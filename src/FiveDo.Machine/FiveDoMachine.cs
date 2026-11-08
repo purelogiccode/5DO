@@ -87,12 +87,19 @@ public sealed class FiveDoMachine
             OperaSemantics = Tuning.ClioTimers == ClioTimerMode.OperaScheduler,
             MediaAccess = Tuning.OperaDipir ? Clio.XbusMediaAccess : null,
         };
+        Xbus.FiqTrace = source =>
+            Clio.TraceXbusFiq(Xbus.SelectedDevice, Xbus.GetPoll(), source);
         Cdrom = new CdromChip
         {
             TimingMode = Tuning.CdromTiming,
             ConfiguredSpeed = Tuning.CdSpeed,
             ArmClock = Tuning.ArmClock,
-            InterruptRequested = () => Clio.GenerateFiq(4, 0),
+            InterruptRequested = () =>
+            {
+                // The reference detects this level in opera_xbus_tick and raises source 1.
+                Clio.TraceXbusFiq(Xbus.SelectedDevice, Xbus.GetPoll(), 1);
+                Clio.GenerateFiq(4, 0);
+            },
         };
         Xbus.Attach(Cdrom);
         Dsp = new DspCore { Host = Clio };
@@ -1016,7 +1023,7 @@ public sealed class FiveDoMachine
         // completions invisible to the guest and stretched timer-based waits.
         if (Tuning.CdromTiming == CdromTimingMode.OperaCycleBased && Xbus.FiqPending)
         {
-            Clio.GenerateFiq(4, 0);
+            Xbus.RaiseTickFiq();
         }
 
         if (Quartz.QueueDsp())

@@ -44,6 +44,12 @@ public sealed class Xbus : IClioXbus, IStateSection
     /// <summary>Gets or sets the media-access latch callback. Opera: <c>opera_clio_xbus_media_access</c>.</summary>
     public Action<uint>? MediaAccess { get; set; }
 
+    /// <summary>
+    /// Gets or sets the diagnostic callback invoked before a CD FIQ raise. The argument is the
+    /// reference source: 1 tick, 2 poll tick, 3 built-in command, 4 device command/poll, 5 built-in poll.
+    /// </summary>
+    public Action<byte>? FiqTrace { get; set; }
+
     /// <summary>Initializes a new instance of the <see cref="Xbus"/> class.</summary>
     public Xbus()
     {
@@ -75,16 +81,44 @@ public sealed class Xbus : IClioXbus, IStateSection
     {
         get
         {
-            for (var i = 0; i < DeviceCount; i++)
-            {
-                if (_devices[i]?.FiqPending == true)
-                {
-                    return true;
-                }
-            }
-
-            return _select == BuiltInDevice && PollFiqPending();
+            return DeviceFiqPending() || (_select == BuiltInDevice && PollFiqPending());
         }
+    }
+
+    /// <summary>
+    /// Raises the level-held CD FIQ for one clock batch, like <c>opera_xbus_tick</c>.
+    /// The diagnostic source distinguishes a device request (1) from the built-in
+    /// responder's poll request (2).
+    /// </summary>
+    public void RaiseTickFiq()
+    {
+        if (DeviceFiqPending())
+        {
+            RaiseFiq(1);
+        }
+        else if (_select == BuiltInDevice && PollFiqPending())
+        {
+            RaiseFiq(2);
+        }
+    }
+
+    private bool DeviceFiqPending()
+    {
+        for (var i = 0; i < DeviceCount; i++)
+        {
+            if (_devices[i]?.FiqPending == true)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RaiseFiq(byte source)
+    {
+        FiqTrace?.Invoke(source);
+        _interrupts?.GenerateFiq(4, 0);
     }
 
     /// <summary>Gets the save-state section version.</summary>
@@ -170,7 +204,7 @@ public sealed class Xbus : IClioXbus, IStateSection
                 _poll = (byte)((_poll & 0xf0) | (int)(value & 0x07));
                 if (PollFiqPending())
                 {
-                    _interrupts?.GenerateFiq(4, 0);
+                    RaiseFiq(5);
                 }
             }
             else
@@ -189,7 +223,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         device.SetPoll(value);
         if (device.FiqPending)
         {
-            _interrupts?.GenerateFiq(4, 0);
+            RaiseFiq(4);
         }
     }
 
@@ -228,7 +262,7 @@ public sealed class Xbus : IClioXbus, IStateSection
             device.SetCommand((byte)value);
             if (device.FiqPending)
             {
-                _interrupts?.GenerateFiq(4, 0);
+                RaiseFiq(4);
             }
 
             return;
@@ -408,7 +442,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         {
             if (PollFiqPending())
             {
-                _interrupts?.GenerateFiq(4, 0);
+                RaiseFiq(3);
             }
 
             return;
@@ -417,7 +451,7 @@ public sealed class Xbus : IClioXbus, IStateSection
         if (((_pollDevice & PolStatus) != 0 && (_pollDevice & PolStatusMask) != 0) ||
             ((_pollDevice & PolData) != 0 && (_pollDevice & PolDataMask) != 0))
         {
-            _interrupts?.GenerateFiq(4, 0);
+            RaiseFiq(3);
         }
     }
 }

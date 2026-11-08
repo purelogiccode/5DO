@@ -2953,3 +2953,47 @@ next measurement is the wake source (FIQ/timer/SPORT). The 11-title `cd-cadence`
 keeps the same first mismatch indices. **2,048 tests pass**; build and format are
 clean. The local InspectCode host crashed before emitting a result in this session; the
 prior complete run was clean.
+
+### 1.1bg CORE-04/CORE-07 guest wake-source parity (2026-11-08)
+
+The 5DO `--clio-timer-trace` now emits the same diagnostic events as the reference
+debug core: FIQ generation (`event=fiqgen`), FIQ-register writes (`event=fiqwrite`),
+XBUS select/poll (`event=xbussel`/`event=xbuspoll`), and XBUS FIQ edges
+(`event=xbusfiq`, with the reference source code 1 tick, 2 poll tick, 3 built-in
+command, 4 device command/poll, 5 built-in poll). The edge rule matches
+`xbus_raise_fiq`: the event is written only while CD FIQ bit 4 is not already active.
+
+The wake-source probe (`artifacts/diff/probe-20th-wake`, 20th Century Video Almanac,
+290 frames, accuracy profile, unbounded CD speed) compares the 20th Century wait
+directly:
+
+- During the 57.8M-59.0M cycle interval both engines read the active-FIQ register
+  **exactly 99 times**, with identical distributions: 38x `00000001`, 33x `80000001`,
+  23x `80000801`, and 5x `80000003`. FIQ delivery, masks, and handler cadence are in
+  lockstep.
+- The guest is in the Portfolio OS idle loop at `0x205f4..0x20600` during the wait.
+  The 5DO CPU leaves the loop on the VBlank FIQ at cycle 59,021,271 and issues
+  `READ_DATA` at 59,063,402. Opera stays idle; its next command is `READ_ID` at
+  70,080,576, 12.46M cycles later.
+- On 900-frame captures (`artifacts/diff/probe-20th-wake-900`) the `READ_ID` media-poll
+  cadence after the first poll is the same on both engines (Opera
+  70.08M/82.59M/95.11M/107.62M/120.13M/132.64M; 5DO
+  70.29M/82.80M/95.31M/107.83M/120.34M/132.85M, a +0.21M cycle phase). 5DO inserts
+  `READ_DATA` bursts between the polls (59.06M, 59.12M, 61.56M, 64.07M, 66.57M,
+  69.07M); Opera issues only the polls.
+
+The residual is therefore **not** the FIQ/timer/SPORT wake source, the CD command
+table, the CD status bytes, or the READ_ID payload (both return
+`83 00 10 00 01 00 00 00 00 00 00 e3`). It is the guest file-system read-request
+schedule: 5DO's loader continues to request sectors after command 104 while Opera's
+loader stops and only runs the periodic media poll. A 2x A/B
+(`artifacts/diff/probe-20th-speed2x`, 5DO `cdSpeed=2x` against the reference's
+unbounded default) grows the per-command delta by exactly **81,246 cycles per
+READ_DATA**, matching `cdrom_data_sector_cycles` (104,166 - 2,087); the sector-time
+formula and the panel's unbounded setting are correct. The next measurement is the FS
+read request and the CD task's wake queue, not the interrupt controller.
+
+**2,051 tests pass** (three new trace tests); build and format are clean. A forced
+harness capture now deletes the title's `nvram.ram` before the 5DO run, matching the
+reference host's `.srm` deletion; a fresh-NVRAM control produced the same 108/105
+command cadence, ruling out saved guest settings.

@@ -164,7 +164,9 @@ reference core runs unbounded); the resulting 5DO `profile` field is `Custom` be
 the drive speed differs, but the ARM/CLIO/CEL/CD timing modes follow the selected
 profile. Every override is recorded in the report provenance (`armTimingOverride`,
 `clioTimersOverride`, `celTimingOverride`, `cdTimingOverride`, `profileOverride`) so an
-A/B report is self-describing. `--compare-pc` requires a reference core with the
+A/B report is self-describing. `--force` also deletes the title's `nvram.ram` before
+the 5DO run, matching the reference host's `.srm` deletion, so a forced capture always
+starts from a fresh NVRAM. `--compare-pc` requires a reference core with the
 optional debug exports; without them the PC field is reported as unavailable rather
 than silently passing.
 
@@ -442,8 +444,12 @@ code. It is loaded through its `sg_*` C ABI.
   `sg_debug_timer_reload_at`, and `sg_debug_timer_fiq_at`. It records timer
   counter/control/slack writes, underflows, CLIO timer/VCNT/FIQ reads, XBUS
   select/poll/FIQ events, and FIQ-register writes with the same cycle and PC stamps
-  as 5DO's `--clio-timer-trace`/`--clio-read-trace`/`--clio-trace`. The arrays are
-  diagnostic-only; a core without the exports still runs.
+  as 5DO's `--clio-timer-trace`/`--clio-read-trace`/`--clio-trace`. 5DO emits the
+  same event names: `event=fiqgen` only on the CD FIQ bit-4 edge, `event=fiqwrite`
+  for `0x40`-`0x6c`, `event=xbussel`/`event=xbuspoll`, and `event=xbusfiq` with the
+  reference source code (1 tick, 2 poll tick, 3 built-in command, 4 device
+  command/poll, 5 built-in poll). The arrays are diagnostic-only; a core without the
+  exports still runs.
 - The debug core is local tooling. The `opera_clio_debug_*` helpers live in
   `opera_clio.c`/`opera_clio.h`; `opera_xbus.c` calls them for XBUS levels. Reproduce
   them on a fresh `References/CPP_SimpleGui` checkout if the gitignored tree is
@@ -506,6 +512,23 @@ title still diverges). Intentional changes update the baseline in the same
 change.
 
 ## 8. Current evidence
+
+- **2026-11-08 guest wake-source parity and the 20th Century read schedule
+  (CORE-04/CORE-07).** The 5DO timer trace now emits the reference's FIQ and XBUS
+  events, so the wake-source comparison is a direct text diff. On 20th Century Video
+  Almanac (290 frames, accuracy profile, unbounded CD speed) both engines read the
+  active-FIQ register **exactly 99 times** during the 57.8M-59.0M wait, with identical
+  values (38x `00000001`, 33x `80000001`, 23x `80000801`, 5x `80000003`). The guest is
+  in the Portfolio OS idle loop at `0x205f4..0x20600`; 5DO leaves it on the VBlank FIQ
+  at 59,021,271 and issues `READ_DATA` at 59,063,402, while Opera stays idle until its
+  `READ_ID` at 70,080,576. On 900-frame captures the `READ_ID` poll cadence then
+  matches (Opera 70.08M/82.59M/95.11M/107.62M/120.13M/132.64M; 5DO
+  70.29M/82.80M/95.31M/107.83M/120.34M/132.85M, +0.21M phase), and 5DO inserts
+  `READ_DATA` bursts between polls (59.06M/59.12M/61.56M/64.07M/66.57M/69.07M).
+  FIQ delivery, masks, the CD command/status contract, and the `READ_ID` payload
+  (`83 00 10 00 01 00 00 00 00 00 00 e3`) are not the residual; the guest file-system
+  read-request schedule is. See `TestCorpus.md` 1.1bg and the probe at
+  `artifacts/diff/probe-20th-wake`. **2,051 tests pass.**
 
 - **2026-11-08 CD register trace, status parity, and the 20th Century read schedule
   (CORE-04).** `--cd-register-trace` now writes matched `fivedo.cdreg.txt` and

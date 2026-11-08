@@ -49,6 +49,15 @@ internal static class FiveDoCaptureRunner
             harness.CdTiming);
         var titleDirectory = Path.Combine(outputDirectory, HarnessCommon.SafeName(title.Id));
         Directory.CreateDirectory(titleDirectory);
+        var nvramPath = Path.Combine(titleDirectory, "nvram.ram");
+
+        // A forced capture must start from the same fresh NVRAM as the Opera side,
+        // which deletes its .srm before every run. Reusing a guest-written image can
+        // change the guest's saved settings between otherwise identical captures.
+        if (harness.Force)
+        {
+            HarnessCommon.DeleteFile(nvramPath);
+        }
 
         if (!File.Exists(disc))
         {
@@ -80,7 +89,7 @@ internal static class FiveDoCaptureRunner
             "--cd-commands",
             Path.Combine(titleDirectory, "fivedo.cd.txt"),
             "--nvram",
-            Path.Combine(titleDirectory, "nvram.ram"),
+            nvramPath,
         };
 
         if (harness.TimerTrace)

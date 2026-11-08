@@ -30,6 +30,9 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private const uint Reload = 0x2;
     private const uint Cascade = 0x4;
 
+    /// <summary>Low FIQ bit held by the XBUS CD-ROM device.</summary>
+    private const uint FiqCdrom = 0x4;
+
     private const uint Dipir1Address = 0x410;
     private const uint Dipir2Address = 0x414;
     private const uint DipirCurrent = 0x8000;
@@ -416,6 +419,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
         if ((address & ~0x2cu) == 0x40)
         {
+            TraceFiqWrite(address, value);
             switch (address)
             {
                 case 0x40:
@@ -602,6 +606,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
         if (address is >= 0x500 and < 0x540)
         {
+            TraceXbusSelect(value);
             Xbus?.SetSelect(value);
             return false;
         }
@@ -615,6 +620,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
         if (address is >= 0x540 and < 0x580)
         {
+            TraceXbusPoll(value);
             Xbus?.SetPoll(value);
             return false;
         }
@@ -680,6 +686,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     /// <param name="reason2">High interrupt mask.</param>
     public void GenerateFiq(uint reason1, uint reason2)
     {
+        TraceFiqGenerate(reason1);
         _registers[0x40] |= reason1;
         _registers[0x60] |= reason2;
         if (_registers[0x60] != 0)
@@ -688,6 +695,26 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         }
 
         EvaluateFiqRequest();
+    }
+
+    /// <summary>
+    /// Records an XBUS media-access FIQ exactly like the reference
+    /// <c>xbus_raise_fiq</c>: the event is emitted only on the transition into the
+    /// CD FIQ bit, so a level-held request does not flood the trace.
+    /// </summary>
+    /// <param name="selected">Selected XBUS device slot.</param>
+    /// <param name="poll">Current XBUS poll byte.</param>
+    /// <param name="source">Reference source code (1 tick, 2 poll, 3 command, 4 device, 5 built-in poll).</param>
+    public void TraceXbusFiq(int selected, uint poll, uint source)
+    {
+        if (TimerTraceWriter is null || (_registers[0x40] & FiqCdrom) != 0)
+        {
+            return;
+        }
+
+        TimerTraceWriter.WriteLine(
+            $"{TimerTracePrefix()} event=xbusfiq sel={selected:x} "
+            + $"poll={poll:x2} source={source}");
     }
 
     /// <summary>
@@ -957,6 +984,53 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private string TimerTracePrefix()
     {
         return $"clio-timer f={FrameProvider?.Invoke() ?? -1} cyc={CycleProvider?.Invoke() ?? 0}";
+    }
+
+    private void TraceFiqGenerate(uint reason1)
+    {
+        if (TimerTraceWriter is null
+            || (reason1 & FiqCdrom) == 0
+            || (_registers[0x40] & FiqCdrom) != 0)
+        {
+            return;
+        }
+
+        TimerTraceWriter.WriteLine($"{TimerTracePrefix()} event=fiqgen value={reason1:x8}");
+    }
+
+    private void TraceFiqWrite(uint address, uint value)
+    {
+        if (TimerTraceWriter is null)
+        {
+            return;
+        }
+
+        TimerTraceWriter.WriteLine(
+            $"{TimerTracePrefix()} event=fiqwrite addr={address:x3} value={value:x8}");
+    }
+
+    private void TraceXbusSelect(uint value)
+    {
+        if (TimerTraceWriter is null)
+        {
+            return;
+        }
+
+        TimerTraceWriter.WriteLine(
+            $"{TimerTracePrefix()} event=xbussel sel={value & 0xf:x} "
+            + $"value={value & 0xff:x2} high={value & 0xf0:x2}");
+    }
+
+    private void TraceXbusPoll(uint value)
+    {
+        if (TimerTraceWriter is null)
+        {
+            return;
+        }
+
+        TimerTraceWriter.WriteLine(
+            $"{TimerTracePrefix()} event=xbuspoll sel={Xbus?.SelectedDevice ?? 0:x} "
+            + $"value={value & 0xff:x2}");
     }
 
     private void TraceTimerControl(uint address)

@@ -43,6 +43,83 @@ public sealed class ClioTests
     }
 
     [Fact]
+    public void TimerTrace_LogsFiqAndXbusEventsWithReferenceNames()
+    {
+        var clio = new ClioChip
+        {
+            CycleProvider = () => 1234,
+            FrameProvider = () => 7,
+        };
+        using var writer = new StringWriter();
+        clio.TimerTraceWriter = writer;
+
+        clio.TraceXbusFiq(0, 0x37, 4);
+        clio.GenerateFiq(4, 0);
+        clio.Poke(0x44, 0x800);
+        clio.Poke(0x500, 0x80);
+        clio.Poke(0x540, 0x07);
+
+        var text = writer.ToString();
+        Assert.Contains(
+            "clio-timer f=7 cyc=1234 event=xbusfiq sel=0 poll=37 source=4",
+            text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "clio-timer f=7 cyc=1234 event=fiqgen value=00000004",
+            text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "clio-timer f=7 cyc=1234 event=fiqwrite addr=044 value=00000800",
+            text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "clio-timer f=7 cyc=1234 event=xbussel sel=0 value=80 high=80",
+            text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "clio-timer f=7 cyc=1234 event=xbuspoll sel=0 value=07",
+            text,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TimerTrace_XbusFiqAndFiqGenerateAreEdgeOnly()
+    {
+        var clio = new ClioChip();
+        using var writer = new StringWriter();
+        clio.TimerTraceWriter = writer;
+
+        clio.GenerateFiq(4, 0);
+        clio.TraceXbusFiq(0, 0x37, 1);
+        clio.GenerateFiq(4, 0);
+
+        var held = writer.ToString();
+        Assert.Equal(1, Count(held, "event=fiqgen"));
+        Assert.Equal(0, Count(held, "event=xbusfiq"));
+
+        clio.Poke(0x44, 4);
+        clio.TraceXbusFiq(0, 0x37, 1);
+        clio.GenerateFiq(4, 0);
+
+        var released = writer.ToString();
+        Assert.Equal(2, Count(released, "event=fiqgen"));
+        Assert.Equal(1, Count(released, "event=xbusfiq"));
+    }
+
+    private static int Count(string text, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
+    }
+
+    [Fact]
     public void Interrupts_NeedFiqFollowsEnableMasks()
     {
         var clio = new ClioChip();

@@ -79,6 +79,44 @@ public sealed class XbusTests
         Assert.True(xbus.FiqPending);
     }
 
+    [Fact]
+    public void RaiseTickFiq_TracesTheDeviceAndBuiltInSources()
+    {
+        var device = new PendingDevice();
+        var xbus = new XbusChip { OperaSemantics = true };
+        var sink = new RecordingInterrupts();
+        var sources = new List<byte>();
+        xbus.Interrupts = sink;
+        xbus.FiqTrace = sources.Add;
+        xbus.Attach(device);
+        xbus.SetSelect(0x80);
+
+        xbus.RaiseTickFiq();
+        Assert.Equal(new byte[] { 1 }, sources);
+        Assert.Equal(1, sink.Count);
+
+        device.Pending = false;
+        xbus.SetSelect(0x0f);
+        xbus.SetPoll(0x07);
+        for (var i = 0; i < 7; i++)
+        {
+            xbus.SetCommandFifo(i == 0 ? 0x83u : 0u);
+        }
+
+        sources.Clear();
+        xbus.RaiseTickFiq();
+        Assert.Equal(new byte[] { 2 }, sources);
+    }
+
+    private sealed class RecordingInterrupts : IInterruptSink
+    {
+        public bool NeedFiq => true;
+
+        public int Count { get; private set; }
+
+        public void GenerateFiq(uint reason1, uint reason2) => Count++;
+    }
+
     private sealed class PendingDevice : IXbusDevice
     {
         public bool HasMediaAccess => false;
