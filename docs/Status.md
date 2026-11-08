@@ -20,6 +20,12 @@ passes are retained below. Road Rash's
 Debug core builds are optimized, and Auto presentation frame skip is the default.
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 
+**Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
+titles / 378 game test set**, and every unique title now has a 5DO status. The
+unique-title 5DO/4DO/Phoenix comparison is in
+[`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
+above remains the per-image baseline.
+
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept
 as the reference oracle. The 3DO background is now 24-bit end to end, a zero VDL
