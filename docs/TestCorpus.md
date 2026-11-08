@@ -63,6 +63,11 @@ Seven additional CHD titles (Gex, Need for Speed, Super Street Fighter II Turbo,
 Total Eclipse, Killing Time, Theme Park, and Return Fire) were validated for boot,
 render, save-state, and audio in section 1.7.
 
+The full local collection is inventoried in section 1.1bh: **1,371 images collapse to
+414 unique titles and a 378-title game test set**, with canonical disc selection and a
+5DO/4DO/Phoenix comparison. Use `artifacts/corpus/unique-testset.txt` for compatibility
+runs; the five-title list above remains the differential corpus.
+
 ISO/BIN/CUE parity testing still needs a legally obtained image in one of those
 formats, or a locally generated fixture. Do not convert and commit a retail disc.
 
@@ -2997,3 +3002,48 @@ read request and the CD task's wake queue, not the interrupt controller.
 harness capture now deletes the title's `nvram.ram` before the 5DO run, matching the
 reference host's `.srm` deletion; a fresh-NVRAM control produced the same 108/105
 command cadence, ruling out saved guest settings.
+
+### 1.1bh TEST-08 unique corpus and 3-way compatibility comparison (2026-11-08)
+
+The local collection is now inventoried by content, not by filename. `tools/corpus-inventory.py`
+asks the 5DO CLI for each image's `gameId` (the MD5 of the first two 2048-byte sectors, the
+same key the library and 4DO database use) and records the database metadata. On the current
+`J:\Panasonic 3DO` plus `G:\MAME\MAME Software List CHDs\3do` collection:
+
+- **1,371 disc images** (1,366 on `J:`, 5 on `G:`), **0 read errors**.
+- **653 distinct game IDs** — the same count as the game database.
+- **414 unique titles** after collapsing identical images and grouping regional revisions.
+- **378-title game test set** after separating demo, magazine/sampler, hack/translation, and
+  audio-only images.
+
+`tools/generate-compat-comparison.py` matches the unique titles against the saved 4DO wiki
+and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. The result is
+`docs/CompatibilityComparison.md`, with the full mapping in `docs/data/unique-corpus.csv` and
+`docs/data/compatibility-comparison.json`:
+
+| Metric | Result |
+|---|---:|
+| Unique titles | 414 |
+| Game test set | 378 |
+| Matched to 4DO | 232 of 241 reference titles |
+| Matched to Phoenix | 246 of 302 reference titles |
+| Matched to both | 194 |
+| 5DO manual gameplay grades | 11 |
+| 5DO automated loadability | 403 |
+| 5DO untested | 0 |
+| 5DO ahead of 4DO | 2 (Orbatak, Shootout at Old Tucson) |
+| 5DO behind 4DO | 8 (all manual `Playable` vs peer `Good`, not load failures) |
+| 5DO behind Phoenix | 10 (same grade gap) |
+| Loadability regressions | 0 |
+
+**Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
+an unlisted title means *no data*. The useful comparison is the reverse direction: a title
+Phoenix lists as working but 5DO cannot load is a regression.
+
+The canonical test set is written to `artifacts/corpus/unique-testset.txt` for
+`tools/compat-sweep.ps1 -FileList`. The 44 titles that were previously untested were run
+at 3,000 frames with `-AllowUnsigned`: **40 rendered** and **4 had no video**
+(`3DO Gamepack #1`, the audio-only `A&M Music Sampler`, `Evil Australians`, and the
+`LameNES` emulator). All four are secondary media/homebrew, not retail game regressions,
+and all 414 unique titles now have a 5DO status. This section is the evidence for
+`TEST-08`; it does not replace the 50-title accuracy panel or the playability audit.

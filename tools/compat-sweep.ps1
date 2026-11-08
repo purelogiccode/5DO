@@ -52,6 +52,10 @@ Only test files whose name matches this wildcard.
 .PARAMETER Files
 Explicit disc paths to test instead of scanning the roots. Takes precedence over Roots.
 
+.PARAMETER FileList
+Text file with one disc path per line. Blank lines and lines starting with # are
+ignored. Use this for a unique-title test set whose command line would be too long.
+
 .PARAMETER RetryFrames
 When a disc completes but its final frame is blank, rerun it once with this frame count.
 Defaults to 0 (no retry). Slow loaders such as Myst need around 20,000 frames.
@@ -61,6 +65,9 @@ Do not write frame.png. This makes the sweep faster but disables image metrics.
 
 .PARAMETER NoPrefetch
 Disable the CLI --prefetch cache.
+
+.PARAMETER AllowUnsigned
+Pass --allow-unsigned-discs for homebrew and prototype images without a retail RSA signature.
 
 .EXAMPLE
 pwsh -File tools/compat-sweep.ps1 -Frames 3000
@@ -86,9 +93,11 @@ param(
     [int]$Limit = 0,
     [string]$Filter = '*.chd',
     [string[]]$Files = @(),
+    [string]$FileList = '',
     [int]$RetryFrames = 0,
     [switch]$NoFrameCapture,
     [switch]$NoPrefetch,
+    [switch]$AllowUnsigned,
     [int]$MinNonBlackPercent = 3,
     [int]$MinColors = 8,
     [switch]$Build
@@ -256,6 +265,7 @@ function Invoke-OneDisc {
     $arguments.Add('--audio')
     $arguments.Add('null')
     if (-not $NoPrefetch) { $arguments.Add('--prefetch') }
+    if ($AllowUnsigned) { $arguments.Add('--allow-unsigned-discs') }
     if ($HighRes) { $arguments.Add('--high-res') }
     if (-not $NoFrameCapture) {
         $arguments.Add('--frame-out')
@@ -385,6 +395,16 @@ if ($bios2Path -and -not (Test-Path -LiteralPath $bios2Path)) {
 
 $cliCommand = Get-CliCommand $Cli
 $discs = [System.Collections.Generic.List[string]]::new()
+if ($FileList) {
+    if (-not (Test-Path -LiteralPath $FileList)) {
+        throw "File list not found: $FileList"
+    }
+    $Files = @($Files) + @(
+        Get-Content -LiteralPath $FileList |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and -not $_.StartsWith('#') }
+    )
+}
 if ($Files.Count -gt 0) {
     foreach ($file in $Files) {
         $resolved = if (Test-Path -LiteralPath $file) { (Resolve-Path -LiteralPath $file).Path } else { '' }

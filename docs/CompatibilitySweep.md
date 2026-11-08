@@ -24,15 +24,22 @@ and the per-title result columns are in
 
 | Input | Path | Count |
 |---|---|---:|
-| Main collection | `J:\Panasonic 3DO` | 589 CHD images |
+| Main collection | `J:\Panasonic 3DO` | 1,366 CHD images |
 | MAME software-list collection | `G:\MAME\MAME Software List CHDs\3do` | 5 CHD images |
+| Unique-title inventory | `artifacts/corpus/inventory.json` | **1,371 images → 414 titles** |
+| Unique game test set | `artifacts/corpus/unique-testset.txt` | **378 games** |
 | BIOS | `bios/panafz1.bin` (baseline) | 1 MB, user-provided |
 | Alternate BIOSes | `panafz10.bin`, `panafz10-patched.bin`, `panafz10e-anvil.bin`, `panafz10ja-anvil-kanji.bin` | 1 MB each; used for BIOS-sensitive titles |
 | 4DO reference list | `References/4DO-master/4DO Compatibility List ⚈ 3DO emulator Wiki ».mhtml` | 241 titles |
+| Phoenix reference list | `References/Phoenix/3DO Compatibility List _ Arts-Union.mhtml` | 302 titles (100% list) |
 
-The two collections contain regional variants and alternate revisions. The sweep tests
-every image, not one image per title. The 4DO list is a reference for known issues; it
-is not a guarantee that a matching filename is the same disc revision.
+The two collections contain regional variants and alternate revisions. The **loadability
+sweep** may test every image; the **compatibility matrix** tests one canonical disc per
+unique title, because regional copies do not add playability signal. `tools/corpus-inventory.py`
+fingerprints every image with the 5DO `gameId`, and `tools/generate-compat-comparison.py`
+collapses duplicates, groups revisions, chooses the canonical disc, and writes the 5DO/4DO/Phoenix
+matrix. The full mapping is `docs/data/unique-corpus.csv`; the comparison is
+`docs/CompatibilityComparison.md`.
 
 Regenerate the reference table after changing a collection or the 4DO snapshot:
 
@@ -40,9 +47,26 @@ Regenerate the reference table after changing a collection or the 4DO snapshot:
 python tools/generate-compat-list.py
 ```
 
-The generator uses only the Python standard library and rewrites
+Build the unique-title inventory and the 5DO/4DO/Phoenix comparison after changing
+the collection, a reference list, or the sweep results:
+
+```powershell
+python tools/corpus-inventory.py --jobs 8 --out artifacts/corpus/inventory.json
+python tools/generate-compat-comparison.py `
+  --inventory artifacts/corpus/inventory.json `
+  --sweep artifacts/compat-full/summary-merged.csv `
+  --reference docs/GameCompatibilityList.md
+```
+
+`corpus-inventory.py` caches by path; pass `--refresh` to re-fingerprint every image.
+`generate-compat-comparison.py` writes `docs/CompatibilityComparison.md`,
+`docs/data/unique-corpus.csv`, `docs/data/compatibility-comparison.json`, and the
+canonical path list in `artifacts/corpus/unique-testset.txt`.
+
+The older generator uses only the Python standard library and rewrites
 [`GameCompatibilityList.md`](GameCompatibilityList.md). It matches titles by normalized
 filename, not by disc hash, so verify a match before treating it as the same revision.
+The new comparison groups by `gameId` first and is the authoritative 3-way view.
 
 After updating [`GameCompatibilityResults.md`](GameCompatibilityResults.md) or the reference
 list, rebuild the data used by the [compatibility browser](CompatibilityBrowser.md):

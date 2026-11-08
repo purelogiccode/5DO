@@ -40,7 +40,8 @@ works. See [Compatibility notes](Compatibility.md) and
 ## Data and contributions
 
 - [Raw per-disc results](GameCompatibilityResults.md) — the full table with frame hashes and evidence paths.
-- [4DO reference list](GameCompatibilityList.md) — the 241-title reference matrix and manual 5DO grades.
+- [4DO reference list](GameCompatibilityList.md) - the 241-title reference matrix and manual 5DO grades.
+- [5DO vs 4DO vs Phoenix](CompatibilityComparison.md) - unique-title comparison and regression list.
 - [Compatibility sweep procedure](CompatibilitySweep.md) — how the automated pass is run.
 - Found a regression or a game that is missing? [Report a compatibility issue](https://github.com/purelogiccode/5DO/issues/new?template=compatibility_report.yml).
 

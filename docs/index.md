@@ -119,8 +119,9 @@ the remaining work.
 - [FAQ](FAQ.md) — common questions and short answers.
 - [Compatibility browser](CompatibilityBrowser.md) — filterable per-game sweep results with screenshots and evidence.
 - [Compatibility notes](Compatibility.md) — BIOS, disc, input, and game-fix compatibility.
-- [Game compatibility list](GameCompatibilityList.md) — 241-title 4DO reference and 5DO status.
-- [Game compatibility results](GameCompatibilityResults.md) — per-disc sweep evidence.
+- [Game compatibility list](GameCompatibilityList.md) - 241-title 4DO reference and 5DO status.
+- [5DO vs 4DO vs Phoenix](CompatibilityComparison.md) - unique-title comparison across all three emulators.
+- [Game compatibility results](GameCompatibilityResults.md) - per-disc sweep evidence.
 - [Known issues](KnownIssues.md) — current game, renderer, platform, and packaging limits.
 - [Troubleshooting](Troubleshooting.md) — symptom-driven diagnosis.
 - [Glossary](Glossary.md) — hardware, emulator, renderer, audio, and release terms.

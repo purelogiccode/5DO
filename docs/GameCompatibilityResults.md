@@ -13,7 +13,7 @@ For a filterable per-game view with screenshots, open the [compatibility browser
 - Loadable/No video: **1**
 - Not Loadable: **0**
 
-Status definitions and triage guidance are in [`CompatibilitySweep.md`](CompatibilitySweep.md). The 4DO reference list is in [`GameCompatibilityList.md`](GameCompatibilityList.md).
+Status definitions and triage guidance are in [`CompatibilitySweep.md`](CompatibilitySweep.md). The 4DO reference list is in [`GameCompatibilityList.md`](GameCompatibilityList.md). The unique-title 5DO/4DO/Phoenix comparison is in [`CompatibilityComparison.md`](CompatibilityComparison.md).
 
 ## Results
 

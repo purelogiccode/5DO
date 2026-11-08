@@ -2,6 +2,8 @@
 
 This is the working compatibility matrix for the full local 3DO collection. The 4DO scores and notes are transcribed from the saved 4DO wiki page; the 5DO columns are filled in by the collection sweep.
 
+> **Counts are the 2026-10-30 snapshot.** The table below reflects the 594-image loadability pass. The current collection is **1,371 images → 414 unique titles**; the authoritative 5DO/4DO/Phoenix comparison is [`CompatibilityComparison.md`](CompatibilityComparison.md).
+
 ## Sources
 
 - 4DO compatibility wiki snapshot: `References/4DO-master/4DO Compatibility List ⚈ 3DO emulator Wiki ».mhtml` (saved 2026-10-25). `References/` is local-only and ignored by git; this Markdown file is the committed reference copy.

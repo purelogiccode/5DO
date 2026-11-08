@@ -348,7 +348,9 @@ does not need a separate high-resolution input path.
 ## 10. Curated compatibility matrix
 
 This is the validated showcase set. The full 241-title 4DO reference list and the
-local collection matrix are in [`GameCompatibilityList.md`](GameCompatibilityList.md).
+local collection matrix are in [`GameCompatibilityList.md`](GameCompatibilityList.md);
+the unique-title 5DO/4DO/Phoenix comparison is in
+[`CompatibilityComparison.md`](CompatibilityComparison.md).
 Use this table when testing real discs. Record the disc hash/ID, BIOS, build, and result.
 
 | Game | Region | Disc ID | BIOS | Build | Boot | In-game | Audio | Input | Notes | Opera reference |
