@@ -152,7 +152,8 @@ the remaining work.
 - [Documentation guide](Documentation.md) — build the site, preview locally, and publish the wiki.
 - [Status](Status.md) — current position, completion estimate, and next steps.
 - [Roadmap](Roadmap.md) — concise milestone summary.
-- [Implementation plan](ImplementationPlan.md) — master maintainer checklist and progress log.
+- [Implementation plan](ImplementationPlan.md) — active compatibility completion task list.
+- [Implementation plan archive](ImplementationPlanArchive.md) — former plan, completed log, and evidence.
 - [Release checklist](ReleaseChecklist.md) — v1.1 scope and gates.
 - [Release legal review](ReleaseLegalReview.md) — attribution and distribution decisions.
 - [OpenAL Soft notice](OpenALSoft.md) — LGPL notice, source offer, and relinking rights.

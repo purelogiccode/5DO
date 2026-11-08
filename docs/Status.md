@@ -445,7 +445,7 @@ Settings > Emulation override combo. Auto-selection uses the game database regio
 known requirements for Slayer Europe/USA, Powers Kingdom (Europe), and Arcade CD-ROM
 discs; the configured BIOS remains the fallback when no BIOS folder is set. The
 five-title 3,000-frame smoke run and four known-requirement 12,000-frame runs are in
-[`TestCorpus.md`](TestCorpus.md) 1.1f. The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript); see `FixParity.md` and the completed log in `ImplementationPlan.md`.
+[`TestCorpus.md`](TestCorpus.md) 1.1f. The first Opera parity batch (VDLP, ARM carry, DSP FIFO, MADAM span/MARIA/BPP0/SKIPX/LRFORM/blue-LSB/REGCTL/PIXC, CLIO FIFO), OP-14 (XYPOSH/XYPOSL origin, retired `GraphicsStepY`/`BitTiming6`), OP-SYS-02 (Opera CD poll/local reset), OP-SYS-01/03's ROM overlay, DIPIR, XBUS, and CSTAT soft-reset work, and OP-SYS-06's separate CLIO PRNG are complete (the DIPIR/soft-reset path remains opt-in pending a boot transcript); see `FixParity.md` and the completed log in `ImplementationPlanArchive.md`.
 UX-01/UX-02 add rewind and fast-forward. `RewindBuffer` keeps compressed keyframes plus
 the per-frame PBUS packet, replays input deterministically after the nearest keyframe,
 clears on timeline jumps, and enforces a 256 MB default cap; `CoreRunner.Rewind` restores
@@ -546,8 +546,8 @@ This is the short, current answer to "where are we?" The documentation index is
 [`ImplementationPlan.md`](ImplementationPlan.md), the performance contract in
 [`Performance.md`](Performance.md), the local game corpus in
 [`TestCorpus.md`](TestCorpus.md), the release gate in
-[`ReleaseChecklist.md`](ReleaseChecklist.md), and the master plan/next actions in
-[`ImplementationPlan.md`](ImplementationPlan.md).
+[`ReleaseChecklist.md`](ReleaseChecklist.md), and the compatibility completion
+plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
 
 ---
 

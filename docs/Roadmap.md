@@ -1,6 +1,6 @@
 # Roadmap
 
-This is the short public roadmap. The authoritative maintainer checklist is
+This is the short public roadmap. The authoritative active plan is
 [ImplementationPlan.md](ImplementationPlan.md), and the current position is
 [Status.md](Status.md).
 

@@ -585,7 +585,7 @@ the bundled Windows OperaCore (`References/CPP_SimpleGui`) and the same
 `panafz1.bin` BIOS. Opera rendered Road Rash, Wolfenstein, Alone, and Space Ace for
 60 s. After the 2026-10-24 DSP fixes the C# port also renders all five titles and
 produces non-silent audio. The comparison method and commands are in
-[`ReferenceStrategy.md`](ReferenceStrategy.md); the master plan and next actions are in
+[`ReferenceStrategy.md`](ReferenceStrategy.md); the compatibility completion plan and next actions are in
 [`ImplementationPlan.md`](ImplementationPlan.md).
 
 The 2026-10-24 pass added the diagnostics needed to make the comparison mechanical:
