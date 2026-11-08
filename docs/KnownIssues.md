@@ -33,16 +33,19 @@ checksums are attached, and legal/attribution sign-off is recorded.
   are within 9 samples of the reference at frame 300. After the 24-bit VDL
   background and zero-entry VDL stop fixes, **50/50 titles match every frame
   hash** at frames 60/120/300. The 5-title panel matches **5/5** at 300 frames.
-- The first PC/CPSR divergence at frame 60 is an **instruction phase**, not an
-  interrupt bug: on all 50 titles 5DO frame 60 aligns with Opera frame 59 at a
-  residual of -55..-256 retired instructions (the same-frame delta is ~89,000,
-  or one field). The one-field boot phase itself is still present and is
-  tracked in `TEST-07`/`CORE-07`.
-- The CD command count matches at frame 60 on 49/50 titles. The remaining CD
-  differences are cadence: 36 titles first differ by 1-2 commands at frame 120
-  (in-flight at the checkpoint; all recover by frame 300), and 13 differ at
-  frame 300 (seven FMV titles issue +3/+4 extra READ_DATA commands, six are
-  1-2 behind). Tracked in `ImplementationPlan.md` CORE-04.
+- The universal frame-60 PC/CPSR phase is resolved. The harness now captures
+  Opera's ARM/CD state in the checkpoint's own field (it previously read one
+  field late), and `RunFrame` ends a field on the 263-line scanline boundary
+  like Opera instead of a rounded cycle budget. On the 50-title panel the
+  same-frame retired-instruction delta is **11-20** at f=60 (average 15.3) and
+  **23-2,223** at f=120 (most titles around 200). The old "5DO frame 60 aligns
+  with Opera frame 59" description was a harness sampling artifact.
+- The CD command count matches on **50/50 titles at f=60 and f=120**. The first
+  behavioral divergence moved to **11 titles at f=300**: 8 count differences
+  and 3 one-command sequence differences (Creature Shock, Foes of Ali, N.O.B.).
+  The other **39/50 titles are phase-only** at the checkpoints. The final
+  transcript classification is still 39 Equal / 8 PrefixAhead / 3
+  SequenceDiverged. Tracked in `ImplementationPlan.md` CORE-04.
 - At 3,000 frames, Alone, Lemmings, Space Ace, and Wolfenstein match the
   reference frame hash. Road Rash still diverges at 1,000 and 3,000; it is the
   remaining long-run video divergence. CD counts at 3,000 are Lemmings

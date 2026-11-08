@@ -151,6 +151,25 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void RunFrame_EndsOnTheVdlFieldBoundary()
+    {
+        // Opera ends a field when the scanline counter reaches the region height, not
+        // when a rounded ARM-cycle budget elapses. The old cycle-only loop added a few
+        // cycles per field and left the guest one instruction batch ahead of the
+        // reference after a few dozen frames.
+        var machine = new FiveDoMachine();
+        var budget = VideoRegionProfile.Ntsc.GetFrameCycles(EmulatorConstants.ArmClock);
+
+        for (var frame = 0; frame < 60; frame++)
+        {
+            var before = machine.Quartz.VdlFieldIndex;
+            machine.RunFrame();
+            Assert.NotEqual(before, machine.Quartz.VdlFieldIndex);
+            Assert.InRange(machine.LastFrameCycles, budget - 64, budget + 64);
+        }
+    }
+
+    [Fact]
     public void Reset_FlushesTheAudioSink()
     {
         var machine = new FiveDoMachine();

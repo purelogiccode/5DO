@@ -289,7 +289,7 @@ internal sealed class OperaCoreHost : IDisposable
     private uint _lastFrameHash;
     private int _lastWidth;
     private int _lastHeight;
-    private int _pendingFrame;
+    private CaptureSample? _pendingSample;
     private int _stopRequested;
     private volatile string? _callbackError;
     private bool _disposed;
@@ -507,7 +507,11 @@ internal sealed class OperaCoreHost : IDisposable
         try
         {
             var frame = Interlocked.Increment(ref _frame);
-            if (_pendingFrame > 0)
+
+            // The previous checkpoint is finalized here, after its audio callback and
+            // before the current field is sampled. Its ARM/CD fields were captured at
+            // the end of its own field, so the whole sample belongs to one frame.
+            if (_pendingSample is not null)
             {
                 FinalizePending();
             }
@@ -530,7 +534,27 @@ internal sealed class OperaCoreHost : IDisposable
             _lastHeight = (int)height;
             if (Array.IndexOf(_checkpoints, frame) >= 0)
             {
-                _pendingFrame = frame;
+                // Capture the CPU/CD state now, at the end of this field. The audio hash
+                // is filled in when the sample is finalized after this field's audio
+                // callback, which runs after the video callback.
+                _pendingSample = new CaptureSample
+                {
+                    Frame = frame,
+                    Pc = _debugArmPc?.Invoke(),
+                    Cpsr = _debugArmCpsr?.Invoke(),
+                    Instructions = _debugArmInstructions is null
+                        ? null
+                        : _debugArmInstructions.Invoke(),
+                    FrameHash = _lastFrameHash,
+                    ArmStateHash = _debugArmStateHash?.Invoke(),
+                    CdStatus = _debugCdStatus?.Invoke(),
+                    CdPoll = _debugCdPoll is null ? null : checked((int)_debugCdPoll.Invoke()),
+                    CdCommandCount = _debugCdCommandCount is null
+                        ? null
+                        : checked((int)_debugCdCommandCount.Invoke()),
+                    CdCommandHash = _debugCdCommandHash?.Invoke(),
+                    ImagePath = WritePendingImage(frame),
+                };
             }
 
             if (frame >= _targetFrames)
@@ -621,32 +645,34 @@ internal sealed class OperaCoreHost : IDisposable
 
     private void FinalizePending()
     {
-        var frame = _pendingFrame;
-        if (frame <= 0 || _samples.ContainsKey(frame))
+        CaptureSample? pending = _pendingSample;
+        if (pending is null)
         {
-            _pendingFrame = 0;
             return;
         }
 
-        _samples[frame] = new CaptureSample
+        _pendingSample = null;
+        if (pending.Frame <= 0 || _samples.ContainsKey((int)pending.Frame))
         {
-            Frame = frame,
-            Pc = _debugArmPc?.Invoke(),
-            Cpsr = _debugArmCpsr?.Invoke(),
-            Instructions = _debugArmInstructions is null
-                ? null
-                : _debugArmInstructions.Invoke(),
-            FrameHash = _lastFrameHash,
+            return;
+        }
+
+        _samples[(int)pending.Frame] = new CaptureSample
+        {
+            Frame = pending.Frame,
+            Pc = pending.Pc,
+            Cpsr = pending.Cpsr,
+            Instructions = pending.Instructions,
+            FrameHash = pending.FrameHash,
             Samples = _pcm.SampleCount,
             AudioHash = _pcm.Hash,
-            ArmStateHash = _debugArmStateHash?.Invoke(),
-            CdStatus = _debugCdStatus?.Invoke(),
-            CdPoll = _debugCdPoll is null ? null : checked((int)_debugCdPoll.Invoke()),
-            CdCommandCount = _debugCdCommandCount is null ? null : checked((int)_debugCdCommandCount.Invoke()),
-            CdCommandHash = _debugCdCommandHash?.Invoke(),
-            ImagePath = WritePendingImage(frame),
+            ArmStateHash = pending.ArmStateHash,
+            CdStatus = pending.CdStatus,
+            CdPoll = pending.CdPoll,
+            CdCommandCount = pending.CdCommandCount,
+            CdCommandHash = pending.CdCommandHash,
+            ImagePath = pending.ImagePath,
         };
-        _pendingFrame = 0;
     }
 
     private string? WritePendingImage(int frame)

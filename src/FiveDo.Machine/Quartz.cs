@@ -154,6 +154,14 @@ public sealed class Quartz : IStateSection
     /// <summary>Gets the current half-frame index. FreeDO: <c>_qrz_VDHalfFrame()</c>.</summary>
     public int VdHalfFrame => (int)(_vdlLine / (uint)_region.FieldLines);
 
+    /// <summary>Gets the zero-based field index (0 or 1) of the VDL line counter.</summary>
+    /// <remarks>
+    /// A field boundary is crossed whenever this value changes. The machine uses it as
+    /// the field termination condition, matching Opera's <c>line &lt; scanlines</c> loop
+    /// instead of stopping on a rounded ARM-cycle budget.
+    /// </remarks>
+    public int VdlFieldIndex => VdHalfFrame;
+
     /// <summary>Gets the absolute VDL line counter. FreeDO: <c>_qrz_VDCurrOverline()</c>.</summary>
     public int VdCurrOverline => (int)_vdlLine;
 

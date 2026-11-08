@@ -487,6 +487,23 @@ internal static class DiffComparer
             return null;
         }
 
+        // After the line-based field-boundary fix the same-frame instruction delta is
+        // usually a few hundred to a few thousand instructions (one field retires roughly
+        // 85,000). Label deltas below one tenth of a field as same-frame phase instead of
+        // leaving the divergence untriaged; the real work differences (the CD cadence
+        // outliers) are around 30,000 instructions.
+        const long sameFrameTolerance = 8_192;
+        if (sameDelta <= sameFrameTolerance)
+        {
+            return new InstructionPhase(
+                frame,
+                sameInstructions - fiveDoInstructions,
+                fiveDo.Pc is { } samePc
+                    && opera.Pc is { } sameOperaPc
+                    && Math.Abs((long)sameOperaPc - samePc) <= pcTolerance,
+                fiveDo.Cpsr is { } sameCpsr && opera.Cpsr == sameCpsr);
+        }
+
         // One frame retires roughly 85,000 instructions at the stock clock. Accept a
         // neighbor only when its count is within a tenth of a frame; a wider window
         // would hide real work differences (for example extra CD sector reads).

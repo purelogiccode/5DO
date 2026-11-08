@@ -76,6 +76,26 @@ shows **no CD register access during the 237,794-cycle Space Ace wait or the
 **1,922 tests**. See [`DifferentialHarness.md`](DifferentialHarness.md) 8 and
 [`TestCorpus.md`](TestCorpus.md) 1.1bb.
 
+**Frame-boundary parity (2026-11-07):** the universal frame-60 PC/CPSR phase had
+two causes. The harness finalized each Opera checkpoint at the next video
+callback, so ARM/CD state belonged to the following field while the audio hash
+was already correct; the harness now captures ARM/CD state in the checkpoint's
+own callback. `FiveDoMachine.RunFrame` also stopped on the rounded
+208,541-cycle budget while Opera stops on the 263-line scanline boundary, so the
+discarded last-batch overshoot accumulated about 3.3 instructions per field;
+`RunFrame` now ends on `Quartz.VdlFieldIndex`. On the 50-title confirmation
+panel the same-frame retired-instruction delta is **11-20** at f=60 (average
+15.3) and **23-2,223** at f=120, with **50/50 frame hashes** and **0 errors**.
+The CD count matches on **50/50 titles at f=60 and f=120** (down from 36 first
+divergences at f=120), and the first behavioral divergence moved to **11 titles
+at f=300** (8 count, 3 sequence); the other 39 titles are phase-only. This
+supersedes the "5DO frame 60 aligns with Opera frame 59" interpretation. The
+3,000-frame showcase keeps **4/5 video matches** (Road Rash is the only
+frame-hash divergence) with CD counts Lemmings 365/352, Gex 548/547, Road Rash
+851/836, Wolfenstein 862/861, and Alone 932/932. The suite is **1,923 tests**.
+See [`DifferentialHarness.md`](DifferentialHarness.md) 8 and
+[`TestCorpus.md`](TestCorpus.md) 1.1bc.
+
 Release workflow
 <https://github.com/purelogiccode/5DO/actions/runs/42399055155> passed all six bundle
 jobs and published six versioned archives plus `SHA256SUMS.txt`; all six checksums verify.

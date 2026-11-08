@@ -366,6 +366,12 @@ code. It is loaded through its `sg_*` C ABI.
   remains a 512-sample safety margin, and all 50 panel titles were within 9
   samples at frame 300. The cumulative audio hash is still not gated until the
   streams are aligned or resampled.
+- A checkpoint sample is assembled from the checkpoint's own field: the harness
+  captures PC/CPSR/instructions/CD state inside the video callback and adds the
+  audio hash after that field's audio callback. Earlier builds finalized the
+  sample at the next callback, which read ARM/CD state one field late while the
+  audio was already correct; that produced the apparent universal "frame 60
+  matches Opera frame 59" phase.
 - The core is paced in real time, so a 3000-frame capture takes about 50 seconds
   per title. Use `--resume` for long runs.
 
@@ -390,6 +396,38 @@ the reference core or the local discs.
 
 ## 8. Current evidence
 
+- **2026-11-07 frame-boundary parity (TEST-07/CORE-07).** Two independent fixes
+  removed the universal frame-60 phase. First, `OperaCoreHost` finalized each
+  checkpoint at the next video callback, so PC/CPSR/instructions and CD state
+  were read after the following field had executed; the audio hash was already
+  from the checkpoint field. The harness now captures ARM/CD state in the
+  checkpoint's own video callback and fills the audio hash when that field's
+  audio callback completes. Second, `FiveDoMachine.RunFrame` stopped on the
+  rounded ARM-cycle budget (208,541 cycles) while Opera stops on the 263-line
+  NTSC field boundary (`opera_3do_process_frame`). The discarded batch overshoot
+  accumulated ~3.3 instructions per field. `RunFrame` now ends when
+  `Quartz.VdlFieldIndex` changes, matching the reference's
+  `line < opera_region_scanlines()` loop. On the five-title sample
+  (`test63-line-boundary/report.json`) the same-frame retired-instruction delta
+  at f=60 is **8-17** instructions (was ~219 after the capture fix and ~89,000
+  before it), and at f=120 it is **24-84**; PCs match within one instruction.
+  The 50-title confirmation panel (`test64-panel50-line-boundary/report.json`)
+  captures **50/50 with 0 errors** and **50/50 frame hashes**; the same-frame
+  delta is **11-20** at f=60 and **23-2,223** at f=120, the CD count matches on
+  **50/50 titles at f=60 and f=120**, and the first behavioral divergence moved
+  to **11 titles at f=300** (8 count, 3 one-command sequence differences). The
+  other 39 titles are phase-only. This supersedes the earlier "5DO frame 60
+  aligns with Opera frame 59" interpretation: the one-field offset was a harness
+  sampling-order bug.
+- **2026-11-07 timer-14 wait trace (CORE-07/CORE-02).** On Lemmings the
+  READ_ID-to-READ_ERROR wait between commands 50 and 51 is **2,169,618 cycles**
+  in 5DO and **2,146,784** in Opera (+22,834 cycles). There are **no FIQ events**
+  and no CD register accesses during the wait. 5DO's timer 14 underflows **209
+  times** at roughly 10,400 cycles per period (`--clio-timer-trace`); Opera's
+  wait is consistent with a roughly 1% shorter period. `--clio-timers opera`
+  makes the period about 12,400 cycles and shifts the whole boot timeline, so the
+  opt-in Opera scheduler is not the fix. This narrows the remaining CD cadence
+  difference to the timer-14 period/guest wait loop, not the CD command table.
 - **2026-11-07 CD cadence triage (TEST-07/CORE-04).** The harness now classifies
   every final CD transcript and reports the largest cadence step with its
   command-issue PC and retired-instruction jump. On the existing 50-title panel

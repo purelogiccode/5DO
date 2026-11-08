@@ -2673,3 +2673,65 @@ HTML reports add a `CD cadence` column and detail line.
   PC and instruction jump, sub-threshold step suppression, transcript-kind
   assertions for equal/prefix/diverged streams, and CD register-trace output for
   command/poll/status accesses. `dotnet format` is clean.
+
+#### 1.1bc Frame-boundary parity and checkpoint capture order (2026-11-07)
+
+Two independent defects produced the universal frame-60 PC/CPSR phase:
+
+- **Capture order.** `OperaCoreHost` stored the checkpoint frame number in the
+  video callback but finalized the sample at the *next* callback. That read the
+  ARM PC/CPSR/instruction count and the CD status after the following field had
+  executed, while `_pcm` already held the audio through the checkpoint field.
+  The harness now captures ARM/CD state in the checkpoint's own video callback
+  and fills the audio hash when that field's audio callback completes.
+- **Field boundary.** `FiveDoMachine.RunFrame` stopped when the rounded
+  ARM-cycle budget (208,541 cycles) elapsed. Opera stops when the scanline
+  counter reaches `opera_region_scanlines()` (263 lines for NTSC), carrying the
+  remaining cycles in `g_FRAME_CYCLE_REMAINDER`. The last 16-cycle batch
+  overshoot was discarded, so 5DO accumulated about 3.3 extra retired
+  instructions per field. `RunFrame` now ends on a change of
+  `Quartz.VdlFieldIndex`, with a two-field safety cap.
+
+Five-title sample (`test63-line-boundary/report.json`, debug core
+`opera-build-pc`, MD5 `53c26d4cb701e3d6e3bb28e877cd502b`):
+
+| Frame | Retired-instruction delta (Opera − 5DO) | Notes |
+|---|---|---|
+| 60 (5 titles) | **8-17** | was ~89,000 before the capture fix, ~219 after it |
+| 120 (5 titles) | **24-84** | PCs match within one instruction |
+| 60 (50 titles) | **11-20** | average 15.3; 50/50 frame hashes |
+| 120 (50 titles) | **23-2,223** | most titles around 200; 50/50 CD count match |
+| 300 (50 titles) | CD cadence only | 11 titles: 8 count, 3 one-command sequence |
+
+The 50-title confirmation panel (`test64-panel50-line-boundary/report.json`)
+captures **50/50 with 0 errors** and **50/50 frame hashes**. The CD count
+matches on **50/50 titles at f=60 and f=120**, down from 36 first divergences
+at f=120; the first behavioral divergence moved to **11 titles at f=300**
+(8 `cdCommandCount` differences and 3 one-command `cdCommands` sequence
+differences). The other **39/50 titles are phase-only** at the checkpoints.
+The 3,000-frame showcase keeps **4/5 video matches** (Road Rash is the only
+frame-hash divergence) with CD counts Lemmings 365/352, Gex 548/547, Road Rash
+851/836, Wolfenstein 862/861, and Alone 932/932 (Alone's sequence hash differs
+but the video matches).
+
+The residual is below one 16-cycle batch. This supersedes the earlier
+interpretation that 5DO frame 60 aligns with Opera frame 59; that one-field
+offset was a harness sampling-order bug. `DiffComparer` now labels a same-frame
+delta of at most 256 retired instructions as same-frame phase
+(`pcPhaseFrame` = the checkpoint frame), so future reports carry
+`pcPhaseTitles` for the small residual instead of leaving it untriaged.
+
+The first remaining behavioral divergence on Lemmings is still the CD cadence
+step between commands 50 and 51: the READ_ID-to-READ_ERROR wait is **2,169,618
+cycles** in 5DO and **2,146,784** in Opera (+22,834). `--fiq-trace` has **no FIQ
+events** and `--cd-register-trace` has **no CD accesses** during the wait.
+`--clio-timer-trace` shows timer 14 underflowing **209 times** at roughly 10,400
+cycles per period; the Opera wait is consistent with a roughly 1% shorter
+period. `--clio-timers opera` changes the period to about 12,400 cycles and
+shifts the boot timeline, so the opt-in Opera scheduler is not the fix. The
+next measurement is the reference timer-14 period/slack (CORE-02).
+
+**Tests:** **1,923 pass**. New coverage: `RunFrame_EndsOnTheVdlFieldBoundary`
+runs 60 frames and asserts the VDL field index changes exactly once per frame
+and the executed cycle count stays within 64 cycles of the exact budget.
+`dotnet format` is clean.

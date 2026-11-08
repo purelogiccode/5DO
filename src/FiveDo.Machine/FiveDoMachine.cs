@@ -918,13 +918,19 @@ public sealed class FiveDoMachine
         var total = 0;
         var batch = 0;
         var frameCycles = RegionProfile.GetFrameCycles(Tuning.ArmClock);
+        var startField = Quartz.VdlFieldIndex;
+        // Opera ends a field when the VDL scanline counter reaches the region's field
+        // height, not when a rounded ARM-cycle budget elapses. Stopping on the cycle
+        // budget accumulated a few extra cycles per field and put the guest one
+        // instruction batch ahead of the reference after a few dozen frames.
+        var maxFrameCycles = frameCycles * 2;
         var celBusyTiming = Tuning.CelTiming == CelTimingMode.OperaBusy;
         var useJit = Tuning.CpuBackend == CpuBackendKind.Jit
             && instructionObserver is null
             && !celBusyTiming;
         uint celElapsedCycles = 0;
 
-        while (total < frameCycles)
+        while (Quartz.VdlFieldIndex == startField && total < maxFrameCycles)
         {
             if (celBusyTiming)
             {

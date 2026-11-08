@@ -81,14 +81,18 @@
 
 **2026-11-07, v1.4.0 release (GitHub Releases).**
 
-- **1,922 tests** are present in the current test assembly.
+- **1,923 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
-  60/120/300 with **0 errors**, and **48/50 first PC divergences instruction-align
-  to Opera frame 59** (2/50 to frame 119); the only remaining behavioral
-  divergence is CD command cadence. The per-command PC/instruction stamps show
-  the boot-handoff fix cut a **+207,707 cycle / +86,511 instruction** divergence
-  to **-818 / -376**; see
-  [`DifferentialHarness.md`](DifferentialHarness.md).
+  60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
+  now samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a
+  field on the 263-line scanline boundary like the reference. The same-frame
+  retired-instruction delta is **11-20** at frame 60 (average 15.3) and
+  **23-2,223** at frame 120. The CD count matches on **50/50 titles at f=60 and
+  f=120** (down from 36 first divergences at f=120); the first behavioral
+  divergence moved to **11 titles at f=300** (8 count, 3 sequence), and the other
+  39 titles are phase-only. The per-command PC/instruction stamps show the
+  boot-handoff fix cut a **+207,707 cycle / +86,511 instruction** divergence to
+  **-818 / -376**; see [`DifferentialHarness.md`](DifferentialHarness.md).
 - The library reports **653 games across 1,366 images**; three audio-only CHDs are
   catalogued.
 - The first full-collection loadability sweep covered **594 disc images**: **576

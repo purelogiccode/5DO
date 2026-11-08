@@ -1273,3 +1273,32 @@ M1 implements the section primitive used by all later chips:
   visible scanline. `Vdlp.ExecuteVdl` now returns without changing state; a
   pre-change Johnny Bazookatone (USA) 3,000-frame hash check produced the same
   output, so this does not regress the earlier zero-entry case.
+
+### 12.37 Line-based field boundary and checkpoint capture order (2026-11-07)
+
+- Opera's `opera_3do_process_frame` ends a field when the scanline counter reaches
+  `opera_region_scanlines()` (263 lines for NTSC, 312 for PAL). It carries the
+  remaining ARM cycles in `g_FRAME_CYCLE_REMAINDER` and consumes them at the start
+  of the next field. 5DO's `RunFrame` stopped when the rounded ARM-cycle budget
+  (`VideoRegionProfile.GetFrameCycles`, 208,541 for NTSC) elapsed. Because each
+  ARM batch is 16 cycles, the last batch overshot the budget by a few cycles and
+  that overshoot was discarded, so 5DO accumulated about 3.3 extra retired
+  instructions per field. Over 60 fields this was a ~219-instruction phase
+  difference at the same frame number.
+- `FiveDoMachine.RunFrame` now ends on a change of `Quartz.VdlFieldIndex` (the
+  same 263/312-line boundary as Opera) and keeps a two-field safety cap on the
+  cycle count. `LastFrameCycles` still reports the cycles actually executed in the
+  field, which stays within 64 cycles of the exact budget. No state format change
+  is required; the VDL and timer accumulators already carry their own fractions.
+- The differential harness's `OperaCoreHost` also finalized each checkpoint at the
+  **next** video callback. That read the ARM PC/CPSR/instruction count and the CD
+  status after the following field had already run, while the audio hash was
+  correctly one field earlier. The harness now captures the CPU/CD fields inside
+  the checkpoint's own video callback and fills in the audio hash when that
+  field's audio callback completes. This removed the apparent "5DO frame 60
+  matches Opera frame 59" one-field offset; it was a sampling-order bug in the
+  harness, not a core timing difference.
+- Evidence: on the five-title sample the same-frame retired-instruction delta at
+  frame 60 fell from ~219 to **8-17**, and at frame 120 from ~392 to **24-84**;
+  the PCs match within one instruction. The remaining `cdCommandCount`
+  divergence is unchanged and is tracked under CORE-04.
