@@ -102,6 +102,11 @@ For an isolated timing-mode A/B, use the same fresh-output pattern with
 every 5DO capture and recorded in report provenance; the reference captures are reused
 by `--resume`.
 
+`--timer-trace` writes `fivedo.timers.txt`, `fivedo.reads.txt`, and
+`opera.timers.txt`. `--cd-register-trace` writes `fivedo.cdreg.txt` and
+`opera.cdreg.txt` with command, poll, status, and data accesses (cycle and PC); use
+fresh output directories and `--force` when adding or removing either trace.
+
 Regenerate the full manifest after changing the collection:
 
 ```powershell

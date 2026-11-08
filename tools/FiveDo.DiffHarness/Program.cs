@@ -657,6 +657,9 @@ internal static class Program
                 case "--timer-trace":
                     harness.TimerTrace = true;
                     break;
+                case "--cd-register-trace":
+                    harness.CdRegisterTrace = true;
+                    break;
                 case "--cleanup-iso":
                     harness.CleanupIso = true;
                     break;
@@ -888,6 +891,7 @@ internal static class Program
         Console.WriteLine("  --no-opera         Capture 5DO only");
         Console.WriteLine("  --no-images        Skip checkpoint BMP/PNG captures");
         Console.WriteLine("  --timer-trace      Write CLIO timer traces for both engines (fivedo.timers.txt/opera.timers.txt)");
+        Console.WriteLine("  --cd-register-trace  Write CD register-access traces (fivedo.cdreg.txt/opera.cdreg.txt)");
         Console.WriteLine("  --cleanup-iso      Delete the staged ISO after a successful Opera capture");
         Console.WriteLine("  --compare-pc       Include the ARM PC and CPSR in the pass/fail gate (requires the debug core)");
         Console.WriteLine("  --compare-cd       Include the CD command count/hash in the pass/fail gate (requires the debug core)");

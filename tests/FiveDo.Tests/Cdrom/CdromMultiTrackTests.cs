@@ -25,7 +25,7 @@ public sealed class CdromMultiTrackTests
         Send(cd, 0x8C, 0x00, 0x02);
         byte[] track = ReadStatus(cd, 10);
         Assert.Equal(0x8C, track[0]);
-        Assert.Equal(0x00, track[2]);
+        Assert.Equal(0x10, track[2]);
         Assert.Equal(0x02, track[3]);
         Assert.Equal(0x00, track[5]);
         Assert.Equal(0x02, track[6]);
@@ -33,6 +33,7 @@ public sealed class CdromMultiTrackTests
 
         Send(cd, 0x8C, 0x00, 0xAA);
         byte[] leadOut = ReadStatus(cd, 10);
+        Assert.Equal(0x10, leadOut[2]);
         Assert.Equal(0xAA, leadOut[3]);
         Assert.Equal(0x02, leadOut[6]);
         Assert.Equal(0x06, leadOut[7]);
@@ -75,7 +76,7 @@ public sealed class CdromMultiTrackTests
         byte[] subQ = ReadStatus(cd, 12);
         Assert.Equal(0x87, subQ[0]);
         Assert.Equal(0x00, subQ[1]);
-        Assert.Equal(0x00, subQ[2]);
+        Assert.Equal(0x01, subQ[2]);
         Assert.Equal(0x02, subQ[3]);
         Assert.Equal(0x01, subQ[4]);
         Assert.Equal(0x00, subQ[5]);
@@ -113,7 +114,7 @@ public sealed class CdromMultiTrackTests
         Send(cd, 0x07);
         byte[] injected = ReadStatus(cd, 2);
         Assert.Equal(0x07, injected[0]);
-        Assert.Equal(0xE1, cd.DriveStatus);
+        Assert.Equal(0xE3, cd.DriveStatus);
         Assert.NotEqual(0, cd.Poll & 0x40);
         Assert.False(cd.TrayOpen);
         Assert.True(cd.DiscPresent);

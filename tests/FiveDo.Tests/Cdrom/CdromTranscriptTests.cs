@@ -79,7 +79,7 @@ public sealed class CdromTranscriptTests
         Assert.Equal(0x06, transcript.Entries[0].Opcode);
         Assert.Equal(0x07, transcript.Entries[1].Opcode);
         Assert.Equal(0, transcript.Entries[0].DriveStatus & 0xE0);
-        Assert.Equal(0xE1, transcript.Entries[1].DriveStatus);
+        Assert.Equal(0xE3, transcript.Entries[1].DriveStatus);
         Assert.True(cd.DiscPresent);
         Assert.False(cd.TrayOpen);
     }

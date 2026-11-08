@@ -87,7 +87,7 @@ public sealed class CdromDeviceTests
     {
         var cd = new CdromDevice();
 
-        Assert.Equal((byte)0xE1, cd.DriveStatus);
+        Assert.Equal((byte)0xE3, cd.DriveStatus);
         Assert.Equal(0x0F, (int)cd.GetPoll());
         Assert.False(cd.FiqPending);
     }
@@ -107,7 +107,7 @@ public sealed class CdromDeviceTests
         Assert.Equal(0x10, status[2]);
         Assert.Equal(0x00, status[3]);
         Assert.Equal(0x01, status[4]);
-        Assert.Equal(0xE1, status[11]);
+        Assert.Equal(0xE3, status[11]);
         Assert.Equal(0x0F, (int)cd.GetPoll());
     }
 
@@ -133,13 +133,31 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void ReadSessionInfoReturnsTheSingleSessionPayload()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+
+        Send(cd, 0x8D);
+        byte[] status = ReadStatus(cd, 8);
+
+        Assert.Equal(0x8D, status[0]);
+        for (var i = 1; i <= 6; i++)
+        {
+            Assert.Equal(0x00, status[i]);
+        }
+
+        Assert.Equal(0xE3, status[7]);
+    }
+
+    [Fact]
     public void DataPathCheck_ReturnsMagicBytes()
     {
         var cd = new CdromDevice();
         Send(cd, 0x80);
         var status = ReadStatus(cd, 4);
 
-        Assert.Equal(new byte[] { 0x80, 0xAA, 0x55, 0xE1 }, status);
+        Assert.Equal(new byte[] { 0x80, 0xAA, 0x55, 0xE3 }, status);
     }
 
     [Fact]
@@ -344,7 +362,7 @@ public sealed class CdromDeviceTests
         cd.EjectDisc();
 
         Assert.Null(cd.Disc);
-        Assert.Equal(0x01, cd.DriveStatus);
+        Assert.Equal(0x03, cd.DriveStatus);
         Assert.NotEqual(0, (int)cd.GetPoll() & 0x80);
     }
 
@@ -485,6 +503,59 @@ public sealed class CdromDeviceTests
     }
 
     [Fact]
+    public void ModeSelectDoubleSpeedSetsTheXbusStatusBit()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+
+        // Opera: MEI_CDROM_DOUBLE_SPEED is 0x80, not 2. The guest's boot MODE
+        // SELECT page 3 writes 0x80 and the drive advertises the XBUS 2x bit.
+        Send(cd, 0x09, 0x03, 0x80, 0x00, 0x00, 0x00, 0x00);
+
+        Assert.NotEqual(0, cd.DriveStatus & 0x02);
+        Assert.Equal(2, cd.EffectiveSpeed);
+        Assert.Equal(81_246UL, cd.DataSectorCycles);
+    }
+
+    [Fact]
+    public void ModeSelectSingleSpeedCapsTheEffectiveSpeedAtOne()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new MemoryDisc(4));
+
+        Send(cd, 0x09, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00);
+
+        Assert.Equal(0, cd.DriveStatus & 0x02);
+        Assert.Equal(1, cd.EffectiveSpeed);
+        Assert.Equal(164_591UL, cd.DataSectorCycles);
+    }
+
+    [Fact]
+    public void UnboundedSpeedIgnoresTheGuestSpeedRequest()
+    {
+        var cd = new CdromDevice { ConfiguredSpeed = CdSpeed.Unbounded };
+        cd.InsertDisc(new MemoryDisc(4));
+
+        Send(cd, 0x09, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00);
+
+        Assert.Equal(0, cd.DriveStatus & 0x02);
+        Assert.Equal(0, cd.EffectiveSpeed);
+        Assert.Equal(0UL, cd.DataSectorCycles);
+    }
+
+    [Fact]
+    public void InitializeReportsTheStockDoubleSpeedBit()
+    {
+        var cd = new CdromDevice { TimingMode = CdromTimingMode.OperaCycleBased };
+        cd.Reset();
+
+        // cdrom_init selects MEI_CDROM_DOUBLE_SPEED before the guest issues any
+        // command, so the initial status is READY | 2x, not READY alone.
+        Assert.NotEqual(0, cd.DriveStatus & 0x02);
+        Assert.Equal(2, cd.EffectiveSpeed);
+    }
+
+    [Fact]
     public void UnknownConfiguredSpeed_Throws()
     {
         var cd = new CdromDevice();
@@ -500,7 +571,7 @@ public sealed class CdromDeviceTests
         cd.EjectDisc();
 
         // FreeDO XBP_RESET(NULL) calls Init(), which reasserts the tray/disc/spin bits.
-        Assert.Equal((byte)0xE1, cd.DriveStatus);
+        Assert.Equal((byte)0xE3, cd.DriveStatus);
         Assert.Null(cd.Disc);
     }
 

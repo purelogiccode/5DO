@@ -268,12 +268,12 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 
 - CD command/status timing is approximate. The README/plan describe the remaining
   `libopera` differential work; do not port `opera_cdrom.c` wholesale.
-- The former static READ_ID-only wait states are now addressed by a CD media-access
-  pulse: two consecutive READ_ID polls with at least 50 frames between them set poll
-  bit `0x40`, which Portfolio uses to finish a post-race/post-load transition. This
-  advances Road Rash's ~42k/~92k/100k screens to `BUSTED`, race select, and a new
-  race. Alone's intro and Wolfenstein's fresh-game load share the old signature and
-  should be re-checked with this fix. The current 3,000-frame audio-clock keys are in
+- The READ_ID media-access heuristic was retired. It raised a false `POLMA` level FIQ
+  and shifted Space Ace's 3,000-frame hash; the reference's poll enables plus the
+  level-held XBUS FIQ are the current model. The CD register trace now shows matching
+  command bytes, status bytes, and sector data through the first command-sequence
+  divergence on 20th Century Video Almanac; the residual there is guest sleep time, not
+  CD readiness. The current 3,000-frame audio-clock keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1.
 - High-resolution mode is opt-in and validated mainly with Lemmings. It line-doubles
   240 lines to 480; it is not true vertical high-resolution rendering. A true 640x240

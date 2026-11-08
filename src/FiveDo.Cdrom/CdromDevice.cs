@@ -32,6 +32,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private const byte BlockFlagError = 0x80;
 
     private const byte CdCtlAudioTrack = 0x00;
+    private const byte CdCtlQPosition = 0x10;
 
     private const byte DensityDigitalAudio = 0x82;
 
@@ -55,6 +56,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private const byte Cdst2X = 0x02;
     private const byte CdstReady = 0x01;
 
+    // Opera: MEI_CDROM_DOUBLE_SPEED. MODE SELECT page 3 stores this byte and
+    // cdrom_mode_apply_drive_speed maps it to the XBUS 2x status bit.
+    private const byte MeiDoubleSpeed = 0x80;
+
     private const byte CdCtlDataTrack = 0x04;
 
     private readonly byte[] _status = new byte[256];
@@ -74,8 +79,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private MeiError _meiStatus;
     private DiscState _discState = new();
     private int _currentSector;
+    private int _totalSectorCount;
     private CdromTimingMode _timingMode = CdromTimingMode.FreeDoCompatible;
     private CdSpeed _configuredSpeed = CdSpeed.X2;
+    private byte _driveSpeedByte = MeiDoubleSpeed;
     private int _armClock = EmulatorConstants.ArmClock;
     private ulong _cycles;
     private ulong _nextReadyCycle;
@@ -113,10 +120,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <see cref="CdromTimingMode.OperaCycleBased"/>. The stock 3DO drive is 2x.
     /// </summary>
     /// <remarks>
-    /// The drive status does not advertise the 2x bit in 5DO, so the configured speed is
-    /// treated as the drive's effective speed instead of being reduced to 1x. This keeps the
-    /// default CORE-04 timing unchanged and makes the speed option measurable; the status-bit
-    /// divergence is recorded in <c>docs/PortingNotes.md</c>.
+    /// The guest's MODE SELECT page 3 speed byte sets the XBUS 2x status bit. Like Opera's
+    /// <c>cdrom_effective_speed</c>, a configured speed above 1x drops to 1x when the guest
+    /// has selected single speed. <see cref="CdSpeed.Unbounded"/> stays unbounded because the
+    /// reference treats configured speed 0 as a host override that bypasses the guest request.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
     public CdSpeed ConfiguredSpeed
@@ -141,7 +148,27 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     }
 
     /// <summary>Gets the effective speed multiplier, or 0 for <see cref="CdSpeed.Unbounded"/>.</summary>
-    public int EffectiveSpeed => (int)_configuredSpeed;
+    /// <remarks>
+    /// Opera: <c>cdrom_effective_speed</c>. The configured host speed is the ceiling; the
+    /// guest's MODE SELECT page 3 request caps it at single speed until the 2x bit is set
+    /// again. This keeps the stock 2x default while following a guest that explicitly selects
+    /// single speed.
+    /// </remarks>
+    public int EffectiveSpeed
+    {
+        get
+        {
+            var configured = (int)_configuredSpeed;
+            if (configured == 0 || configured == 1)
+            {
+                return configured;
+            }
+
+            return RequestedSpeed == 1 ? 1 : configured;
+        }
+    }
+
+    private int RequestedSpeed => _driveSpeedByte == MeiDoubleSpeed ? 2 : 1;
 
     /// <summary>Gets the native sector size selected by the most recent MODE SET block page.</summary>
     /// <remarks>
@@ -260,13 +287,13 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// </remarks>
     private bool UseOperaPollSemantics => _timingMode == CdromTimingMode.OperaCycleBased;
 
-    private uint OverheadCompensationX10Usec => _configuredSpeed switch
+    private uint OverheadCompensationX10Usec => EffectiveSpeed switch
     {
-        CdSpeed.X1 => 1660,
-        CdSpeed.X2 => 1670,
-        CdSpeed.X4 => 1690,
-        CdSpeed.X8 => 1695,
-        CdSpeed.X16 => 1704,
+        1 => 1660,
+        2 => 1670,
+        4 => 1690,
+        8 => 1695,
+        16 => 1704,
         _ => 1695,
     };
 
@@ -445,9 +472,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// <remarks>
     /// Version 2 adds the cycle-based data-sector clock and deadline. Version 3 adds the
     /// MODE SET sector size/block flags and the PLAY_AUDIO playback position. Version 4
-    /// adds the CD-DA mix volume and mute flag.
+    /// adds the CD-DA mix volume and mute flag. Version 5 adds the guest drive-speed mode
+    /// and the volume-header readable-disc limit.
     /// </remarks>
-    public ushort Version => 4;
+    public ushort Version => 5;
 
     /// <summary>Inserts a disc and initializes the drive for it.</summary>
     /// <param name="disc">Disc source. The device does not take ownership.</param>
@@ -482,7 +510,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _audioSampleLba = 0;
         _audioSampleOffset = 0;
         _xbusStatus = 0;
+        _totalSectorCount = 0;
         ResetPoll();
+        // Opera's cdrom_mode_reset selects MEI_CDROM_DOUBLE_SPEED, so the stock
+        // drive reports the XBUS 2x bit before the guest writes MODE SELECT.
+        _driveSpeedByte = MeiDoubleSpeed;
+        ApplyDriveSpeed();
         if (UseOperaPollSemantics)
         {
             // Opera: no media callback means the door is closed and the drive is
@@ -505,7 +538,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _discState.LastTrack = 1;
         SetMsf(_discState.CurrentAbsoluteMsf, 0, 2, 0);
         _discState.DiscId = 0;
-        SetTocEntry(1, CdCtlDataTrack, track: 1, minute: 0, second: 2, frame: 0);
+        SetTocEntry(1, CdCtlDataTrack | CdCtlQPosition, track: 1, minute: 0, second: 2, frame: 0);
 
         _discState.TempLba = 150;
         LbaToMsf();
@@ -568,7 +601,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _audioSampleLba = 0;
         _audioSampleOffset = 0;
         _xbusStatus = 0;
+        _totalSectorCount = 0;
         ResetPoll();
+        _driveSpeedByte = MeiDoubleSpeed;
+        ApplyDriveSpeed();
         _xbusStatus |= CdstTray;
         _xbusStatus |= CdstReady;
         _xbusStatus |= CdstDisc;
@@ -580,16 +616,21 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _discState.LastTrack = 1;
         SetMsf(_discState.CurrentAbsoluteMsf, 0, 2, 0);
         _discState.DiscId = 0;
-        SetTocEntry(1, CdCtlDataTrack, track: 1, minute: 0, second: 2, frame: 0);
+        SetTocEntry(1, CdCtlDataTrack | CdCtlQPosition, track: 1, minute: 0, second: 2, frame: 0);
 
         // FreeDO's InitCD adds 150 to the sector count before LBA2MSF, but LBA2MSF
         // already adds the 150-frame lead-in. The double-add makes the reported
         // disc end 150 frames larger than the actual sector count. The CD DIPIR
         // rejects a disc when the reported end exceeds the volume block count by
         // more than 512 frames, which is why discs with less than ~360 blocks of
-        // padding (for example Road Rash) were treated as invalid. Report the real
-        // end instead: TotalFrames = SectorCount, i.e. MSF = SectorCount + 150.
-        var sectorCount = (uint)(_disc?.SectorCount ?? 0);
+        // padding (for example Road Rash) were treated as invalid.
+        //
+        // Opera reports the 3DO volume header's volume_block_count (sector 0,
+        // offset 0x50, big-endian), not the physical image size. The two differ on
+        // pressed discs (this title: 327,168 declared vs 327,320 physical), and the
+        // declared count is the reference's readable-disc limit.
+        _totalSectorCount = ResolveSectorCount();
+        var sectorCount = (uint)_totalSectorCount;
         _discState.TempLba = (int)sectorCount;
         LbaToMsf();
         CopyMsf(_discState.TotalMsf, _discState.TempMsf);
@@ -667,6 +708,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             result = _data[_dataPointer];
             _dataLength--;
             _dataPointer++;
+            TraceRegister("datr", result);
 
             if (_dataLength == 0)
             {
@@ -751,6 +793,18 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _poll = (byte)((_poll & 0xf0) | (control & (PollStatusMask | PollDataMask | PollMediaMask)));
     }
 
+    private void ApplyDriveSpeed()
+    {
+        if (_driveSpeedByte == MeiDoubleSpeed)
+        {
+            _xbusStatus |= Cdst2X;
+        }
+        else
+        {
+            _xbusStatus &= unchecked((byte)~Cdst2X);
+        }
+    }
+
     private void ResetPoll()
     {
         // Opera: 0x220/0x540 reset leaves all three interrupt enables set. POLRE is
@@ -808,6 +862,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteInt32(_requested);
         writer.WriteUInt32((uint)_meiStatus);
         writer.WriteInt32(_currentSector);
+        writer.WriteInt32(_totalSectorCount);
         writer.WriteBytes(_status);
         writer.WriteBytes(_data);
         writer.WriteBytes(_command);
@@ -817,6 +872,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         writer.WriteInt32(_readSectorSize);
         writer.WriteByte(_densityCode);
         writer.WriteByte(_blockFlags);
+        writer.WriteByte(_driveSpeedByte);
         writer.WriteByte(_audioPlaying ? (byte)1 : (byte)0);
         writer.WriteInt32(_audioStartLba);
         writer.WriteInt32(_audioEndLba);
@@ -860,6 +916,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public void Load(IStateReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
+        int version = reader is StateSectionReader header ? header.Version : int.MaxValue;
         _poll = reader.ReadByte();
         _xbusStatus = reader.ReadByte();
         _statusLength = reader.ReadByte();
@@ -869,6 +926,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         _requested = reader.ReadInt32();
         _meiStatus = (MeiError)reader.ReadUInt32();
         _currentSector = reader.ReadInt32();
+        _totalSectorCount = version >= 5 ? reader.ReadInt32() : ResolveSectorCount();
+        if (_totalSectorCount < 0)
+        {
+            throw new InvalidStateException($"Invalid CD-ROM sector count {_totalSectorCount}.");
+        }
+
         reader.ReadBytes(_status);
         reader.ReadBytes(_data);
         reader.ReadBytes(_command);
@@ -892,7 +955,6 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _readStatusPending = false;
         }
 
-        int version = reader is StateSectionReader section ? section.Version : int.MaxValue;
         if (version >= 3)
         {
             _readSectorSize = reader.ReadInt32();
@@ -903,6 +965,18 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
             _densityCode = reader.ReadByte();
             _blockFlags = reader.ReadByte();
+            if (version >= 5)
+            {
+                _driveSpeedByte = reader.ReadByte();
+            }
+            else
+            {
+                // Version 3/4 stored only the derived XBUS bit. The guest-selected
+                // single-speed mode is lost while ejected, but the common case is
+                // recoverable from the status byte.
+                _driveSpeedByte = (_xbusStatus & Cdst2X) != 0 ? MeiDoubleSpeed : (byte)0;
+            }
+
             byte audioPlaying = reader.ReadByte();
             if (audioPlaying > 1)
             {
@@ -1292,17 +1366,19 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
                 break;
             case 0x8D: // read session information
+                // Opera: payload[0] = session_valid ? 0x80 : 0, then the session
+                // MSF, then two zero bytes. 5DO does not model multi-session TOCs,
+                // so the single-session value is all zero.
                 _statusLength = 8;
                 _status[0] = 0x8D;
                 if ((_xbusStatus & CdstTray) != 0 && (_xbusStatus & CdstDisc) != 0)
                 {
-                    _status[1] = 0x00;
-                    _status[2] = 0x00;
-                    _status[3] = 0x02;
-                    _status[4] = 0x00;
-                    _status[5] = 0x00;
+                    for (var i = 1; i <= 6; i++)
+                    {
+                        _status[i] = 0x00;
+                    }
+
                     _xbusStatus |= CdstReady;
-                    _status[6] = 0x00;
                     _status[7] = _xbusStatus;
                     _meiStatus = MeiError.NoError;
                 }
@@ -1464,15 +1540,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 break;
             case 3: // drive speed
                 accepted = true;
-                if (_command[2] == 2)
-                {
-                    _xbusStatus |= Cdst2X;
-                }
-                else
-                {
-                    _xbusStatus &= unchecked((byte)~Cdst2X);
-                }
-
+                _driveSpeedByte = _command[2];
+                ApplyDriveSpeed();
                 break;
             default:
                 accepted = false;
@@ -1619,12 +1688,32 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         SetStatus(command);
     }
 
-    private int TotalSectorCount => _disc switch
+    private int TotalSectorCount => _totalSectorCount;
+
+    private int ResolveSectorCount()
     {
-        ITrackedDiscSource tracked => tracked.TotalSectorCount,
-        not null => _disc.SectorCount,
-        _ => 0,
-    };
+        int physical = _disc?.SectorCount ?? 0;
+        if (_disc is null || physical == 0)
+        {
+            return physical;
+        }
+
+        // Audio-only discs have no 3DO volume header; the TOC is the only limit.
+        if (_disc is ITrackedDiscSource tracked
+            && tracked.Tracks.Count > 0
+            && tracked.Tracks[0].IsAudio)
+        {
+            return physical;
+        }
+
+        var header = new byte[RequestSize];
+        _disc.ReadSector(0, header);
+        int declared = (header[0x50] << 24)
+            | (header[0x51] << 16)
+            | (header[0x52] << 8)
+            | header[0x53];
+        return declared > 0 && declared <= physical ? declared : physical;
+    }
 
     private static DiscTrack? FindTrackByNumber(ITrackedDiscSource tracked, int number)
     {
@@ -1665,6 +1754,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
         _xbusStatus &= unchecked((byte)~CdstError);
         _meiStatus = MeiError.NoError;
+        // Opera: inject re-applies the stored drive-speed mode. Eject clears the
+        // 2x status bit, so injecting must restore it from the guest's MODE SELECT.
+        ApplyDriveSpeed();
         if (_disc is ITrackedDiscSource tracked)
         {
             BuildToc(tracked);
@@ -1970,14 +2062,14 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             int absoluteFrame = track.StartLba + 150;
             SetTocEntry(
                 track.Number,
-                track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack,
+                (byte)((track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack) | CdCtlQPosition),
                 (byte)track.Number,
                 (byte)(absoluteFrame / (60 * 75)),
                 (byte)((absoluteFrame / 75) % 60),
                 (byte)(absoluteFrame % 75));
         }
 
-        _discState.TempLba = tracked.TotalSectorCount;
+        _discState.TempLba = _totalSectorCount;
         LbaToMsf();
         CopyMsf(_discState.TotalMsf, _discState.TempMsf);
     }
@@ -1994,7 +2086,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
         int absoluteFrame = lba + 150;
         int relative = lba - track.StartLba;
-        byte control = track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack;
+        byte control = (byte)((track.IsAudio ? CdCtlAudioTrack : CdCtlDataTrack) | CdCtlQPosition);
         byte controlAddress = (byte)(((control << 4) & 0xF0) | ((control >> 4) & 0x0F));
         payload =
         [

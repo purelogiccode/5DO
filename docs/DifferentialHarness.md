@@ -151,10 +151,10 @@ Useful run flags: `--resume`, `--force`, `--title <filter>`, `--limit N`,
 `--no-images`, `--cleanup-iso`, `--seed <n>`, `--compare-pc`, `--compare-cd`,
 `--compare-audio`, `--pc-tolerance <bytes>`,
 `--arm-timing freedo|arm60`, `--clio-timers freedo|opera`,
-`--cel-timing freedo|opera`, `--cd-timing freedo|opera`, `--timer-trace`, and
-`--profile compatible|accuracy|performance|custom`. The default fixed seed is
-1488; it is applied to both engines and recorded in each capture and in the
-report provenance.
+`--cel-timing freedo|opera`, `--cd-timing freedo|opera`, `--timer-trace`,
+`--cd-register-trace`, and `--profile compatible|accuracy|performance|custom`.
+The default fixed seed is 1488; it is applied to both engines and recorded in each
+capture and in the report provenance.
 The timing and profile overrides replace the manifest option for every 5DO capture, so
 one manifest can drive both sides of an ARM, CLIO, CEL, CD, or profile A/B run without
 editing the manifest. Use a fresh `--out` directory (or `--force`) when changing an
@@ -448,6 +448,15 @@ code. It is loaded through its `sg_*` C ABI.
   `opera_clio.c`/`opera_clio.h`; `opera_xbus.c` calls them for XBUS levels. Reproduce
   them on a fresh `References/CPP_SimpleGui` checkout if the gitignored tree is
   rebuilt.
+- `--cd-register-trace` writes `fivedo.cdreg.txt` and `opera.cdreg.txt` per title. The
+  reference core exposes `sg_debug_cd_register_count`, `..._cycle_at`, `..._pc_at`,
+  `..._op_at`, and `..._value_at`. It records command bytes (`cmdw`), poll writes and
+  reads (`pollw`/`pollr`), status reads (`statusr`), data writes (`dataw`), and data
+  reads (`datr`) with cycle and PC stamps, matching 5DO's `--cd-register-trace`. The
+  5DO trace also records `datr_empty` for an empty data read. The arrays are
+  diagnostic-only; a core without the exports still runs and logs that the trace was
+  not written. Command/status/data value comparison uses the `cmdw`/`statusr`/`datr`
+  sequences; poll counts include guest polling only.
 - `sg_debug_arm_instructions` counts calls to `opera_arm_execute`. The harness
   records it beside 5DO's `instructions` and prints the delta per checkpoint; it
   is diagnostic-only, not a gate.
@@ -497,6 +506,29 @@ title still diverges). Intentional changes update the baseline in the same
 change.
 
 ## 8. Current evidence
+
+- **2026-11-08 CD register trace, status parity, and the 20th Century read schedule
+  (CORE-04).** `--cd-register-trace` now writes matched `fivedo.cdreg.txt` and
+  `opera.cdreg.txt` files. The reference plugin records every command byte, poll
+  write/read, status read, and data read with cycle and PC; 5DO records `datr` for
+  every non-empty data read in addition to `datr_empty`. On 20th Century Video Almanac
+  (290 frames, unbounded CD speed, accuracy profile) the two engines' command packets,
+  status bytes, and sector data are **identical through command 105**; the first
+  command sequence divergence is command 106 (5DO `READ_DATA` vs Opera `READ_ID`).
+  The trace also exposed four CD metadata divergences that are now fixed: the XBUS 2x
+  status bit (MODE SELECT page 3 uses `0x80`, and the drive starts at double speed),
+  the guest speed cap (`cdrom_effective_speed`), the readable-disc limit (3DO volume
+  header `volume_block_count`, not the physical image size), and the TOC Q-position
+  bit plus READ_SESSION_INFO payload. The remaining 20th Century wait is guest sleep
+  time (6 frames in 5DO vs 60 in Opera) with matching CD values, so CORE-04's residual
+  is not a CD register-contract difference. The 11-title `cd-cadence` panel keeps the
+  same first mismatch indices. The confirmation panel
+  (`test110-panel50-metadata/report.json`, 50 titles, 300 frames) captures **50/50
+  titles with 0 errors**, **0 frame-hash divergences**, **150/150 aligned audio
+  fields**, **39 phase-only** titles, and the same **11 CD-only first behavioral
+  divergences** at f=300. **2,048 tests pass.** Build and format are clean; the local
+  InspectCode host crashed before emitting a result in this session, and the prior
+  complete run was clean.
 
 - **2026-11-08 audio gating, scripted input, and nightly baseline (TEST-07).**
   The 300-frame panel now compares the cumulative audio hash. The alignment probe

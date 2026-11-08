@@ -2913,3 +2913,43 @@ f=600. The first opcode mismatch is 5DO `0x10` (READ_DATA) versus Opera `0x83`
 real guest CD read-schedule difference that reaches the audio stream, not a
 300-frame in-flight artifact.
 **2,043 tests pass**; build, format, and InspectCode are clean.
+
+### 1.1bf CORE-04 CD register trace and status/metadata parity (2026-11-08)
+
+The debug reference core now records every CD command byte, poll write/read, status
+read, and data read with cycle and PC (`sg_debug_cd_register_*`), and the differential
+harness writes matched `fivedo.cdreg.txt`/`opera.cdreg.txt` files with
+`--cd-register-trace`. 5DO records `datr` for every non-empty data read in addition to
+`datr_empty`.
+
+On 20th Century Video Almanac (290 frames, unbounded speed, accuracy profile) the
+command packets, status bytes, and 2048-byte sector data are **identical through command
+105**, the last command before the sequence divergence; the first mismatch is command
+106 (5DO `READ_DATA` vs Opera `READ_ID`). The trace exposed four reference divergences
+now fixed:
+
+- The XBUS 2x status bit: `MEI_CDROM_DOUBLE_SPEED` is `0x80`, not `2`, and
+  `cdrom_mode_reset` starts the drive at double speed. The drive now reports `0xE3`
+  from reset, the guest's MODE SELECT page 3 byte drives the bit, and the stored mode
+  is re-applied on inject.
+- `EffectiveSpeed` follows `cdrom_effective_speed`: unbounded stays unbounded,
+  configured 1x stays 1x, and any configured speed above 1x drops to 1x while the guest
+  has selected single speed. The overhead compensation follows the effective speed.
+- The readable-disc limit is the 3DO volume header's `volume_block_count` (sector 0,
+  offset `0x50`, big-endian), not the physical image size. 20th Century declares
+  327,168 blocks in a 327,320-sector image; READ_DISC_INFO and the READ_DATA end checks
+  now match the reference.
+- TOC control bytes include the Q-position bit (`0x10`), and READ_SESSION_INFO returns
+  the reference's 8-byte single-session payload.
+
+The CD-ROM save-state section is version 5 for the guest speed mode and readable limit.
+The confirmation panel (`artifacts/diff/test110-panel50-metadata/report.json`, 50 titles,
+300 frames, debug core `opera-build-timers/OperaCore.dll`) captures **50/50 titles with
+0 errors**, **0 frame-hash divergences**, **150/150 aligned audio fields**, **39
+phase-only** titles, and the same **11 CD-only first behavioral divergences** at f=300.
+The remaining 20th Century difference is guest sleep time (6 frames in 5DO vs 60 in
+Opera) with matching CD values, so the residual is not the CD register contract; the
+next measurement is the wake source (FIQ/timer/SPORT). The 11-title `cd-cadence` panel
+keeps the same first mismatch indices. **2,048 tests pass**; build and format are
+clean. The local InspectCode host crashed before emitting a result in this session; the
+prior complete run was clean.

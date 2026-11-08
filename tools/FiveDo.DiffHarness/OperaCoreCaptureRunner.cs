@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -93,7 +94,8 @@ internal static class OperaCoreCaptureRunner
             seed,
             Path.Combine(titleDirectory, "opera.log.txt"),
             harness.NoImages ? null : Path.Combine(titleDirectory, "images"),
-            harness.TimerTrace ? Path.Combine(titleDirectory, "opera.timers.txt") : null);
+            harness.TimerTrace ? Path.Combine(titleDirectory, "opera.timers.txt") : null,
+            harness.CdRegisterTrace ? Path.Combine(titleDirectory, "opera.cdreg.txt") : null);
 
         CaptureResult result = host.Execute();
         return new CaptureResult
@@ -246,6 +248,7 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly string _logPath;
     private readonly string? _imageDirectory;
     private readonly string? _timerTracePath;
+    private readonly string? _cdRegisterTracePath;
     private readonly List<string> _log = [];
     private readonly Lock _logLock = new();
     private readonly Dictionary<int, CaptureSample> _samples = [];
@@ -276,6 +279,11 @@ internal sealed class OperaCoreHost : IDisposable
     private readonly DebugUInt32Index32? _debugCdCycleAt;
     private readonly DebugUInt32Index32? _debugCdPcAt;
     private readonly DebugUInt32Index32? _debugCdInstructionsAt;
+    private readonly DebugUInt32? _debugCdRegisterCount;
+    private readonly DebugUInt32Index32? _debugCdRegisterCycleAt;
+    private readonly DebugUInt32Index32? _debugCdRegisterPcAt;
+    private readonly DebugUInt32Index? _debugCdRegisterOpAt;
+    private readonly DebugUInt32Index32? _debugCdRegisterValueAt;
     private readonly DebugUInt32? _debugTimerEventCount;
     private readonly DebugUInt32Index32? _debugTimerCycleAt;
     private readonly DebugUInt32Index32? _debugTimerPcAt;
@@ -318,7 +326,8 @@ internal sealed class OperaCoreHost : IDisposable
         uint seed,
         string logPath,
         string? imageDirectory,
-        string? timerTracePath = null)
+        string? timerTracePath = null,
+        string? cdRegisterTracePath = null)
     {
         _isoPath = isoPath;
         _targetFrames = targetFrames;
@@ -329,6 +338,7 @@ internal sealed class OperaCoreHost : IDisposable
         _logPath = logPath;
         _imageDirectory = imageDirectory;
         _timerTracePath = timerTracePath;
+        _cdRegisterTracePath = cdRegisterTracePath;
 
         _library = NativeLibrary.Load(corePath);
         _apiVersion = Load<ApiVersion>("sg_api_version");
@@ -356,6 +366,11 @@ internal sealed class OperaCoreHost : IDisposable
         _debugCdCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_cycle_at");
         _debugCdPcAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_pc_at");
         _debugCdInstructionsAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_instructions_at");
+        _debugCdRegisterCount = TryLoad<DebugUInt32>("sg_debug_cd_register_count");
+        _debugCdRegisterCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_register_cycle_at");
+        _debugCdRegisterPcAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_register_pc_at");
+        _debugCdRegisterOpAt = TryLoad<DebugUInt32Index>("sg_debug_cd_register_op_at");
+        _debugCdRegisterValueAt = TryLoad<DebugUInt32Index32>("sg_debug_cd_register_value_at");
         _debugTimerEventCount = TryLoad<DebugUInt32>("sg_debug_timer_event_count");
         _debugTimerCycleAt = TryLoad<DebugUInt32Index32>("sg_debug_timer_cycle_at");
         _debugTimerPcAt = TryLoad<DebugUInt32Index32>("sg_debug_timer_pc_at");
@@ -442,6 +457,7 @@ internal sealed class OperaCoreHost : IDisposable
             FinalizePending();
             var (cdCommands, cdCommandCycles, cdCommandPcs, cdCommandInstructions) = ReadCdCommands();
             WriteTimerTrace();
+            WriteCdRegisterTrace();
 
             clock.Stop();
             var samples = _checkpoints
@@ -883,6 +899,57 @@ internal sealed class OperaCoreHost : IDisposable
         catch (IOException)
         {
             // The timer trace is diagnostic; never fail a capture because of it.
+        }
+    }
+
+    private void WriteCdRegisterTrace()
+    {
+        if (_cdRegisterTracePath is null)
+        {
+            return;
+        }
+
+        if (_debugCdRegisterCount is null)
+        {
+            lock (_logLock)
+            {
+                _log.Add(
+                    "debug: sg_debug_cd_register_count is unavailable; CD register trace was not written.");
+            }
+
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_cdRegisterTracePath))!);
+            var count = _debugCdRegisterCount();
+            using var writer = new StreamWriter(_cdRegisterTracePath);
+            for (uint index = 0; index < count; index++)
+            {
+                var cycle = _debugCdRegisterCycleAt?.Invoke(index) ?? 0;
+                var pc = _debugCdRegisterPcAt?.Invoke(index) ?? 0;
+                var op = _debugCdRegisterOpAt?.Invoke(index) ?? 0xFF;
+                var value = _debugCdRegisterValueAt?.Invoke(index) ?? 0;
+                var name = op switch
+                {
+                    0 => "cmdw",
+                    1 => "pollw",
+                    2 => "pollr",
+                    3 => "statusr",
+                    4 => "dataw",
+                    5 => "datr",
+                    _ => "unknown",
+                };
+                writer.WriteLine(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"cdreg f=-1 cycle={cycle} pc={pc:x8} {name} {value:x}"));
+            }
+        }
+        catch (IOException)
+        {
+            // The CD register trace is diagnostic; never fail a capture because of it.
         }
     }
 

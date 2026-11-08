@@ -93,6 +93,12 @@ internal static class FiveDoCaptureRunner
             arguments.Add(Path.Combine(titleDirectory, "fivedo.clio.txt"));
         }
 
+        if (harness.CdRegisterTrace)
+        {
+            arguments.Add("--cd-register-trace");
+            arguments.Add(Path.Combine(titleDirectory, "fivedo.cdreg.txt"));
+        }
+
         var imageDirectory = Path.Combine(titleDirectory, "images");
         if (!harness.NoImages)
         {

@@ -816,10 +816,23 @@ M1 implements the section primitive used by all later chips:
   1,660 (1x), 1,670 (2x), 1,690 (4x), 1,695 (8x), 1,704 (16x), and 1,695 for 24x/32x.
   `Unbounded` returns zero so the requested sector is published immediately. The FreeDO
   timing path ignores the speed and remains immediate.
-- The drive status does not advertise the XBUS 2x bit in 5DO, so the configured speed is
-  treated as the effective speed instead of following Opera's reduction to 1x when the
-  bit is clear. Do not set the 2x bit as part of a speed change without re-baselining the
-  CD transcripts; it changes every status response.
+- The drive advertises the XBUS 2x bit like the reference: `cdrom_mode_reset` selects
+  `MEI_CDROM_DOUBLE_SPEED` (`0x80`), so the initial status is `0xE3` and the guest's
+  MODE SELECT page 3 byte drives the bit afterwards. `CdromDevice.EffectiveSpeed` follows
+  `cdrom_effective_speed`: unbounded stays unbounded, a configured 1x stays 1x, and any
+  configured speed above 1x drops to 1x while the guest has selected single speed. The
+  mode byte is stored separately from the status bit because eject clears the bit and the
+  reference's inject command re-applies the stored mode.
+- The readable-disc limit is the 3DO volume header's `volume_block_count` (sector 0,
+  offset `0x50`, big-endian), not the physical image size. On pressed discs the two
+  differ (20th Century Video Almanac declares 327,168 blocks in a 327,320-sector image),
+  and the reference uses the declared count for READ_DATA end checks and READ_DISC_INFO.
+  Audio-only discs fall back to the TOC length. If the declared count is zero or exceeds
+  the physical image, the physical count is used.
+- TOC control bytes include the Q-position bit (`0x10`), matching
+  `CD_CTL_DATA_TRACK | CD_CTL_Q_POSITION` and the reference's `cdrom_toc_position_control`.
+  READ_SESSION_INFO (`0x8D`) returns the reference's single-session payload (8 status
+  bytes, all zero payload); multi-session TOC metadata is not modeled yet.
 - `EmulationProfile` is a host-side shortcut over the timing options, not a new machine
   mode. `EmulationProfiles.Apply` preserves fixes, high-res, backend, and seed.
   `Detect` compares the actual options (including the ARM clock) and returns `Custom` on

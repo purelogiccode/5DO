@@ -53,10 +53,28 @@ wired into both engines: the five-title, 900-frame `samples5-input` panel matche
 **5/5 frame hashes at 60/300/600**, the generic menu script changes guest output at
 600/900, and the no-input control confirms the matches are not from an ignored script.
 The nightly workflow now runs the showcase fresh, uploads `report.html`, and fails only
-when a 5DO field changes against the checked-in baseline. The suite is **2,043 tests**;
+when a 5DO field changes against the checked-in baseline. The suite is **2,048 tests**;
 build, format, and InspectCode are clean. See
 [`DifferentialHarness.md`](DifferentialHarness.md) §4.1/§4.2/§6 and
 [`TestCorpus.md`](TestCorpus.md) 1.1bd.
+
+**CORE-04 CD register and metadata parity update (2026-11-08):** the debug reference core
+now records every CD command byte, poll write/read, status read, and data read with
+cycle and PC, and the harness writes matched `fivedo.cdreg.txt`/`opera.cdreg.txt` traces
+with `--cd-register-trace`. On 20th Century Video Almanac the two engines' command
+packets, status bytes, and 2048-byte sector data are identical through command 105, the
+last command before the sequence divergence; the remaining difference is guest sleep
+time, not the CD register contract. The trace exposed and fixed the XBUS 2x status bit
+(`MEI_CDROM_DOUBLE_SPEED` is `0x80`, and the drive starts at double speed), the guest
+speed cap in `cdrom_effective_speed`, the readable-disc limit (3DO volume header
+`volume_block_count`, not the physical image size), and the TOC Q-position bit plus the
+8-byte READ_SESSION_INFO payload. The confirmation panel
+(`test110-panel50-metadata`, 50 titles, 300 frames) captures **50/50 with 0 errors**,
+**0 frame-hash divergences**, **150/150 aligned audio fields**, **39 phase-only**
+titles, and the same **11 CD-only first behavioral divergences** at f=300. The CD-ROM
+save-state section is version 5. The suite is **2,048 tests**; build and format are
+clean. See [`TestCorpus.md`](TestCorpus.md) 1.1bf and
+[`PortingNotes.md`](PortingNotes.md) 12.19.
 
 **1.4.0 release update (2026-11-07):** **v1.4.0** adds online cover art (473 unique
 WebP covers, 645/653 game IDs mapped), VID-12 run-ahead/frame-delay/VRR/audio-sync
