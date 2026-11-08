@@ -3032,8 +3032,8 @@ and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. T
 | 5DO automated loadability | 307 |
 | 5DO untested | 0 |
 | 5DO ahead of 4DO | 5 (Alone in the Dark, DinoPark Tycoon, Orbatak, Psychic Detective, Shootout at Old Tucson) |
-| 5DO behind 4DO | 23 after Tier B batch 4 (8 initially; batches 1-4 turned unknown rows into explicit grades) |
-| 5DO behind Phoenix | 26 after Tier B batch 4 (10 initially) |
+| 5DO behind 4DO | 22 after Tier B batch 4 (8 initially; batches 1-4 turned unknown rows into explicit grades) |
+| 5DO behind Phoenix | 25 after Tier B batch 4 (10 initially) |
 | Loadability regressions | 0 |
 
 **Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
@@ -3161,13 +3161,13 @@ where **both** 4DO and Phoenix claim `Playable`/`Good` and 5DO had only automate
 loadability evidence. The run used the same 36,000-frame generic script, `--bios-auto`,
 and four parallel jobs. All 32 completed with exit code 0 and `dspRunning: true`.
 
-**26 promoted to `Good`:** Lost Eden, Lost Files of Sherlock Holmes, Lucienne's Quest,
+**27 promoted to `Good`:** Lost Eden, Lost Files of Sherlock Holmes, Lucienne's Quest,
 Mad Dog McCree, Mazer, MegaRace, Microcosm, Need for Speed, Novastorm, Out of This World,
 OverDrivin', PaTaank, Pebble Beach Golf Links, Perfect General, Phoenix 3, Plumbers Don't
 Wear Ties, PO'ed, Policenauts, Primal Rage, Psychic Detective, Quarantine, Real Pinball,
-Return Fire, Rise of the Robots, Road Rash, and Panzer General.
+Return Fire, Rise of the Robots, Road Rash, Panzer General, and Quarterback Attack.
 
-**6 kept `Playable`:**
+**5 kept `Playable`:**
 
 | Title | Why it is not Good yet |
 |---|---|
@@ -3175,14 +3175,17 @@ Return Fire, Rise of the Robots, Road Rash, and Panzer General.
 | Off-world Interceptor | Stays in the vehicle upgrade/shop menu; no mission launched. |
 | Olympic Soccer | Stays on the team-select and title menu; no match started. |
 | PGA Tour 96 | Stays on the Main Menu; the generic script does not start a round. |
-| Quarterback Attack | Stays on the setup menu; options change but the game does not kick off. |
 | Return Fire - Maps O' Death | Stays on the expansion title/box-art screen; it is an add-on disc. |
 
-Two follow-up checks changed or confirmed grades:
+Three follow-up checks changed or confirmed grades:
 
 - **Panzer General** was `Playable` in the generic pass. A title-specific
   `benchmarks/diff/scripts/tierb-panzer-start.txt` script confirmed `START GAME` with the
   A button and reached the scenario map with units at 9,000 frames, so it is `Good`.
+- **Quarterback Attack** was `Playable` in the generic pass. A title-specific
+  `benchmarks/diff/scripts/tierb-quarterback-start.txt` script moved from Skill Level to
+  `KICKOFF`, confirmed it, and reached football gameplay (scoreboard and play select) at
+  20,800 frames, so it is `Good`.
 - **Real Pinball** showed a nearly black late frame in the generic pass. A five-capture
   recheck (`artifacts/tierb-panel-4-realpinball-check`) showed the full table at frame
   30,000; the dark frame is the attract/transition view, not a render failure. It stays
@@ -3193,8 +3196,8 @@ An 18,000-frame `--audio-hash` pass covered all 32 titles: every run produced
 (`artifacts/tierb-panel-4-audio/summary.csv`). The ledger is
 `docs/data/playability-grades.csv`.
 
-Result: **107 titles now have a manual grade** (80 `Good`, 27 `Playable`) and **307**
-titles still have automated loadability only. The `Behind` count is **23 vs 4DO / 26 vs
+Result: **107 titles now have a manual grade** (81 `Good`, 26 `Playable`) and **307**
+titles still have automated loadability only. The `Behind` count is **22 vs 4DO / 25 vs
 Phoenix**; all of the new rows are explicit `Playable` grades with a recorded reason or a
 missing title-specific script, not loadability regressions. Five titles are now ahead of
 4DO. The ~100-title Tier B target is met; converting the remaining `Playable` menus into

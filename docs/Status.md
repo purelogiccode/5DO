@@ -22,8 +22,8 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 
 **Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
 titles / 378 game test set**, and every unique title now has a 5DO status. Tier B
-batches 1-4 reviewed **107 titles** (80 `Good`, 27 `Playable`); **307 titles** still have
-automated loadability only, and the **23 `Behind` vs 4DO / 26 vs Phoenix** rows all have
+batches 1-4 reviewed **107 titles** (81 `Good`, 26 `Playable`); **307 titles** still have
+automated loadability only, and the **22 `Behind` vs 4DO / 25 vs Phoenix** rows all have
 recorded reasons. Five titles are ahead of 4DO (Alone in the Dark, DinoPark Tycoon,
 Orbatak, Psychic Detective, Shootout at Old Tucson). The higher `Behind` count is the
 explicit grade gap, not a loadability regression. The unique-title 5DO/4DO/Phoenix

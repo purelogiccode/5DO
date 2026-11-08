@@ -32,18 +32,18 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Verdict | Titles |
 |---|---:|
 | 5DO ahead | 5 |
-| Parity | 78 |
+| Parity | 79 |
 | Parity (loadability) | 73 |
-| Behind | 23 |
+| Behind | 22 |
 | — | 53 |
 
 ### 5DO vs Phoenix
 
 | Verdict | Titles |
 |---|---:|
-| Parity | 80 |
+| Parity | 81 |
 | Parity (loadability) | 140 |
-| Behind | 26 |
+| Behind | 25 |
 
 `Behind` means 5DO has a lower grade, usually because the manual 5DO grade is `Playable` while the peer says `Good`; it is not a loadability failure. `Regression` is the hard failure: a peer reports the title as playable, but 5DO produced no usable frame.
 
@@ -309,7 +309,7 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Puzzle Bobble | game | Puzzle Bobble (1995)(Micro Cabin)(JP)[!].chd | 4 | 2 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Pyramid Intruder | game | Pyramid Intruder (1995)(Taito)(JP)(en)[!].chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Quarantine | game | Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd | 5 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
-| Quarterback Attack - The Professional Quarterback Simulator | game | Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Quarterback Attack - The Professional Quarterback Simulator | game | Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Real Pinball | game | Real Pinball (1994)(Panasonic)(US)[!].chd | 6 | 2 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Reika - Virtual Puppet | game | Reika - Virtual Puppet (1994)(H.A.N.D)(JP).chd | 3 | 1 | Rendered | — | — | — | — |
 | Return Fire | game | Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd | 7 | 4 | Good | Good (100) | Parity | Good (100%) | Parity |

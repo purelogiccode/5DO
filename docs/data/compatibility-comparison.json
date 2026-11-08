@@ -10,15 +10,15 @@
       "loadability": 307
     },
     "vs4do": {
-      "Behind": 23,
-      "Parity": 78,
+      "Behind": 22,
+      "Parity": 79,
       "Parity (loadability)": 73,
       "—": 53,
       "5DO ahead": 5
     },
     "vsPhoenix": {
-      "Behind": 26,
-      "Parity": 80,
+      "Behind": 25,
+      "Parity": 81,
       "Parity (loadability)": 140
     }
   },
@@ -4894,8 +4894,8 @@
       "regions": "US",
       "images": 2,
       "variants": 1,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "Stays on the setup menu; the generic script changes options but does not kick off.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "Tier B 10-minute pass stays on the setup menu; the title-specific tierb-quarterback-start script moves to KICKOFF and reaches football gameplay (scoreboard and play select at 20",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -4903,8 +4903,8 @@
       "phoenix": "Good",
       "phoenixPercent": 100,
       "phoenixNotes": "Size: 675282944, MD5: 05dd23ad773ee9caf461e15ebfc9dab1, SH1: ec6c6b243702d79e1fcf70de760b87b213b8adfa",
-      "vs4do": "Behind",
-      "vsPhoenix": "Behind"
+      "vs4do": "Parity",
+      "vsPhoenix": "Parity"
     },
     {
       "title": "Real Pinball",

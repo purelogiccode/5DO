@@ -1,0 +1,12 @@
+# Quarterback Attack: move from Skill Level to Kickoff and confirm.
+0     None
+18000 Down
+18010 None
+18600 Down
+18610 None
+19200 Down
+19210 None
+19800 Down
+19810 None
+20400 A
+20440 None
