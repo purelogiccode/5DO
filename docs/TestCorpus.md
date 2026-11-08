@@ -3032,8 +3032,8 @@ and the Phoenix (Arts-Union) list, then joins the 5DO sweep and manual grades. T
 | 5DO automated loadability | 403 |
 | 5DO untested | 0 |
 | 5DO ahead of 4DO | 2 (Orbatak, Shootout at Old Tucson) |
-| 5DO behind 4DO | 8 (all manual `Playable` vs peer `Good`, not load failures) |
-| 5DO behind Phoenix | 10 (same grade gap) |
+| 5DO behind 4DO | 4 after the Tier B batch (8 at the initial comparison) |
+| 5DO behind Phoenix | 5 after the Tier B batch (10 initially) |
 | Loadability regressions | 0 |
 
 **Phoenix is a 100% list, not a graded database.** All 302 entries are recorded at 100%, so
@@ -3047,3 +3047,38 @@ at 3,000 frames with `-AllowUnsigned`: **40 rendered** and **4 had no video**
 `LameNES` emulator). All four are secondary media/homebrew, not retail game regressions,
 and all 414 unique titles now have a 5DO status. This section is the evidence for
 `TEST-08`; it does not replace the 50-title accuracy panel or the playability audit.
+
+### 1.1bi TEST-06 Tier B batch 1: the ten comparison diffs (2026-11-08)
+
+The first Tier B batch covers the ten titles where 5DO differed from 4DO or Phoenix. It is
+a **5DO-only** pass: the question is whether the shipped emulator reaches and sustains
+gameplay, and Opera is real-time paced. Runner: `tools/playability-sweep.py`; manifest:
+`benchmarks/diff/tierb-behind.json`; script: `benchmarks/diff/scripts/tierb-10min.txt`.
+
+Method: 36,000 frames (10 minutes at 60 Hz), default `compatible` profile, `panafz1` for
+retail discs and `panafz10-patched` for the arcade CD-ROMs, captures at frames
+600/3,600/18,000/36,000, and a fresh per-title NVRAM. The generic script advances menus
+for the first minute and then rotates movement/action buttons.
+
+| Title | What the captures show | Verdict |
+|---|---|---|
+| Battle Chess | Interactive chessboard at 3,600, 18,000, and 36,000; no crash | **Good** (promoted) |
+| Crash 'n Burn | Black boot at 3,600; in-race HUD and car at 18,000 and 36,000 | **Good** (promoted) |
+| Myst | Gameplay scene at 3,600, load menu at 18,000, gameplay scene at 36,000 | **Good** (promoted) |
+| Olympic Summer Games | 100m at 3,600, discus at 18,000, high jump at 36,000 | **Good** (promoted) |
+| Orbatak | Black boot at 3,600; arena match at 18,000 and 36,000 | **Good** (promoted) |
+| Crime Patrol | Interactive Play/Rookie/1 Player/Calibrate menu at 18,000 and 36,000 | Playable: generic pad script cannot select a lightgun target |
+| Mad Dog II | Live-action intro at 3,600 and 18,000; menu at 36,000 | Playable: needs a title-specific lightgun script |
+| Guardian War | Battle scene at 3,600; save menu at 18,000; transition at 36,000 | Playable: generic script does not sustain the battle |
+| Shootout at Old Tucson | In-game scene at 3,600; credits at 18,000 and 36,000 | Playable: gameplay reached, then script exits to credits |
+| Slayer | Title/menu at 18,000 and 36,000; no character started | Playable: needs a title-specific script |
+
+All ten runs completed with exit code 0 and `dspRunning: true`. The five promoted titles
+were re-run against a stock BIOS with no RSA patch; all produced **13,243,230 samples**
+(18,000 fields) with non-zero audio hashes. Crash 'n Burn's 18,000-frame WAV is non-silent
+(peak **7,631**, RMS **1,190**, **0** clipped frames, 6.6% silence).
+
+Result: the comparison moves from **8 `Behind` vs 4DO and 10 vs Phoenix** to
+**4 `Behind` vs 4DO and 5 vs Phoenix**, with **0 loadability regressions**. The remaining
+five rows need title-specific input scripts, not emulator fixes; that is the next Tier B
+increment.

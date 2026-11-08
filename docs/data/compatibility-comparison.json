@@ -12,12 +12,14 @@
     "vs4do": {
       "Parity (loadability)": 169,
       "—": 53,
-      "Behind": 8,
+      "Parity": 4,
+      "Behind": 4,
       "5DO ahead": 2
     },
     "vsPhoenix": {
       "Parity (loadability)": 236,
-      "Behind": 10
+      "Parity": 5,
+      "Behind": 5
     }
   },
   "titles": [
@@ -408,8 +410,8 @@
       "regions": "US",
       "images": 6,
       "variants": 3,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "Europe disc is PAL-only and needs `panafz10e-anvil`; it reaches the board at 30,000 frames. USA/Japan boot with `panafz10`.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "USA disc boots and stays on the interactive chessboard through 36,000 frames of the 10-minute Tier B pass. Europe disc is PAL-only and needs `panafz10e-anvil`; it reaches the board at 30,000 frames. USA/Japan boot with `panafz10`.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -417,8 +419,8 @@
       "phoenix": "Good",
       "phoenixPercent": 100,
       "phoenixNotes": "Size: 272629760, MD5: 63cac013bff1a1b5d85a1265c9d616bf, SH1: fa92a9566e47bf02fc1e7b7ada65a6a8dff4846b",
-      "vs4do": "Behind",
-      "vsPhoenix": "Behind"
+      "vs4do": "Parity",
+      "vsPhoenix": "Parity"
     },
     {
       "title": "Battle Pinball",
@@ -902,8 +904,8 @@
       "regions": "US",
       "images": 6,
       "variants": 2,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "USA/Korea revisions render with panafz1; Japan revision still black with FZ-1J + FZ-1J Kanji font at 65,000 frames (2026-11-01 retry); needs a bootable Japanese BIOS or a better dump.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "USA/Korea revisions reach the race and stay in-race through 36,000 frames of the 10-minute Tier B pass; the 18,000-frame WAV is non-silent (peak 7,631, RMS 1,190, 0 clipped). Japan revision still black with FZ-1J + FZ-1J Kanji font at 65,000 frames (2026-11-01 retry); needs a bootable Japanese BIOS or a better dump.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 90,
@@ -911,8 +913,8 @@
       "phoenix": "Good",
       "phoenixPercent": 100,
       "phoenixNotes": "Size: 629145600, MD5: b86dd8f8de59ffea908b7d920570ca43, SH1: d76b1f310773387e42305466973745a703780104",
-      "vs4do": "Behind",
-      "vsPhoenix": "Behind"
+      "vs4do": "Parity",
+      "vsPhoenix": "Parity"
     },
     {
       "title": "Crayon Shin-chan - Puzzle Daimaou no Nazo",
@@ -960,7 +962,7 @@
       "images": 5,
       "variants": 2,
       "fiveDo": "Playable",
-      "fiveDoDetail": "Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action/credits.",
+      "fiveDoDetail": "Arcade CD-ROM: panafz10-patched; regular USA: panafz1. The 10-minute Tier B lightgun pass reaches the interactive Play/Rookie/1 Player/Calibrate menu and stays there; the generic pad script cannot select a target. No rendering defect.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -2233,7 +2235,7 @@
       "images": 4,
       "variants": 1,
       "fiveDo": "Playable",
-      "fiveDoDetail": "EU version needs Anvil BIOS; Canada/USA render; Europe reaches a live-action intro at 60,000 frames.",
+      "fiveDoDetail": "EU version needs Anvil BIOS; Canada/USA render. The 10-minute Tier B pass reaches the battle scene at 3,600 frames and a save menu at 18,000; the generic script lands on a transition at 36,000. Needs a title-specific script before a Good grade.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -3297,7 +3299,7 @@
       "images": 4,
       "variants": 3,
       "fiveDo": "Playable",
-      "fiveDoDetail": "Arcade CD-ROM: panafz10-patched; regular USA: panafz1. Input reaches live-action.",
+      "fiveDoDetail": "Arcade CD-ROM: panafz10-patched; regular USA: panafz1. The 10-minute Tier B lightgun pass plays the live-action intro at 3,600/18,000 frames and returns to the menu by 36,000; no crash. A title-specific lightgun script is needed before a Good grade.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -3638,8 +3640,8 @@
       "regions": "US",
       "images": 9,
       "variants": 5,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "Japan/USA discs render by 9,000 frames with panafz1; Germany untested.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "USA disc reaches gameplay scenes at 3,600 and 36,000 frames of the 10-minute Tier B pass, with a load menu at 18,000; 13.2M audio samples hashed non-zero. Germany untested.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -3647,8 +3649,8 @@
       "phoenix": "Good",
       "phoenixPercent": 100,
       "phoenixNotes": "Size: 650117120, MD5: b47198692ed04109e1631e7909d16127, SH1: 662ebe50faeab06858975e548ae2cdb465898a70",
-      "vs4do": "Behind",
-      "vsPhoenix": "Behind"
+      "vs4do": "Parity",
+      "vsPhoenix": "Parity"
     },
     {
       "title": "N. O. B. - Neo Organic Bioform",
@@ -4075,8 +4077,8 @@
       "regions": "US",
       "images": 2,
       "variants": 1,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "Default headless pad fixes controller detection; A/P reaches the credits.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "10-minute Tier B pass progresses through 100m (3,600), discus (18,000), and high jump (36,000) with no crash; default headless pad fixes controller detection.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,
@@ -4084,8 +4086,8 @@
       "phoenix": "Good",
       "phoenixPercent": 100,
       "phoenixNotes": "Size: 545259520, MD5: cc2b0ff670c52d9aafe6d9147d94ed3e, SH1: 3e5c9c93939606829fb683f37bb2f8078c1cecdf",
-      "vs4do": "Behind",
-      "vsPhoenix": "Behind"
+      "vs4do": "Parity",
+      "vsPhoenix": "Parity"
     },
     {
       "title": "Onee-san to Issho! Janken Paradise",
@@ -4151,8 +4153,8 @@
       "regions": "US",
       "images": 2,
       "variants": 1,
-      "fiveDo": "Playable",
-      "fiveDoDetail": "panafz10-patched; input script starts a match. 4DO's no-controls note does not reproduce.",
+      "fiveDo": "Good",
+      "fiveDoDetail": "panafz10-patched; 10-minute Tier B trackball pass reaches and sustains the arena match through 36,000 frames. 4DO's no-controls note does not reproduce.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Unplayable",
       "fourDoScore": 25,
@@ -4161,7 +4163,7 @@
       "phoenixPercent": 100,
       "phoenixNotes": "Other: Requires a BIOS with RSA verification disabled to run. Size: 120586240, MD5: edea544c3a5518578422b5d28812ed5d, SH1: 84e941019f4b5007b6a3b3be28fe8d01b6dea0bb",
       "vs4do": "5DO ahead",
-      "vsPhoenix": "Behind"
+      "vsPhoenix": "Parity"
     },
     {
       "title": "Oukoku no Grand Chef",
@@ -5444,7 +5446,7 @@
       "images": 3,
       "variants": 2,
       "fiveDo": "Playable",
-      "fiveDoDetail": "RE2/RE3 render with panafz10-patched; input reaches the title/advisory screen.",
+      "fiveDoDetail": "RE2/RE3 render with panafz10-patched. The 10-minute Tier B pass reaches in-game gameplay at 3,600 frames, then the generic script returns to the credits by 18,000; no crash. A title-specific lightgun script is needed before a Good grade.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Unplayable",
       "fourDoScore": 25,
@@ -5520,7 +5522,7 @@
       "images": 6,
       "variants": 1,
       "fiveDo": "Playable",
-      "fiveDoDetail": "Europe renders credits with panafz1 at 12,000; USA reaches its title menu at 60,000 with panafz10. Action Pak not individually tested.",
+      "fiveDoDetail": "Europe renders credits with panafz1 at 12,000; USA reaches its title menu at 60,000 with panafz10. The 10-minute Tier B pass on the Europe disc reaches the title/menu but the generic script does not start a character; no crash. Action Pak not individually tested.",
       "fiveDoEvidence": "reviewed",
       "fourDo": "Good",
       "fourDoScore": 100,

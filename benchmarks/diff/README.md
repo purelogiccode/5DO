@@ -46,6 +46,12 @@ not product configuration.
   currently points at the machine-specific `J:/Panasonic 3DO` and
   `G:/MAME/MAME Software List CHDs/3do` paths; every title uses `${games}` or
   `${games2}` so only the roots need editing on another machine.
+- `tierb-behind.json` - the first Tier B playability batch: the ten titles where
+  5DO differed from 4DO or Phoenix, 36,000 frames each, with the generic
+  `scripts/tierb-10min.txt` script. It is consumed by
+  `python tools/playability-sweep.py`, not by `FiveDo.DiffHarness`; the runner
+  captures 600/3,600/18,000/36,000 frames and writes a 5DO-only summary. See
+  `docs/TestCorpus.md` 1.1bi.
 
 These manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
 Relative paths resolve from the repository root. The harness stages the OperaCore

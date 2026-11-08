@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier B - 10 titles where 5DO differs from 4DO or Phoenix",
+  "defaults": {
+    "root": "J:/Panasonic 3DO",
+    "bios": "bios/panafz1.bin",
+    "frames": 36000,
+    "captureFrames": [600, 3600, 18000, 36000],
+    "inputScript": "benchmarks/diff/scripts/tierb-10min.txt",
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "battle-chess",
+      "name": "Battle Chess",
+      "disc": "${root}/Battle Chess (1993)(Interplay)(US)[!].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good"
+    },
+    {
+      "id": "crash-n-burn",
+      "name": "Crash 'n Burn",
+      "disc": "${root}/Crash 'n Burn (1993)(Crystal Dynamics)(US)[!][3DRM-1239120 1].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good; fix bit 1"
+    },
+    {
+      "id": "crime-patrol",
+      "name": "Crime Patrol",
+      "disc": "${root}/Crime Patrol (1994)(American Laser Games)(US)[!].chd",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title"
+    },
+    {
+      "id": "guardian-war",
+      "name": "Guardian War",
+      "disc": "${root}/Guardian War (1994)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good"
+    },
+    {
+      "id": "mad-dog-ii",
+      "name": "Mad Dog II - The Lost Gold",
+      "disc": "${root}/Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title"
+    },
+    {
+      "id": "myst",
+      "name": "Myst",
+      "disc": "${root}/Myst (1994)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good"
+    },
+    {
+      "id": "olympic-summer-games",
+      "name": "Olympic Summer Games",
+      "disc": "${root}/Olympic Summer Games (1996)(Panasonic)(US)[!].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good"
+    },
+    {
+      "id": "orbatak",
+      "name": "Orbatak",
+      "disc": "${root}/Orbatak (USA) (Arcade CD-ROM).chd",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=orbatak-trackball",
+      "note": "5DO ahead of 4DO; arcade trackball"
+    },
+    {
+      "id": "shootout-old-tucson",
+      "name": "Shootout at Old Tucson",
+      "disc": "${root}/Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=arcade-lightgun",
+      "note": "5DO ahead of 4DO; arcade lightgun"
+    },
+    {
+      "id": "slayer",
+      "name": "Slayer",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "bios": null,
+      "inputDevice": null,
+      "note": "5DO Playable, 4DO/Phoenix Good"
+    }
+  ]
+}

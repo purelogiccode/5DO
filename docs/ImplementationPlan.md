@@ -5,7 +5,7 @@
 **Current release:** `1.5.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
-**Status:** **2,051 tests pass**; build, format, and InspectCode are clean. The local collection now inventories **1,371 disc images**, which collapse to **414 unique titles** and a **378-title game test set**. The new 3-way matrix matches **232 titles to 4DO** and **246 to Phoenix** (194 to both), with **0 loadability regressions**, **2 titles where 5DO is ahead of 4DO**, and **0 untested**; the four no-video results are secondary media/homebrew, not retail game regressions. The 50-title accuracy panel keeps **50/50 frame hashes** and **150/150 audio hashes** at frames 60/120/300. The 594-disc legacy sweep remains **593 rendered, 1 known failure** (Crash 'n Burn Japan). Full evidence: `docs/CompatibilityComparison.md`, `docs/DifferentialHarness.md` §8, `docs/GameCompatibilityResults.md`.
+**Status:** **2,051 tests pass**; build, format, and InspectCode are clean. The local collection now inventories **1,371 disc images**, which collapse to **414 unique titles** and a **378-title game test set**. The new 3-way matrix matches **232 titles to 4DO** and **246 to Phoenix** (194 to both), with **0 loadability regressions**, **2 titles where 5DO is ahead of 4DO**, and **0 untested**; the four no-video results are secondary media/homebrew, not retail game regressions. The first 10-title Tier B pass promoted **Battle Chess, Crash 'n Burn, Myst, Olympic Summer Games, and Orbatak** to `Good`, cutting the `Behind` rows from **8 vs 4DO / 10 vs Phoenix** to **4 / 5**. The 50-title accuracy panel keeps **50/50 frame hashes** and **150/150 audio hashes** at frames 60/120/300. The 594-disc legacy sweep remains **593 rendered, 1 known failure** (Crash 'n Burn Japan). Full evidence: `docs/CompatibilityComparison.md`, `docs/DifferentialHarness.md` §8, `docs/GameCompatibilityResults.md`.
 **Goal:** beat 4DO and Phoenix on **measured, player-visible compatibility**, and remain the best standalone desktop 3DO emulator on Windows, Linux, and macOS.<br>
 **Plan shape:** **three phases, one corpus, one comparison, four gates.** Research, product, and speculative timing work are out of scope until the compatibility gate is green.
 
@@ -50,7 +50,7 @@
 | Static analysis | `jb inspectcode --severity=WARNING` - **0 results** |
 | CLI | `5DO 1.5.0 (FiveDo)`; `selftest --json` - all checks `ok: true` |
 | Corpus inventory | **1,371 images**, **653 distinct game IDs**, **414 unique titles**, **378 game test set** |
-| 3-way comparison | 4DO **232** matched, Phoenix **246** matched, both **194**; **0 regressions**, **2 ahead of 4DO** |
+| 3-way comparison | 4DO **232** matched, Phoenix **246** matched, both **194**; **0 regressions**, **2 ahead of 4DO**, **4 `Behind` vs 4DO / 5 vs Phoenix** after the Tier B batch |
 | 50-title panel | **50/50 captured, 0 errors**; **50/50 frame hashes** at 60/120/300; **150/150 audio hashes** |
 | Scripted input | 5 titles, 900 frames; **5/5 frame hashes** at 60/300/600; input changes guest output |
 | 3,000-frame sample | 4/5 video matches; Road Rash still diverges; first behavioral difference is CD cadence |
@@ -94,7 +94,7 @@ These are done and must not regress. They are listed here once; the backlog cont
 ### 2.4 Evidence gaps that block the claim
 
 1. **Loadability is not playability.** The matrix has **11 manual gameplay grades** and **403 automated loadability results**, with **0 untested**; the four `No video` rows are secondary media/homebrew. Tier B/C of `TEST-06` is the missing evidence.
-2. **The peer comparison is loadability-level.** It is enough to find regressions, not enough to claim a playability win. `Behind` rows (8 vs 4DO, 10 vs Phoenix) are mostly manual `Playable` grades that need a gameplay pass before they can be called losses.
+2. **The peer comparison is mostly loadability-level.** It is enough to find regressions, not enough to claim a playability win. After the first Tier B batch, **4 rows remain `Behind` vs 4DO and 5 vs Phoenix**; all five need title-specific input scripts, not emulator fixes.
 3. **The CD cadence residual is still open.** Eleven 50-title panel titles diverge in command cadence at frame 300; video and audio still match. It is a diagnostic difference until a title shows a player-visible effect.
 4. **Platform evidence is asymmetric.** Windows and Linux are validated; macOS is documented best-effort. That is acceptable for the compatibility claim but must be stated in the release notes.
 
@@ -133,6 +133,7 @@ Each entry is a single feature or a tightly-scoped bundle. **No feature appears 
   - **Tier B (target ~100 titles):** every title where 4DO or Phoenix reports `Playable`/`Good` and 5DO differs, plus every `Behind`/`Regression` row; run a 10-minute scripted input pass and record a checkpoint screenshot.
   - **Tier C (top 50):** full gameplay review to `Good`/`Playable`/`Unplayable` with a reason and evidence.
   **Done when:** all 378 games have a reviewed status; Tier B has zero unexplained regressions; Tier C is ≥95% Good/Playable; the matrix and per-game database are updated.
+  **Evidence (2026-11-08 batch 1):** the ten comparison diffs were run through a 10-minute 5DO-only scripted pass (`artifacts/tierb-behind-clean`, `benchmarks/diff/tierb-behind.json`). All ten completed with exit code 0; five reached and sustained gameplay (**Battle Chess**, **Crash 'n Burn**, **Myst**, **Olympic Summer Games**, **Orbatak**) and were promoted to `Good`, with non-zero audio hashes on all five and a non-silent 18,000-frame WAV for Crash 'n Burn. The other five reach menus/FMV or leave gameplay before the end and stay `Playable` pending title-specific scripts: Crime Patrol, Mad Dog II, Guardian War, Shootout at Old Tucson, and Slayer. The comparison moved from **8/10 `Behind`** to **4 vs 4DO / 5 vs Phoenix**. See `TestCorpus.md` §1.1bi.
   **Why first:** this is the only evidence that answers "better than 4DO and Phoenix" for a player. The old 594-title "renders" count does not.
   **Ref:** `docs/CompatibilityComparison.md`; `docs/Compatibility.md` §10/§13.
 
@@ -369,6 +370,8 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-08 - TEST-06 Tier B batch 1 (10 comparison diffs).** Ran the ten titles where 5DO differed from 4DO or Phoenix through a 5DO-only 36,000-frame scripted pass (`tools/playability-sweep.py`, `benchmarks/diff/tierb-behind.json`, `benchmarks/diff/scripts/tierb-10min.txt`) with captures at 600/3,600/18,000/36,000. Five titles reached and sustained gameplay and were promoted to `Good`: Battle Chess, Crash 'n Burn, Myst, Olympic Summer Games, and Orbatak. The five promoted titles were re-run on stock BIOS behavior with **13,243,230 samples** and non-zero audio hashes; Crash 'n Burn's 18,000-frame WAV is non-silent (peak 7,631, RMS 1,190, 0 clipped). Crime Patrol, Mad Dog II, Guardian War, Shootout at Old Tucson, and Slayer remain `Playable` pending title-specific scripts. The comparison moved from **8 `Behind` vs 4DO / 10 vs Phoenix** to **4 vs 4DO / 5 vs Phoenix**, with 0 loadability regressions. See `TestCorpus.md` §1.1bi.
 
 - **2026-11-08 - TEST-08 unique-corpus inventory and 5DO/4DO/Phoenix comparison.** Added `tools/corpus-inventory.py`, which fingerprints every local image with the 5DO `gameId` (MD5 of the first two 2048-byte sectors) and reads the database metadata, and `tools/generate-compat-comparison.py`, which collapses identical images, groups regional revisions, chooses a canonical disc, parses both saved compatibility lists, and writes the comparison. On the current `J:`/`G:` collection the inventory finds **1,371 images**, **653 distinct game IDs**, and **414 unique titles**, including a **378-title game test set**; **232 titles match 4DO** and **246 match Phoenix** (194 both). A 44-disc gap-fill pass with `-AllowUnsigned` classified the remaining titles: **40 rendered**, **4 no video** (all secondary media/homebrew), so **0 titles are untested**. The matrix finds **0 loadability regressions**, **2 titles where 5DO is ahead of 4DO** (Orbatak and Shootout at Old Tucson), **8 `Behind` rows vs 4DO**, and **10 vs Phoenix** (all manual `Playable` vs peer `Good`, not failures). `docs/CompatibilityComparison.md`, `docs/data/unique-corpus.csv`, and `docs/data/compatibility-comparison.json` are committed. `tools/compat-sweep.ps1` gained `-FileList` and `-AllowUnsigned` for the unique test set and homebrew images. **2,051 tests pass**; build and format are clean.
 

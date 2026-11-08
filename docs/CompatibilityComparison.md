@@ -32,16 +32,18 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Verdict | Titles |
 |---|---:|
 | 5DO ahead | 2 |
+| Parity | 4 |
 | Parity (loadability) | 169 |
-| Behind | 8 |
+| Behind | 4 |
 | — | 53 |
 
 ### 5DO vs Phoenix
 
 | Verdict | Titles |
 |---|---:|
+| Parity | 5 |
 | Parity (loadability) | 236 |
-| Behind | 10 |
+| Behind | 5 |
 
 `Behind` means 5DO has a lower grade, usually because the manual 5DO grade is `Playable` while the peer says `Good`; it is not a loadability failure. `Regression` is the hard failure: a peer reports the title as playable, but 5DO produced no usable frame.
 
@@ -71,7 +73,7 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Bakushou!! All Yoshimoto Quiz ou Ketteisen | game | Bakushou!! All Yoshimoto Quiz ou Ketteisen (1995)(Yoshimoto Kogyo)(JP)[!].chd | 2 | 1 | Rendered | — | — | — | — |
 | Ballz - The Director's Cut | game | Ballz - The Director's Cut (1995)(Panasonic)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Battle Blues | game | Battle Blues (1996)(LG)(KR).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
-| Battle Chess | game | Battle Chess (1993)(Interplay)(US)[!].chd | 6 | 3 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Battle Chess | game | Battle Chess (1993)(Interplay)(US)[!].chd | 6 | 3 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Battle Pinball | game | Battle Pinball (1994)(Panasonic)(JP)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | BattleSport | game | BattleSport (1995)(Studio 3DO)(EU)[!].chd | 6 | 3 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | BC Racers | game | BC Racers (1995)(GoldStar)(EU-US)[!].chd | 3 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
@@ -97,7 +99,7 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Corpse Killer | game | Corpse Killer (1994)(Digital Pictures)(US)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Coven, The | game | Coven, The (1994)(Vivid Interactive)(US).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Cowboy Casino - Interactive Poker | game | Cowboy Casino - Interactive Poker (1994)(IntelliPlay)(US)[!].chd | 3 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Crash 'n Burn | game | Crash 'n Burn (1993)(Crystal Dynamics)(US)[!][3DRM-1239120 1].chd | 6 | 2 | Playable | Good (90) | Behind | Good (100%) | Behind |
+| Crash 'n Burn | game | Crash 'n Burn (1993)(Crystal Dynamics)(US)[!][3DRM-1239120 1].chd | 6 | 2 | Good | Good (90) | Parity | Good (100%) | Parity |
 | Crayon Shin-chan - Puzzle Daimaou no Nazo | game | Crayon Shin-chan - Puzzle Daimaou no Nazo (1995)(Bandai)(JP).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Creature Shock | game | Creature Shock (1995)(Virgin)(US)(Disc 1 of 2)[!].chd | 4 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Crime Patrol | game | Crime Patrol (1994)(American Laser Games)(US)[!].chd | 5 | 2 | Playable | Good (100) | Behind | Good (100%) | Behind |
@@ -241,7 +243,7 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Montana Jones | game | Montana Jones (1995)(Future Pirates Junior)(JP)[!].chd | 5 | 2 | Rendered | No data | — | Good (100%) | Parity (loadability) |
 | Multimedia Shinsho - Driving School | game | Multimedia Shinsho - Driving School (Futsuu Menkyo Gakka-hen) (1995)(JISC Life Support)(JP).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM | game | Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM (1994)(Vantan International)(JP)(en-ja)[!].chd | 2 | 1 | Rendered | — | — | — | — |
-| Myst | game | Myst (1994)(Panasonic)(US)[!].chd | 9 | 5 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Myst | game | Myst (1994)(Panasonic)(US)[!].chd | 9 | 5 | Good | Good (100) | Parity | Good (100%) | Parity |
 | N. O. B. - Neo Organic Bioform | game | N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Nais How's 1 - Front How's '95-'96 | game | Nais How's 1 - Front How's '95-'96 v1.0 R2.0 (1995)(National)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I | game | Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I (Butsubutsu Koukan no Maki) (Japan).chd | 1 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
@@ -264,11 +266,11 @@ This page compares the three emulators on the **same local collection**. The 4DO
 | Ogura Hyakunin Isshu | game | Ogura Hyakunin Isshu (Japan).chd | 2 | 1 | Rendered | — | — | — | — |
 | Oilman | game | Oilman (Japan).chd | 1 | 1 | Rendered | — | — | — | — |
 | Olympic Soccer | game | Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd | 2 | 1 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
-| Olympic Summer Games | game | Olympic Summer Games (1996)(Panasonic)(US)[!].chd | 2 | 1 | Playable | Good (100) | Behind | Good (100%) | Behind |
+| Olympic Summer Games | game | Olympic Summer Games (1996)(Panasonic)(US)[!].chd | 2 | 1 | Good | Good (100) | Parity | Good (100%) | Parity |
 | Onee-san to Issho! Janken Paradise | game | Onee-san to Issho! Janken Paradise (Japan).chd | 2 | 1 | Rendered | — | — | — | — |
 | Onee-san to Issho! Kisekae Paradise | game | Onee-san to Issho! Kisekae Paradise (Japan).chd | 2 | 1 | Rendered | — | — | Good (100%) | Parity (loadability) |
 | OpenLara | game | OpenLara (2021-12-20)(XProger)(BSD2).chd | 1 | 1 | Rendered | — | — | — | — |
-| Orbatak | game | Orbatak (USA) (Arcade CD-ROM).chd | 2 | 1 | Playable | Unplayable (25) | 5DO ahead | Good (100%) | Behind |
+| Orbatak | game | Orbatak (USA) (Arcade CD-ROM).chd | 2 | 1 | Good | Unplayable (25) | 5DO ahead | Good (100%) | Parity |
 | Oukoku no Grand Chef | game | Oukoku no Grand Chef (1996)(Sala International)(JP).chd | 2 | 1 | Rendered | — | — | — | — |
 | Out of this World | game | Out of this World (1993)(Interplay)(US)[!][45097-1].chd | 7 | 2 | Rendered | Good (100) | Parity (loadability) | Good (100%) | Parity (loadability) |
 | Outer World | game | Outer World (1994)(Electronic Arts)(JP)(en)[!].chd | 2 | 1 | Rendered | — | — | — | — |
@@ -476,5 +478,5 @@ The peer reports `Unplayable`/`Not Loadable`, but 5DO loads the title. Promote t
 
 | Title | 5DO | 4DO | Phoenix |
 |---|---|---|---|
-| Orbatak | Playable | Unplayable | Good |
+| Orbatak | Good | Unplayable | Good |
 | Shootout at Old Tucson | Playable | Unplayable | Good |
