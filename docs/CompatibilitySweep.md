@@ -427,6 +427,29 @@ Life Stage) stay `Playable` with a non-game note; the *Return Fire - Maps O' Dea
 standalone data disc keeps its documented peer invalidation. The quality result is
 recorded in `docs/data/playability-grades.csv` under the `tierc-*` batch name.
 
+The Tier C input format accepts one optional pointer token per line after the pad
+buttons: `@mouse dx dy [left,middle,right,shift]`,
+`@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. Select the matching device with
+`--input-device <port>=<device>`; pointer buttons persist and relative motion applies to
+one frame. The reference `OperaCore` bridge is joypad-only, so pointer runs are 5DO-only
+evidence. See [`CliReference.md`](CliReference.md#input-and-automation-options).
+
+The second Tier C increment promoted **Carrier - Fortress at Sea**, **Family Feud**,
+**Insect War**, and **N. O. B.** to `Good`; the ledger is **88 `Good`, 13 `Playable`**.
+Seven remaining rows are media/reference/add-on discs, and six are game leads
+(BladeForce, DeathKeep, Jurassic Park, Kingdom, Off-world Interceptor, PGA Tour 96).
+See [`TestCorpus.md`](TestCorpus.md) 1.1bo.
+
+The suspected core-defect triage is closed: DeathKeep's Start Game black screen also
+appears on OperaCore at 48,000 frames, Kingdom's intro returns to the same title screen
+on both engines at 60,000, and BladeForce reaches the same Main Options menu on both
+engines. All three are content/script limits, not 5DO regressions. The weekly
+`compat-baseline.yml` workflow now includes a `quality-ledger` job that runs
+`tools/verify-playability-grades.py` against
+`docs/data/playability-grades-baseline.json` and fails on a `Good` -> `Playable` drop.
+
 ---
 
 ## 5. In-game / visual check

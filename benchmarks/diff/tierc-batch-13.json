@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 13: second promotions",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "carrier-play5",
+      "name": "Carrier - Fortress at Sea",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "tierC": "second-promotion",
+      "inputScript": "benchmarks/diff/scripts/tierc/carrier-play5.txt",
+      "frames": 14000,
+      "captureFrames": [
+        8000,
+        14000
+      ]
+    },
+    {
+      "id": "family-feud-play7",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "second-promotion",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play7.txt",
+      "frames": 12000,
+      "captureFrames": [
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "insect-war-play5",
+      "name": "Insect War",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Insect War (1994)(Panasonic)(JP)[!].chd",
+      "tierC": "second-promotion",
+      "inputScript": "benchmarks/diff/scripts/tierc/insect-war-play5.txt",
+      "frames": 72000,
+      "captureFrames": [
+        58000,
+        62000
+      ]
+    },
+    {
+      "id": "nob-c2",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "second-promotion",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        9000,
+        36000
+      ]
+    },
+    {
+      "id": "bladeforce-play6",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-play6.txt",
+      "frames": 100000,
+      "captureFrames": [
+        78000,
+        100000
+      ]
+    }
+  ]
+}

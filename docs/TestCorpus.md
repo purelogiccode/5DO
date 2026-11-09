@@ -3286,3 +3286,68 @@ buttons, a mouse-device probe, and paired input/no-input runs:
 
 No grade changes came from these probes; the ledger stays **101 rows: 84 `Good`, 17
 `Playable`**.
+
+### 1.1bo TEST-06 Tier C: second gameplay-depth increment (2026-11-09)
+
+The second increment added pointer state to the input-script format and re-checked the
+menu leads whose earlier scripts pressed buttons before the menu was visible.
+
+**Input-script pointer support.** `InputScript` now accepts one optional pointer token
+per line after the pad buttons: `@mouse dx dy [left,middle,right,shift]`,
+`@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. `ScriptedPbusSource` applies
+the state to every port configured with that device, keeps buttons held, and treats
+relative mouse/trackball motion as a one-frame impulse. The parser and source are
+covered by six new `InputScriptTests`. The reference `OperaCore` bridge is still
+joypad-only, so pointer scripts are 5DO-only evidence.
+
+**Promoted to `Good` (`tierc-2`):**
+
+| Title | Evidence |
+|---|---|
+| Carrier - Fortress at Sea | `tierc/carrier-play5.txt`: the briefing room's pad path opens the trap menu (DAY/NIGHT/WEATHER TRAPS, PREFLIGHT BRIEFING), then starts a live trap approach with the 3D ocean, aircraft HUD, and a WAVE OFF glide-slope message at 8,000/14,000 frames. The earlier probe pressed buttons before the briefing room appeared, which is why it looked pointer-only. |
+| Family Feud | `tierc/family-feud-play7.txt`: eight Down presses move from the options rows to DONE; the game-mode menu opens and FAMILY VS 3DO SYSTEM starts the show. Live questions, host, contestants, the $2,000/$3,000 bank, and the letter keyboard render at 9,000/12,000 frames. |
+| Insect War | `tierc/insect-war-play5.txt`: Story Mode, character confirm, and match start reach the first-person HUD (timer, health bars, radar, crosshair) at 58,000/62,000 frames; the WARNING/explosion state follows. No crash through 72,000. |
+| N. O. B. - Neo Organic Bioform | `tierc/nob-c2.txt`: SURVIVE starts and reaches the first-person corridor with the VITALITY HUD at 9,000 frames. The session later returns to MODE SELECT, and the script re-enters. No crash through 36,000. |
+
+The four promotions and the BladeForce path are reproducible from
+`benchmarks/diff/tierc-batch-13.json`:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-13.json `
+  --out artifacts/tierc-batch-13 --jobs 4
+```
+
+The ledger is now **101 rows: 88 `Good`, 13 `Playable`**. Seven of the remaining
+`Playable` rows are media/reference/add-on discs (20th Century Video Almanac, Club 3DO,
+Dennis Miller, Digital Dreamware, ESPN Golf, Life Stage, and the Return Fire Maps O'
+Death data disc). The six remaining game leads are BladeForce, DeathKeep, Jurassic Park,
+Kingdom, Off-world Interceptor, and PGA Tour 96. Jurassic Park's Operations hub shows
+the pause menu's `TIME LEFT`/`LIVES LEFT` session state, but no in-park mini-game was
+opened; PGA Tour 96 still cycles Golf Bag -> Pro Info, and Off-world Interceptor remains
+in the pre-mission shop.
+
+**DeathKeep differential (2026-11-09).** The Tier C black-screen lead is not a 5DO
+defect: the reference OperaCore reached 48,000 frames with the same script and its
+`f048000.bmp` capture is also pure black, while 5DO's `f048000.png` is black at the
+same checkpoint. The only comparison field that diverged at 48,000 was the sample count
+(35,315,280 vs 35,315,323, the documented 1.214 ppm reference-clock alignment). The
+Start Game path therefore leads to a legitimate long black screen/load on both engines,
+not a 5DO renderer or CD regression. Evidence:
+`artifacts/diff/tierc-triage2/deathkeep-play7`.
+
+**BladeForce differential (2026-11-09).** The reference core reaches the same Main
+Options menu at 60,000 frames; the only comparison difference is the documented sample
+count (44,144,100 vs 44,144,154). A new script (`tierc/bladeforce-play6.txt`) moves
+Right to START NEW GAME, confirms the name entry, and plays the live-action intro and
+character-platform cutscenes through 100,000 frames.
+The menu/cutscene loop is therefore a content/script limit, not a 5DO input or renderer
+bug; BladeForce stays `Playable` because no interactive mission was reached. Evidence:
+`artifacts/bladeforce-play6`; `artifacts/diff/tierc-triage2/bladeforce-play4`.
+
+**Kingdom differential (2026-11-09).** A 60,000-frame comparison
+(`artifacts/diff/kingdom-triage-60k`) captures the same *Kingdom - The Far Reaches*
+title screen on 5DO and OperaCore. The A/C intro loop is therefore a content/script
+limit on both engines, not a 5DO boot or renderer defect; Kingdom stays `Playable`
+because this script starts no scenario.

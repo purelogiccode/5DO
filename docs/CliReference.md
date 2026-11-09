@@ -240,6 +240,31 @@ buttons. The state persists until the next entry. Duplicate frames keep the last
 With `--state-in`, a script starting at `0` applies its last entry immediately unless
 `--script-base state` is used.
 
+A line may also carry one pointer-device state after the pad buttons. The device must
+be selected with `--input-device` on the same port; otherwise the pointer state is
+ignored. Pointer buttons persist until the next entry, while relative mouse and
+trackball motion applies to one frame only:
+
+```text
+# frame  pad buttons  pointer token
+300      A            @mouse 40 -20 left
+320      None         @mouse 0 0
+340      None         @lightgun 160 120 trigger
+360      None         @arcadegun 200 150 trigger,coins
+380      None         @trackball 6 -2 start1,coin2
+```
+
+| Token | Coordinates | Optional buttons |
+|---|---|---|
+| `@mouse` | relative `dx dy`, each -512..511 | `left`, `middle`, `right`, `shift` |
+| `@lightgun` (`@gun`) | screen `x y`, 0-319/0-239 | `trigger`, `option`, `reload`, `offscreen` |
+| `@arcadegun` (`@arcade`) | screen `x y` | `trigger`, `service`, `coins`, `start`, `holster`, `offscreen` |
+| `@trackball` (`@orbatak`) | relative `dx dy`, each -24..24 | `start1`, `start2`, `coin1`, `coin2`, `service` |
+
+A line without a pointer token releases every pointer button. The reference
+`OperaCore` wrapper used by the differential harness currently exposes only a joypad,
+so pointer scripts produce 5DO-only evidence until that bridge gains pointer support.
+
 ### Output options
 
 | Option | Default | Meaning |

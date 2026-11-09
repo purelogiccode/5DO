@@ -279,6 +279,13 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
 If the recording started after a save state was loaded, add `--script-base state` so
 the script's frame numbers are shifted by the loaded frame count.
 
+Input recordings capture the player-1 pad only. To drive a mouse, lightgun, arcade
+lightgun, or Orbatak trackball in a script, add a pointer token to a line manually:
+`@mouse dx dy [left,middle,right,shift]`, `@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, or
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. Select the same device with
+`--input-device <port>=<device>`; see [`CliReference.md`](CliReference.md#input-and-automation-options).
+
 ### TAS movies
 
 **Emulation > Record Movie...** captures a deterministic `.5domovie` file: the exact

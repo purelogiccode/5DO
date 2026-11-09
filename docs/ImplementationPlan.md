@@ -1,11 +1,13 @@
 # 5DO — Compatibility Completion Plan
 
-**Snapshot:** 2026-11-08
+**Snapshot:** 2026-11-09
 **Objective:** finish with the largest playable 3DO game set — more playable titles than
 4DO and Phoenix on the same BIOS, the same unique-title corpus, and the same input
 scripts.
-**Scope:** compatibility only. Product, performance, research, and platform work do not
-block completion unless they stop a title from reaching the finish line.
+**Scope:** compatibility completion. Phase 3 tracks post-1.6 quality and accuracy work;
+it does not change a completed compatibility claim. Product, performance, research, and
+platform work do not block completion unless they stop a title from reaching the finish
+line.
 **History:** this file is the active task list. The former plan, status snapshots, stable
 IDs, evidence, completed log, appendices, and reference strategy are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md).
@@ -88,6 +90,12 @@ is a static pad status card, `LameNES Emulator` renders only a minimal "HELLO, W
 text line (0.43% non-black), and the *Return Fire – Maps O' Death* standalone data disc
 is a static box-art/title card. All are documented in the evidence page.
 
+**Quality baseline (2026-11-09):** the Tier C ledger is **101 rows: 88 `Good`,
+13 `Playable`**. Seven `Playable` rows are media/reference/add-on discs; the six game
+leads are BladeForce, DeathKeep, Jurassic Park Interactive, Kingdom - The Far Reaches,
+Off-world Interceptor, and PGA Tour 96. This is the Phase 3 starting point; the binary
+playable count above is unchanged.
+
 ---
 
 ## 2. Task list
@@ -97,10 +105,12 @@ is a static box-art/title card. All are documented in the evidence page.
 | **0 — Measure** | COMPAT-01 … COMPAT-06 | 378/378 classified; every failure triaged |
 | **1 — Fix** | COMPAT-07 … COMPAT-13 | 0 `Behind`/`Regression`; ≥254 playable; strict superset |
 | **2 — Lock and ship** | COMPAT-14 … COMPAT-16, REL-01 … REL-03 | regression gate green; six bundles published |
+| **3 — Post-1.6 quality** | QUAL-01 … QUAL-04, ACC-01 … ACC-02, PLAT-01 | quality ledger closed or every residual documented |
 
-All compatibility tasks are complete; the remaining open items are the platform validation
-and bundle publication in Phase 2. A task is complete only when its **Done when** line is
-satisfied and the evidence is committed.
+All compatibility tasks are complete; **v1.6.0** shipped the six bundles. Phase 3 is the
+post-1.6 quality and accuracy program; it does not reopen a completed compatibility
+claim. A task is complete only when its **Done when** line is satisfied and the evidence
+is committed.
 
 ### Phase 0 — Measure the whole corpus
 
@@ -266,6 +276,113 @@ satisfied and the evidence is committed.
   `SHA256SUMS.txt`; all published checksums verify:
   <https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>.
 
+### Phase 3 — Post-1.6 quality and accuracy
+
+- [x] **QUAL-01 — Differential triage of suspected core defects**
+  Run **DeathKeep**, **Kingdom - The Far Reaches**, and **BladeForce** against
+  OperaCore with the same BIOS, seed, input script, and checkpoint range. DeathKeep
+  renders its stained-glass intro and then pure black through 48,000 frames while both
+  peers claim `Good`; Kingdom plays its intro and returns to the title; BladeForce
+  exposes live-action cutscenes and returns to Main Options. A reference gameplay
+  capture turns each into a core bug; a matching reference loop closes it as a content
+  or script limit.
+  **Done when:** each title either reaches the reference's beyond-title state or has a
+  dated root cause, a stored reproduction, and a focused regression test where the
+  cause is in 5DO.
+  **2026-11-09:** differential rerun with `bios/panafz10.bin` and a 1,200-second
+  timeout after the first attempt hit the harness's 180-second default; see
+  `artifacts/diff/tierc-triage2`. **DeathKeep closed as not-a-5DO-defect:** OperaCore
+  reached 48,000 frames and its `f048000.bmp` is also pure black; the only divergence
+  was the documented 1.214 ppm sample-count alignment (35,315,280 vs 35,315,323).
+  **BladeForce closed as not-a-5DO-defect:** the reference reaches the same Main Options
+  menu at 60,000 frames with only the sample-count alignment; the new
+  `bladeforce-play6` script selects START NEW GAME and reaches the intro/cutscene path
+  through 100,000 frames, but no interactive mission. **Kingdom closed as
+  not-a-5DO-defect:** a 60,000-frame comparison in
+  `artifacts/diff/kingdom-triage-60k` captures the same Kingdom title screen on both
+  engines. All three leads are content/script limits, not 5DO core regressions.
+
+- [x] **QUAL-02 — Pointer input scripting**
+  Add pointer-device state to the scripted input path so pointer-driven UI and
+  lightgun/trackball titles are testable. The format is one optional token per line
+  after the pad buttons: `@mouse dx dy [left,middle,right,shift]`,
+  `@lightgun x y [trigger,option,reload,offscreen]`,
+  `@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
+  `@trackball dx dy [start1,start2,coin1,coin2,service]`. `ScriptedPbusSource` applies
+  the state to every matching port, holds buttons, and treats relative motion as a
+  one-frame impulse.
+  **Done when:** the CLI and scripted source support the tokens with tests and docs.
+  **2026-11-09:** `InputScript`, `InputScriptPointer`, `ScriptedPbusSource`, the CLI
+  path, `CliReference.md`, `DifferentialHarness.md`, `UserGuide.md`, and six tests are
+  in. The reference `OperaCore` wrapper remains joypad-only, so pointer runs are
+  documented as 5DO-only evidence until that bridge is extended.
+
+- [x] **QUAL-03 — Remaining Tier C game leads**
+  Close the six game rows still graded `Playable`: **BladeForce**, **DeathKeep**,
+  **Jurassic Park Interactive**, **Kingdom - The Far Reaches**, **Off-world
+  Interceptor**, and **PGA Tour 96**. The seven media/reference/add-on rows stay
+  `Playable` by design.
+  **Done when:** every game row reaches gameplay with a title-specific script, or has a
+  dated reason that names the blocking screen/input.
+  **2026-11-09:** Carrier - Fortress at Sea, Family Feud, Insect War, and N. O. B. were
+  promoted to `Good`; the ledger is **88 `Good`, 13 `Playable`**. All six remaining game
+  rows now have a dated blocking screen: BladeForce (START NEW GAME intro/cutscene loop),
+  DeathKeep (Start Game black screen on both engines), Jurassic Park (Operations hub,
+  pause menu session state, no terminal opened), Kingdom (intro returns to the title on
+  both engines), Off-world Interceptor (pre-mission shop), and PGA Tour 96 (Golf Bag ->
+  Pro Info cycle).
+
+- [x] **QUAL-04 — Quality-ledger gate**
+  Extend the weekly compatibility workflow to validate `docs/data/playability-grades.csv`
+  and fail when a title drops from `Good`, a row loses its evidence path, or the ledger
+  count changes without a dated batch entry.
+  **Done when:** the gate runs unattended and a synthetic regression fails it.
+  **2026-11-09:** `tools/verify-playability-grades.py` validates statuses, duplicates,
+  reasons, and `tierc-*` evidence, and compares against
+  `docs/data/playability-grades-baseline.json`; `compat-baseline.yml` runs it in a
+  `quality-ledger` job. The checked-in baseline is 88 `Good` / 13 `Playable`; a
+  fabricated Good -> Playable drop fails as expected.
+
+- [x] **ACC-01 — Time-boxed Road Rash long-run divergence**
+  Road Rash is the only 3,000-frame showcase title whose frame hash still differs from
+  OperaCore. Use the existing trace and CD-cadence tools to find the first divergent
+  behavior; open a core fix only when it has a player-visible effect.
+  **Done when:** the divergence is fixed with a regression panel, or documented with
+  its first mismatch, guest-visible impact, and a revisit condition.
+  **2026-11-09:** fresh 900-frame no-input run in
+  `artifacts/diff/roadrash-acc1-timers`. First behavioral divergence is f=600
+  (`0x6E906F97` vs `0xE2817090`); the CD command arrays match through index 558, then
+  Opera issues READ_ID where 5DO continues READ_DATA, both from PC `0x00022388`, with
+  the READ_ID cycles within +785. The residual is guest read-request ordering, not a
+  CD register/PC bug. Revisit if a Road Rash gameplay scene (not intro/attract) diverges
+  or a matrix title changes status. See [`DifferentialHarness.md`](DifferentialHarness.md)
+  §8.
+
+- [x] **ACC-02 — CD-DA audio-only TOC and track list**
+  Audio-only CD-DA discs reach the 3DO CD player but show an empty track list and
+  capture silence. Add the read-ahead/audio-only-TOC behavior only if a matrix title
+  needs it.
+  **Done when:** a known audio-only disc lists and plays its tracks, or the residual is
+  recorded with its exact disc and limit.
+  **2026-11-09:** recorded the exact limit: *A&M Music Sampler*
+  (`[CD-Audio].chd`) has **14 audio tracks, no data track**; `disc tracks` reports them
+  correctly, but the guest CD player shows no list and the WAV capture is silent. No
+  matrix game needs the behavior, so this stays a documented SYS-01 residual with no
+  core change. See [`KnownIssues.md`](KnownIssues.md).
+
+- [x] **PLAT-01 — macOS, arm64, and Linux GPU validation**
+  Validate macOS x64/arm64 runtime, Windows/Linux arm64 hardware, and Linux GPU
+  presentation. These are post-1.6 platform items and do not block the compatibility
+  claim.
+  **Done when:** each target has a dated smoke result or a documented best-effort
+  limitation.
+  **2026-11-09:** closed as documented best-effort limitations on the current hardware:
+  Windows x64 and Linux x64 (Hyper-V `LinuxMint`, llvmpipe) have dated smoke results;
+  macOS is cross-published as Mach-O and not executed; Windows/Linux arm64 and macOS
+  arm64 are not hardware-validated; Linux GPU presentation remains preview/best-effort.
+  The six apphost architectures are PE/ELF/Mach-O verified by the release workflow. See
+  [`KnownIssues.md`](KnownIssues.md) and [`Compatibility.md`](Compatibility.md) §10.3.
+
 ---
 
 ## 3. Execution order
@@ -274,6 +391,8 @@ satisfied and the evidence is committed.
 2. **Fix:** COMPAT-07 through COMPAT-13. Work the failure ledger by root-cause bucket;
    do not start with title-specific patches.
 3. **Lock and ship:** COMPAT-14 → COMPAT-15 → COMPAT-16 → REL-01 → REL-02 → REL-03.
+4. **Post-1.6 quality:** QUAL-01 → QUAL-02 → QUAL-03 → QUAL-04, then ACC-01/ACC-02 and
+   PLAT-01. QUAL-01 comes first because a real core defect outranks a quality grade.
 
 Rules:
 
@@ -308,6 +427,9 @@ python tools/beyond-title-report.py --ledger docs/data/beyond-title-results.csv
 python tools/verify-beyond-title-ledger.py --ledger docs/data/beyond-title-results.csv
 python tools/beyond-title-baseline.py --ledger docs/data/beyond-title-results.csv --check --require-count 378
 
+# Input-script parser and pointer-device tests
+dotnet test 5DO.sln -c Debug --filter FullyQualifiedName~InputScriptTests
+
 # Accuracy smoke (frame/audio panel)
 dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/panel50.json --core artifacts/diff/opera-build/out/OperaCore.dll
 
@@ -326,7 +448,9 @@ preserved in [ImplementationPlanArchive.md](ImplementationPlanArchive.md#7-verif
 
 ## 5. Out of scope
 
-These do not block compatibility completion and must not be added as prerequisites:
+These do not block compatibility completion and must not be added as prerequisites.
+Phase 3 treats gameplay depth and accuracy residuals as a quality program, not a
+compatibility gate:
 
 - Deep gameplay verification, ending validation, or full-game completion.
 - Frame-perfect parity with 4DO/Phoenix after the beyond-title screen.
@@ -343,4 +467,6 @@ The former plan and its completed log are archived in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md). It preserves the
 2026-11-08 status snapshot, the old A-D gates, stable IDs (`TEST-06`, `CORE-04`,
 `CORE-13`, `SYS-*`, `ECO-*`), the shipped baseline, evidence gaps, reference strategy,
-appendices, and every completed entry. Completed work must not be re-opened here.
+appendices, and every completed entry. Completed work must not be re-opened here;
+Phase 3 adds new post-1.6 quality IDs without changing a completed compatibility
+claim.

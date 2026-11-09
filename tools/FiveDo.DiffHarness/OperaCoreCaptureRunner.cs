@@ -81,6 +81,15 @@ internal static class OperaCoreCaptureRunner
         if (inputScript is not null)
         {
             script = InputScript.Load(inputScript);
+            if (script.Any(entry => entry.PointerState.Kind != InputScriptPointerKind.None))
+            {
+                return Failed(
+                    disc,
+                    bios,
+                    frames,
+                    "pointer input script is not supported by the joypad-only reference bridge; "
+                    + "rerun with --no-opera.");
+            }
         }
 
         var timeout = harness.TimeoutSeconds ?? manifest.Defaults?.TimeoutSeconds ?? 180;

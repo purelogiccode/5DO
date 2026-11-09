@@ -366,11 +366,21 @@ button names are `ControllerButton` names or the aliases `Start`/`Play`/`Pause`
 340   None
 ```
 
+A line may also attach a pointer device after the pad buttons: `@mouse dx dy
+[left,middle,right,shift]`, `@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, or
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. Pointer buttons persist,
+while relative mouse/trackball motion is a one-frame impulse. The 5DO CLI must select
+the matching device with `--input-device`; a port configured as a joypad ignores the
+pointer state. See [`CliReference.md`](CliReference.md#input-and-automation-options).
+
 The harness passes the file to `run --input-script` and to the reference input
 callback. Both engines apply the entry whose frame is at or before the current
-emulated frame, before that frame executes. The generic
-`benchmarks/diff/scripts/menu-advance.txt` is the current panel script; it presses
-Start and A with gaps so boot logos, menus, and FMV prompts advance.
+emulated frame, before that frame executes. The reference `OperaCore` wrapper is
+currently joypad-only, so a pointer script is a 5DO-only capture unless the harness
+bridge is extended. The generic `benchmarks/diff/scripts/menu-advance.txt` is the
+current panel script; it presses Start and A with gaps so boot logos, menus, and FMV
+prompts advance.
 
 Evidence (`test94-samples5-input`, 900 frames, five titles):
 
@@ -699,6 +709,17 @@ change.
   862/861 (Wolfenstein), and 932/932 (Alone). Transient video mismatches at
   f=1000 on Alone and Space Ace recover by f=3000. This separates the remaining
   long-run issue into CD cadence and Road Rash-specific scene divergence.
+- **2026-11-09 Road Rash ACC-01 trace.** A fresh 900-frame no-input run
+  (`artifacts/diff/roadrash-acc1-timers`) reproduces the first behavioral
+  divergence at f=600 (`0x6E906F97` vs `0xE2817090`) and the known +43-sample
+  clock alignment. The CD command arrays are byte-identical through index 558;
+  the first sequence difference is index 559, where Opera issues a READ_ID
+  (`0x83`) burst while 5DO continues READ_DATA (`0x10`). Both issue the command
+  from the same PC (`0x00022388`); 5DO's READ_ID follows at cycle 119,295,439
+  versus Opera's 119,296,224 (+785 cycles). The residual is guest read-request
+  ordering, not a command-table, PC, or register-contract difference. The 50-title
+  panel still matches every frame hash at 60/120/300, so the residual stays
+  documented rather than release-blocking.
 - **2026-11-06 exact-clock panel (TEST-07).** The previous 50-title panel
   (`artifacts/diff/test21-panel50/report.json`, local corpus) captured **50/50
   titles with 0 errors**. **32/50 match every frame hash** at frames 60/120/300;

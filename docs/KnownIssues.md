@@ -35,7 +35,9 @@ checksums are attached, and legal/attribution sign-off is recorded.
   completed 7,200 frames with the Disc 2 hash. Audio-only CD-DA discs reach the 3DO CD
   player but the track list stays empty and the WAV capture is silent; this is the
   documented SYS-01 CD-DA read-ahead/audio-only-TOC residual, not a beyond-title
-  blocker.
+  blocker. The exact reproduction is *A&M Music Sampler* (`[CD-Audio].chd`):
+  `disc tracks` reports **14 audio tracks, no data track**, but the guest CD player
+  shows no list and the WAV capture is silent. No matrix game needs the behavior.
 - The weekly regression gate is `.github/workflows/compat-baseline.yml` on a Windows
   self-hosted runner with the collection mounted, backed by
   `docs/data/beyond-title-baseline.json` and `tools/run-beyond-title-gate.ps1`.

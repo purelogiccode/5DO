@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-09, after the first Tier C gameplay-depth increment and the 1.6.0
+**Snapshot:** 2026-11-09, after the two Tier C gameplay-depth increments and the 1.6.0
 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
 baseline update; the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
@@ -69,11 +69,28 @@ through 36,000 frames), **Hell - A Cyberpunk Thriller** (3D adventure gameplay a
 44,000/48,000 frames), and **Slayer** (first-person dungeon gameplay at 80,000/90,000
 frames). A fixed-script run withdrew the earlier PGA Tour 96 promotion; the Player List
 stays put, so it remains `Playable`.
-The CSV ledger is now **101 rows: 84 `Good`, 17 `Playable`**. The 378-title playable
+The CSV ledger moved to **101 rows: 84 `Good`, 17 `Playable`**. The 378-title playable
 count stays **375** because Tier C changes the quality grade, not the binary
 compatibility result. The 25-title baseline completed 25/25. See
 [`TestCorpus.md`](TestCorpus.md) 1.1bm and [`CompatibilitySweep.md`](CompatibilitySweep.md)
 4.3.
+
+**Tier C second increment (2026-11-09):** input scripts now support pointer devices
+(`@mouse`, `@lightgun`, `@arcadegun`, `@trackball`) with one-frame relative motion and
+persistent buttons; `ScriptedPbusSource` applies them per configured port and the parser
+has six new tests. Four more titles were promoted to `Good`: **Carrier - Fortress at
+Sea** (trap menu to a live trap approach and WAVE OFF at 14,000 frames), **Family Feud**
+(home questions and letter keyboard at 9,000/12,000), **Insect War** (first-person HUD
+and WARNING state at 58,000/62,000), and **N. O. B.** (VITALITY HUD gameplay at 9,000).
+The ledger is now **101 rows: 88 `Good`, 13 `Playable`**; seven of the remaining rows are
+media/reference/add-on discs, and six are game leads (BladeForce, DeathKeep, Jurassic
+Park, Kingdom, Off-world Interceptor, PGA Tour 96). Differential triage closed the three
+suspected core defects as content/script limits: DeathKeep and Kingdom show the same
+black screen/title screen on OperaCore, and BladeForce reaches the same Main Options
+menu on both engines. The quality ledger gate (`tools/verify-playability-grades.py` and
+`compat-baseline.yml`) now fails on a `Good` -> `Playable` drop. The suite is **2,068
+tests**; build, format, and InspectCode are clean. See [`TestCorpus.md`](TestCorpus.md)
+1.1bo and [`CliReference.md`](CliReference.md#input-and-automation-options).
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept

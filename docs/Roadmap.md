@@ -22,11 +22,16 @@ The compatibility plan is complete:
 
 **Playability depth (in progress):**
 
-- Tier C gameplay-depth pass: the first increment reviewed the 25 remaining `Playable`
-  titles and promoted eight to `Good` (Olympic Soccer, John Madden Football, Crime
-  Patrol, Mad Dog II, Shootout at Old Tucson, Guardian War, Hell - A Cyberpunk Thriller,
-  and Slayer). The remaining leads include BladeForce, PGA Tour 96, N.O.B., Insect War,
-  DeathKeep, Kingdom, Family Feud, and Jurassic Park.
+- Tier C gameplay-depth pass: the first increment promoted eight titles to `Good`
+  (Olympic Soccer, John Madden Football, Crime Patrol, Mad Dog II, Shootout at Old
+  Tucson, Guardian War, Hell - A Cyberpunk Thriller, and Slayer). The second increment
+  added pointer-device input scripts and promoted four more: **Carrier - Fortress at
+  Sea**, **Family Feud**, **Insect War**, and **N. O. B.**. The ledger is **88 `Good`,
+  13 `Playable`**; the remaining game leads are BladeForce, DeathKeep, Jurassic Park,
+  Kingdom, Off-world Interceptor, and PGA Tour 96, alongside seven media/reference/
+  add-on discs. All six now have a dated blocking screen. DeathKeep and Kingdom match
+  the reference core's black/title screens, and BladeForce matches the reference Main
+  Options menu, so none of the three is a 5DO core defect.
 - Full-race and long-playthrough evidence for Road Rash, Alone in the Dark, and the
   remaining scripted titles.
 
