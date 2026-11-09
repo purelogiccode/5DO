@@ -81,7 +81,7 @@ peer set. See [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md).
 
 The per-title state is the `Unique titles` table in
 [CompatibilityComparison.md](CompatibilityComparison.md). Its `5DO`, `vs 4DO`, and
-`vs Phoenix` columns are the work queue.
+`vs Phoenix` columns are the authoritative per-title matrix.
 
 The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
 is a static pad status card, `LameNES Emulator` renders only a minimal "HELLO, WORLD!"
