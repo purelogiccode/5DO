@@ -1,0 +1,23 @@
+# Slayer: four Downs from Play Introduction to Create Character.
+24000 C
+24020 None
+30000 C
+30020 None
+50000 Down
+50020 None
+50400 Down
+50420 None
+50800 Down
+50820 None
+51200 Down
+51220 None
+51600 C
+51620 None
+53000 C
+53020 None
+55000 C
+55020 None
+57000 C
+57020 None
+59000 C
+59020 None

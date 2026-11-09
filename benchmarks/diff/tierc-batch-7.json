@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 7: Slayer and Hell confirm buttons",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "slayer-play7",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-play7.txt",
+      "frames": 60000,
+      "captureFrames": [
+        54000,
+        56000,
+        58000,
+        60000
+      ]
+    },
+    {
+      "id": "hell-play6",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-play6.txt",
+      "frames": 48000,
+      "captureFrames": [
+        40000,
+        42000,
+        44000,
+        46000,
+        48000
+      ]
+    }
+  ]
+}

@@ -3226,22 +3226,34 @@ reaching gameplay and completing the checkpoint window without a hang or crash.
 |---|---|
 | Olympic Soccer | `tierc/olympic-soccer-play.txt`: ARCADE -> team select -> **FULL-TIME** at 18,000 frames; returns to the menu by 36,000. |
 | John Madden Football | `tierc/john-madden-c2.txt`: C through the Scouting Report and play selection; live football field, players, and clock at 12,000/24,000/36,000 frames. |
-| PGA Tour 96 | `tierc/pga-play3.txt`: confirms the Player List and reaches the Hole 13 tee with the golfer, pin, and yardage HUD at 24,000 frames; returns to the Main Menu by 36,000. |
 | Crime Patrol | `tierc/crime-patrol-c2.txt`: C selects PLAY and 1 PLAYER; live-action lightgun scene at 48,000 frames. |
 | Mad Dog II - The Lost Gold | `tierc/mad-dog-ii-c2.txt`: C selects Play and 1 Player; live-action stage at 48,000 frames. |
 | Shootout at Old Tucson | `tierc/shootout-c2.txt`: skips the credits with C; live-action lightgun scene with the ammo HUD at 48,000 frames. |
 | Guardian War | `tierc/guardian-war-play3.txt`: keeps the game in play after the opening battle; Goddess dialogue at 18,000 and the world-map character at 24,000/36,000 frames. |
+| Hell - A Cyberpunk Thriller | `tierc/hell-play6.txt`: A activates the menu, three Downs select Start New Game, and A confirms; character select at 40,000 and 3D adventure gameplay at 44,000/48,000 frames. |
+| Slayer | `tierc/slayer-play8.txt`: Create Character, Choose Face, and Dungeon Settings confirmed; first-person dungeon gameplay with map and HP/FD HUD at 80,000/90,000 frames. |
 
-The CSV ledger now has **100 rows: 83 `Good`, 17 `Playable`**. The remaining `Playable`
+The CSV ledger now has **101 rows: 84 `Good`, 17 `Playable`**. The remaining `Playable`
 rows are five media/reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN
 Golf, Life Stage), the *Return Fire - Maps O' Death* data disc, and eleven game/script
 gaps. The strongest remaining leads are BladeForce (3D mission/cinematic scenes at
-24,000/36,000; interactive gameplay not yet confirmed), N.O.B. (SURVIVE scene at
-18,000), Insect War (3D content at 30,000), DeathKeep (late title menu), Hell (Start New
-Game menu), Kingdom (late title menu), Family Feud (two-stage game options), Jurassic
-Park (play-level screen), and Slayer (late title menu). Carrier's briefing room appears
+24,000/36,000; interactive gameplay not yet confirmed), PGA Tour 96 (Player List; needs
+a round-start script), N.O.B. (SURVIVE scene at 18,000), Insect War (3D content at
+30,000), DeathKeep (late title menu), Kingdom (late title menu), Family Feud (two-stage
+game options), and Jurassic Park (play-level screen). Carrier's briefing room appears
 to be pointer-driven, so the scripted pad cannot select `Challenge!`; it stays
 `Playable` with that reason.
+
+**Fixed-script recheck (2026-11-09):** an early batch generator emitted a press and
+its `None` release at the same frame. `InputScript.Parse` coalesces duplicate frames,
+so the press could be discarded. Every affected script was repaired with an explicit
+20-frame hold and the affected titles were re-run in `artifacts/tierc-fixed`,
+`tierc-batch-7`, and `tierc-batch-8`. The corrected runs confirmed John Madden, Crime
+Patrol, Mad Dog II, Shootout at Old Tucson, Guardian War, Hell, and Slayer, and
+**withdrew the PGA Tour 96 promotion** because the fixed script stays on the Player
+List. The paired BladeForce input/no-input probe now shows a real input effect, but both
+runs only expose live-action cutscenes and return to the menu; BladeForce remains
+`Playable`.
 
 The Tier C workflow and grade rules are in
 [`CompatibilitySweep.md`](CompatibilitySweep.md) 4.3.

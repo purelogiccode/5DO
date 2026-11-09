@@ -23,10 +23,10 @@ The compatibility plan is complete:
 **Playability depth (in progress):**
 
 - Tier C gameplay-depth pass: the first increment reviewed the 25 remaining `Playable`
-  titles and promoted seven to `Good` (Olympic Soccer, John Madden Football, PGA Tour 96,
-  Crime Patrol, Mad Dog II, Shootout at Old Tucson, and Guardian War). The remaining
-  leads include BladeForce, N.O.B., Insect War, DeathKeep, Hell, Kingdom, Family Feud,
-  Jurassic Park, and Slayer.
+  titles and promoted eight to `Good` (Olympic Soccer, John Madden Football, Crime
+  Patrol, Mad Dog II, Shootout at Old Tucson, Guardian War, Hell - A Cyberpunk Thriller,
+  and Slayer). The remaining leads include BladeForce, PGA Tour 96, N.O.B., Insect War,
+  DeathKeep, Kingdom, Family Feud, and Jurassic Park.
 - Full-race and long-playthrough evidence for Road Rash, Alone in the Dark, and the
   remaining scripted titles.
 

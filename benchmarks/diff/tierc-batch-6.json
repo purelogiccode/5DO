@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 6: Slayer, Hell, DeathKeep activation",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "slayer-play6",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-play6.txt",
+      "frames": 60000,
+      "captureFrames": [
+        36000,
+        50000,
+        54000,
+        58000,
+        60000
+      ]
+    },
+    {
+      "id": "hell-play5",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-play5.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        38000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "deathkeep-play6",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-play6.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        38000,
+        40000,
+        44000,
+        48000
+      ]
+    }
+  ]
+}

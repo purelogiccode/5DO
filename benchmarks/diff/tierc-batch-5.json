@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 5: late menus and BladeForce control",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "family-feud-play5",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play5.txt",
+      "frames": 48000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "slayer-play5",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-play5.txt",
+      "frames": 60000,
+      "captureFrames": [
+        36000,
+        48000,
+        54000,
+        60000
+      ]
+    },
+    {
+      "id": "deathkeep-play5",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-play5.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "hell-play4",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-play4.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "kingdom-play4",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-play4.txt",
+      "frames": 90000,
+      "captureFrames": [
+        36000,
+        48000,
+        60000,
+        72000,
+        90000
+      ]
+    },
+    {
+      "id": "bladeforce-input",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-input.txt",
+      "frames": 36000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "bladeforce-control",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-control.txt",
+      "frames": 36000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ Ballz - The Director's Cut (1995)(Panasonic)[!].chd,Good,"Tier B pass stays in t
 Battle Pinball (1994)(Panasonic)(JP)[!].chd,Good,"Tier B pass reaches the pinball table at 3,600 and the character select later; no crash.",tierb-2
 BattleSport (1995)(Studio 3DO)(EU)[!].chd,Good,"Tier B pass stays in the arena match through 36,000 frames; no crash.",tierb-2
 BC Racers (1995)(GoldStar)(EU-US)[!].chd,Good,"Tier B pass reaches the race and is still in gameplay (paused) at 36,000; no crash.",tierb-2
-BladeForce (1995)(Studio 3DO)(EU)[!].chd,Playable,"Tier C script (tierc/bladeforce-play3.txt) starts a mission and reaches 3D mission/cinematic scenes at 24,000 and 36,000 frames, but interactive gameplay is not yet confirmed; remains Playable pending a control-effect check. Evidence: artifacts/tierc-batch-4/bladeforce-play3.",tierc-1
+BladeForce (1995)(Studio 3DO)(EU)[!].chd,Playable,"Tier C control probe: the input and no-input runs diverge at 24,000/30,000/36,000 frames, but both play the live-action intro/cutscene sequence and return to Main Options; no interactive gameplay was captured. Remains Playable. Evidence: artifacts/tierc-batch-5/bladeforce-input and bladeforce-control.",tierc-1
 Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd,Good,"Tier B pass reaches the interactive scene and stays interactive through 36,000; no crash.",tierb-2
 Burning Soldier (1994)(Panasonic)(US)[!].chd,Good,"Tier B pass stays in the space-shooter gameplay through 36,000; no crash.",tierb-2
 Bust-A-Move (1995)(Taito)(US).chd,Good,"Tier B pass stays in the puzzle board through 36,000; no crash.",tierb-2
@@ -47,7 +47,7 @@ Flying Nightmares (1995)(Domark)(EU)[!].chd,Good,"Tier B pass reaches the cockpi
 Foes of Ali (1995)(EA Sports)(US)[!].chd,Good,"Tier B pass reaches the boxing match and stays in-game through 36,000; no crash.",tierb-3
 Gex (1995)(Crystal Dynamics)(EU-US)[!].chd,Good,"Tier B pass stays in the platform gameplay through 36,000; no crash.",tierb-3
 Gridders (1994)(GoldStar - Tetragon)(KR-US)(en)[!].chd,Good,"Tier B pass stays in the isometric gameplay through 36,000; no crash.",tierb-3
-Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd,Playable,Stays on the title menu (Turn Music Off / First Sound Off / Restore Game / Start New Game).,tierb-3
+Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd,Good,"Tier C fixed-script run (tierc/hell-play6.txt) activates the title menu with A, moves to Start New Game with three Downs, and confirms with A; the character-select screen appears at 40,000 and 3D adventure gameplay at 44,000/48,000 frames; no crash. Evidence: artifacts/tierc-batch-7/hell-play6.",tierc-1
 "Horde, The (1994)(Crystal Dynamics)(EU-US)[!].chd",Good,"Tier B pass stays in the map gameplay through 36,000; no crash.",tierb-3
 Icebreaker (1995)(Panasonic)(US)[!].chd,Good,"Tier B pass stays in the puzzle gameplay through 36,000; no crash.",tierb-3
 "Incredible Machine, The (1994)(Dynamix)(US)[!].chd",Good,"Tier B pass stays in the puzzle gameplay through 36,000; no crash.",tierb-3
@@ -81,7 +81,7 @@ Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd,Good,"Tier B 10-minute pass
 PaTaank (1994)(PF.Magic)(EU-US)[!].chd,Good,Tier B 10-minute pass reaches the 3D brick-breaker playfield; no crash.,tierb-4
 Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd,Good,Tier B 10-minute pass reaches Hole 1 tee-off with the player HUD; no crash.,tierb-4
 "Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd",Good,Tier B 10-minute pass reaches the scenario board with units; no crash.,tierb-4
-PGA Tour 96 (1995)(EA Sports)(EU)[!].chd,Good,"Tier C 36,000-frame script (tierc/pga-play3.txt) confirms the Player List with C and reaches the Hole 13 tee with the golfer, pin, and yardage HUD at 24,000 frames; the round returns to the Main Menu by 36,000 without a crash. Evidence: artifacts/tierc-batch-4/pga-play3.",tierc-1
+PGA Tour 96 (1995)(EA Sports)(EU)[!].chd,Playable,"Tier C fixed-script run (tierc/pga-play3.txt) confirms the Player List and stays on it at 24,000/36,000; the earlier Good capture was an unattended attract/demo frame and was withdrawn. Remains Playable pending a working round-start script. Evidence: artifacts/tierc-fixed/pga-fixed.",tierc-1
 Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd,Good,Tier B 10-minute pass reaches in-game combat and the pause/options screen; no crash.,tierb-4
 Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd,Good,Tier B 10-minute pass reaches the live-action interactive scenes; no crash.,tierb-4
 PO'ed (1995)(Studio 3DO)(EU-US)[!].chd,Good,Tier B 10-minute pass reaches in-game combat and the pause menu; no crash.,tierb-4
@@ -98,4 +98,5 @@ Road Rash (1994)(Electronic Arts)(US)[!].chd,Good,Tier B 10-minute pass stays in
 Crime Patrol (1994)(American Laser Games)(US)[!].chd,Good,"Tier C 48,000-frame script (tierc/crime-patrol-c2.txt) selects PLAY and 1 PLAYER with C and reaches live-action lightgun gameplay by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/crime-patrol-c2.",tierc-1
 Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd,Good,"Tier C 48,000-frame script (tierc/mad-dog-ii-c2.txt) selects Play and 1 Player with C and reaches the live-action stage by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/mad-dog-ii-c2.",tierc-1
 Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd,Good,"Tier C 48,000-frame script (tierc/shootout-c2.txt) skips the credits with C and reaches the live-action lightgun scene with the ammo HUD by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/shootout-c2.",tierc-1
-Guardian War (1994)(Panasonic)(US)[!].chd,Good,"Tier C 36,000-frame script (tierc/guardian-war-play3.txt) keeps the game in play after the opening battle: Goddess dialogue at 18,000 and the world-map character at 24,000/36,000; no crash. Evidence: artifacts/tierc-batch-4/guardian-war-play3.",tierc-1
+Guardian War (1994)(Panasonic)(US)[!].chd,Good,"Tier C fixed-script run (tierc/guardian-war-play3.txt) keeps the game in play after the opening battle: Goddess dialogue at 24,000 and the world-map character at 36,000; no crash. Evidence: artifacts/tierc-fixed/guardian-war-fixed.",tierc-1
+Slayer (1994)(Mindscape)(EU)[!].chd,Good,"Tier C fixed-script run (tierc/slayer-play8.txt) confirms Create Character, Choose Face, and Dungeon Settings, then reaches first-person dungeon gameplay with the map and HP/FD HUD at 80,000/90,000 frames; no crash. Evidence: artifacts/tierc-batch-8/slayer-play8.",tierc-1

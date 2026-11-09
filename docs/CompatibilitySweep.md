@@ -416,6 +416,12 @@ Grade rules:
   a script that cannot start a round).
 - **Unplayable:** does not reach or sustain gameplay.
 
+Input scripts must hold a button for at least one field. Write `3600 C` followed by
+`3620 None`, not two entries at frame 3600: `InputScript.Parse` coalesces duplicate
+frames and keeps the last entry, so a same-frame press/release can discard the press.
+The Tier C batches were re-run with explicit 20-frame holds after an early generator
+emitted same-frame releases.
+
 Media and reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN Golf,
 Life Stage) stay `Playable` with a non-game note; the *Return Fire - Maps O' Death*
 standalone data disc keeps its documented peer invalidation. The quality result is

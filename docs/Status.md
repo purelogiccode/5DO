@@ -61,12 +61,15 @@ wiki. All published checksums verify. See
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the
 25 titles still graded `Playable` after Tier B with title-specific start and gameplay
-scripts. Seven were promoted to `Good`: **Olympic Soccer** (full match to FULL-TIME),
-**John Madden Football** (live football gameplay through 36,000 frames), **PGA Tour 96**
-(Hole 13 tee and round), **Crime Patrol** and **Mad Dog II** (live-action lightgun
-scenes at 48,000), **Shootout at Old Tucson** (lightgun scene with the ammo HUD), and
-**Guardian War** (world-map gameplay through 36,000 frames).
-The CSV ledger is now **100 rows: 83 `Good`, 17 `Playable`**. The 378-title playable
+scripts. Eight were promoted to `Good`: **Olympic Soccer** (full match to FULL-TIME),
+**John Madden Football** (live football gameplay through 36,000 frames), **Crime
+Patrol** and **Mad Dog II** (live-action lightgun scenes at 48,000), **Shootout at Old
+Tucson** (lightgun scene with the ammo HUD), **Guardian War** (world-map gameplay
+through 36,000 frames), **Hell - A Cyberpunk Thriller** (3D adventure gameplay at
+44,000/48,000 frames), and **Slayer** (first-person dungeon gameplay at 80,000/90,000
+frames). A fixed-script run withdrew the earlier PGA Tour 96 promotion; the Player List
+stays put, so it remains `Playable`.
+The CSV ledger is now **101 rows: 84 `Good`, 17 `Playable`**. The 378-title playable
 count stays **375** because Tier C changes the quality grade, not the binary
 compatibility result. The 25-title baseline completed 25/25. See
 [`TestCorpus.md`](TestCorpus.md) 1.1bm and [`CompatibilitySweep.md`](CompatibilitySweep.md)

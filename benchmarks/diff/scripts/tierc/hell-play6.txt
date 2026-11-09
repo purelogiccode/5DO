@@ -1,0 +1,21 @@
+# Hell: Start New Game is selected; try A then P to confirm.
+36000 A
+36020 None
+36500 Down
+36520 None
+37000 Down
+37020 None
+37500 Down
+37520 None
+38000 A
+38020 None
+40000 A
+40020 None
+42000 P
+42020 None
+44000 A
+44020 None
+46000 P
+46020 None
+48000 A
+48020 None
