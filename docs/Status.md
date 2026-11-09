@@ -49,7 +49,13 @@ format, and InspectCode are clean; `verify-beyond-title-ledger.py` and
 `generate-compat-comparison.py --check` pass; Road Rash boots for 600 frames in both the
 compatible and accuracy profiles. The six framework-dependent bundles and
 `SHA256SUMS.txt` are published at
-<https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>. See
+<https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42552318341> passed all six bundle
+jobs and the publish job; CI run
+<https://github.com/purelogiccode/5DO/actions/runs/42552303788> passed every required
+job; docs run
+<https://github.com/purelogiccode/5DO/actions/runs/42552303805> deployed Pages and the
+wiki. All published checksums verify. See
 [`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.6.0.md`](ReleaseNotes-1.6.0.md).
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared

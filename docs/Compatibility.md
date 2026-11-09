@@ -592,8 +592,10 @@ locally and verified. The Windows x64 bundle passed `FiveDo.Cli.exe --version` (
 --smoke-test` (`FRONTEND SMOKE OK 1.6.0`, OpenGL 4.0 + OpenAL ready). The bundle tree has
 no runtime folder, PDB, or XML files, and all six `SHA256SUMS.txt` entries verify. Local
 PE/ELF/Mach-O inspection confirms `win-x64`/`win-arm64`, `linux-x64`/`linux-arm64`, and
-`osx-x64`/`osx-arm64` apphosts. The release workflow repeats the Linux x64 smoke under
-xvfb and validates every bundle tree and apphost architecture.
+`osx-x64`/`osx-arm64` apphosts. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42552318341> repeated the Linux x64
+smoke under xvfb, validated every bundle tree and apphost architecture, and published
+all six bundles with `SHA256SUMS.txt`; all published checksums verify.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

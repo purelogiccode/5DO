@@ -239,16 +239,20 @@ satisfied and the evidence is committed.
   clean, InspectCode 0 results, `verify-beyond-title-ledger.py` and
   `generate-compat-comparison.py --check` pass.
 
-- [ ] **REL-02 — Platform validation (ECO-04)**
+- [x] **REL-02 — Platform validation (ECO-04)**
   Validate Windows x64/arm64 bundle smoke and Linux x64 on the local VM. Record macOS
   build validation and GPU presentation as best-effort.
   **Done when:** the release gate is green on Windows and Linux; macOS is documented.
   **2026-11-08 (1.6.0):** Windows x64 bundle smoke passed (CLI 1.6.0 `selftest` + frontend
   `--smoke-test`). Local PE/ELF/Mach-O inspection confirms all six bundle apphost
-  architectures. The release workflow repeats the Linux x64 smoke under xvfb; the local
-  Linux VM rerun remains blocked by host memory. macOS remains best-effort.
+  architectures. Release run
+  <https://github.com/purelogiccode/5DO/actions/runs/42552318341> passed the Linux x64
+  CLI/frontend smoke under xvfb and all six bundle jobs; CI run
+  <https://github.com/purelogiccode/5DO/actions/runs/42552303788> passed Windows, Linux,
+  and macOS build/test. The local Linux VM rerun remains blocked by host memory; macOS
+  remains best-effort.
 
-- [ ] **REL-03 — Bundles, checksums, and release notes**
+- [x] **REL-03 — Bundles, checksums, and release notes**
   Publish the six platform/architecture bundles with `README.md`, `LICENSE`,
   `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. Publish
   `SHA256SUMS.txt`; keep a local copy in
@@ -258,8 +262,9 @@ satisfied and the evidence is committed.
   release notes reflect the final result.
   **2026-11-08 (1.6.0):** six local bundles built in
   `src/FiveDo.Frontend.Avalonia/bin/Release`; all `SHA256SUMS-1.6.0.txt` entries verify;
-  no runtime/PDB/XML files; release notes and WhatsNew are 1.6.0. Waiting for the tag
-  workflow to publish the same bundles.
+  no runtime/PDB/XML files. Tag `v1.6.0` published six bundles and
+  `SHA256SUMS.txt`; all published checksums verify:
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>.
 
 ---
 

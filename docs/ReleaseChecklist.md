@@ -174,16 +174,24 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Build all six framework-dependent single-file bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
       Local bundles: `5do-1.6.0-{win-x64,win-arm64}.zip` and
-      `5do-1.6.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`.
+      `5do-1.6.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`; all six
+      `SHA256SUMS-1.6.0.txt` entries verify.
 - [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the 1.6.0 release notes, and the legal notices, and contains no
       `runtime/`, `*.pdb`, or `*.xml` files.
 - [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
       (`FRONTEND SMOKE OK 1.6.0`); CI verifies the arm64/macOS apphost machine types.
-- [ ] Create and push tag `v1.6.0`; the release workflow publishes six versioned
-      bundles and `SHA256SUMS.txt`.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.6.0 release page, What's New, release notes, and wiki page.
+- [x] Create and push tag `v1.6.0`; the release workflow published six versioned
+      bundles and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42552318341> passed all six
+      bundle jobs and the publish job. All six published `SHA256SUMS.txt` entries verify
+      locally. Local bundles are in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.6.0 release page, What's New, release notes, and wiki page. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42552303805> passed build,
+      Pages deploy, and wiki publish; `ReleaseNotes-1.6.0.html`, `WhatsNew.html`, and
+      `wiki/Release-1.6.0` return HTTP 200.
 
 ---
 
