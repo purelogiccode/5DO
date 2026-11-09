@@ -240,6 +240,10 @@ satisfied and the evidence is committed.
   Validate Windows x64/arm64 bundle smoke and Linux x64 on the local VM. Record macOS
   build validation and GPU presentation as best-effort.
   **Done when:** the release gate is green on Windows and Linux; macOS is documented.
+  **2026-11-08:** Windows x64 1.5.0 bundle smoke passed (CLI help + frontend
+  `--smoke-test`). The Linux VM rerun was blocked because the host could not allocate
+  the VM's 8 GB; no runtime code changed, so the 2026-11-02 Linux x64 gate remains the
+  current evidence. macOS remains best-effort.
 
 - [ ] **REL-03 — Bundles, checksums, and release notes**
   Publish the six platform/architecture bundles with `README.md`, `LICENSE`,

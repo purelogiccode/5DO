@@ -578,6 +578,14 @@ shipped as a **preview/best-effort** build: the CLI, frontend launch, and audio 
 validated, while GPU presentation should be re-tested on a hardware-accelerated Linux
 desktop before claiming full GL support. See [`KnownIssues.md`](KnownIssues.md).
 
+**2026-11-08 compatibility-pass note:** the Windows x64 1.5.0 bundle extracted and
+passed both `FiveDo.Cli.exe --help` and `FiveDo.Frontend.Avalonia.exe --smoke-test`
+(OpenGL 4.0 + OpenAL ready). The Linux rerun could not start the local 8 GB `LinuxMint`
+VM because the host could not allocate the memory; no runtime code changed in the
+compatibility pass, so the 2026-11-02 Linux x64 gate above remains the current Linux
+evidence. Re-run the Linux gate on a host with enough free memory before a new release.
+macOS remains build-validated and best-effort.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
