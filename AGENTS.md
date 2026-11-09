@@ -25,7 +25,7 @@ is documented as preview/best-effort. Record new Linux evidence in
 dotnet build 5DO.sln -c Debug
 dotnet test 5DO.sln -c Debug --no-build --no-restore
 dotnet format 5DO.sln --verify-no-changes --no-restore
-jb inspectcode 5DO.sln --severity=WARNING --no-updates
+jb inspectcode 5DO.sln --severity=WARNING --no-updates --no-build --output=inspectcode.sarif
 ```
 
 Run the release gate commands from `docs/ReleaseChecklist.md` before tagging a release.

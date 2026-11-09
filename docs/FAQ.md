@@ -59,21 +59,25 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Yes - **v1.1.0** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0). There is one
-bundle per system (Windows x64, Linux x64, macOS x64), and each bundle contains both
-the desktop app and the CLI. Install the **.NET 10 Runtime** first; the bundles do not
-include it. You can also build from source.
+Yes - **v1.6.0** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0). There is one
+bundle per system and architecture (Windows x64/arm64, Linux x64/arm64, macOS
+x64/arm64), and each bundle contains both the desktop app and the CLI. Install the
+**.NET 10 Runtime** first; the bundles do not include it. You can also build from
+source.
 
 ## Compatibility
 
 ### How compatible is 5DO?
 
-The full-collection loadability sweep covered **594 disc images**: **593 render**,
-**1 known boot failure** (`Crash 'n Burn` Japan), and **0 not-loadable rows**. The
-12-title compatibility matrix and known issues are the supported v1.0 set; full visual
-review and high-resolution CEL research are post-1.0. This is a
-**documented-compatibility** project, not a claim of full 3DO library compatibility.
+The compatibility matrix covers **378 game-test-set titles**: **375 are playable under
+the binary beyond-title rule**, and the three exceptions are non-retail/add-on images
+with documented root causes. Against the peer lists, 5DO has **0 `Behind` and 0
+`Regression` rows** and is a strict superset of the **252-title peer union** (4DO **167**,
+Phoenix **233**). The separate 594-image loadability sweep covers **593 render**, **1
+known boot failure** (`Crash 'n Burn` Japan), and **0 not-loadable rows**. This is a
+**documented-compatibility** project, not a claim of full 3DO library compatibility;
+full visual review and high-resolution CEL research remain post-1.6.
 
 See [Compatibility](Compatibility.md), [Game compatibility list](GameCompatibilityList.md),
 and [Known issues](KnownIssues.md).

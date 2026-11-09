@@ -6,39 +6,38 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.1.0 documented-compatibility release** (published on GitHub).
+The project is at the **v1.6.0 compatibility-completion release** (published on GitHub).
+The compatibility plan is complete:
 
-**M13 — compatibility sweep and status merge**
+- **378 game-test-set titles** are classified beyond the title screen with dated evidence.
+- **375 are playable**; the other three are non-retail/add-on images with documented root
+  causes. The comparison has **0 `Behind` and 0 `Regression` rows**.
+- 5DO is a strict superset of the **252-title peer union**, ahead of 4DO's **167** and
+  Phoenix's **233** playable titles.
+- The six framework-dependent bundles and `SHA256SUMS.txt` are published. Windows x64 is
+  the validated desktop; Linux x64 build/test and smoke pass in CI, and macOS remains
+  best-effort.
 
-- Loadability is complete: 594 images tested, **593 render**, 1 known no-video case
-  (`Crash 'n Burn` Japan), and zero not-loadable rows.
-- The in-game/visual review (M13.5) and high-resolution pass (M13.6) are post-1.0.
-- Linux x64 full suite passed; GPU presentation is preview/best-effort.
-- The remaining v1.0 work is the tag and artifact attachment.
+## Post-1.6
 
-**M14 — high-resolution CEL research (post-1.0)**
+**Playability depth (next):**
 
-- Measure the current opt-in 640×480 mode.
-- Prototype true internal high-resolution and 2× supersampling approaches.
-- Decide whether the feature ships, remains opt-in, or moves to the post-1.0 backlog.
+- Tier C gameplay review: promote the remaining `Playable` titles to `Good` with
+  title-specific scripts, reasons, and evidence.
+- Full-race and long-playthrough evidence for Road Rash, Alone in the Dark, and the
+  remaining scripted titles.
 
-## Release status
+**Accuracy residuals (not release blockers):**
 
-v1.1.0 is published on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0) as one
-bundle per system (Windows/Linux/macOS x64) with the CLI and desktop app. The .NET 10
-runtime is required on the host and is not bundled.
+- Road Rash's long-run frame divergence from the reference core.
+- CD command-cadence residual and CD-DA audio-only TOC/track-list evidence.
+- Crash 'n Burn (Japan) BIOS/dump boot limitation.
 
-Full compatibility and M14 research are **not** v1.0 gates. CI is green, the soak is
-complete, and the legal/attribution sign-off is recorded.
+**Platform and product:**
 
-## Post-1.0
-
-- Full-race and long-playthrough evidence for the remaining scripted titles.
-- GLES 3.1 and desktop arm64 validation. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
-- Tier B performance timing, DPI validation, and presentation polish.
+- GLES 3.1, desktop arm64, and Linux/macOS GPU validation.
+- M14 high-resolution CEL research.
 - Installers, signing, and file associations.
-- Optional managed IL JIT for guest ARM blocks.
 - Additional metadata providers and media in the library.
 - More TAS tooling, Lua scripting, and an input timeline.
 - Full PAL library validation and CD subcode work.

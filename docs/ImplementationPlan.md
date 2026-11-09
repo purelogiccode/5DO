@@ -294,7 +294,7 @@ Rules:
 dotnet build 5DO.sln -c Debug
 dotnet test 5DO.sln -c Debug --no-build --no-restore
 dotnet format 5DO.sln --verify-no-changes --no-restore
-jb inspectcode 5DO.sln --severity=WARNING --no-updates
+jb inspectcode 5DO.sln --severity=WARNING --no-updates --no-build --output=inspectcode.sarif
 
 # Unique corpus and 3-way comparison
 python tools/corpus-inventory.py --jobs 8 --out artifacts/corpus/inventory.json
