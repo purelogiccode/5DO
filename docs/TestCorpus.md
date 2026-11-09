@@ -3237,8 +3237,8 @@ The CSV ledger now has **101 rows: 84 `Good`, 17 `Playable`**. The remaining `Pl
 rows are five media/reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN
 Golf, Life Stage), the *Return Fire - Maps O' Death* data disc, and eleven game/script
 gaps. The strongest remaining leads are BladeForce (3D mission/cinematic scenes at
-24,000/36,000; interactive gameplay not yet confirmed), PGA Tour 96 (Player List; needs
-a round-start script), N.O.B. (SURVIVE scene at 18,000), Insect War (3D content at
+24,000/36,000; interactive gameplay not yet confirmed), PGA Tour 96 (Player List, Pro
+Info, and Golf Bag; bag confirm not scripted), N.O.B. (SURVIVE scene at 18,000), Insect War (3D content at
 30,000), DeathKeep (late title menu), Kingdom (late title menu), Family Feud (two-stage
 game options), and Jurassic Park (play-level screen). Carrier's briefing room appears
 to be pointer-driven, so the scripted pad cannot select `Challenge!`; it stays
@@ -3257,3 +3257,32 @@ runs only expose live-action cutscenes and return to the menu; BladeForce remain
 
 The Tier C workflow and grade rules are in
 [`CompatibilitySweep.md`](CompatibilitySweep.md) 4.3.
+
+### 1.1bn TEST-06 Tier C: remaining-lead probes (2026-11-09)
+
+Batches 9-12 targeted the last `Playable` leads with longer windows, alternate confirm
+buttons, a mouse-device probe, and paired input/no-input runs:
+
+- **PGA Tour 96.** The C-driven path reaches the Player List, adds a pro (Stadler/Tom
+  Kite/Brad Faxon), opens **Pro Info**, and reaches the **Golf Bag** screen. Confirming
+  the bag cycles back to Pro Info instead of starting a round. Evidence:
+  `artifacts/tierc-batch-10`, `tierc-batch-11`, `tierc-batch-12`.
+- **Family Feud.** The options screen is reached, but Down/C toggles SPEECH and RAPID
+  PLAY values and does not reliably reach DONE or the Game Options screen. Evidence:
+  `artifacts/tierc-batch-9/family-feud-play6`.
+- **DeathKeep.** Selecting Start Game plays the stained-glass intro and then a black
+  screen at 44,000/48,000; no gameplay. Evidence:
+  `artifacts/tierc-batch-9/deathkeep-play7`.
+- **Kingdom - The Far Reaches.** A-only and repeated A/C title input start the intro and
+  return to the title by 60,000/90,000; no gameplay. Evidence:
+  `artifacts/tierc-batch-9/kingdom-play5`.
+- **BladeForce.** The 60,000-frame input run still only exposes live-action cutscenes and
+  returns to Main Options; the paired no-input run stays on the menu. Remains
+  `Playable` as FMV-heavy content. Evidence: `artifacts/tierc-batch-5/bladeforce-*`,
+  `artifacts/tierc-batch-9/bladeforce-play4`.
+- **Carrier - Fortress at Sea.** The briefing room is unchanged with both the pad and the
+  `1=mouse` device; the pointer-driven UI cannot be scripted with the current source.
+  Evidence: `artifacts/tierc-batch-9/carrier-mouse`.
+
+No grade changes came from these probes; the ledger stays **101 rows: 84 `Good`, 17
+`Playable`**.
