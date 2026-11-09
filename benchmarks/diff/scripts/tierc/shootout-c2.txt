@@ -1,0 +1,21 @@
+# Shootout at Old Tucson: skip the credits and start with C.
+36000 C
+36000 None
+36200 A
+36200 None
+36500 C
+36500 None
+37000 C
+37000 None
+38000 C
+38000 None
+40000 C
+40000 None
+42000 C
+42000 None
+44000 C
+44000 None
+46000 C
+46000 None
+48000 C
+48000 None

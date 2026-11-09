@@ -8,7 +8,7 @@ Ballz - The Director's Cut (1995)(Panasonic)[!].chd,Good,"Tier B pass stays in t
 Battle Pinball (1994)(Panasonic)(JP)[!].chd,Good,"Tier B pass reaches the pinball table at 3,600 and the character select later; no crash.",tierb-2
 BattleSport (1995)(Studio 3DO)(EU)[!].chd,Good,"Tier B pass stays in the arena match through 36,000 frames; no crash.",tierb-2
 BC Racers (1995)(GoldStar)(EU-US)[!].chd,Good,"Tier B pass reaches the race and is still in gameplay (paused) at 36,000; no crash.",tierb-2
-BladeForce (1995)(Studio 3DO)(EU)[!].chd,Playable,Tier B pass stays on the Start New Game/options menu; the generic script does not start a mission.,tierb-2
+BladeForce (1995)(Studio 3DO)(EU)[!].chd,Playable,"Tier C script (tierc/bladeforce-play3.txt) starts a mission and reaches 3D mission/cinematic scenes at 24,000 and 36,000 frames, but interactive gameplay is not yet confirmed; remains Playable pending a control-effect check. Evidence: artifacts/tierc-batch-4/bladeforce-play3.",tierc-1
 Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd,Good,"Tier B pass reaches the interactive scene and stays interactive through 36,000; no crash.",tierb-2
 Burning Soldier (1994)(Panasonic)(US)[!].chd,Good,"Tier B pass stays in the space-shooter gameplay through 36,000; no crash.",tierb-2
 Bust-A-Move (1995)(Taito)(US).chd,Good,"Tier B pass stays in the puzzle board through 36,000; no crash.",tierb-2
@@ -56,7 +56,7 @@ Iron Angel of the Apocalypse (1994)(Synergy)(US)[!].chd,Good,Tier B pass reaches
 Iron Angel of the Apocalypse - The Return (1995)(Synergy)(US)[!].chd,Good,"Tier B pass stays in the corridor gameplay through 36,000; no crash.",tierb-3
 Jammit (1994)(GTE)(US)[!].chd,Good,"Tier B pass stays in the basketball gameplay through 36,000; no crash.",tierb-3
 Jikki Pachi Slot Simulator Vol. 1 (1995)(Electronic Arts)(JP).chd,Good,"Tier B pass stays in the slot-machine gameplay through 36,000; no crash.",tierb-3
-John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd,Playable,Stays on the Scouting Report/play-selection menu; no snap started.,tierb-3
+John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd,Good,"Tier C 36,000-frame script (tierc/john-madden-c2.txt) uses C to advance from the Scouting Report through play selection and reaches football gameplay by 12,000 frames; the field, players, and clock remain live at 24,000 and 36,000. Evidence: artifacts/tierc-batch-3/john-madden-c2.",tierc-1
 Johnny Bazookatone (1996)(U.S. Gold)(US)[!].chd,Good,"Tier B pass reaches the platform gameplay and is paused at 36,000; no crash.",tierb-3
 Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd,Playable,Reaches the Operations terminal map; no in-park gameplay confirmed.,tierb-3
 Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd,Playable,Stays on the title menu (Scare Apprentice / Scare Wizard / Records / Quit).,tierb-3
@@ -74,14 +74,14 @@ N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd,Playable,Stays on the N.O.B
 "Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd",Good,Tier B 10-minute pass stays in the race with HUD; no crash.,tierb-4
 Novastorm (1994)(Psygnosis)(US)[!].chd,Good,Tier B 10-minute pass reaches the shooter with score HUD; no crash.,tierb-4
 Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd,Playable,Stays in the vehicle upgrade/shop menu; the generic script does not launch a mission.,tierb-4
-Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd,Playable,Stays on the team-select and title menu; the generic script does not start a match.,tierb-4
+Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd,Good,"Tier C 36,000-frame script (tierc/olympic-soccer-play.txt) starts ARCADE, selects a team, plays to FULL-TIME at 18,000 frames, and returns to the menu by 36,000; no crash. Evidence: artifacts/tierc-probes-2/olympic-soccer-play.",tierc-1
 Out of this World (1993)(Interplay)(US)[!][45097-1].chd,Good,Tier B 10-minute pass reaches the in-game tunnel scene and the password/continue screen; no crash.,tierb-4
 OverDrivin' (1994)(Electronic Arts)(JP)[!].chd,Good,Tier B 10-minute pass stays in the race with HUD; no crash.,tierb-4
 Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd,Good,"Tier B 10-minute pass stays on the menu; the title-specific tierb-panzer-start script confirms START GAME and reaches scenario gameplay (units and map at 9,000 frames); no crash.",tierb-4
 PaTaank (1994)(PF.Magic)(EU-US)[!].chd,Good,Tier B 10-minute pass reaches the 3D brick-breaker playfield; no crash.,tierb-4
 Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd,Good,Tier B 10-minute pass reaches Hole 1 tee-off with the player HUD; no crash.,tierb-4
 "Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd",Good,Tier B 10-minute pass reaches the scenario board with units; no crash.,tierb-4
-PGA Tour 96 (1995)(EA Sports)(EU)[!].chd,Playable,Stays on the Main Menu; the generic script does not start a round.,tierb-4
+PGA Tour 96 (1995)(EA Sports)(EU)[!].chd,Good,"Tier C 36,000-frame script (tierc/pga-play3.txt) confirms the Player List with C and reaches the Hole 13 tee with the golfer, pin, and yardage HUD at 24,000 frames; the round returns to the Main Menu by 36,000 without a crash. Evidence: artifacts/tierc-batch-4/pga-play3.",tierc-1
 Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd,Good,Tier B 10-minute pass reaches in-game combat and the pause/options screen; no crash.,tierb-4
 Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd,Good,Tier B 10-minute pass reaches the live-action interactive scenes; no crash.,tierb-4
 PO'ed (1995)(Studio 3DO)(EU-US)[!].chd,Good,Tier B 10-minute pass reaches in-game combat and the pause menu; no crash.,tierb-4
@@ -95,3 +95,7 @@ Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd
 Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd,Good,Tier B 10-minute pass stays in the vehicle/base gameplay; no crash.,tierb-4
 Rise of the Robots (1995)(Absolute)(US)(M3)[!].chd,Good,Tier B 10-minute pass stays in the fight; no crash.,tierb-4
 Road Rash (1994)(Electronic Arts)(US)[!].chd,Good,Tier B 10-minute pass stays in the race with HUD; no crash.,tierb-4
+Crime Patrol (1994)(American Laser Games)(US)[!].chd,Good,"Tier C 48,000-frame script (tierc/crime-patrol-c2.txt) selects PLAY and 1 PLAYER with C and reaches live-action lightgun gameplay by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/crime-patrol-c2.",tierc-1
+Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd,Good,"Tier C 48,000-frame script (tierc/mad-dog-ii-c2.txt) selects Play and 1 Player with C and reaches the live-action stage by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/mad-dog-ii-c2.",tierc-1
+Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd,Good,"Tier C 48,000-frame script (tierc/shootout-c2.txt) skips the credits with C and reaches the live-action lightgun scene with the ammo HUD by 48,000 frames; no crash. Evidence: artifacts/tierc-batch-3/shootout-c2.",tierc-1
+Guardian War (1994)(Panasonic)(US)[!].chd,Good,"Tier C 36,000-frame script (tierc/guardian-war-play3.txt) keeps the game in play after the opening battle: Goddess dialogue at 18,000 and the world-map character at 24,000/36,000; no crash. Evidence: artifacts/tierc-batch-4/guardian-war-play3.",tierc-1

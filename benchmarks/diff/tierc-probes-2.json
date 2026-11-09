@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C confirm-button and gameplay probes",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 12000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "pga-a-probe",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-a-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "pga-p-probe",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-p-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "pga-c-probe",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-c-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "nob-a-probe",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-a-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "nob-p-probe",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-p-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "nob-c-probe",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-c-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "offworld-long",
+      "name": "Off-world Interceptor",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/offworld-long.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "offworld-p-probe",
+      "name": "Off-world Interceptor",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/offworld-p-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "offworld-c-probe",
+      "name": "Off-world Interceptor",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/offworld-c-probe.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "family-feud-fix",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-fix.txt",
+      "frames": 12000,
+      "captureFrames": [
+        3600,
+        4800,
+        6000,
+        9000,
+        12000
+      ]
+    },
+    {
+      "id": "olympic-soccer-play",
+      "name": "Olympic Soccer",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/olympic-soccer-play.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "nob-play",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-play.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "kingdom-play",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-play.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    }
+  ]
+}

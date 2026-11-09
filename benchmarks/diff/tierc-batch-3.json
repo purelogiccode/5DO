@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C C-button menu batch (15 titles)",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "guardian-war-c",
+      "name": "Guardian War",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Guardian War (1994)(Panasonic)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/guardian-war-c.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        18000,
+        20000,
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "pga-c2",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        9000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "nob-c2",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        9000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "kingdom-c2",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-c2.txt",
+      "frames": 60000,
+      "captureFrames": [
+        36000,
+        40000,
+        48000,
+        54000,
+        60000
+      ]
+    },
+    {
+      "id": "bladeforce-c2",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        9000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "hell-c2",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        18000,
+        20000,
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "insect-war-c2",
+      "name": "Insect War",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Insect War (1994)(Panasonic)(JP)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/insect-war-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        12000,
+        18000,
+        20000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "john-madden-c2",
+      "name": "John Madden Football",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/john-madden-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "jurassic-park-c2",
+      "name": "Jurassic Park Interactive",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/jurassic-park-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "carrier-c2",
+      "name": "Carrier - Fortress at Sea",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/carrier-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "deathkeep-c2",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "slayer-c2",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-c2.txt",
+      "frames": 60000,
+      "captureFrames": [
+        30000,
+        36000,
+        42000,
+        48000,
+        54000,
+        60000
+      ]
+    },
+    {
+      "id": "crime-patrol-c2",
+      "name": "Crime Patrol",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Crime Patrol (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/crime-patrol-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "mad-dog-ii-c2",
+      "name": "Mad Dog II - The Lost Gold",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/mad-dog-ii-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "shootout-c2",
+      "name": "Shootout at Old Tucson",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=arcade-lightgun",
+      "note": "5DO ahead of 4DO; arcade lightgun",
+      "disc": "${root}/Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/shootout-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# N.O.B. - Neo Organic Bioform: select SURVIVE and start.
+0 None
+3000 None
+3600 A
+3620 None
+4000 A
+4020 None
+4500 A
+4520 None
+5000 A
+5020 None
+6000 A
+6020 None
+7000 A
+7020 None
+8000 A
+8020 None
+9000 A
+9020 None
+10000 A
+10020 None

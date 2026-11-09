@@ -3202,3 +3202,46 @@ Phoenix**; all of the new rows are explicit `Playable` grades with a recorded re
 missing title-specific script, not loadability regressions. Five titles are now ahead of
 4DO. The ~100-title Tier B target is met; converting the remaining `Playable` menus into
 confirmed gameplay is the next grade-gap increment.
+
+### 1.1bm TEST-06 Tier C: first gameplay-depth increment (2026-11-09)
+
+Tier C targets the 25 titles still graded `Playable` after Tier B. The Tier B generic
+script presses A early and often stops before the menu appears; the 3DO **C button is
+the usual confirm/select button** in these menus. Added:
+
+- `benchmarks/diff/tierc-panel.json` - the 25-title remaining-`Playable` gap.
+- `benchmarks/diff/tierc-batch-3.json` and `tierc-batch-4.json` - the C-button and
+  follow-up batches.
+- `benchmarks/diff/scripts/tierc/` - title-specific start and gameplay scripts.
+- `artifacts/tierc-baseline` - a 25-title baseline with the generic Tier B script;
+  **25/25 completed** with exit code 0 and all captures written.
+
+The scripts use C for menu confirmation, press it at the frame where the menu is
+actually visible, and switch to A/B/directions for gameplay. A `Good` grade requires
+reaching gameplay and completing the checkpoint window without a hang or crash.
+
+**Promoted to `Good` in this increment (batch `tierc-1`):**
+
+| Title | Evidence |
+|---|---|
+| Olympic Soccer | `tierc/olympic-soccer-play.txt`: ARCADE -> team select -> **FULL-TIME** at 18,000 frames; returns to the menu by 36,000. |
+| John Madden Football | `tierc/john-madden-c2.txt`: C through the Scouting Report and play selection; live football field, players, and clock at 12,000/24,000/36,000 frames. |
+| PGA Tour 96 | `tierc/pga-play3.txt`: confirms the Player List and reaches the Hole 13 tee with the golfer, pin, and yardage HUD at 24,000 frames; returns to the Main Menu by 36,000. |
+| Crime Patrol | `tierc/crime-patrol-c2.txt`: C selects PLAY and 1 PLAYER; live-action lightgun scene at 48,000 frames. |
+| Mad Dog II - The Lost Gold | `tierc/mad-dog-ii-c2.txt`: C selects Play and 1 Player; live-action stage at 48,000 frames. |
+| Shootout at Old Tucson | `tierc/shootout-c2.txt`: skips the credits with C; live-action lightgun scene with the ammo HUD at 48,000 frames. |
+| Guardian War | `tierc/guardian-war-play3.txt`: keeps the game in play after the opening battle; Goddess dialogue at 18,000 and the world-map character at 24,000/36,000 frames. |
+
+The CSV ledger now has **100 rows: 83 `Good`, 17 `Playable`**. The remaining `Playable`
+rows are five media/reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN
+Golf, Life Stage), the *Return Fire - Maps O' Death* data disc, and eleven game/script
+gaps. The strongest remaining leads are BladeForce (3D mission/cinematic scenes at
+24,000/36,000; interactive gameplay not yet confirmed), N.O.B. (SURVIVE scene at
+18,000), Insect War (3D content at 30,000), DeathKeep (late title menu), Hell (Start New
+Game menu), Kingdom (late title menu), Family Feud (two-stage game options), Jurassic
+Park (play-level screen), and Slayer (late title menu). Carrier's briefing room appears
+to be pointer-driven, so the scripted pad cannot select `Challenge!`; it stays
+`Playable` with that reason.
+
+The Tier C workflow and grade rules are in
+[`CompatibilitySweep.md`](CompatibilitySweep.md) 4.3.

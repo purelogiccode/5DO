@@ -20,10 +20,13 @@ The compatibility plan is complete:
 
 ## Post-1.6
 
-**Playability depth (next):**
+**Playability depth (in progress):**
 
-- Tier C gameplay review: promote the remaining `Playable` titles to `Good` with
-  title-specific scripts, reasons, and evidence.
+- Tier C gameplay-depth pass: the first increment reviewed the 25 remaining `Playable`
+  titles and promoted seven to `Good` (Olympic Soccer, John Madden Football, PGA Tour 96,
+  Crime Patrol, Mad Dog II, Shootout at Old Tucson, and Guardian War). The remaining
+  leads include BladeForce, N.O.B., Insect War, DeathKeep, Hell, Kingdom, Family Feud,
+  Jurassic Park, and Slayer.
 - Full-race and long-playthrough evidence for Road Rash, Alone in the Dark, and the
   remaining scripted titles.
 

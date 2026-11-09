@@ -382,6 +382,45 @@ The 2026-11-08 beyond-title pass recorded these format checks:
   audio-only-TOC residual, not a title beyond-title blocker. All 378 game titles use a
   data track 1.
 
+### 4.3 Tier C gameplay-depth pass
+
+Tier B answers "does 5DO reach and sustain gameplay?" with a generic 10-minute script.
+Tier C closes the quality gap for the titles that stop at a menu: it gives each
+remaining `Playable` title a title-specific start/menu script and records a `Good`
+grade only when the run reaches gameplay and survives the full checkpoint window.
+
+The remaining-`Playable` gap is tracked in `benchmarks/diff/tierc-panel.json`; the
+scripts live in `benchmarks/diff/scripts/tierc/`. Run the baseline and a probe batch
+with:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-panel.json `
+  --out artifacts/tierc-baseline --jobs 6
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-3.json `
+  --out artifacts/tierc-batch-3 --jobs 6
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-4.json `
+  --out artifacts/tierc-batch-4 --jobs 6
+```
+
+The 3DO **C button is the usual confirm/select button** in these menus. The Tier B
+generic script presses A early and stops before many menus appear, which is why titles
+such as PGA Tour 96, N.O.B., and BladeForce stay on their first screen. Tier C scripts
+use C for menu confirmation, press it at the frame where the menu is actually visible,
+and switch to A/B/directions for gameplay.
+
+Grade rules:
+
+- **Good:** reaches gameplay, survives the scripted window (usually 36,000 frames, about
+  10 minutes) without a hang or crash, and has no player-visible rendering defect.
+- **Playable:** runs but still has a documented gap (menu-only, media/reference disc, or
+  a script that cannot start a round).
+- **Unplayable:** does not reach or sustain gameplay.
+
+Media and reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN Golf,
+Life Stage) stay `Playable` with a non-game note; the *Return Fire - Maps O' Death*
+standalone data disc keeps its documented peer invalidation. The quality result is
+recorded in `docs/data/playability-grades.csv` under the `tierc-*` batch name.
+
 ---
 
 ## 5. In-game / visual check

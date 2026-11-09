@@ -1,6 +1,7 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-08, after the 1.6.0 compatibility-completion release; the TEST-07
+**Snapshot:** 2026-11-09, after the first Tier C gameplay-depth increment and the 1.6.0
+compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
 baseline update; the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
 CD-parity update; the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
@@ -57,6 +58,19 @@ job; docs run
 <https://github.com/purelogiccode/5DO/actions/runs/42552303805> deployed Pages and the
 wiki. All published checksums verify. See
 [`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.6.0.md`](ReleaseNotes-1.6.0.md).
+
+**Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the
+25 titles still graded `Playable` after Tier B with title-specific start and gameplay
+scripts. Seven were promoted to `Good`: **Olympic Soccer** (full match to FULL-TIME),
+**John Madden Football** (live football gameplay through 36,000 frames), **PGA Tour 96**
+(Hole 13 tee and round), **Crime Patrol** and **Mad Dog II** (live-action lightgun
+scenes at 48,000), **Shootout at Old Tucson** (lightgun scene with the ammo HUD), and
+**Guardian War** (world-map gameplay through 36,000 frames).
+The CSV ledger is now **100 rows: 83 `Good`, 17 `Playable`**. The 378-title playable
+count stays **375** because Tier C changes the quality grade, not the binary
+compatibility result. The 25-title baseline completed 25/25. See
+[`TestCorpus.md`](TestCorpus.md) 1.1bm and [`CompatibilitySweep.md`](CompatibilitySweep.md)
+4.3.
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept

@@ -1,0 +1,17 @@
+# Insect War: select Story Mode, then start the match.
+24000 C
+24000 None
+30000 C
+30000 None
+36000 C
+36000 None
+38000 A
+38000 None
+40000 A
+40000 None
+42000 B
+42000 None
+44000 C
+44000 None
+46000 Right
+46000 None

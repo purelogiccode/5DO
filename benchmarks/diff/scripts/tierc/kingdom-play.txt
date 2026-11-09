@@ -1,0 +1,25 @@
+# Kingdom: start Scare Apprentice, then battle input.
+18000 A
+18020 None
+18400 A
+18420 None
+18800 A
+18820 None
+19200 A
+19220 None
+20000 A
+20020 None
+22000 Right
+22020 None
+24000 B
+24020 None
+26000 Down
+26020 None
+28000 C
+28020 None
+30000 Left
+30020 None
+32000 B
+32020 None
+34000 Up
+34020 None
