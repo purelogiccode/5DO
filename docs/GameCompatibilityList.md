@@ -2,7 +2,7 @@
 
 This is the working compatibility matrix for the full local 3DO collection. The 4DO scores and notes are transcribed from the saved 4DO wiki page; the 5DO columns are filled in by the collection sweep.
 
-> **Counts are the 2026-10-30 snapshot.** The table below reflects the 594-image loadability pass. The current collection is **1,371 images → 414 unique titles**; the authoritative 5DO/4DO/Phoenix comparison is [`CompatibilityComparison.md`](CompatibilityComparison.md).
+> **Counts are the 2026-10-30 snapshot.** The table below reflects the 594-image loadability pass. The current collection is **1,371 images → 414 unique titles**; the authoritative 5DO/4DO/Phoenix comparison is [`CompatibilityComparison.md`](CompatibilityComparison.md). The dated beyond-title ledger in `docs/data/beyond-title-results.csv` and [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md) supersedes the old manual 5DO grade for the 378-game test set.
 
 ## Sources
 

@@ -77,7 +77,7 @@ Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd,Playable,Stays in t
 Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd,Playable,Stays on the team-select and title menu; the generic script does not start a match.,tierb-4
 Out of this World (1993)(Interplay)(US)[!][45097-1].chd,Good,Tier B 10-minute pass reaches the in-game tunnel scene and the password/continue screen; no crash.,tierb-4
 OverDrivin' (1994)(Electronic Arts)(JP)[!].chd,Good,Tier B 10-minute pass stays in the race with HUD; no crash.,tierb-4
-Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd,Good,Tier B 10-minute pass stays on the menu; the title-specific tierb-panzer-start script confirms START GAME and reaches scenario gameplay (units and map at 9,000 frames); no crash.,tierb-4
+Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd,Good,"Tier B 10-minute pass stays on the menu; the title-specific tierb-panzer-start script confirms START GAME and reaches scenario gameplay (units and map at 9,000 frames); no crash.",tierb-4
 PaTaank (1994)(PF.Magic)(EU-US)[!].chd,Good,Tier B 10-minute pass reaches the 3D brick-breaker playfield; no crash.,tierb-4
 Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd,Good,Tier B 10-minute pass reaches Hole 1 tee-off with the player HUD; no crash.,tierb-4
 "Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd",Good,Tier B 10-minute pass reaches the scenario board with units; no crash.,tierb-4
@@ -89,7 +89,7 @@ Policenauts (1995)(Konami)(JP)(Disc 1 of 2)[!].chd,Good,Tier B 10-minute pass re
 Primal Rage v1.0 (1995)(GoldStar)(EU-US)(M7)[!].chd,Good,Tier B 10-minute pass stays in the fight; no crash.,tierb-4
 Psychic Detective (1995)(Electronic Arts)(EU)(Disc 1 of 3)[!].chd,Good,Tier B 10-minute pass reaches the interactive FMV scene; no crash.,tierb-4
 "Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd",Good,Tier B 10-minute pass stays in the driving/combat HUD; no crash.,tierb-4
-Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd,Good,Tier B 10-minute pass stays on the setup menu; the title-specific tierb-quarterback-start script moves to KICKOFF and reaches football gameplay (scoreboard and play select at 20,800 frames); no crash.,tierb-4
+Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd,Good,"Tier B 10-minute pass stays on the setup menu; the title-specific tierb-quarterback-start script moves to KICKOFF and reaches football gameplay (scoreboard and play select at 20,800 frames); no crash.",tierb-4
 Real Pinball (1994)(Panasonic)(US)[!].chd,Good,"Tier B 10-minute pass reaches the pinball table; a later dark frame is the attract/transition view, not a render failure.",tierb-4
 Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd,Playable,Stays on the expansion title/box-art screen; the generic script does not enter a map (add-on disc).,tierb-4
 Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd,Good,Tier B 10-minute pass stays in the vehicle/base gameplay; no crash.,tierb-4

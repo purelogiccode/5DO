@@ -10,6 +10,36 @@ validation, installers, and the optional JIT are post-1.0. See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
+## Beyond-title compatibility (2026-11-08)
+
+- The binary beyond-title pass covers all **378** game/homebrew titles. Every row has a
+  dated status, BIOS, disc hash, capture frame, and screenshot in
+  `docs/data/beyond-title-results.csv` and
+  [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md).
+- **375 of 378 are Playable.** The 147-title peer gap is fully Playable. The comparison
+  has **0 `Behind` and 0 `Regression` rows**, a strict superset of the **252-title peer
+  union**, and **375** playable titles against 4DO's **167** / Phoenix's **233**.
+- **`Return Fire – Maps O' Death`** is the only peer-claim invalidation. The standalone
+  data disc renders only a static box-art/title card and ignores the scripted input and
+  control pair; the peer claim covers the expansion content used with the base game.
+  The row carries `peerInvalid4do`, `peerInvalidPhoenix`, and a capture path.
+- **`Joypad Test v1.0`** is `Title-only`: a non-retail pad status card that never leaves
+  its static screen. **`LameNES Emulator`** is `No video`: a non-retail emulator test
+  image that renders only a small "HELLO, WORLD!" line (0.43% non-black), below the
+  0.5% video threshold. Both are outside the retail and peer corpora.
+- **BIOS/input coverage:** auto-selection used FZ-10, FZ-10J + Kanji, FZ-10E Anvil, and
+  the No-RSA FZ-10; no failure needs a manual BIOS step. The device set covers joypad,
+  mouse (Marine Tour), lightgun, arcade lightgun, and the Orbatak trackball. Panzer
+  General and Quarterback Attack use title-specific start scripts; both reach gameplay.
+- **Format checks:** Night Trap Disc 1 was swapped to Disc 2 at frame 3,600 and
+  completed 7,200 frames with the Disc 2 hash. Audio-only CD-DA discs reach the 3DO CD
+  player but the track list stays empty and the WAV capture is silent; this is the
+  documented SYS-01 CD-DA read-ahead/audio-only-TOC residual, not a beyond-title
+  blocker.
+- The weekly regression gate is `.github/workflows/compat-baseline.yml` on a Windows
+  self-hosted runner with the collection mounted, backed by
+  `docs/data/beyond-title-baseline.json` and `tools/run-beyond-title-gate.ps1`.
+
 ## Online cover art (2026-11-07)
 
 - The online catalog is optional and hosted separately from the application bundles.

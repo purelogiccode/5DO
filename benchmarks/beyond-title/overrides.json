@@ -1,0 +1,23 @@
+{
+  "panzer general": {
+    "inputScript": "benchmarks/diff/scripts/tierb-panzer-start.txt",
+    "note": "Generic menu script stays on the menu; the title-specific script starts a scenario."
+  },
+  "quarterback attack professional quarterback simulator": {
+    "inputScript": "benchmarks/diff/scripts/tierb-quarterback-start.txt",
+    "note": "Generic menu script stays on setup; the title-specific script reaches football gameplay."
+  },
+  "return fire maps o death": {
+    "note": "Standalone data disc; review whether the expansion title/box-art screen is beyond-title."
+  },
+  "marine tour diving spot guide": {
+    "inputDevice": "1=mouse",
+    "note": "The map hub is mouse-driven; the generic button script cannot move the pointer."
+  },
+  "evil australians rise of stupidity": {
+    "allowUnsigned": true
+  },
+  "lamenes emulator": {
+    "allowUnsigned": true
+  }
+}

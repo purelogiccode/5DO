@@ -110,6 +110,21 @@ For the automated loadability pass, two intermediate labels are recorded:
 
 These intermediate labels are converted to the five-level status after visual review.
 
+The compatibility plan uses a **binary playable rule** on top of the quality scale:
+`Good` and `Playable` both count as playable; the quality label is information, not a
+losing comparison against a peer's `Good`. The beyond-title pass records the stricter
+result separately:
+
+| Beyond-title status | Meaning |
+|---|---|
+| **Playable** | A distinct menu, options, character-select, gameplay, or FMV/content screen is reached; a loop that never leaves the title/attract screen does not count. |
+| **Title-only** | Boot/title/attract only. |
+| **No video** | No usable non-black frame. |
+| **Not loadable** | The CLI failed, timed out, or produced no captures. |
+
+A `Rendered` title stays **Unverified** in the comparison until a beyond-title pass runs;
+it becomes `Behind` only after that pass fails.
+
 ---
 
 ## 3. Automated loadability sweep
@@ -257,7 +272,119 @@ record of the failure.
 
 ---
 
-## 4. In-game / visual check
+## 4. Beyond-title playability pass
+
+The loadability sweep answers "does it render?". The **beyond-title** pass answers the
+compatibility plan's playable rule: does the title advance past the title/attract screen
+to a distinct menu, options, character-select, gameplay, or FMV/content screen, and does
+scripted input change the machine?
+
+Run the peer-gap queue (titles a peer reports playable while 5DO is still unverified):
+
+```powershell
+python tools/beyond-title-sweep.py `
+  --scope peer-gap --jobs 10 `
+  --out artifacts/beyond-title `
+  --ledger docs/data/beyond-title-results.csv
+```
+
+Scopes are `peer-gap` (the 147-title peer-gap queue), `unverified` (every non-playable
+title in the 378-game set), and `all` (all 378 titles). `--only "base,base"` selects
+specific titles, and `--limit N` caps a pilot.
+
+The runner starts one CLI process per title with auto BIOS selection, captures at
+`120, 600, 1200, 2400, 3600, 4800, 6000, 7200, 8400, 9600, 10800, 12000` frames, and
+records CLI checkpoints at `120, 600, 1800, 3600, 7200, 12000`. It then repeats the
+first 3,600 frames **without** the input script. Exact checkpoint frame hashes and
+capture difference hashes prove whether scripted input changed the machine. Pass
+`--deep-control` to repeat the full frame count instead; that catches titles whose
+first input effect appears after 3,600 frames.
+
+The classifier writes one of four final states:
+
+| Status | Meaning |
+|---|---|
+| **Playable** | A non-black beyond-title screen is reached and scripted input changes the machine, or the first rendered content screen accepts input, or several content screens advance without input. |
+| **Title-only** | The title/attract screen is static or loops and no distinct beyond-title screen follows. |
+| **No video** | Every capture is black or nearly blank. |
+| **Not loadable** | The CLI failed, timed out, or produced no captures. |
+
+Ambiguous cases carry `review=yes` in the summary. Review them with the contact-sheet
+tool before publishing a ledger:
+
+```powershell
+python tools/beyond-title-contact-sheet.py --dir artifacts/beyond-title --status Playable --max 20
+python tools/beyond-title-contact-sheet.py --dir artifacts/beyond-title --status Title-only --max 20
+```
+
+Per-title BIOS, BIOS2, input-device, script, frame-count, and unsigned-disc overrides are
+read from `benchmarks/beyond-title/overrides.json`, keyed by the comparison `base`:
+
+```json
+{
+  "worldcup super stadium": {
+    "bios": "bios/panafz10j.bin",
+    "bios2": "bios/panafz1j-kanji.bin"
+  }
+}
+```
+
+Every row in `docs/data/beyond-title-results.csv` records the observed status, date,
+BIOS, BIOS2, disc hash, game ID, capture frame, screenshot path, failure reason, and
+input/control timing. The comparison generator reads that ledger first, ahead of manual
+grades and the old loadability sweep.
+
+### 4.1 Regression gate
+
+The full 378-title pass is the regression gate. Run it nightly or weekly, either from a
+local scheduled task or a self-hosted runner with the collection mounted:
+
+```powershell
+pwsh -File tools/run-beyond-title-gate.ps1 -Scope all
+pwsh -File tools/run-beyond-title-gate.ps1 -Scope all -UpdateBaseline
+pwsh -File tools/run-beyond-title-gate.ps1 -Scope all -SkipExisting
+```
+
+The gate builds the Release CLI, runs the sweep, regenerates the comparison and the
+evidence page, and fails when a title that was `Playable` in
+`docs/data/beyond-title-baseline.json` changes to a failing state. It also runs
+`tools/verify-beyond-title-ledger.py`, which checks 378/378 coverage, screenshot
+existence, BIOS/disc-hash/frame/date fields, and every peer-playable title. Newly tested
+titles and improvements are allowed. A known, dated exception goes in
+`docs/data/beyond-title-exceptions.json`:
+
+```json
+{
+  "exceptions": [
+    {
+      "file": "Example (USA).chd",
+      "reason": "Tracked in COMPAT-10; under bisect.",
+      "expires": "2027-01-31"
+    }
+  ]
+}
+```
+
+An expired exception fails the gate. `-SkipExisting` is for incremental work, not for
+the gate itself.
+
+### 4.2 Disc-format checks
+
+The 2026-11-08 beyond-title pass recorded these format checks:
+
+- **Multi-disc swap.** Night Trap (USA, Europe) Disc 1 was run for 7,200 frames with
+  `--swap-disc "Night Trap (USA, Europe) (Disc 2).chd" --swap-at 3600`. The CLI logged
+  the swap, the reported `discHash` changed to Disc 2, all 7,200 frames completed, and
+  the final capture was live-action video (`artifacts/compat-checks/f007200.png`).
+- **CD-DA.** The audio-only A&M Music Sampler and the Oyaji Hunter Mahjong CD-Audio
+  image both reached the 3DO CD player, but the track list stayed empty and the WAV
+  capture had peak/RMS 0. This is the documented SYS-01 CD-DA read-ahead/subcode and
+  audio-only-TOC residual, not a title beyond-title blocker. All 378 game titles use a
+  data track 1.
+
+---
+
+## 5. In-game / visual check
 
 Loadability is not the same as a usable picture. After the automated pass:
 
@@ -293,7 +420,7 @@ for every visual difference.
 
 ---
 
-## 5. High-resolution pass
+## 6. High-resolution pass
 
 The current `--high-res` mode is the FreeDO-style 640x480 path: CELs are rasterized
 into four 1 MB VRAM planes and VDLP line-doubles 240 lines to 480. It is not a true
@@ -320,7 +447,7 @@ Do not enable high-res by default until a title has been visually validated.
 
 ---
 
-## 6. Triage workflow for failures
+## 7. Triage workflow for failures
 
 Group failures before changing code:
 
@@ -339,7 +466,7 @@ and the 4DO/Opera reference confirms it.
 
 ---
 
-## 7. Linux validation in the local Hyper-V VM
+## 8. Linux validation in the local Hyper-V VM
 
 The local VM is `LinuxMint` in `D:\Hyper-V\VMs\LinuxMint` (Hyper-V generation 2,
 8 GB assigned). The VM is a validation target, not a CI replacement. It is reachable
@@ -372,7 +499,7 @@ llvmpipe/SSH session, so Linux GPU presentation is preview/best-effort. See
 
 ---
 
-## 8. Completion criteria
+## 9. Completion criteria
 
 The **loadability sweep** is complete for v1.0 when:
 

@@ -741,3 +741,27 @@ explicit known requirements. `bios select` prints the reason for each choice, an
 `run --json` records it in `biosSelection`. The full BIOS-aware sweep is still the
 acceptance step; the selector does not claim a title is compatible merely because a
 BIOS was chosen.
+
+### 13.3 Beyond-title completion (2026-11-08)
+
+The compatibility plan replaced the old quality-rank comparison with a binary
+beyond-title rule. A title is Playable when it reaches a distinct menu, options,
+character-select, gameplay, or FMV/content screen; a title/attract loop that never
+leaves is not Playable. `tools/beyond-title-sweep.py` runs each canonical disc with
+auto BIOS selection, a generic input script, capture checkpoints, and a no-input control
+run. Exact checkpoint frame hashes prove whether scripted input changed the machine.
+
+The full 378-game test set and the 147-title peer gap were run on 2026-11-08. The
+per-title BIOS, disc hash, capture frame, screenshot, and failure reason are in
+[`BeyondTitleEvidence.md`](BeyondTitleEvidence.md) and
+`docs/data/beyond-title-results.csv`. The 5DO/4DO/Phoenix matrix in
+[`CompatibilityComparison.md`](CompatibilityComparison.md) is generated from that
+ledger. The machine-readable regression gate is
+`docs/data/beyond-title-baseline.json`; `tools/run-beyond-title-gate.ps1` runs the full
+pass and fails on a Playable regression.
+
+Format checks: Night Trap Disc 1 was swapped to Disc 2 at frame 3,600 and completed
+7,200 frames with the Disc 2 hash; the final capture is live-action video. Audio-only
+CD-DA images reach the 3DO CD player but the track list is empty and the WAV capture is
+silent; this is the documented SYS-01 CD-DA read-ahead/audio-only-TOC residual, not a
+beyond-title blocker.

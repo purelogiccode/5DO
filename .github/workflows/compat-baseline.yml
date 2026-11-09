@@ -1,0 +1,49 @@
+name: Compatibility baseline
+
+on:
+  schedule:
+    # Weekly, Monday 03:17 UTC.
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compat-baseline
+  cancel-in-progress: false
+
+jobs:
+  beyond-title:
+    name: Beyond-title gate
+    # Requires a Windows self-hosted runner with the 3DO collection at J:\Panasonic 3DO,
+    # the BIOS folder, and the .NET 10 SDK.
+    runs-on: [self-hosted, windows, 3do]
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run the full beyond-title gate
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tools/run-beyond-title-gate.ps1 `
+            -Scope all `
+            -Jobs 10
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          name: beyond-title-evidence
+          path: |
+            docs/data/beyond-title-results.csv
+            docs/data/beyond-title-baseline.json
+            docs/BeyondTitleEvidence.md
+            docs/CompatibilityComparison.md
+            artifacts/beyond-title/summary.csv
+            artifacts/beyond-title/run-remaining.log
+          if-no-files-found: warn
+          retention-days: 30

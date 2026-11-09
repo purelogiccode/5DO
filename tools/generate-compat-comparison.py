@@ -34,6 +34,7 @@ import html as html_module
 import io
 import json
 import re
+import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from email import policy
@@ -43,6 +44,7 @@ DEFAULT_INVENTORY = "artifacts/corpus/inventory.json"
 DEFAULT_SWEEP = "artifacts/compat-full/summary-merged.csv"
 DEFAULT_REFERENCE = "docs/GameCompatibilityList.md"
 DEFAULT_GRADES = "docs/data/playability-grades.csv"
+DEFAULT_BEYOND = "docs/data/beyond-title-results.csv"
 DEFAULT_FOURDO = "References/4DO-master/*Compatibility List*.mhtml"
 DEFAULT_PHOENIX = "References/Phoenix/*Compatibility List*.mhtml"
 DEFAULT_OUT = "docs/CompatibilityComparison.md"
@@ -542,10 +544,89 @@ def read_grade_csv(path: Path) -> dict[str, tuple[str, str]]:
     return grades
 
 
-def observed_status(title: UniqueTitle, sweep: dict[str, dict[str, str]], manual: dict[str, tuple[str, str]]) -> tuple[str, str, str]:
-    """Return (label, detail, evidence state)."""
-    # Manual grade wins; prefer the canonical disc, then any variant.
+def read_beyond(path: Path) -> dict[str, tuple[str, str]]:
+    """Read the committed beyond-title evidence ledger.
+
+    The runner writes one row per canonical disc with the observed status,
+    BIOS, disc hash, capture frame, screenshot, and failure reason. A missing
+    ledger is allowed while the corpus pass is still being built. A non-empty
+    ``manualStatus`` is an explicit human adjudication and wins over the
+    automated status.
+    """
+    if not path.exists():
+        return {}
+    results: dict[str, tuple[str, str]] = {}
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            name = (row.get("file") or "").strip()
+            status = (row.get("manualStatus") or row.get("status") or "").strip()
+            if not name or not status:
+                continue
+            note = (row.get("notes") or row.get("failureReason") or "").strip()
+            results[name.casefold()] = (status, note)
+    return results
+
+
+def read_peer_invalid(path: Path) -> tuple[set[str], set[str], dict[str, str]]:
+    """Read explicit peer-claim invalidation records from the ledger."""
+    fourdo: set[str] = set()
+    phoenix: set[str] = set()
+    evidence: dict[str, str] = {}
+    if not path.exists():
+        return fourdo, phoenix, evidence
+    positive = {"yes", "true", "1", "y"}
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            name = (row.get("file") or "").strip().casefold()
+            if not name:
+                continue
+            if (row.get("peerInvalid4do") or "").strip().lower() in positive:
+                fourdo.add(name)
+            if (row.get("peerInvalidPhoenix") or "").strip().lower() in positive:
+                phoenix.add(name)
+            if row.get("peerEvidence"):
+                evidence[name] = row["peerEvidence"]
+    return fourdo, phoenix, evidence
+
+
+# A title is playable when it reaches a distinct screen beyond the title. The
+# five-level quality scale is kept as information only; it must not turn a
+# reached beyond-title screen into a losing row against a peer's ``Good``.
+FIVE_DO_PLAYABLE = {"Good", "Playable", "Playable (beyond-title)"}
+FOUR_DO_PLAYABLE = {"Good", "Playable"}
+PHOENIX_PLAYABLE = {"Good"}
+BEYOND_FAILED = {"Title-only", "Unplayable", "No video", "Not loadable"}
+
+
+def is_playable(label: str, source: str) -> bool:
+    if source == "4DO":
+        return label in FOUR_DO_PLAYABLE
+    if source == "Phoenix":
+        return label in PHOENIX_PLAYABLE
+    return label in FIVE_DO_PLAYABLE
+
+
+def observed_status(
+    title: UniqueTitle,
+    sweep: dict[str, dict[str, str]],
+    manual: dict[str, tuple[str, str]],
+    beyond: dict[str, tuple[str, str]] | None = None,
+) -> tuple[str, str, str]:
+    """Return (label, detail, evidence state).
+
+    Precedence is beyond-title evidence, then a manual grade, then the
+    automated loadability sweep. A ``Rendered``/untested title is *unverified*,
+    not a failure: it becomes ``Behind`` only when a beyond-title pass fails.
+    """
     ordered = [title.canonical] + [disc for disc in title.discs if disc is not title.canonical]
+    for disc in ordered:
+        if disc is None:
+            continue
+        result = (beyond or {}).get(disc.file.casefold())
+        if result:
+            status, notes = result
+            return status, notes, "beyond-title"
+
     for disc in ordered:
         if disc is None:
             continue
@@ -569,33 +650,29 @@ def observed_status(title: UniqueTitle, sweep: dict[str, dict[str, str]], manual
     return "Not loadable", statuses[0].get("Reason", ""), "loadability"
 
 
-def rank(label: str) -> int | None:
-    return {
-        "not loadable": 0,
-        "no video": 1,
-        "unplayable": 1,
-        "rendered": 2,
-        "playable": 2,
-        "good": 3,
-    }.get(label.strip().lower())
+def compare(label: str, evidence: str, peer_status: str, peer_source: str) -> str:
+    """Compare on the binary playable rule.
 
-
-def compare(label: str, evidence: str, peer_status: str) -> str:
-    peer = rank(peer_status)
-    five = rank(label)
-    if peer is None or five is None:
+    ``Behind`` is reserved for a title that was actually tested beyond the
+    title and failed. An untested/``Rendered`` title is ``Unverified``. A peer
+    playable title that 5DO cannot even render is a ``Regression``.
+    """
+    if not peer_status or peer_status == "No data":
         return "—"
-    if five <= 1 and peer >= 2:
+    peer = is_playable(peer_status, peer_source)
+    five = is_playable(label, "5DO")
+    if five and peer:
+        return "Parity"
+    if five and not peer:
+        return "5DO ahead"
+    if not five and not peer:
+        return "—"
+    # 5DO is not playable while the peer is. Classify the evidence.
+    if label in ("No video", "Not loadable") and evidence != "beyond-title":
         return "Regression"
-    if five >= 2 and peer <= 1:
-        return "5DO ahead"
-    if evidence == "loadability" and five >= 2 and peer >= 2:
-        return "Parity (loadability)"
-    if five > peer:
-        return "5DO ahead"
-    if five < peer:
+    if evidence in ("beyond-title", "reviewed"):
         return "Behind"
-    return "Parity"
+    return "Unverified"
 
 
 def match_references(
@@ -717,6 +794,11 @@ def main() -> int:
         default=DEFAULT_GRADES,
         help="Optional Tier B manual-grade ledger (CSV).",
     )
+    parser.add_argument(
+        "--beyond",
+        default=DEFAULT_BEYOND,
+        help="Optional beyond-title evidence ledger (CSV).",
+    )
     parser.add_argument("--fourdo", default=None)
     parser.add_argument("--phoenix", default=None)
     parser.add_argument("--out", default=DEFAULT_OUT)
@@ -746,6 +828,8 @@ def main() -> int:
         sweep.update(read_sweep(Path(sweep_path)))
     manual = read_manual_grades(Path(args.reference))
     manual.update(read_grade_csv(Path(args.grades)))
+    beyond = read_beyond(Path(args.beyond))
+    peer_invalid4do, peer_invalid_phoenix, peer_evidence = read_peer_invalid(Path(args.beyond))
 
     fourdo = parse_fourdo(fourdo_path)
     phoenix = parse_phoenix(phoenix_path)
@@ -760,33 +844,42 @@ def main() -> int:
         canonical = title.canonical
         if canonical is None:
             continue
-        label, detail, evidence = observed_status(title, sweep, manual)
+        label, detail, evidence = observed_status(title, sweep, manual, beyond)
         tested[evidence] += 1
         four = best_reference(fourdo_match.get(title.base, []))
         phx = best_reference(phoenix_match.get(title.base, []))
-        vs4 = compare(label, evidence, four.status if four else "")
-        vsp = compare(label, evidence, phx.status if phx else "")
-        if four:
+        file_key = canonical.file.casefold()
+        four_invalid = file_key in peer_invalid4do
+        phoenix_invalid = file_key in peer_invalid_phoenix
+        vs4 = "Peer invalid" if four_invalid else compare(label, evidence, four.status if four else "", "4DO")
+        vsp = "Peer invalid" if phoenix_invalid else compare(label, evidence, phx.status if phx else "", "Phoenix")
+        if four and not four_invalid:
             verdicts_4do[vs4] += 1
-        if phx:
+        if phx and not phoenix_invalid:
             verdicts_phoenix[vsp] += 1
         rows.append(
             {
                 "title": title.display or title.base,
+                "base": title.base,
                 "kind": title.kind,
                 "canonical": canonical.file,
+                "canonicalPath": canonical.path,
                 "regions": canonical.regions,
                 "images": len(title.discs),
                 "variants": title.variants,
                 "fiveDo": label,
                 "fiveDoDetail": detail,
                 "fiveDoEvidence": evidence,
+                "playable": is_playable(label, "5DO"),
                 "fourDo": four.status if four else "—",
                 "fourDoScore": four.score if four else None,
                 "fourDoNotes": four.notes if four else "",
+                "fourDoInvalid": four_invalid,
                 "phoenix": phx.status if phx else "—",
                 "phoenixPercent": phx.percent if phx else None,
                 "phoenixNotes": phx.notes if phx else "",
+                "phoenixInvalid": phoenix_invalid,
+                "peerEvidence": peer_evidence.get(file_key, ""),
                 "vs4do": vs4,
                 "vsPhoenix": vsp,
             }
@@ -806,8 +899,11 @@ def main() -> int:
         "This page compares the three emulators on the **same local collection**. "
         "The 4DO and Phoenix columns are transcribed from their saved compatibility "
         "lists; the 5DO column comes from the merged sweep summaries under "
-        "`artifacts/compat-full` and `artifacts/compat-unique`, plus the manual grades "
-        "in [`GameCompatibilityList.md`](GameCompatibilityList.md)."
+        "`artifacts/compat-full` and `artifacts/compat-unique`, the manual grades in "
+        "[`GameCompatibilityList.md`](GameCompatibilityList.md), and the committed "
+        "beyond-title ledger in `docs/data/beyond-title-results.csv`. The per-title "
+        "captures and failure reasons are in "
+        "[`BeyondTitleEvidence.md`](BeyondTitleEvidence.md)."
     )
     lines.append("")
     lines.append("## Method")
@@ -819,25 +915,67 @@ def main() -> int:
         "`docs/data/unique-corpus.csv`."
     )
     lines.append(
-        "- **5DO loadability is not gameplay.** `Rendered` means the automated sweep "
-        "completed the frame count with a non-black frame. A comparison against a peer's "
-        "`Playable`/`Good` is labelled `Parity (loadability)` until a manual grade exists."
+        "- **Playable is binary.** 5DO is playable when it reaches a distinct screen "
+        "beyond the title and a `Good`, `Playable`, or automated beyond-title `Playable` "
+        "evidence row exists. The quality grade remains visible but never turns a "
+        "reached screen into a losing row."
     )
     lines.append(
-        "- **Candidate wins need review.** `5DO ahead` means the peer reports "
-        "`Unplayable`/`Not Loadable` while 5DO produced a frame. It becomes a confirmed "
-        "win only after scripted input proves gameplay."
+        "- **Peer playable is binary.** 4DO `Good`/`Playable` and Phoenix `Good` count "
+        "as peer-playable. Phoenix publishes a 100% list, so an unlisted title means "
+        "*no data*, not a failure."
     )
     lines.append(
-        "- **Verdicts** are computed on the five-level scale: Not Loadable < Unplayable < "
-        "Playable < Good. `Regression` means 5DO failed to load a title a peer reports as "
-        "playable or good."
+        "- **Unverified is not a failure.** A `Rendered` or untested title is excluded "
+        "from the playable count and marked `Unverified`; it becomes `Behind` only "
+        "after a beyond-title pass fails. `Regression` is reserved for a title that "
+        "does not load or renders no video while a peer can play it."
     )
     lines.append("")
     lines.append("## Summary")
     lines.append("")
     primary = [title for title in titles if title.kind in ("game", "homebrew")]
     secondary = [title for title in titles if title.kind not in ("game", "homebrew")]
+    primary_rows = [row for row in rows if row["kind"] in ("game", "homebrew")]
+
+    def row_four_playable(row: dict) -> bool:
+        return not row.get("fourDoInvalid") and is_playable(row["fourDo"], "4DO")
+
+    def row_phoenix_playable(row: dict) -> bool:
+        return not row.get("phoenixInvalid") and is_playable(row["phoenix"], "Phoenix")
+
+    five_playable = sum(1 for row in primary_rows if row["playable"])
+    four_playable = sum(1 for row in primary_rows if row_four_playable(row))
+    phoenix_playable = sum(1 for row in primary_rows if row_phoenix_playable(row))
+    peer_union = sum(
+        1 for row in primary_rows if row_four_playable(row) or row_phoenix_playable(row)
+    )
+    unverified = sum(
+        1
+        for row in primary_rows
+        if not row["playable"]
+        and "Unverified" in (row["vs4do"], row["vsPhoenix"])
+    )
+    regressions = [
+        row
+        for row in primary_rows
+        if "Regression" in (row["vs4do"], row["vsPhoenix"])
+    ]
+    behind = [
+        row for row in primary_rows if "Behind" in (row["vs4do"], row["vsPhoenix"])
+    ]
+    failed_beyond = sum(
+        1
+        for row in primary_rows
+        if row["fiveDoEvidence"] == "beyond-title" and row["fiveDo"] in BEYOND_FAILED
+    )
+    strict_superset = all(
+        row["playable"]
+        for row in primary_rows
+        if row_four_playable(row) or row_phoenix_playable(row)
+    )
+    target = 254
+
     lines.append(f"- Local images inventoried: **{len(discs)}**")
     lines.append(f"- Unique titles: **{len(titles)}**")
     lines.append(f"  - Playable test set (game/homebrew): **{len(primary)}**")
@@ -846,16 +984,31 @@ def main() -> int:
     lines.append(f"- Titles matched to Phoenix: **{phoenix_covered}**")
     lines.append(f"- Titles matched to both: **{both_covered}**")
     lines.append("")
+    lines.append("### Playable-set target")
+    lines.append("")
+    lines.append("| Measure | Titles |")
+    lines.append("|---|---:|")
+    lines.append(f"| 5DO playable | **{five_playable}** |")
+    lines.append(f"| 4DO playable | {four_playable} |")
+    lines.append(f"| Phoenix playable | {phoenix_playable} |")
+    lines.append(f"| Peer union | {peer_union} |")
+    lines.append(f"| 5DO unverified (test set) | {unverified} |")
+    lines.append(f"| 5DO failed beyond-title (test set) | {failed_beyond} |")
+    lines.append(f"| 5DO `Behind` rows | {len(behind)} |")
+    lines.append(f"| 5DO `Regression` rows | {len(regressions)} |")
+    lines.append(f"| Strict superset | {'yes' if strict_superset else 'no'} |")
+    lines.append(f"| Numeric target (≥{target}) | {'yes' if five_playable >= target else 'no'} |")
+    lines.append("")
     lines.append(
-        "> **Phoenix publishes a 100% list, not a graded database.** Every Phoenix entry "
-        "is recorded at 100%, so an unlisted title means *no data*, not a failure. The "
-        "useful comparison is the reverse direction: a title Phoenix lists as working but "
-        "5DO cannot load is a regression."
+        "The target is measured on the 378 game/homebrew titles. The 36 secondary "
+        "demo/media/hack/translation/audio titles are loadability-only and do not enter "
+        "the playable count; their `Unverified` rows in the table below are expected."
     )
     lines.append("")
     lines.append("| 5DO evidence | Titles |")
     lines.append("|---|---:|")
     for key, label in (
+        ("beyond-title", "Beyond-title pass"),
         ("reviewed", "Manual gameplay grade"),
         ("loadability", "Automated loadability"),
         ("none", "Untested"),
@@ -866,7 +1019,7 @@ def main() -> int:
     lines.append("")
     lines.append("| Verdict | Titles |")
     lines.append("|---|---:|")
-    for key in ("5DO ahead", "Parity", "Parity (loadability)", "Behind", "Regression", "—"):
+    for key in ("5DO ahead", "Parity", "Unverified", "Behind", "Regression", "Peer invalid", "—"):
         if verdicts_4do.get(key):
             lines.append(f"| {key} | {verdicts_4do[key]} |")
     lines.append("")
@@ -874,13 +1027,13 @@ def main() -> int:
     lines.append("")
     lines.append("| Verdict | Titles |")
     lines.append("|---|---:|")
-    for key in ("5DO ahead", "Parity", "Parity (loadability)", "Behind", "Regression", "—"):
+    for key in ("5DO ahead", "Parity", "Unverified", "Behind", "Regression", "Peer invalid", "—"):
         if verdicts_phoenix.get(key):
             lines.append(f"| {key} | {verdicts_phoenix[key]} |")
     lines.append("")
     lines.append(
-        "`Behind` means 5DO has a lower grade, usually because the manual 5DO grade is "
-        "`Playable` while the peer says `Good`; it is not a loadability failure. "
+        "`Behind` means a tested title failed to reach beyond-title while its peer can "
+        "play it. `Unverified` means the title has not been tested beyond the title yet. "
         "`Regression` is the hard failure: a peer reports the title as playable, but 5DO "
         "produced no usable frame."
     )
@@ -889,7 +1042,8 @@ def main() -> int:
     lines.append("")
     lines.append(
         "`5DO` is the observed state: `Rendered`/`No video`/`Not loadable` are automated, "
-        "`Good`/`Playable`/`Unplayable` are manual grades. `Images` is the number of local "
+        "`Good`/`Playable`/`Unplayable` are manual grades, and beyond-title results come "
+        "from `docs/data/beyond-title-results.csv`. `Images` is the number of local "
         "files collapsed into this title; `Variants` counts distinct game IDs."
     )
     lines.append("")
@@ -925,8 +1079,8 @@ def main() -> int:
     lines.append("")
     lines.append("## Regressions to triage")
     lines.append("")
-    regressions = [row for row in rows if "Regression" in (row["vs4do"], row["vsPhoenix"])]
-    if not regressions:
+    regression_rows = [row for row in rows if "Regression" in (row["vs4do"], row["vsPhoenix"])]
+    if not regression_rows:
         lines.append("None.")
     else:
         lines.append(
@@ -936,7 +1090,7 @@ def main() -> int:
         lines.append("")
         lines.append("| Title | 5DO | 4DO | Phoenix |")
         lines.append("|---|---|---|---|")
-        for row in regressions:
+        for row in regression_rows:
             lines.append(
                 "| "
                 + " | ".join(
@@ -957,8 +1111,9 @@ def main() -> int:
         lines.append("None.")
     else:
         lines.append(
-            "The peer reports `Unplayable`/`Not Loadable`, but 5DO loads the title. "
-            "Promote these to confirmed wins only after a scripted gameplay check."
+            "The peer reports `Unplayable`/`Not Loadable`, but 5DO is playable under the "
+            "beyond-title rule. Each row carries a manual or automated beyond-title "
+            "evidence record."
         )
         lines.append("")
         lines.append("| Title | 5DO | 4DO | Phoenix |")
@@ -972,6 +1127,44 @@ def main() -> int:
                         escape_cell(row["fiveDo"]),
                         escape_cell(row["fourDo"]),
                         escape_cell(row["phoenix"]),
+                    ]
+                )
+                + " |"
+            )
+    lines.append("")
+    lines.append("## Peer-claim invalidations")
+    lines.append("")
+    invalidated = [row for row in rows if row.get("fourDoInvalid") or row.get("phoenixInvalid")]
+    if not invalidated:
+        lines.append("None.")
+    else:
+        lines.append(
+            "A peer claim is removed only with a beyond-title capture and an explicit "
+            "`peerInvalid`/`peerEvidence` record. The peer's raw status remains visible in "
+            "the table above."
+        )
+        lines.append("")
+        lines.append("| Title | Peer | Raw status | Evidence |")
+        lines.append("|---|---|---|---|")
+        for row in invalidated:
+            peers = []
+            if row.get("fourDoInvalid"):
+                peers.append("4DO")
+            if row.get("phoenixInvalid"):
+                peers.append("Phoenix")
+            raw = []
+            if row.get("fourDoInvalid"):
+                raw.append(f"4DO {row.get('fourDo')}")
+            if row.get("phoenixInvalid"):
+                raw.append(f"Phoenix {row.get('phoenix')}")
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        escape_cell(row["title"]),
+                        escape_cell(", ".join(peers)),
+                        escape_cell("; ".join(raw)),
+                        escape_cell(row.get("peerEvidence", "")),
                     ]
                 )
                 + " |"
@@ -991,6 +1184,18 @@ def main() -> int:
                 "summary": {
                     "images": len(discs),
                     "uniqueTitles": len(titles),
+                    "testSet": len(primary),
+                    "fiveDoPlayable": five_playable,
+                    "fourDoPlayable": four_playable,
+                    "phoenixPlayable": phoenix_playable,
+                    "peerUnion": peer_union,
+                    "unverified": unverified,
+                    "failedBeyondTitle": failed_beyond,
+                    "behind": len(behind),
+                    "regressions": len(regressions),
+                    "strictSuperset": strict_superset,
+                    "target": target,
+                    "targetMet": five_playable >= target,
                     "fourdoMatched": fourdo_covered,
                     "phoenixMatched": phoenix_covered,
                     "bothMatched": both_covered,

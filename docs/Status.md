@@ -21,14 +21,18 @@ Debug core builds are optimized, and Auto presentation frame skip is the default
 **594 discs tested: 593 Loadable/Rendered, 1 Loadable/No video (known boot failure), 0 Not Loadable.**
 
 **Corpus update (2026-11-08):** the current collection is **1,371 images → 414 unique
-titles / 378 game test set**, and every unique title now has a 5DO status. Tier B
-batches 1-4 reviewed **107 titles** (81 `Good`, 26 `Playable`); **307 titles** still have
-automated loadability only, and the **22 `Behind` vs 4DO / 25 vs Phoenix** rows all have
-recorded reasons. Five titles are ahead of 4DO (Alone in the Dark, DinoPark Tycoon,
-Orbatak, Psychic Detective, Shootout at Old Tucson). The higher `Behind` count is the
-explicit grade gap, not a loadability regression. The unique-title 5DO/4DO/Phoenix
-comparison is in [`CompatibilityComparison.md`](CompatibilityComparison.md); the
-594-disc legacy sweep above remains the per-image baseline.
+titles / 378 game test set**. Under the compatibility plan's binary beyond-title rule,
+**375 of 378 games are Playable** — the full 147-title peer gap is verified, the
+comparison has **0 `Behind` and 0 `Regression` rows**, and 5DO is a strict superset of
+the **252-title peer union** (after the evidenced *Return Fire – Maps O' Death* data-disc
+invalidation). The original **≥254** numeric target is exceeded. The two `Title-only`
+rows and one `No video` row are non-retail test images (`Joypad Test v1.0`,
+*Return Fire – Maps O' Death* data disc, and `LameNES Emulator`). Per-title BIOS, disc
+hash, capture frame, screenshot, and failure reason live in
+[`BeyondTitleEvidence.md`](BeyondTitleEvidence.md) and
+`docs/data/beyond-title-results.csv`. The unique-title 5DO/4DO/Phoenix comparison is in
+[`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
+above remains the per-image baseline.
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept

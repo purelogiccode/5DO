@@ -1,0 +1,3413 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-08",
+  "counts": {
+    "No video": 1,
+    "Playable": 375,
+    "Title-only": 2
+  },
+  "rows": {
+    "20th century video almanac (1993)(software toolworks)(us)[!].chd": {
+      "file": "20th Century Video Almanac (1993)(Software Toolworks)(US)[!].chd",
+      "title": "20th Century Video Almanac",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\20th-century-video-almanac\\captures\\f012000.png",
+      "discHash": "3f72700d784d0e480aac3a9e23581fee",
+      "bios": "Panasonic FZ-10"
+    },
+    "3d atlas (1994)(electronic arts)(us).chd": {
+      "file": "3D Atlas (1994)(Electronic Arts)(US).chd",
+      "title": "3D Atlas",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\3d-atlas\\captures\\f012000.png",
+      "discHash": "83d70d9c6a4a525a6774ae22ddb1fa23",
+      "bios": "Panasonic FZ-10"
+    },
+    "3do de shiru miru asobu - nakajima miyuki (japan).chd": {
+      "file": "3DO de Shiru Miru Asobu - Nakajima Miyuki (Japan).chd",
+      "title": "3DO de Shiru Miru Asobu - Nakajima Miyuki",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\3do-de-shiru-miru-asobu-nakajima-miyuki\\captures\\f012000.png",
+      "discHash": "59e7f6f04228305c0058f0ecb63d27a1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "3do real - tokubetsu puremiamu cd - hatsubai 1 shuuren (1994)(panasonic)(jp)[!].chd": {
+      "file": "3DO REAL - Tokubetsu Puremiamu CD - Hatsubai 1 Shuuren (1994)(Panasonic)(JP)[!].chd",
+      "title": "3DO REAL - Tokubetsu Puremiamu CD - Hatsubai 1 Shuuren",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\3do-real-tokubetsu-puremiamu-cd-hatsubai-1-shuuren\\captures\\f012000.png",
+      "discHash": "d4620a934c8f919106d940a0712def9e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "3do tes - 3do training educational system (1995)(tg information network)(jp).chd": {
+      "file": "3DO TES - 3DO Training Educational System (1995)(TG Information Network)(JP).chd",
+      "title": "3DO TES - 3DO Training Educational System",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\3do-tes-3do-training-educational-system\\captures\\f012000.png",
+      "discHash": "f6b24c00650cf2404d1a4b977946d6af",
+      "bios": "Panasonic FZ-10J"
+    },
+    "adventures of captain j, the (usa) (unl).chd": {
+      "file": "Adventures Of Captain J, The (USA) (Unl).chd",
+      "title": "Adventures Of Captain J, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\adventures-of-captain-j\\captures\\f012000.png",
+      "discHash": "0a7231ab552ce4daff4b36cfffe6ee55",
+      "bios": "Panasonic FZ-10"
+    },
+    "agi gongnyong goldie (korea).chd": {
+      "file": "Agi Gongnyong Goldie (Korea).chd",
+      "title": "Agi Gongnyong Goldie",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\agi-gongnyong-goldie\\captures\\f012000.png",
+      "discHash": "c71a0d77b8c7b3fdea8dca75cc49e557",
+      "bios": "Panasonic FZ-10J"
+    },
+    "ai shougi (1995)(taito)(jp).chd": {
+      "file": "AI Shougi (1995)(Taito)(JP).chd",
+      "title": "AI Shougi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ai-shougi\\captures\\f012000.png",
+      "discHash": "a5e3c8b519f8f6464ee4cd367319bef4",
+      "bios": "Panasonic FZ-10J"
+    },
+    "alone in the dark (1994)(interplay)(us)[!].chd": {
+      "file": "Alone in the Dark (1994)(Interplay)(US)[!].chd",
+      "title": "Alone in the Dark",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\alone-in-dark\\captures\\f012000.png",
+      "discHash": "9f7d72bccaacfc84f230c8d1a7189329",
+      "bios": "Panasonic FZ-10"
+    },
+    "alone in the dark 2 (1995)(interplay)(us)[!].chd": {
+      "file": "Alone in the Dark 2 (1995)(Interplay)(US)[!].chd",
+      "title": "Alone in the Dark 2",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\alone-in-dark-2\\captures\\f012000.png",
+      "discHash": "1d963e844356d6f26a5d9c744d60952b",
+      "bios": "Panasonic FZ-10"
+    },
+    "anno mitsumasa - peperon-mura no shiki (1995)(marubeni)(jp).chd": {
+      "file": "Anno Mitsumasa - Peperon-mura no Shiki (1995)(Marubeni)(JP).chd",
+      "title": "Anno Mitsumasa - Peperon-mura no Shiki",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\anno-mitsumasa-peperon-mura-no-shiki\\captures\\f012000.png",
+      "discHash": "c881c8fbba129f1810e23a467f3fafbc",
+      "bios": "Panasonic FZ-10J"
+    },
+    "aqua world - umi monogatari (japan).chd": {
+      "file": "Aqua World - Umi Monogatari (Japan).chd",
+      "title": "Aqua World - Umi Monogatari",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\aqua-world-umi-monogatari\\captures\\f012000.png",
+      "discHash": "c43b1fe8c7680ef91eb33f903027721d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "armageddon (1996)(lg)(kr).chd": {
+      "file": "Armageddon (1996)(LG)(KR).chd",
+      "title": "Armageddon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\armageddon\\captures\\f012000.png",
+      "discHash": "981ce2f03821fe521d0ab67463fa1095",
+      "bios": "Panasonic FZ-10J"
+    },
+    "autobahn tokio (1995)(panasonic)(jp)(en)[!].chd": {
+      "file": "AutoBahn Tokio (1995)(Panasonic)(JP)(en)[!].chd",
+      "title": "AutoBahn Tokio",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\autobahn-tokio\\captures\\f012000.png",
+      "discHash": "7df1ad3e67c1a66c92899ef2d1da3161",
+      "bios": "Panasonic FZ-10J"
+    },
+    "bakushou!! all yoshimoto quiz ou ketteisen (1995)(yoshimoto kogyo)(jp)[!].chd": {
+      "file": "Bakushou!! All Yoshimoto Quiz ou Ketteisen (1995)(Yoshimoto Kogyo)(JP)[!].chd",
+      "title": "Bakushou!! All Yoshimoto Quiz ou Ketteisen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bakushou-all-yoshimoto-quiz-ou-ketteisen\\captures\\f012000.png",
+      "discHash": "34925fc5667c6bf0d78bd9ebca82bfc4",
+      "bios": "Panasonic FZ-10J"
+    },
+    "ballz - the director's cut (1995)(panasonic)[!].chd": {
+      "file": "Ballz - The Director's Cut (1995)(Panasonic)[!].chd",
+      "title": "Ballz - The Director's Cut",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ballz-director-s-cut\\captures\\f012000.png",
+      "discHash": "4b65a32f409118a50e6be0ee403221dc",
+      "bios": "Panasonic FZ-10J"
+    },
+    "battle blues (1996)(lg)(kr).chd": {
+      "file": "Battle Blues (1996)(LG)(KR).chd",
+      "title": "Battle Blues",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\battle-blues\\captures\\f012000.png",
+      "discHash": "616440c6f4a95245e1a2a07cc54e717c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "battle chess (1993)(interplay)(us)[!].chd": {
+      "file": "Battle Chess (1993)(Interplay)(US)[!].chd",
+      "title": "Battle Chess",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\battle-chess\\captures\\f012000.png",
+      "discHash": "8cc37a2391c075fc27287d9f02ade52b",
+      "bios": "Panasonic FZ-10"
+    },
+    "battle pinball (1994)(panasonic)(jp)[!].chd": {
+      "file": "Battle Pinball (1994)(Panasonic)(JP)[!].chd",
+      "title": "Battle Pinball",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\battle-pinball\\captures\\f012000.png",
+      "discHash": "693986f7031873bd10a05666fc60f4d8",
+      "bios": "Panasonic FZ-10J"
+    },
+    "battlesport (1995)(studio 3do)(eu)[!].chd": {
+      "file": "BattleSport (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "BattleSport",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\battle-sport\\captures\\f012000.png",
+      "discHash": "1771ed98fb0a1b0d0de7970dd477e5a5",
+      "bios": "Panasonic FZ-10"
+    },
+    "bc racers (1995)(goldstar)(eu-us)[!].chd": {
+      "file": "BC Racers (1995)(GoldStar)(EU-US)[!].chd",
+      "title": "BC Racers",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bc-racers\\captures\\f012000.png",
+      "discHash": "c8198cde66c1365a5db6b10daabf9cca",
+      "bios": "Panasonic FZ-10"
+    },
+    "belzerion (1994)(human)(jp)[!].chd": {
+      "file": "Belzerion (1994)(Human)(JP)[!].chd",
+      "title": "Belzerion",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\belzerion\\captures\\f012000.png",
+      "discHash": "e2e9845b54e4c675f10ce7b7e153cdbe",
+      "bios": "Panasonic FZ-10J"
+    },
+    "bfs - blue forest story (japan) (alt).chd": {
+      "file": "BFS - Blue Forest Story (Japan) (Alt).chd",
+      "title": "BFS - Blue Forest Story",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bfs-blue-forest-story\\captures\\f012000.png",
+      "discHash": "7ca7eb9db16782f9015da6585bd3ae05",
+      "bios": "Panasonic FZ-10J"
+    },
+    "biofury (usa) (unl).chd": {
+      "file": "BioFury (USA) (Unl).chd",
+      "title": "BioFury",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\biofury\\captures\\f012000.png",
+      "discHash": "7d62cf1f0b93f29985e2c3984bb4a65d",
+      "bios": "Panasonic FZ-10"
+    },
+    "bishoujo senshi sailor moon s (1995)(bandai)(jp)[!].chd": {
+      "file": "Bishoujo Senshi Sailor Moon S (1995)(Bandai)(JP)[!].chd",
+      "title": "Bishoujo Senshi Sailor Moon S",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bishoujo-senshi-sailor-moon-s\\captures\\f012000.png",
+      "discHash": "c3e4ef6873a009254c8b47b878ee508c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "bladeforce (1995)(studio 3do)(eu)[!].chd": {
+      "file": "BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "BladeForce",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bladeforce\\captures\\f012000.png",
+      "discHash": "759bfe4980922a980c7aaa7a1668b576",
+      "bios": "Panasonic FZ-10"
+    },
+    "blonde justice (1995)(vivid interactive)(us).chd": {
+      "file": "Blonde Justice (1995)(Vivid Interactive)(US).chd",
+      "title": "Blonde Justice",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\blonde-justice\\captures\\f012000.png",
+      "discHash": "6488571318e93c1bc0e92c68a46ae4bc",
+      "bios": "Panasonic FZ-10"
+    },
+    "blue forest monogatari (1996)(panasonic)(jp)[!].chd": {
+      "file": "Blue Forest Monogatari (1996)(Panasonic)(JP)[!].chd",
+      "title": "Blue Forest Monogatari",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\blue-forest-monogatari\\captures\\f012000.png",
+      "discHash": "42ac15557c8595a354e7ef58c627549d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "bodyconscious digital rave! part 1 - shinjuku & takasaki (1994)(transpegasus)(jp).chd": {
+      "file": "Bodyconscious Digital Rave! Part 1 - Shinjuku & Takasaki (1994)(Transpegasus)(JP).chd",
+      "title": "Bodyconscious Digital Rave! Part 1 - Shinjuku & Takasaki",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bodyconscious-digital-rave-part-1-shinjuku-and-takasaki\\captures\\f012000.png",
+      "discHash": "7ce169702b5f999aea572f0093089c3a",
+      "bios": "Panasonic FZ-10J"
+    },
+    "bonogurashi (1995)(amuse)(jp).chd": {
+      "file": "Bonogurashi (1995)(Amuse)(JP).chd",
+      "title": "Bonogurashi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bonogurashi\\captures\\f012000.png",
+      "discHash": "e25c436f190410d3387f695a4a499654",
+      "bios": "Panasonic FZ-10J"
+    },
+    "brain dead 13 starring fritz (1995)(readysoft)(us)(disc 1 of 2)[!].chd": {
+      "file": "Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd",
+      "title": "Brain Dead 13 Starring Fritz",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\brain-dead-13-starring-fritz\\captures\\f012000.png",
+      "discHash": "ac072c5035d111738bc6209db4605b31",
+      "bios": "Panasonic FZ-10"
+    },
+    "burning soldier (1994)(panasonic)(us)[!].chd": {
+      "file": "Burning Soldier (1994)(Panasonic)(US)[!].chd",
+      "title": "Burning Soldier",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\burning-soldier\\captures\\f012000.png",
+      "discHash": "8a243b82d06386dc5fdf3225402401f7",
+      "bios": "Panasonic FZ-10"
+    },
+    "bust-a-move (1995)(taito)(us).chd": {
+      "file": "Bust-A-Move (1995)(Taito)(US).chd",
+      "title": "Bust-A-Move",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bust-move\\captures\\f012000.png",
+      "discHash": "caaad4dd60dadc8d86da3b17f20a8fb8",
+      "bios": "Panasonic FZ-10"
+    },
+    "cannon fodder (1994)(virgin)(us)[!].chd": {
+      "file": "Cannon Fodder (1994)(Virgin)(US)[!].chd",
+      "title": "Cannon Fodder",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\cannon-fodder\\captures\\f012000.png",
+      "discHash": "285433697f2c07a66762f97e4f3ed8d2",
+      "bios": "Panasonic FZ-10"
+    },
+    "captain quazar (1995)(studio 3do)(eu)[!].chd": {
+      "file": "Captain Quazar (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "Captain Quazar",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\captain-quazar\\captures\\f012000.png",
+      "discHash": "0a2babc6c777d95b6febc54a3cea9f8c",
+      "bios": "Panasonic FZ-10"
+    },
+    "carrier - fortress at sea (1995)(panasonic)(us).chd": {
+      "file": "Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "title": "Carrier - Fortress at Sea",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\carrier-fortress-at-sea\\captures\\f012000.png",
+      "discHash": "c5d29d397671268e608e81ef65e11517",
+      "bios": "Panasonic FZ-10"
+    },
+    "casper (1996)(interplay)(us)[!].chd": {
+      "file": "Casper (1996)(Interplay)(US)[!].chd",
+      "title": "Casper",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\casper\\captures\\f012000.png",
+      "discHash": "f60fff308f82ac9d3ec1696b488ff4fa",
+      "bios": "Panasonic FZ-10"
+    },
+    "chiki chiki machine mou race - kenken to black maou no ijiwaru daisakusen (1994)(future pirates)(jp)[!].chd": {
+      "file": "Chiki Chiki Machine Mou Race - Kenken to Black Maou no Ijiwaru Daisakusen (1994)(Future Pirates)(JP)[!].chd",
+      "title": "Chiki Chiki Machine Mou Race - Kenken to Black Maou no Ijiwaru Daisakusen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\chiki-chiki-machine-mou-race-kenken-to-black-maou-no-ijiwaru-daisakusen\\captures\\f012000.png",
+      "discHash": "1aae20e90fc390d4b255988c903eb16b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "chiki chiki machine mou race 2 - in space (1995)(future pirates)(jp)[!].chd": {
+      "file": "Chiki Chiki Machine Mou Race 2 - In Space (1995)(Future Pirates)(JP)[!].chd",
+      "title": "Chiki Chiki Machine Mou Race 2 - In Space",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\chiki-chiki-machine-mou-race-2-in-space\\captures\\f012000.png",
+      "discHash": "0a5baaa6e2527d4237354ac000405055",
+      "bios": "Panasonic FZ-10J"
+    },
+    "chip-8 emulator (2016)(gameblabla)[incl. tetris rom].chd": {
+      "file": "Chip-8 Emulator (2016)(Gameblabla)[incl. Tetris ROM].chd",
+      "title": "Chip-8 Emulator",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\chip-8-emulator\\captures\\f012000.png",
+      "discHash": "c2d1582441db03f4edfcf5419bec87ec",
+      "bios": "Panasonic FZ-10J"
+    },
+    "club 3do - station invasion (1994)(studio 3do)(us)[!].chd": {
+      "file": "Club 3DO - Station Invasion (1994)(Studio 3DO)(US)[!].chd",
+      "title": "Club 3DO - Station Invasion",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\club-3do-station-invasion\\captures\\f012000.png",
+      "discHash": "3549173ffb8a6ce107db41af99552910",
+      "bios": "Panasonic FZ-10"
+    },
+    "corpse killer (1994)(digital pictures)(us)[!].chd": {
+      "file": "Corpse Killer (1994)(Digital Pictures)(US)[!].chd",
+      "title": "Corpse Killer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\corpse-killer\\captures\\f012000.png",
+      "discHash": "4a39f30de6a3ecf18354a663447173f7",
+      "bios": "Panasonic FZ-10"
+    },
+    "coven, the (1994)(vivid interactive)(us).chd": {
+      "file": "Coven, The (1994)(Vivid Interactive)(US).chd",
+      "title": "Coven, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\coven\\captures\\f012000.png",
+      "discHash": "21d8d5ad3a70b9d5fe33554a3b95362c",
+      "bios": "Panasonic FZ-10"
+    },
+    "cowboy casino - interactive poker (1994)(intelliplay)(us)[!].chd": {
+      "file": "Cowboy Casino - Interactive Poker (1994)(IntelliPlay)(US)[!].chd",
+      "title": "Cowboy Casino - Interactive Poker",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\cowboy-casino-interactive-poker\\captures\\f012000.png",
+      "discHash": "455ab8b3a179200af61607a9744e4c81",
+      "bios": "Panasonic FZ-10"
+    },
+    "crash 'n burn (1993)(crystal dynamics)(us)[!][3drm-1239120 1].chd": {
+      "file": "Crash 'n Burn (1993)(Crystal Dynamics)(US)[!][3DRM-1239120 1].chd",
+      "title": "Crash 'n Burn",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\crash-n-burn\\captures\\f012000.png",
+      "discHash": "217344b0b501be4bbb274af4a49f7053",
+      "bios": "Panasonic FZ-10"
+    },
+    "crayon shin-chan - puzzle daimaou no nazo (1995)(bandai)(jp).chd": {
+      "file": "Crayon Shin-chan - Puzzle Daimaou no Nazo (1995)(Bandai)(JP).chd",
+      "title": "Crayon Shin-chan - Puzzle Daimaou no Nazo",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\crayon-shin-chan-puzzle-daimaou-no-nazo\\captures\\f012000.png",
+      "discHash": "9d12e91c0827724e8c09f1b6e4fed274",
+      "bios": "Panasonic FZ-10J"
+    },
+    "creature shock (1995)(virgin)(us)(disc 1 of 2)[!].chd": {
+      "file": "Creature Shock (1995)(Virgin)(US)(Disc 1 of 2)[!].chd",
+      "title": "Creature Shock",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\creature-shock\\captures\\f012000.png",
+      "discHash": "861bdc7de021bc04d15561ad73bbecb7",
+      "bios": "Panasonic FZ-10"
+    },
+    "crime patrol (1994)(american laser games)(us)[!].chd": {
+      "file": "Crime Patrol (1994)(American Laser Games)(US)[!].chd",
+      "title": "Crime Patrol",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\crime-patrol\\captures\\f012000.png",
+      "discHash": "e8fbe61ca2232ec73b71d3524ce00567",
+      "bios": "Panasonic FZ-10"
+    },
+    "crystal borg in hyperspace (2017)(optimus6128).chd": {
+      "file": "Crystal Borg in Hyperspace (2017)(Optimus6128).chd",
+      "title": "Crystal Borg in Hyperspace",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\crystal-borg-in-hyperspace\\captures\\f012000.png",
+      "discHash": "fe2be048be8cc411831a42e8fa8965fd",
+      "bios": "Panasonic FZ-10J"
+    },
+    "cyberdillo (1995)(panasonic)(us)[!].chd": {
+      "file": "Cyberdillo (1995)(Panasonic)(US)[!].chd",
+      "title": "Cyberdillo",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\cyberdillo\\captures\\f012000.png",
+      "discHash": "f29bc43c3c31451b6942099a777ddb8b",
+      "bios": "Panasonic FZ-10"
+    },
+    "cyberia (1996)(interplay)(us)[!].chd": {
+      "file": "Cyberia (1996)(Interplay)(US)[!].chd",
+      "title": "Cyberia",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\cyberia\\captures\\f012000.png",
+      "discHash": "27a64cfcc9ef42f064e1f66885abbecf",
+      "bios": "Panasonic FZ-10"
+    },
+    "d (1995)(panasonic)(eu-us)(disc 1 of 2)[!].chd": {
+      "file": "D (1995)(Panasonic)(EU-US)(Disc 1 of 2)[!].chd",
+      "title": "D",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\d\\captures\\f012000.png",
+      "discHash": "d6f4b4d1736914dd3c6dd5672ba10e3e",
+      "bios": "Panasonic FZ-10"
+    },
+    "d no shokutaku (1995)(san-ei shobo publishing)(jp)(disc 1 of 2)[!].chd": {
+      "file": "D no Shokutaku (1995)(San-Ei Shobo Publishing)(JP)(Disc 1 of 2)[!].chd",
+      "title": "D no Shokutaku",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\d-no-shokutaku\\captures\\f012000.png",
+      "discHash": "36a0885ac8ae48069ddaef78b859e440",
+      "bios": "Panasonic FZ-10J"
+    },
+    "d's diner - the director's cut (1996)(warp)(jp)(disc 1 of 3)[!][disk a].chd": {
+      "file": "D's Diner - The Director's Cut (1996)(Warp)(JP)(Disc 1 of 3)[!][Disk A].chd",
+      "title": "D's Diner - The Director's Cut",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\d-s-diner-director-s-cut\\captures\\f012000.png",
+      "discHash": "590f8b64b7b6740232d2e121db842bd7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "daedalus encounter - episode 1 - nanpasen no alien (1995)(hatnet)(jp)(disc 1 of 4)[!].chd": {
+      "file": "Daedalus Encounter - Episode 1 - Nanpasen no Alien (1995)(HATNET)(JP)(Disc 1 of 4)[!].chd",
+      "title": "Daedalus Encounter - Episode 1 - Nanpasen no Alien",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\daedalus-encounter-episode-1-nanpasen-no-alien\\captures\\f012000.png",
+      "discHash": "cb73dfbf76c923496238f6859c430daa",
+      "bios": "Panasonic FZ-10J"
+    },
+    "daedalus encounter, the (1995)(panasonic)(us)(disc 1 of 4)[!].chd": {
+      "file": "Daedalus Encounter, The (1995)(Panasonic)(US)(Disc 1 of 4)[!].chd",
+      "title": "Daedalus Encounter, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\daedalus-encounter\\captures\\f012000.png",
+      "discHash": "d1c4ab66fd42dd5fa426f632b0dfbc3f",
+      "bios": "Panasonic FZ-10"
+    },
+    "deathkeep (1995)(ssi)(us)[!].chd": {
+      "file": "DeathKeep (1995)(SSi)(US)[!].chd",
+      "title": "DeathKeep",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\deathkeep\\captures\\f012000.png",
+      "discHash": "fc8547d2ba7ae3d4b5cb2aec00625ca8",
+      "bios": "Panasonic FZ-10"
+    },
+    "decathlon (2007)(oldergames)[!].chd": {
+      "file": "Decathlon (2007)(Oldergames)[!].chd",
+      "title": "Decathlon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\decathlon\\captures\\f012000.png",
+      "discHash": "0e80be7a25748b9587619543b4986cf7",
+      "bios": "Panasonic FZ-10"
+    },
+    "defcon 5 (1995)(goldstar)(eu)[!].chd": {
+      "file": "Defcon 5 (1995)(GoldStar)(EU)[!].chd",
+      "title": "Defcon 5",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\defcon-5\\captures\\f012000.png",
+      "discHash": "c17409b3544768ce6bcaa77fe9a70928",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    },
+    "demolition man (1994)(virgin)(us)[!].chd": {
+      "file": "Demolition Man (1994)(Virgin)(US)[!].chd",
+      "title": "Demolition Man",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\demolition-man\\captures\\f012000.png",
+      "discHash": "cf43e6953ac0f5012d8e674d5bacf15d",
+      "bios": "Panasonic FZ-10"
+    },
+    "dennis miller - that's news to me (1994)(sanctuary woods)(us)[!].chd": {
+      "file": "Dennis Miller - That's News To Me (1994)(Sanctuary Woods)(US)[!].chd",
+      "title": "Dennis Miller - That's News To Me",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dennis-miller-that-s-news-to-me\\captures\\f012000.png",
+      "discHash": "8d74e0e9710eb47cebe3be8f387fbb1a",
+      "bios": "Panasonic FZ-10"
+    },
+    "dennou hyouryuu - multimedia cruising (1995)(hamlet)(jp)[!].chd": {
+      "file": "Dennou Hyouryuu - Multimedia Cruising (1995)(Hamlet)(JP)[!].chd",
+      "title": "Dennou Hyouryuu - Multimedia Cruising",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dennou-hyouryuu-multimedia-cruising\\captures\\f012000.png",
+      "discHash": "ce3ea37bd40c08cdff76aabfd3dc0120",
+      "bios": "Panasonic FZ-10J"
+    },
+    "devil's course (1995)(panasonic)(jp)[!].chd": {
+      "file": "Devil's Course (1995)(Panasonic)(JP)[!].chd",
+      "title": "Devil's Course",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\devil-s-course\\captures\\f012000.png",
+      "discHash": "8d1f59b6702bfd7b201d88a040663071",
+      "bios": "Panasonic FZ-10J"
+    },
+    "digital dreamware (1995)(virgin)(us)[!].chd": {
+      "file": "Digital Dreamware (1995)(Virgin)(US)[!].chd",
+      "title": "Digital Dreamware",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\digital-dreamware\\captures\\f012000.png",
+      "discHash": "808e705f74dbb17e502df10758281fc3",
+      "bios": "Panasonic FZ-10"
+    },
+    "dinopark tycoon (1994)(mecc)(us).chd": {
+      "file": "DinoPark Tycoon (1994)(MECC)(US).chd",
+      "title": "DinoPark Tycoon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dinopark-tycoon\\captures\\f012000.png",
+      "discHash": "cb8ee795fdb223f6de28a6b7b9feb7f8",
+      "bios": "Panasonic FZ-10"
+    },
+    "doctor hauzer (1994)(panasonic)(jp)[!].chd": {
+      "file": "Doctor Hauzer (1994)(Panasonic)(JP)[!].chd",
+      "title": "Doctor Hauzer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\doctor-hauzer\\captures\\f012000.png",
+      "discHash": "f99996de245b15fdf2b28b80f8fe6da7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "doom (1995)(art data)(us)[!].chd": {
+      "file": "Doom (1995)(Art Data)(US)[!].chd",
+      "title": "Doom",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\doom\\captures\\f012000.png",
+      "discHash": "96be37ff5cfe6eb13d3cfed876ad6a84",
+      "bios": "Panasonic FZ-10"
+    },
+    "doraemons, the - yuujou densetsu (1995)(shopro)(jp)[!].chd": {
+      "file": "Doraemons, The - Yuujou Densetsu (1995)(ShoPro)(JP)[!].chd",
+      "title": "Doraemons, The - Yuujou Densetsu",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\doraemons-yuujou-densetsu\\captures\\f012000.png",
+      "discHash": "467acb334f3b2896d6c00fbf0cdffd35",
+      "bios": "Panasonic FZ-10J"
+    },
+    "dragon lore - the legend begins (1995)(mindscape)(eu-us)(m4)(disc 1 of 3)[!].chd": {
+      "file": "Dragon Lore - The Legend Begins (1995)(Mindscape)(EU-US)(M4)(Disc 1 of 3)[!].chd",
+      "title": "Dragon Lore - The Legend Begins",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dragon-lore-legend-begins\\captures\\f012000.png",
+      "discHash": "1daebe43072dac4213c22cbfac8ca063",
+      "bios": "Panasonic FZ-10"
+    },
+    "dragon tycoon edge (1995)(sanyo)(jp)[!].chd": {
+      "file": "Dragon Tycoon Edge (1995)(Sanyo)(JP)[!].chd",
+      "title": "Dragon Tycoon Edge",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dragon-tycoon-edge\\captures\\f012000.png",
+      "discHash": "b748306e476f86e96f5235b0c9c420b3",
+      "bios": "Panasonic FZ-10J"
+    },
+    "dragon's lair (1993)(readysoft)(us)[!][dh 65003-2].chd": {
+      "file": "Dragon's Lair (1993)(ReadySoft)(US)[!][DH 65003-2].chd",
+      "title": "Dragon's Lair",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\dragon-s-lair\\captures\\f012000.png",
+      "discHash": "b78199c41d858b6fbe5e4dbd50b72982",
+      "bios": "Panasonic FZ-10"
+    },
+    "drug wars (1995)(american laser games)(us)[!].chd": {
+      "file": "Drug Wars (1995)(American Laser Games)(US)[!].chd",
+      "title": "Drug Wars",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\drug-wars\\captures\\f012000.png",
+      "discHash": "f3bb8f835943bd9484ca2b86065c7c9e",
+      "bios": "Panasonic FZ-10"
+    },
+    "eigo de go! - gateway to english (1996)(gakken)(jp).chd": {
+      "file": "Eigo de Go! - Gateway to English (1996)(Gakken)(JP).chd",
+      "title": "Eigo de Go! - Gateway to English",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\eigo-de-go-gateway-to-english\\captures\\f012000.png",
+      "discHash": "4ae94cbd1ae086de20f2922792b8883d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "emit vol. 1 - toki no maigo (1995)(koei)(jp)[!].chd": {
+      "file": "EMIT Vol. 1 - Toki no Maigo (1995)(KOEI)(JP)[!].chd",
+      "title": "EMIT Vol. 1 - Toki no Maigo",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\emit-vol-1-toki-no-maigo\\captures\\f012000.png",
+      "discHash": "194976848401da5c3ec05b50be5cb81e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "emit vol. 2 - meigake no tabi (1995)(koei)(jp)[!].chd": {
+      "file": "EMIT Vol. 2 - Meigake no Tabi (1995)(KOEI)(JP)[!].chd",
+      "title": "EMIT Vol. 2 - Meigake no Tabi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\emit-vol-2-meigake-no-tabi\\captures\\f012000.png",
+      "discHash": "38f1154bc07e895aac01f97f1063b93c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "emit vol. 3 - watashi ni sayonara o (1995)(koei)(jp)[!].chd": {
+      "file": "EMIT Vol. 3 - Watashi ni Sayonara o (1995)(KOEI)(JP)[!].chd",
+      "title": "EMIT Vol. 3 - Watashi ni Sayonara o",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\emit-vol-3-watashi-ni-sayonara-o\\captures\\f012000.png",
+      "discHash": "20ff6433e741fa9384c8ac5581dcebf5",
+      "bios": "Panasonic FZ-10J"
+    },
+    "endlessly (1994)(vivid interactive)(eu-us)[!].chd": {
+      "file": "Endlessly (1994)(Vivid Interactive)(EU-US)[!].chd",
+      "title": "Endlessly",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\endlessly\\captures\\f012000.png",
+      "discHash": "f7abcec1590d577471013cbc12a0977c",
+      "bios": "Panasonic FZ-10"
+    },
+    "escape from monster manor (korea) (en,ko).chd": {
+      "file": "Escape from Monster Manor (Korea) (En,Ko).chd",
+      "title": "Escape from Monster Manor",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\escape-from-monster-manor\\captures\\f012000.png",
+      "discHash": "bd2bab943077026055f818de11e2243b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "escape from monster manor - a terrifying hunt for the undead (1993)(electronic arts)(us)[!].chd": {
+      "file": "Escape from Monster Manor - A Terrifying Hunt for the Undead (1993)(Electronic Arts)(US)[!].chd",
+      "title": "Escape from Monster Manor - A Terrifying Hunt for the Undead",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\escape-from-monster-manor-terrifying-hunt-for-undead\\captures\\f012000.png",
+      "discHash": "2e6f8eeec6f92c478685c75232f9eed6",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn baseball - interactive hitting (1994)(intelliplay)(us)[!].chd": {
+      "file": "ESPN Baseball - Interactive Hitting (1994)(IntelliPlay)(US)[!].chd",
+      "title": "ESPN Baseball - Interactive Hitting",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-baseball-interactive-hitting\\captures\\f012000.png",
+      "discHash": "f776533451076b2c7124bf181f42d425",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn golf - lower your score with tom kite - shot making (1994)(intelliplay)(us)(disc 1 of 3)[!][shot making disc 1].chd": {
+      "file": "ESPN Golf - Lower Your Score With Tom Kite - Shot Making (1994)(IntelliPlay)(US)(Disc 1 of 3)[!][Shot Making Disc 1].chd",
+      "title": "ESPN Golf - Lower Your Score With Tom Kite - Shot Making",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-golf-lower-your-score-with-tom-kite-shot-making\\captures\\f012000.png",
+      "discHash": "ae239b84cfad1c0ee803728ed88cd87a",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn golf - tom kite no kore ga golf da! (1994)(byse)(jp)(disc 1 of 3)[!].chd": {
+      "file": "ESPN Golf - Tom Kite no Kore ga Golf Da! (1994)(BYSE)(JP)(Disc 1 of 3)[!].chd",
+      "title": "ESPN Golf - Tom Kite no Kore ga Golf Da!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-golf-tom-kite-no-kore-ga-golf-da\\captures\\f012000.png",
+      "discHash": "0afe08d786a6f1f0fe06aa088137d09a",
+      "bios": "Panasonic FZ-10J"
+    },
+    "espn let's go skiing with picabo street, a. j. kitt & holly flanders (1994)(intelliplay)(us)[!].chd": {
+      "file": "ESPN Let's Go Skiing with Picabo Street, A. J. Kitt & Holly Flanders (1994)(IntelliPlay)(US)[!].chd",
+      "title": "ESPN Let's Go Skiing with Picabo Street, A. J. Kitt & Holly Flanders",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-let-s-go-skiing-with-picabo-street-j-kitt-and-holly-flanders\\captures\\f012000.png",
+      "discHash": "959c2aa378a34aaf120b0043b88a2714",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn let's play beach volleyball with karch kiraly & karolyn kirby (1993)(intelliplay)(us).chd": {
+      "file": "ESPN Let's Play Beach Volleyball with Karch Kiraly & Karolyn Kirby (1993)(IntelliPlay)(US).chd",
+      "title": "ESPN Let's Play Beach Volleyball with Karch Kiraly & Karolyn Kirby",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-let-s-play-beach-volleyball-with-karch-kiraly-and-karolyn-kirby\\captures\\f012000.png",
+      "discHash": "6e24867dd5163b9c8ebbe4a9b23c3960",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn let's play soccer with john harkes and mia hamm (1994)(intelliplay)(us)[!].chd": {
+      "file": "ESPN Let's Play Soccer with John Harkes and Mia Hamm (1994)(IntelliPlay)(US)[!].chd",
+      "title": "ESPN Let's Play Soccer with John Harkes and Mia Hamm",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-let-s-play-soccer-with-john-harkes-and-mia-hamm\\captures\\f012000.png",
+      "discHash": "16766448246e0626c78abaf7bac62854",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn let's play tennis with tracy austin (1994)(intelliplay)(us).chd": {
+      "file": "ESPN Let's Play Tennis with Tracy Austin (1994)(IntelliPlay)(US).chd",
+      "title": "ESPN Let's Play Tennis with Tracy Austin",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-let-s-play-tennis-with-tracy-austin\\captures\\f012000.png",
+      "discHash": "4efc5a24d6170d2f8836563f7fc02200",
+      "bios": "Panasonic FZ-10"
+    },
+    "espn step aerobics (1994)(intelliplay)(us)[!].chd": {
+      "file": "ESPN Step Aerobics (1994)(IntelliPlay)(US)[!].chd",
+      "title": "ESPN Step Aerobics",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\espn-step-aerobics\\captures\\f012000.png",
+      "discHash": "94d171db1ac0511750c5a5010d13505e",
+      "bios": "Panasonic FZ-10"
+    },
+    "evil australians - rise of stupidity v1.1 (2017)(gameblabla).chd": {
+      "file": "Evil Australians - Rise of Stupidity v1.1 (2017)(Gameblabla).chd",
+      "title": "Evil Australians - Rise of Stupidity",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\evil-australians-rise-of-stupidity\\captures\\f012000.png",
+      "discHash": "2f8ce27067af97478b8c3505c0ff2fd8",
+      "bios": "Panasonic FZ-10 (No RSA)"
+    },
+    "eye of typhoon (korea).chd": {
+      "file": "Eye of Typhoon (Korea).chd",
+      "title": "Eye of Typhoon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\eye-of-typhoon\\captures\\f012000.png",
+      "discHash": "11e49bbd828306056ad018df74a3752a",
+      "bios": "Panasonic FZ-10J"
+    },
+    "f1gp (1995)(pony canyon)(jp).chd": {
+      "file": "F1GP (1995)(Pony Canyon)(JP).chd",
+      "title": "F1GP",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\f1gp\\captures\\f012000.png",
+      "discHash": "5f3bfa9e0202f487e805c31f4b4899f9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "family feud (1994)(gametek)(us)[!].chd": {
+      "file": "Family Feud (1994)(Gametek)(US)[!].chd",
+      "title": "Family Feud",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\family-feud\\captures\\f012000.png",
+      "discHash": "55f8ccf1c26d3301bce9fc90967311e2",
+      "bios": "Panasonic FZ-10"
+    },
+    "fatty bear's birthday surprise (1993)(humongous entertainment)(us)[!].chd": {
+      "file": "Fatty Bear's Birthday Surprise (1993)(Humongous Entertainment)(US)[!].chd",
+      "title": "Fatty Bear's Birthday Surprise",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fatty-bear-s-birthday-surprise\\captures\\f012000.png",
+      "discHash": "587d1337568ef4dcfa13323f6d696c71",
+      "bios": "Panasonic FZ-10"
+    },
+    "fatty bear's funpack (1993)(humongous entertainment)(us)[!].chd": {
+      "file": "Fatty Bear's Funpack (1993)(Humongous Entertainment)(US)[!].chd",
+      "title": "Fatty Bear's Funpack",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fatty-bear-s-funpack\\captures\\f012000.png",
+      "discHash": "b3b6d74d3484babd1f60411c2a55f370",
+      "bios": "Panasonic FZ-10"
+    },
+    "fb battery navi ver. ii (japan).chd": {
+      "file": "FB Battery Navi Ver. II (Japan).chd",
+      "title": "FB Battery Navi Ver. II",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fb-battery-navi-ver-ii\\captures\\f012000.png",
+      "discHash": "95c0cf74429f8fb7ee39de18eedf3190",
+      "bios": "Panasonic FZ-10J"
+    },
+    "fifa international soccer (1994)(ea sports)(eu)[!].chd": {
+      "file": "FIFA International Soccer (1994)(EA Sports)(EU)[!].chd",
+      "title": "FIFA International Soccer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fifa-international-soccer\\captures\\f012000.png",
+      "discHash": "24721bf41aecc6be3eb611b58ac0b4bd",
+      "bios": "Panasonic FZ-10"
+    },
+    "fire ball!! (japan).chd": {
+      "file": "Fire Ball!! (Japan).chd",
+      "title": "Fire Ball!!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fire-ball\\captures\\f012000.png",
+      "discHash": "31a3b2e79ec3243136b20e0403db21d0",
+      "bios": "Panasonic FZ-10J"
+    },
+    "firewall (korea).chd": {
+      "file": "Firewall (Korea).chd",
+      "title": "Firewall",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\firewall\\captures\\f012000.png",
+      "discHash": "7814b6b15af17f4604a32c245f4d08f2",
+      "bios": "Panasonic FZ-10J"
+    },
+    "flashback (japan) (en,ja,fr,de,it,nl).chd": {
+      "file": "Flashback (Japan) (En,Ja,Fr,De,It,Nl).chd",
+      "title": "Flashback",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\flashback\\captures\\f012000.png",
+      "discHash": "9d03be869ad6948a69bc1b49d1d087be",
+      "bios": "Panasonic FZ-10J"
+    },
+    "flashback - the quest for identity (1994)(u.s. gold)(us)(en-fr)[!].chd": {
+      "file": "Flashback - The Quest for Identity (1994)(U.S. Gold)(US)(en-fr)[!].chd",
+      "title": "Flashback - The Quest for Identity",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\flashback-quest-for-identity\\captures\\f012000.png",
+      "discHash": "337813d7ecc5e472778bf9dcff635254",
+      "bios": "Panasonic FZ-10"
+    },
+    "flopon world (japan).chd": {
+      "file": "Flopon World (Japan).chd",
+      "title": "Flopon World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\flopon-world\\captures\\f012000.png",
+      "discHash": "29b5bdf985a872f74de9e6454065f4b5",
+      "bios": "Panasonic FZ-10J"
+    },
+    "flying nightmares (1995)(domark)(eu)[!].chd": {
+      "file": "Flying Nightmares (1995)(Domark)(EU)[!].chd",
+      "title": "Flying Nightmares",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\flying-nightmares\\captures\\f012000.png",
+      "discHash": "4022bbb529e7f9b12b82075a65d8744c",
+      "bios": "Panasonic FZ-10"
+    },
+    "foes of ali (1995)(ea sports)(us)[!].chd": {
+      "file": "Foes of Ali (1995)(EA Sports)(US)[!].chd",
+      "title": "Foes of Ali",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\foes-of-ali\\captures\\f012000.png",
+      "discHash": "65503973d9665d28ffd541249f989ce8",
+      "bios": "Panasonic FZ-10"
+    },
+    "fun 'n games (1993)(panasonic)(us)[!].chd": {
+      "file": "Fun 'n Games (1993)(Panasonic)(US)[!].chd",
+      "title": "Fun 'n Games",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fun-n-games\\captures\\f012000.png",
+      "discHash": "cb3a3ceacc2561b87ceaa6376cb2e641",
+      "bios": "Panasonic FZ-10"
+    },
+    "fun 'n games - soft no omochabai (1994)(virgin)(jp)(en-ja)[!].chd": {
+      "file": "Fun 'n Games - Soft no Omochabai (1994)(Virgin)(JP)(en-ja)[!].chd",
+      "title": "Fun 'n Games - Soft no Omochabai",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\fun-n-games-soft-no-omochabai\\captures\\f012000.png",
+      "discHash": "1cde5c0bc8532f1af692eab7be47c730",
+      "bios": "Panasonic FZ-10J"
+    },
+    "gakkou no kowai uwasa - hanako-san ga kita!! (1995)(amuse)(jp)[!].chd": {
+      "file": "Gakkou no Kowai Uwasa - Hanako-san ga Kita!! (1995)(Amuse)(JP)[!].chd",
+      "title": "Gakkou no Kowai Uwasa - Hanako-san ga Kita!!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\gakkou-no-kowai-uwasa-hanako-san-ga-kita\\captures\\f012000.png",
+      "discHash": "d452e2b3b2a233429bc04ff717828ef0",
+      "bios": "Panasonic FZ-10J"
+    },
+    "game no tatsujin (1995)(sunsoft)(jp)[!].chd": {
+      "file": "Game no Tatsujin (1995)(Sunsoft)(JP)[!].chd",
+      "title": "Game no Tatsujin",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\game-no-tatsujin\\captures\\f012000.png",
+      "discHash": "c780bc890092bf7bd53716b32c1d8119",
+      "bios": "Panasonic FZ-10J"
+    },
+    "gameblabla's crappy compilation rev 2 (2016)(gameblabla).chd": {
+      "file": "Gameblabla's Crappy Compilation Rev 2 (2016)(Gameblabla).chd",
+      "title": "Gameblabla's Crappy Compilation Rev 2",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\gameblabla-s-crappy-compilation\\captures\\f012000.png",
+      "discHash": "c458068cb3c7e1e21fc1f591a516e167",
+      "bios": "Panasonic FZ-10J"
+    },
+    "gex (1995)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Gex (1995)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Gex",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\gex\\captures\\f012000.png",
+      "discHash": "f73f7d08792c0cb1c6a55a0d53dad5e6",
+      "bios": "Panasonic FZ-10"
+    },
+    "ghost hunter series - kuroki shi no kamen (japan) (rev 1).chd": {
+      "file": "Ghost Hunter Series - Kuroki Shi no Kamen (Japan) (Rev 1).chd",
+      "title": "Ghost Hunter Series - Kuroki Shi no Kamen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ghost-hunter-series-kuroki-shi-no-kamen\\captures\\f012000.png",
+      "discHash": "523b0ee18fe20d6599ab19179dbcd68b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "goal fh (1995)(carrozzeria japan)(jp)[!].chd": {
+      "file": "Goal FH (1995)(Carrozzeria Japan)(JP)[!].chd",
+      "title": "Goal FH",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\goal-fh\\captures\\f012000.png",
+      "discHash": "2cb7fe65aa7fb54a50bd3bf479c80d5d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "gridders (1994)(goldstar - tetragon)(kr-us)(en)[!].chd": {
+      "file": "Gridders (1994)(GoldStar - Tetragon)(KR-US)(en)[!].chd",
+      "title": "Gridders",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\gridders\\captures\\f012000.png",
+      "discHash": "e08add77013e623463b06c298e95b4b8",
+      "bios": "Panasonic FZ-10"
+    },
+    "grimm meisaku gekijou 1 - bremen no ongakutai (1994)(ima)(jp).chd": {
+      "file": "Grimm Meisaku Gekijou 1 - Bremen no Ongakutai (1994)(IMA)(JP).chd",
+      "title": "Grimm Meisaku Gekijou 1 - Bremen no Ongakutai",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\grimm-meisaku-gekijou-1-bremen-no-ongakutai\\captures\\f012000.png",
+      "discHash": "86e4ca2f0dd43821b71a373b78d87a54",
+      "bios": "Panasonic FZ-10J"
+    },
+    "grimm meisaku gekijou 2 - hansel to gretel (1994)(ima)(jp)[!].chd": {
+      "file": "Grimm Meisaku Gekijou 2 - Hansel to Gretel (1994)(IMA)(JP)[!].chd",
+      "title": "Grimm Meisaku Gekijou 2 - Hansel to Gretel",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\grimm-meisaku-gekijou-2-hansel-to-gretel\\captures\\f012000.png",
+      "discHash": "f30726e9ecf8bb6f13e9ecd340159eca",
+      "bios": "Panasonic FZ-10J"
+    },
+    "grimm meisaku gekijou 3 - akazukin (1994)(ima)(jp)[!].chd": {
+      "file": "Grimm Meisaku Gekijou 3 - Akazukin (1994)(IMA)(JP)[!].chd",
+      "title": "Grimm Meisaku Gekijou 3 - Akazukin",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\grimm-meisaku-gekijou-3-akazukin\\captures\\f012000.png",
+      "discHash": "e8f5b4c35df174f6ae2957fdcde627b9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "guardian war (1994)(panasonic)(us)[!].chd": {
+      "file": "Guardian War (1994)(Panasonic)(US)[!].chd",
+      "title": "Guardian War",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\guardian-war\\captures\\f012000.png",
+      "discHash": "169f025489673f058742c12e4c7fe543",
+      "bios": "Panasonic FZ-10"
+    },
+    "hell - a cyberpunk thriller (1994)(take 2)(us)[!].chd": {
+      "file": "Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "title": "Hell - A Cyberpunk Thriller",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hell-cyberpunk-thriller\\captures\\f012000.png",
+      "discHash": "55a11e32392f187007c55ee69452656c",
+      "bios": "Panasonic FZ-10"
+    },
+    "hello kitty - asobi no omochabako (japan).chd": {
+      "file": "Hello Kitty - Asobi no Omochabako (Japan).chd",
+      "title": "Hello Kitty - Asobi no Omochabako",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hello-kitty-asobi-no-omochabako\\captures\\f012000.png",
+      "discHash": "a4f10012746cf67d8780821cf09f59bf",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - aesop monogatari vol.1 (1994)(elcom)(jp)(m3)[!].chd": {
+      "file": "Hirata Shougo Interactive Ehon - Aesop Monogatari Vol.1 (1994)(ELCOM)(JP)(M3)[!].chd",
+      "title": "Hirata Shougo Interactive Ehon - Aesop Monogatari Vol.1",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-aesop-monogatari-vol-1\\captures\\f012000.png",
+      "discHash": "3269ce6e8b0f843216057fc381811286",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - cinderella (1995)(elcom)(jp)(m3).chd": {
+      "file": "Hirata Shougo Interactive Ehon - Cinderella (1995)(ELCOM)(JP)(M3).chd",
+      "title": "Hirata Shougo Interactive Ehon - Cinderella",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-cinderella\\captures\\f012000.png",
+      "discHash": "6cdc2543cb970305402f95f6d9540794",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - ningyo-hime (japan) (en,ja,fr).chd": {
+      "file": "Hirata Shougo Interactive Ehon - Ningyo-hime (Japan) (En,Ja,Fr).chd",
+      "title": "Hirata Shougo Interactive Ehon - Ningyo-hime",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-ningyo-hime\\captures\\f012000.png",
+      "discHash": "12b7c666f3e255957ab50a6dcc469ba7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - ookami to nana hiki no ko yagi (1995)(elcom)(jp)(m3).chd": {
+      "file": "Hirata Shougo Interactive Ehon - Ookami to Nana Hiki no Ko Yagi (1995)(ELCOM)(JP)(M3).chd",
+      "title": "Hirata Shougo Interactive Ehon - Ookami to Nana Hiki no Ko Yagi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-ookami-to-nana-hiki-no-ko-yagi\\captures\\f012000.png",
+      "discHash": "cb73a647d49da379f5d793ef1191611b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - sanbiki no kobuta (1994)(elcom)(jp)(m3)[!].chd": {
+      "file": "Hirata Shougo Interactive Ehon - Sanbiki no Kobuta (1994)(ELCOM)(JP)(M3)[!].chd",
+      "title": "Hirata Shougo Interactive Ehon - Sanbiki no Kobuta",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-sanbiki-no-kobuta\\captures\\f012000.png",
+      "discHash": "6a4e0b3a01c5fb1b443ad40f948994d9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hirata shougo interactive ehon - shirayukihime (1994)(elcom)(jp)(m3)[!].chd": {
+      "file": "Hirata Shougo Interactive Ehon - Shirayukihime (1994)(ELCOM)(JP)(M3)[!].chd",
+      "title": "Hirata Shougo Interactive Ehon - Shirayukihime",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hirata-shougo-interactive-ehon-shirayukihime\\captures\\f012000.png",
+      "discHash": "69c2348fcaf4957581e44ed0b18f46c1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "hitchcock ni chousen (japan).chd": {
+      "file": "Hitchcock ni Chousen (Japan).chd",
+      "title": "Hitchcock ni Chousen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\hitchcock-ni-chousen\\captures\\f012000.png",
+      "discHash": "5c0f50fed45d21d6c1f1a25e6d75e94d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "horde, the (1994)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Horde, The (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Horde, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\horde\\captures\\f012000.png",
+      "discHash": "3d1b793df21922afdaf5e50d65df54a2",
+      "bios": "Panasonic FZ-10"
+    },
+    "icebreaker (1995)(panasonic)(us)[!].chd": {
+      "file": "Icebreaker (1995)(Panasonic)(US)[!].chd",
+      "title": "Icebreaker",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\icebreaker\\captures\\f012000.png",
+      "discHash": "3cf36c7e217f396e85d1fbd1429d369b",
+      "bios": "Panasonic FZ-10"
+    },
+    "icebreaker ii (usa) (bonus disk) (unl).chd": {
+      "file": "Icebreaker II (USA) (Bonus Disk) (Unl).chd",
+      "title": "Icebreaker II",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\icebreaker-ii\\captures\\f012000.png",
+      "discHash": "620f0b67a91f7f74151bc5be745b7110",
+      "bios": "Panasonic FZ-10"
+    },
+    "icebreaker ii - the game (2007)(oldergames)[f 3do experience][aka icebreaker 2 2011 edition].chd": {
+      "file": "Icebreaker II - The Game (2007)(Oldergames)[f 3DO Experience][AKA Icebreaker 2 2011 Edition].chd",
+      "title": "Icebreaker II - The Game",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\icebreaker-ii-game\\captures\\f012000.png",
+      "discHash": "4cb57738ba14039929fbbb9683cd53e9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "ida jiyouji nightmare interactive - moon cradle - igyou no hanayome (1995)(panasonic)(jp)[!].chd": {
+      "file": "Ida Jiyouji Nightmare Interactive - Moon Cradle - Igyou no Hanayome (1995)(Panasonic)(JP)[!].chd",
+      "title": "Ida Jiyouji Nightmare Interactive - Moon Cradle - Igyou no Hanayome",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ida-jiyouji-nightmare-interactive-moon-cradle-igyou-no-hanayome\\captures\\f012000.png",
+      "discHash": "5bc20a0aedf1411585af38416eca7171",
+      "bios": "Panasonic FZ-10J"
+    },
+    "ide yousuke meijin no shin jissen mahjong (1996)(capcom)(jp).chd": {
+      "file": "Ide Yousuke Meijin no Shin Jissen Mahjong (1996)(Capcom)(JP).chd",
+      "title": "Ide Yousuke Meijin no Shin Jissen Mahjong",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ide-yousuke-meijin-no-shin-jissen-mahjong\\captures\\f012000.png",
+      "discHash": "c5c1d9ac35977b73b6efe42d1b68a171",
+      "bios": "Panasonic FZ-10J"
+    },
+    "idol janshi suchie-pai special (1994)(jaleco)(jp)[!].chd": {
+      "file": "Idol Janshi Suchie-Pai Special (1994)(Jaleco)(JP)[!].chd",
+      "title": "Idol Janshi Suchie-Pai Special",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\idol-janshi-suchie-pai-special\\captures\\f012000.png",
+      "discHash": "14ea7e0f97927a00a3d6fcf72d3d4365",
+      "bios": "Panasonic FZ-10J"
+    },
+    "idol mahjong - final romance 2 - hyper edition (japan).chd": {
+      "file": "Idol Mahjong - Final Romance 2 - Hyper Edition (Japan).chd",
+      "title": "Idol Mahjong - Final Romance 2 - Hyper Edition",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\idol-mahjong-final-romance-2-hyper-edition\\captures\\f012000.png",
+      "discHash": "0a09a6496e04ae42ec86a6f8d52ec786",
+      "bios": "Panasonic FZ-10J"
+    },
+    "igo time trial - shikatsu daihyakka (japan).chd": {
+      "file": "Igo Time Trial - Shikatsu Daihyakka (Japan).chd",
+      "title": "Igo Time Trial - Shikatsu Daihyakka",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\igo-time-trial-shikatsu-daihyakka\\captures\\f012000.png",
+      "discHash": "c7bd023b869d56368a16e5ef622627ce",
+      "bios": "Panasonic FZ-10J"
+    },
+    "igo time trial najigo i (1994)(ematec)(jp)[!].chd": {
+      "file": "Igo Time Trial Najigo I (1994)(Ematec)(JP)[!].chd",
+      "title": "Igo Time Trial Najigo I",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\igo-time-trial-najigo-i\\captures\\f012000.png",
+      "discHash": "f1d9293e72a93410d8b8cb54598d45d4",
+      "bios": "Panasonic FZ-10J"
+    },
+    "immercenary (1995)(electronic arts)(eu)[!].chd": {
+      "file": "Immercenary (1995)(Electronic Arts)(EU)[!].chd",
+      "title": "Immercenary",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\immercenary-combat-in-a-digital-world\\captures\\f012000.png",
+      "discHash": "6a4523f345f6ade82a0e534bf8d3654d",
+      "bios": "Panasonic FZ-10"
+    },
+    "immortal desire (1994)(vivid interactive)(us).chd": {
+      "file": "Immortal Desire (1994)(Vivid Interactive)(US).chd",
+      "title": "Immortal Desire",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\immortal-desire\\captures\\f012000.png",
+      "discHash": "775e8e0a78139a307fe220ab74af2c06",
+      "bios": "Panasonic FZ-10"
+    },
+    "incredible machine, the (1994)(dynamix)(us)[!].chd": {
+      "file": "Incredible Machine, The (1994)(Dynamix)(US)[!].chd",
+      "title": "Incredible Machine, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\incredible-machine\\captures\\f012000.png",
+      "discHash": "bb4abe7ebabba678a1e7be9edbd1743c",
+      "bios": "Panasonic FZ-10"
+    },
+    "insect war (1994)(panasonic)(jp)[!].chd": {
+      "file": "Insect War (1994)(Panasonic)(JP)[!].chd",
+      "title": "Insect War",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\insect-war\\captures\\f012000.png",
+      "discHash": "064bab53f39f192e8a094789ed799027",
+      "bios": "Panasonic FZ-10J"
+    },
+    "interplay 3do buffet, the (1995)(interplay)(us)[!].chd": {
+      "file": "Interplay 3DO Buffet, The (1995)(Interplay)(US)[!].chd",
+      "title": "Interplay 3DO Buffet, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\interplay-3do-buffet\\captures\\f012000.png",
+      "discHash": "5fd91ed76c50a34465e34b7832ad8def",
+      "bios": "Panasonic FZ-10"
+    },
+    "iron angel of the apocalypse (1994)(synergy)(us)[!].chd": {
+      "file": "Iron Angel of the Apocalypse (1994)(Synergy)(US)[!].chd",
+      "title": "Iron Angel of the Apocalypse",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\iron-angel-of-apocalypse\\captures\\f012000.png",
+      "discHash": "127030e693928115dd5b8a6b4088a5d7",
+      "bios": "Panasonic FZ-10"
+    },
+    "iron angel of the apocalypse - the return (1995)(synergy)(us)[!].chd": {
+      "file": "Iron Angel of the Apocalypse - The Return (1995)(Synergy)(US)[!].chd",
+      "title": "Iron Angel of the Apocalypse - The Return",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\iron-angel-of-apocalypse-return\\captures\\f012000.png",
+      "discHash": "abce4cf3f1cf5319bba0341f6f2e796e",
+      "bios": "Panasonic FZ-10"
+    },
+    "ishida yoshio kudan no igo seiha (1995)(electronic arts)(jp).chd": {
+      "file": "Ishida Yoshio Kudan no Igo Seiha (1995)(Electronic Arts)(JP).chd",
+      "title": "Ishida Yoshio Kudan no Igo Seiha",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ishida-yoshio-kudan-no-igo-seiha\\captures\\f012000.png",
+      "discHash": "4fde9371304038ae121cb3c84434191c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "j. b. harold - blue chicago blues (1995)(riverhill soft)(jp)(disc 1 of 2)[!].chd": {
+      "file": "J. B. Harold - Blue Chicago Blues (1995)(Riverhill Soft)(JP)(Disc 1 of 2)[!].chd",
+      "title": "J. B. Harold - Blue Chicago Blues",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\j-b-harold-blue-chicago-blues\\captures\\f012000.png",
+      "discHash": "a0bd791ad0d668dd161be56f672e0eef",
+      "bios": "Panasonic FZ-10J"
+    },
+    "j.league virtual stadium '95 (1995)(ea sports)(jp)[!].chd": {
+      "file": "J.League Virtual Stadium '95 (1995)(EA Sports)(JP)[!].chd",
+      "title": "J.League Virtual Stadium '95",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\j-league-virtual-stadium-95\\captures\\f012000.png",
+      "discHash": "1bfe2bde3a2e8bb4b31baa5eeb063c2b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "j.league virtual stadium (1994)(ea sports)(jp)[!].chd": {
+      "file": "J.League Virtual Stadium (1994)(EA Sports)(JP)[!].chd",
+      "title": "J.League Virtual Stadium",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\j-league-virtual-stadium\\captures\\f012000.png",
+      "discHash": "eb86bf87ddee8ff94ac2ae2ba2db2eff",
+      "bios": "Panasonic FZ-10J"
+    },
+    "jammit (1994)(gte)(us)[!].chd": {
+      "file": "Jammit (1994)(GTE)(US)[!].chd",
+      "title": "Jammit",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\jammit\\captures\\f012000.png",
+      "discHash": "eca3deb4383cf1461b8340e5e5ffaa10",
+      "bios": "Panasonic FZ-10"
+    },
+    "jietai world (japan).chd": {
+      "file": "Jietai World (Japan).chd",
+      "title": "Jietai World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\jietai-world\\captures\\f012000.png",
+      "discHash": "281bff088b7e245970e54ea96afa9624",
+      "bios": "Panasonic FZ-10J"
+    },
+    "jikki pachi slot simulator vol. 1 (1995)(electronic arts)(jp).chd": {
+      "file": "Jikki Pachi Slot Simulator Vol. 1 (1995)(Electronic Arts)(JP).chd",
+      "title": "Jikki Pachi Slot Simulator Vol. 1",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\jikki-pachi-slot-simulator-vol-1\\captures\\f012000.png",
+      "discHash": "64d8b51a2ea98764c1bb8a9289994f6b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "john madden football (1994)(ea sports)(us)[!][722007-2 70].chd": {
+      "file": "John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd",
+      "title": "John Madden Football",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\john-madden-nfl-football\\captures\\f012000.png",
+      "discHash": "58156d69b0a3bf263754606fc70f0a41",
+      "bios": "Panasonic FZ-10"
+    },
+    "johnny bazookatone (1996)(u.s. gold)(us)[!].chd": {
+      "file": "Johnny Bazookatone (1996)(U.S. Gold)(US)[!].chd",
+      "title": "Johnny Bazookatone",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\johnny-bazookatone\\captures\\f012000.png",
+      "discHash": "c13032f1766399ebe894b62ab18ce2b4",
+      "bios": "Panasonic FZ-10"
+    },
+    "joypad test v1.0 (2011)(sdevel).chd": {
+      "file": "Joypad Test v1.0 (2011)(Sdevel).chd",
+      "title": "Joypad Test",
+      "status": "Title-only",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\joypad-test\\captures\\f012000.png",
+      "discHash": "8d3ef9cd11a5610dede3d39487dcac59",
+      "bios": "Panasonic FZ-10J"
+    },
+    "jurassic park interactive (1994)(universal interactive studios)(us)[!].chd": {
+      "file": "Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "title": "Jurassic Park Interactive",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\jurassic-park-interactive\\captures\\f012000.png",
+      "discHash": "18036597b8d903cc68c5a73b16760a47",
+      "bios": "Panasonic FZ-10"
+    },
+    "kakinoki shogi (1994)(panasonic)(jp)[!].chd": {
+      "file": "Kakinoki Shogi (1994)(Panasonic)(JP)[!].chd",
+      "title": "Kakinoki Shogi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\kakinoki-shogi\\captures\\f012000.png",
+      "discHash": "f443f731baa3dead4a024d0fe9740349",
+      "bios": "Panasonic FZ-10J"
+    },
+    "keiba saishou no housoku (1994)(copya)(jp)[!].chd": {
+      "file": "Keiba Saishou no Housoku (1994)(Copya)(JP)[!].chd",
+      "title": "Keiba Saishou no Housoku",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\keiba-saishou-no-housoku\\captures\\f012000.png",
+      "discHash": "a83bf8a3748bcd881b91513e8bec7006",
+      "bios": "Panasonic FZ-10J"
+    },
+    "kero kero keroppi to origami no tabibito (1995)(mizuki)(jp)[!].chd": {
+      "file": "Kero Kero Keroppi to Origami no Tabibito (1995)(Mizuki)(JP)[!].chd",
+      "title": "Kero Kero Keroppi to Origami no Tabibito",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\kero-kero-keroppi-to-origami-no-tabibito\\captures\\f012000.png",
+      "discHash": "23b3ea0560f3768d2f74e81797e32fe3",
+      "bios": "Panasonic FZ-10J"
+    },
+    "killing time (1995)(studio 3do)(eu)[!].chd": {
+      "file": "Killing Time (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "Killing Time",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\killing-time\\captures\\f012000.png",
+      "discHash": "2ddbb4aa783d255b060e13bdfe015033",
+      "bios": "Panasonic FZ-10"
+    },
+    "kingdom - the far reaches (1994)(interplay)(eu-us)[!].chd": {
+      "file": "Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "title": "Kingdom - The Far Reaches",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\kingdom-far-reaches\\captures\\f012000.png",
+      "discHash": "cee431e238b8548895379d53044f5a00",
+      "bios": "Panasonic FZ-10"
+    },
+    "konpeki no kantai (japan) (rev 1).chd": {
+      "file": "Konpeki no Kantai (Japan) (Rev 1).chd",
+      "title": "Konpeki no Kantai",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\konpeki-no-kantai\\captures\\f012000.png",
+      "discHash": "e29c363c6fdeb5c9c3c2513de754a503",
+      "bios": "Panasonic FZ-10J"
+    },
+    "kyuumei kyuukyuu teate no abc (japan).chd": {
+      "file": "Kyuumei Kyuukyuu Teate no ABC (Japan).chd",
+      "title": "Kyuumei Kyuukyuu Teate no ABC",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\kyuumei-kyuukyuu-teate-no-abc\\captures\\f012000.png",
+      "discHash": "5f1bcfba295af949d451826f1aa1a35d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "kyuusei senjutsu ni yoru - heisei kaiun koyomi (1994)(ariadne)(jp)[!].chd": {
+      "file": "Kyuusei Senjutsu ni Yoru - Heisei Kaiun Koyomi (1994)(Ariadne)(JP)[!].chd",
+      "title": "Kyuusei Senjutsu ni Yoru - Heisei Kaiun Koyomi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\kyuusei-senjutsu-ni-yoru-heisei-kaiun-koyomi\\captures\\f012000.png",
+      "discHash": "5f3be3177abe0809cf60ca121298fd73",
+      "bios": "Panasonic FZ-10J"
+    },
+    "lamenes emulator (2016)(gameblabla - saffron)[incl. hello world rom].chd": {
+      "file": "LameNES Emulator (2016)(Gameblabla - Saffron)[incl. Hello World ROM].chd",
+      "title": "LameNES Emulator",
+      "status": "No video",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lamenes-emulator\\captures\\f012000.png",
+      "discHash": "4947781167f875f8e8aecc71cdbf1dad",
+      "bios": "Panasonic FZ-10 (No RSA)"
+    },
+    "last bounty hunter, the (1994)(american laser games)(us)[!].chd": {
+      "file": "Last Bounty Hunter, The (1994)(American Laser Games)(US)[!].chd",
+      "title": "Last Bounty Hunter, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\last-bounty-hunter\\captures\\f012000.png",
+      "discHash": "f59975a5af738000751bfa93c7a9d2b0",
+      "bios": "Panasonic FZ-10"
+    },
+    "lemmings (1993)(psygnosis)(us)[!].chd": {
+      "file": "Lemmings (1993)(Psygnosis)(US)[!].chd",
+      "title": "Lemmings",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lemmings\\captures\\f012000.png",
+      "discHash": "0be38b22987b40b5d48f70a167656049",
+      "bios": "Panasonic FZ-10"
+    },
+    "life stage, the - virtual house (1993)(goldstar - panasonic)(kr-us)(en)[!].chd": {
+      "file": "Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd",
+      "title": "Life Stage, The - Virtual House",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\life-stage-virtual-house\\captures\\f012000.png",
+      "discHash": "358149fd24d6e3c5e20bcc47a3fbfcf0",
+      "bios": "Panasonic FZ-10"
+    },
+    "little house, the (1995)(mc international)(jp).chd": {
+      "file": "Little House, The (1995)(MC International)(JP).chd",
+      "title": "Little House, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\little-house\\captures\\f012000.png",
+      "discHash": "fec7677340499221362fdcb0687c6860",
+      "bios": "Panasonic FZ-10J"
+    },
+    "lost dungeon (1995)(t&e soft)(jp)[!].chd": {
+      "file": "Lost Dungeon (1995)(T&E Soft)(JP)[!].chd",
+      "title": "Lost Dungeon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lost-dungeon\\captures\\f012000.png",
+      "discHash": "6d1eca0be54218faec02aefb46113830",
+      "bios": "Panasonic FZ-10J"
+    },
+    "lost eden (1993)(virgin)(us)(m5).chd": {
+      "file": "Lost Eden (1993)(Virgin)(US)(M5).chd",
+      "title": "Lost Eden",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lost-eden\\captures\\f012000.png",
+      "discHash": "bd2bc66098580d74e18d4bffe46b30af",
+      "bios": "Panasonic FZ-10"
+    },
+    "lost files of sherlock holmes, the (1994)(electronic arts)(us)[!].chd": {
+      "file": "Lost Files of Sherlock Holmes, The (1994)(Electronic Arts)(US)[!].chd",
+      "title": "Lost Files of Sherlock Holmes, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lost-files-of-sherlock-holmes\\captures\\f012000.png",
+      "discHash": "f06976ff1272bc12869a10345d77b1d8",
+      "bios": "Panasonic FZ-10"
+    },
+    "love bites (1994)(vivid interactive)(us)[!].chd": {
+      "file": "Love Bites (1994)(Vivid Interactive)(US)[!].chd",
+      "title": "Love Bites",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\love-bites\\captures\\f012000.png",
+      "discHash": "8e99acd511e3c8d7c7b9189f9ad1bdb3",
+      "bios": "Panasonic FZ-10"
+    },
+    "lucienne's quest (1996)(panasonic)(us)[!].chd": {
+      "file": "Lucienne's Quest (1996)(Panasonic)(US)[!].chd",
+      "title": "Lucienne's Quest",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\lucienne-s-quest\\captures\\f012000.png",
+      "discHash": "5b49e606319df1e5e1e990b3447aabde",
+      "bios": "Panasonic FZ-10"
+    },
+    "macaroni houren shou interactive (1995)(toshiba emi)(jp)[!].chd": {
+      "file": "Macaroni Houren Shou Interactive (1995)(Toshiba EMI)(JP)[!].chd",
+      "title": "Macaroni Houren Shou Interactive",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\macaroni-houren-shou-interactive\\captures\\f012000.png",
+      "discHash": "a23a837b3dd7fa365a3280c362223ff1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "mad dog ii - the lost gold (1994)(american laser games)(us)[!].chd": {
+      "file": "Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd",
+      "title": "Mad Dog II - The Lost Gold",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mad-dog-ii-lost-gold\\captures\\f012000.png",
+      "discHash": "a94440520fbd823da3c17647fa36ee03",
+      "bios": "Panasonic FZ-10"
+    },
+    "mad dog mccree (1993)(american laser games)(us)[!].chd": {
+      "file": "Mad Dog McCree (1993)(American Laser Games)(US)[!].chd",
+      "title": "Mad Dog McCree",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mad-dog-mccree\\captures\\f012000.png",
+      "discHash": "9b55d2822b3ada88d5186967fc679336",
+      "bios": "Panasonic FZ-10"
+    },
+    "mahjong gokuu tenjiku (1994)(ascii)(jp)[!].chd": {
+      "file": "Mahjong Gokuu Tenjiku (1994)(ASCII)(JP)[!].chd",
+      "title": "Mahjong Gokuu Tenjiku",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mahjong-gokuu-tenjiku\\captures\\f012000.png",
+      "discHash": "3b203c5006272e0cf4a34649912f838d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "mahjong kyou jidai - av gal seifuku hen (1994)(micronet)(jp)[!].chd": {
+      "file": "Mahjong Kyou Jidai - AV Gal Seifuku Hen (1994)(Micronet)(JP)[!].chd",
+      "title": "Mahjong Kyou Jidai - AV Gal Seifuku Hen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mahjong-kyou-jidai-av-gal-seifuku-hen\\captures\\f012000.png",
+      "discHash": "2bd9b14074acd02c4b932034800fc0e1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "mahjong kyou jidai - cogal houkago hen (1995)(micronet)(jp).chd": {
+      "file": "Mahjong Kyou Jidai - Cogal Houkago Hen (1995)(Micronet)(JP).chd",
+      "title": "Mahjong Kyou Jidai - Cogal Houkago Hen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mahjong-kyou-jidai-cogal-houkago-hen\\captures\\f012000.png",
+      "discHash": "891e6a482d71ba49c2d3da60a16397aa",
+      "bios": "Panasonic FZ-10J"
+    },
+    "marine tour - diving spot guide (1994)(office create)(jp)[!].chd": {
+      "file": "Marine Tour - Diving Spot Guide (1994)(Office Create)(JP)[!].chd",
+      "title": "Marine Tour - Diving Spot Guide",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\marine-tour-diving-spot-guide\\captures\\f012000.png",
+      "discHash": "29de5aa357305f2e8c7dd6a9f7d75e15",
+      "bios": "Panasonic FZ-10J"
+    },
+    "masters harukanaru augusta 3 (1994)(panasonic)(jp)[!].chd": {
+      "file": "Masters Harukanaru Augusta 3 (1994)(Panasonic)(JP)[!].chd",
+      "title": "Masters Harukanaru Augusta 3",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\masters-harukanaru-augusta-3\\captures\\f012000.png",
+      "discHash": "aeb43da63d3e5230f0f90fd8cdc62f1d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "mathemagics - an interactive learning cube (1994)(l3)(us)[!].chd": {
+      "file": "Mathemagics - An Interactive Learning Cube (1994)(L3)(US)[!].chd",
+      "title": "Mathemagics - An Interactive Learning Cube",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mathemagics-interactive-learning-cube\\captures\\f012000.png",
+      "discHash": "f242913f20dcd472b353c93fe69ddefa",
+      "bios": "Panasonic FZ-10"
+    },
+    "mazer (1995)(american laser games)(us)[!].chd": {
+      "file": "Mazer (1995)(American Laser Games)(US)[!].chd",
+      "title": "Mazer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mazer\\captures\\f012000.png",
+      "discHash": "47165d9145eb3e6ac91e87b65515b300",
+      "bios": "Panasonic FZ-10"
+    },
+    "megarace (1994)(mindscape)(eu-us)(m5)[!].chd": {
+      "file": "MegaRace (1994)(Mindscape)(EU-US)(M5)[!].chd",
+      "title": "MegaRace",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\megarace\\captures\\f012000.png",
+      "discHash": "935adb1b3d4725b5c63eaf7e3df0a3b1",
+      "bios": "Panasonic FZ-10"
+    },
+    "memory gwanli cd (korea) (re).chd": {
+      "file": "Memory Gwanli CD (Korea) (RE).chd",
+      "title": "Memory Gwanli CD",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\memory-gwanli-cd\\captures\\f012000.png",
+      "discHash": "f846b269522b7d440f9395aa900a69c4",
+      "bios": "Panasonic FZ-10J"
+    },
+    "microcosm (1994)(psygnosis)(us)[!].chd": {
+      "file": "Microcosm (1994)(Psygnosis)(US)[!].chd",
+      "title": "Microcosm",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\microcosm\\captures\\f012000.png",
+      "discHash": "b35c911d969fcefb34ccce662206f8b6",
+      "bios": "Panasonic FZ-10"
+    },
+    "mind teazzer (1994)(vivid interactive)(us)[!].chd": {
+      "file": "Mind Teazzer (1994)(Vivid Interactive)(US)[!].chd",
+      "title": "Mind Teazzer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mind-teazzer\\captures\\f012000.png",
+      "discHash": "a3076373f12f72ac8e37ea00d43af1b0",
+      "bios": "Panasonic FZ-10"
+    },
+    "mirai shounen digital library - conan - the boy in future (1995)(emotional digital software)(jp)[!].chd": {
+      "file": "Mirai Shounen Digital Library - Conan - The Boy in Future (1995)(Emotional Digital Software)(JP)[!].chd",
+      "title": "Mirai Shounen Digital Library - Conan - The Boy in Future",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mirai-shounen-digital-library-conan-boy-in-future\\captures\\f012000.png",
+      "discHash": "d8ac5b9ae27eaa0bbef6c5137024d902",
+      "bios": "Panasonic FZ-10J"
+    },
+    "mono shiri jiyuugaku - ogura hyakunin isshu-hen (1995)(shinko human create)(jp).chd": {
+      "file": "Mono Shiri Jiyuugaku - Ogura Hyakunin Isshu-hen (1995)(Shinko Human Create)(JP).chd",
+      "title": "Mono Shiri Jiyuugaku - Ogura Hyakunin Isshu-hen",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\mono-shiri-jiyuugaku-ogura-hyakunin-isshu-hen\\captures\\f012000.png",
+      "discHash": "1da319edc3e16b56f598f5f6b0338b78",
+      "bios": "Panasonic FZ-10J"
+    },
+    "montana jones (1995)(future pirates junior)(jp)[!].chd": {
+      "file": "Montana Jones (1995)(Future Pirates Junior)(JP)[!].chd",
+      "title": "Montana Jones",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\montana-jones\\captures\\f012000.png",
+      "discHash": "1f311a64100259ccff0c0c3a8f1f6d6d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "multimedia shinsho - driving school (futsuu menkyo gakka-hen) (1995)(jisc life support)(jp).chd": {
+      "file": "Multimedia Shinsho - Driving School (Futsuu Menkyo Gakka-hen) (1995)(JISC Life Support)(JP).chd",
+      "title": "Multimedia Shinsho - Driving School",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\multimedia-shinsho-driving-school\\captures\\f012000.png",
+      "discHash": "b6c5cc9cb2eedb18e9b59bb62f3973c7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "murphy dayo zenin shuugou!! - murphy's tv cd-rom (1994)(vantan international)(jp)(en-ja)[!].chd": {
+      "file": "Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM (1994)(Vantan International)(JP)(en-ja)[!].chd",
+      "title": "Murphy Dayo Zenin Shuugou!! - Murphy's TV CD-ROM",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\murphy-dayo-zenin-shuugou-murphy-s-tv-cd-rom\\captures\\f012000.png",
+      "discHash": "0912fdf85f4b0700e4cbf8f48bb1dcf5",
+      "bios": "Panasonic FZ-10J"
+    },
+    "myst (1994)(panasonic)(us)[!].chd": {
+      "file": "Myst (1994)(Panasonic)(US)[!].chd",
+      "title": "Myst",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\myst\\captures\\f012000.png",
+      "discHash": "e907558e7d16778fec42f371f3a04362",
+      "bios": "Panasonic FZ-10"
+    },
+    "n. o. b. - neo organic bioform (1995)(sanyo)(jp).chd": {
+      "file": "N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "title": "N. O. B. - Neo Organic Bioform",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\n-o-b-neo-organic-bioform\\captures\\f012000.png",
+      "discHash": "d9167cf7506ba71559a2937d3d114853",
+      "bios": "Panasonic FZ-10J"
+    },
+    "nais how's 1 - front how's '95-'96 v1.0 r2.0 (1995)(national)(jp).chd": {
+      "file": "Nais How's 1 - Front How's '95-'96 v1.0 R2.0 (1995)(National)(JP).chd",
+      "title": "Nais How's 1 - Front How's '95-'96",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nais-how-s-1-front-how-s-95-96\\captures\\f012000.png",
+      "discHash": "dc569f81706cd91df2b2bf53b49a9f98",
+      "bios": "Panasonic FZ-10J"
+    },
+    "naoko to hide suekane - sansuu no tensai 1 (1995)(gakuman)(jp).chd": {
+      "file": "Naoko to Hide Suekane - Sansuu no Tensai 1 (1995)(Gakuman)(JP).chd",
+      "title": "Naoko to Hide Suekane - Sansuu no Tensai 1",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\naoko-to-hide-suekane-sansuu-no-tensai-1\\captures\\f012000.png",
+      "discHash": "a454e7b6e1fdaa55d831cb9b28bdd69e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "naoko to hide-bou - sansuu no tensai 1 - wa to sa no bunshoudai tsurukamezan part i (butsubutsu koukan no maki) (japan).chd": {
+      "file": "Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I (Butsubutsu Koukan no Maki) (Japan).chd",
+      "title": "Naoko to Hide-bou - Sansuu no Tensai 1 - Wa to Sa no Bunshoudai Tsurukamezan Part I",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\naoko-to-hide-bou-sansuu-no-tensai-1-wa-to-sa-no-bunshoudai-tsurukamezan-part-i\\captures\\f012000.png",
+      "discHash": "c49b671467b47683fd8f9c14cf7d5870",
+      "bios": "Panasonic FZ-10J"
+    },
+    "naoko to hide-bou - sansuu no tensai 2 - hayasa no bunshoudai tsuukasan part i (japan).chd": {
+      "file": "Naoko to Hide-bou - Sansuu no Tensai 2 - Hayasa no Bunshoudai Tsuukasan Part I (Japan).chd",
+      "title": "Naoko to Hide-bou - Sansuu no Tensai 2 - Hayasa no Bunshoudai Tsuukasan Part I",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\naoko-to-hide-bou-sansuu-no-tensai-2-hayasa-no-bunshoudai-tsuukasan-part-i\\captures\\f012000.png",
+      "discHash": "7c6af0b7396ad94e3500f3c053aa8ee9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "national-panasonic collection (japan).chd": {
+      "file": "National-Panasonic Collection (Japan).chd",
+      "title": "National-Panasonic Collection",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\national-panasonic-collection\\captures\\f012000.png",
+      "discHash": "0d01cd2b9ebcc8f051c962675220a671",
+      "bios": "Panasonic FZ-10J"
+    },
+    "need for speed, the (1994)(electronic arts)(eu-us)[!].chd": {
+      "file": "Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd",
+      "title": "Need for Speed, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\need-for-speed\\captures\\f012000.png",
+      "discHash": "9ec810c593e63b87b4319eb6f51bef1f",
+      "bios": "Panasonic FZ-10"
+    },
+    "nemurenu yoru no chiisa nao hanashi (1994)(amuse)(jp).chd": {
+      "file": "Nemurenu Yoru no Chiisa Nao Hanashi (1994)(Amuse)(JP).chd",
+      "title": "Nemurenu Yoru no Chiisa Nao Hanashi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nemurenu-yoru-no-chiisa-nao-hanashi\\captures\\f012000.png",
+      "discHash": "a3ece7e9ab6640d5e68cb2be169ada1e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "neurodancer - journey into the neuronet (1994)(pixis interactive)(us).chd": {
+      "file": "NeuroDancer - Journey Into The Neuronet (1994)(Pixis Interactive)(US).chd",
+      "title": "NeuroDancer - Journey Into The Neuronet",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\neurodancer-journey-into-neuronet\\captures\\f012000.png",
+      "discHash": "26fc0c600aff0e1db48f7627dc04123a",
+      "bios": "Panasonic FZ-10"
+    },
+    "new how's 1 - front how's '94-'95 v1.0 (1994)(national)(jp)[!].chd": {
+      "file": "New How's 1 - Front How's '94-'95 v1.0 (1994)(National)(JP)[!].chd",
+      "title": "New How's 1 - Front How's '94-'95",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\new-how-s-1-front-how-s-94-95\\captures\\f012000.png",
+      "discHash": "0f67a977ba588e688129586c480fd3e3",
+      "bios": "Panasonic FZ-10J"
+    },
+    "nice body - for professional use - oar star suieitaikai official cd-rom (1995)(fuji television)(jp)[!].chd": {
+      "file": "Nice Body - For Professional Use - Oar Star Suieitaikai Official CD-ROM (1995)(Fuji Television)(JP)[!].chd",
+      "title": "Nice Body - For Professional Use - Oar Star Suieitaikai Official CD-ROM",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nice-body-for-professional-use-oar-star-suieitaikai-official-cd-rom\\captures\\f012000.png",
+      "discHash": "a854d093a380e3bafd40a78af0e0ad62",
+      "bios": "Panasonic FZ-10J"
+    },
+    "night trap (1993)(digital pictures)(us)(disc 1 of 2)[!].chd": {
+      "file": "Night Trap (1993)(Digital Pictures)(US)(Disc 1 of 2)[!].chd",
+      "title": "Night Trap",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\night-trap\\captures\\f012000.png",
+      "discHash": "7c634556655a4ce62dc640193175d17b",
+      "bios": "Panasonic FZ-10"
+    },
+    "nishimura keitarou travel mystery - akugyaku no kisetsu (1994)(panasonic)(jp)(disc 1 of 2)[!].chd": {
+      "file": "Nishimura Keitarou Travel Mystery - Akugyaku no Kisetsu (1994)(Panasonic)(JP)(Disc 1 of 2)[!].chd",
+      "title": "Nishimura Keitarou Travel Mystery - Akugyaku no Kisetsu",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nishimura-keitarou-travel-mystery-akugyaku-no-kisetsu\\captures\\f012000.png",
+      "discHash": "f8db741f714a8b808b5bc4439e6932ed",
+      "bios": "Panasonic FZ-10J"
+    },
+    "nobunaga no yabou - haouden (1994)(koei)(jp)[!].chd": {
+      "file": "Nobunaga no Yabou - Haouden (1994)(KOEI)(JP)[!].chd",
+      "title": "Nobunaga no Yabou - Haouden",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nobunaga-no-yabou-haouden\\captures\\f012000.png",
+      "discHash": "8cd6761de8113fd3c92eb8ab09118cfb",
+      "bios": "Panasonic FZ-10J"
+    },
+    "nontan to issho - hoshi no okurimono (1995)(panasonic)(jp).chd": {
+      "file": "Nontan to Issho - Hoshi no Okurimono (1995)(Panasonic)(JP).chd",
+      "title": "Nontan to Issho - Hoshi no Okurimono",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nontan-to-issho-hoshi-no-okurimono\\captures\\f012000.png",
+      "discHash": "6efa7f4ef5a987641e372cca24330db6",
+      "bios": "Panasonic FZ-10J"
+    },
+    "nontan to issho - nohara de asobo (1994)(panasonic)(jp)[!].chd": {
+      "file": "Nontan to Issho - Nohara de Asobo (1994)(Panasonic)(JP)[!].chd",
+      "title": "Nontan to Issho - Nohara de Asobo",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nontan-to-issho-nohara-de-asobo\\captures\\f012000.png",
+      "discHash": "12126b4fade8b781e1f0fbcb1c57728c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "novastorm (1994)(psygnosis)(us)[!].chd": {
+      "file": "Novastorm (1994)(Psygnosis)(US)[!].chd",
+      "title": "Novastorm",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\nova-storm\\captures\\f012000.png",
+      "discHash": "ebe0915c10d5c7a6f8c43c06200b66b4",
+      "bios": "Panasonic FZ-10"
+    },
+    "oceans below (1993)(software toolworks)(us)[!].chd": {
+      "file": "Oceans Below (1993)(Software Toolworks)(US)[!].chd",
+      "title": "Oceans Below",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\oceans-below\\captures\\f012000.png",
+      "discHash": "66964470230bea6fd511b0d4ac4fd4f5",
+      "bios": "Panasonic FZ-10"
+    },
+    "off-world interceptor (1994)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Off-world Interceptor",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\off-world-interceptor\\captures\\f012000.png",
+      "discHash": "661de8940a888bc6f94f4e590810e7d0",
+      "bios": "Panasonic FZ-10"
+    },
+    "ogura hyakunin isshu (japan).chd": {
+      "file": "Ogura Hyakunin Isshu (Japan).chd",
+      "title": "Ogura Hyakunin Isshu",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ogura-hyakunin-isshu\\captures\\f012000.png",
+      "discHash": "3e72649d548ac76f34b427f775cb2b0f",
+      "bios": "Panasonic FZ-10J"
+    },
+    "oilman (japan).chd": {
+      "file": "Oilman (Japan).chd",
+      "title": "Oilman",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\oilman\\captures\\f012000.png",
+      "discHash": "f9b2127eeab7254b854dd02098346d2f",
+      "bios": "Panasonic FZ-10J"
+    },
+    "olympic soccer (1996)(panasonic)(us)(m5)[!].chd": {
+      "file": "Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd",
+      "title": "Olympic Soccer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\olympic-soccer\\captures\\f012000.png",
+      "discHash": "8bacb7ff83b803ae623a0d3781ce161c",
+      "bios": "Panasonic FZ-10"
+    },
+    "olympic summer games (1996)(panasonic)(us)[!].chd": {
+      "file": "Olympic Summer Games (1996)(Panasonic)(US)[!].chd",
+      "title": "Olympic Summer Games",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\olympic-summer-games\\captures\\f012000.png",
+      "discHash": "870f95cdb834579dd5b095104b8d3657",
+      "bios": "Panasonic FZ-10"
+    },
+    "onee-san to issho! janken paradise (japan).chd": {
+      "file": "Onee-san to Issho! Janken Paradise (Japan).chd",
+      "title": "Onee-san to Issho! Janken Paradise",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\onee-san-to-issho-janken-paradise\\captures\\f012000.png",
+      "discHash": "ffc95fb4ee70218a126ad0a7e51644e6",
+      "bios": "Panasonic FZ-10J"
+    },
+    "onee-san to issho! kisekae paradise (japan).chd": {
+      "file": "Onee-san to Issho! Kisekae Paradise (Japan).chd",
+      "title": "Onee-san to Issho! Kisekae Paradise",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\onee-san-to-issho-kisekae-paradise\\captures\\f012000.png",
+      "discHash": "e42987e2384842a17c34b416e1598a8b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "openlara (2021-12-20)(xproger)(bsd2).chd": {
+      "file": "OpenLara (2021-12-20)(XProger)(BSD2).chd",
+      "title": "OpenLara",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\openlara\\captures\\f012000.png",
+      "discHash": "3d53b5c402da9c491f30adbd383302ab",
+      "bios": "Panasonic FZ-10J"
+    },
+    "orbatak (usa) (arcade cd-rom).chd": {
+      "file": "Orbatak (USA) (Arcade CD-ROM).chd",
+      "title": "Orbatak",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\orbatak\\captures\\f012000.png",
+      "discHash": "b6b3f5b2ca2bdc8fd032599fa4ef4337",
+      "bios": "Panasonic FZ-10 (No RSA)"
+    },
+    "oukoku no grand chef (1996)(sala international)(jp).chd": {
+      "file": "Oukoku no Grand Chef (1996)(Sala International)(JP).chd",
+      "title": "Oukoku no Grand Chef",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\oukoku-no-grand-chef\\captures\\f012000.png",
+      "discHash": "32e53ff301989e00b9e52f8de2748685",
+      "bios": "Panasonic FZ-10J"
+    },
+    "out of this world (1993)(interplay)(us)[!][45097-1].chd": {
+      "file": "Out of this World (1993)(Interplay)(US)[!][45097-1].chd",
+      "title": "Out of this World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\another-world\\captures\\f012000.png",
+      "discHash": "00256a21c9476caadbbe49bda7fe2050",
+      "bios": "Panasonic FZ-10"
+    },
+    "outer world (1994)(electronic arts)(jp)(en)[!].chd": {
+      "file": "Outer World (1994)(Electronic Arts)(JP)(en)[!].chd",
+      "title": "Outer World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\outer-world\\captures\\f012000.png",
+      "discHash": "09ae74c3c873ac63598b442540f9add0",
+      "bios": "Panasonic FZ-10J"
+    },
+    "overdrivin' (1994)(electronic arts)(jp)[!].chd": {
+      "file": "OverDrivin' (1994)(Electronic Arts)(JP)[!].chd",
+      "title": "OverDrivin'",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\overdrivin\\captures\\f012000.png",
+      "discHash": "b11853ca63c27648ce5cac489e7ce1f8",
+      "bios": "Panasonic FZ-10J"
+    },
+    "oyaji hunter mahjong (1995)(warp)(jp)[!].chd": {
+      "file": "Oyaji Hunter Mahjong (1995)(Warp)(JP)[!].chd",
+      "title": "Oyaji Hunter Mahjong",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\oyaji-hunter-mahjong\\captures\\f012000.png",
+      "discHash": "d2e4f08fb435b38cf6bf4aefb923ea9d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "paddock note '95 (1995)(fuji television)(jp)[!].chd": {
+      "file": "Paddock Note '95 (1995)(Fuji Television)(JP)[!].chd",
+      "title": "Paddock Note '95",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\paddock-note-95\\captures\\f012000.png",
+      "discHash": "fd1dfdbec9126afacfc0f5b1139cea0b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "panasonic real 3do interactive multiplayer - demonstration cd (1993)(panasonic)(us).chd": {
+      "file": "Panasonic REAL 3DO Interactive Multiplayer - Demonstration CD (1993)(Panasonic)(US).chd",
+      "title": "Panasonic REAL 3DO Interactive Multiplayer - Demonstration CD",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\panasonic-real-3do-interactive-multiplayer-demonstration-cd\\captures\\f012000.png",
+      "discHash": "58ff39c2681e45ab924db72e4636c9f7",
+      "bios": "Panasonic FZ-10"
+    },
+    "panasonic special cd-rom (1995)(panasonic)(jp).chd": {
+      "file": "Panasonic Special CD-ROM (1995)(Panasonic)(JP).chd",
+      "title": "Panasonic Special CD-ROM",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\panasonic-special-cd-rom\\captures\\f012000.png",
+      "discHash": "f4c6076e88842b1cff045377250adeb5",
+      "bios": "Panasonic FZ-10J"
+    },
+    "panzer general (1995)(mindscape - ssi)(eu-us)[!].chd": {
+      "file": "Panzer General (1995)(Mindscape - SSi)(EU-US)[!].chd",
+      "title": "Panzer General",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\panzer-general\\captures\\f012000.png",
+      "discHash": "536cdb7197c7b63c666167afe086bc6a",
+      "bios": "Panasonic FZ-10"
+    },
+    "pararancho - the incredible machine (1994)(t&e soft)(jp)[!].chd": {
+      "file": "Pararancho - The Incredible Machine (1994)(T&E Soft)(JP)[!].chd",
+      "title": "Pararancho - The Incredible Machine",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pararancho-incredible-machine\\captures\\f012000.png",
+      "discHash": "83b9f8610ce54b6f65b70c1452ed257e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "pataank (1994)(pf.magic)(eu-us)[!].chd": {
+      "file": "PaTaank (1994)(PF.Magic)(EU-US)[!].chd",
+      "title": "PaTaank",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pataank\\captures\\f012000.png",
+      "discHash": "31ee17d5168b3c0d0988a3d9091aa0fc",
+      "bios": "Panasonic FZ-10"
+    },
+    "pebble beach golf links (1993)(goldstar - panasonic)(kr-us)(en)[!].chd": {
+      "file": "Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd",
+      "title": "Pebble Beach Golf Links",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pebble-beach-golf-links\\captures\\f012000.png",
+      "discHash": "701eb31de9aede5d36e4b545674795a5",
+      "bios": "Panasonic FZ-10"
+    },
+    "pebble beach no hatou (1994)(panasonic)(jp)[!].chd": {
+      "file": "Pebble Beach no Hatou (1994)(Panasonic)(JP)[!].chd",
+      "title": "Pebble Beach no Hatou",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pebble-beach-no-hatou\\captures\\f012000.png",
+      "discHash": "ea92f4786a5fb53d6dfa891475c10750",
+      "bios": "Panasonic FZ-10J"
+    },
+    "penthouse interactive - virtual photo shoot vol. 1 (1994)(gaga)(jp).chd": {
+      "file": "Penthouse Interactive - Virtual Photo Shoot Vol. 1 (1994)(GAGA)(JP).chd",
+      "title": "Penthouse Interactive - Virtual Photo Shoot Vol. 1",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\penthouse-interactive-virtual-photo-shoot-vol-1\\captures\\f012000.png",
+      "discHash": "944c26f2a3ae5730c0a2c81da42b07e9",
+      "bios": "Panasonic FZ-10J"
+    },
+    "perfect general, the (1995)(kirin entertainment)(us)[!].chd": {
+      "file": "Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd",
+      "title": "Perfect General, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\perfect-general\\captures\\f012000.png",
+      "discHash": "6a70a098ac044ff3b183c24c7d0b4663",
+      "bios": "Panasonic FZ-10"
+    },
+    "perfect world - combat in a digital world (1995)(electronic arts)(jp)[!].chd": {
+      "file": "Perfect World - Combat in a Digital World (1995)(Electronic Arts)(JP)[!].chd",
+      "title": "Perfect World - Combat in a Digital World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\perfect-world-combat-in-digital-world\\captures\\f012000.png",
+      "discHash": "ee077fdd251e1da4db778f541f3f57db",
+      "bios": "Panasonic FZ-10J"
+    },
+    "peter frankl - puzzle no tou (1995)(tbs multimedia)(jp)(en-ja)[!].chd": {
+      "file": "Peter Frankl - Puzzle no Tou (1995)(TBS Multimedia)(JP)(en-ja)[!].chd",
+      "title": "Peter Frankl - Puzzle no Tou",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\peter-frankl-puzzle-no-tou\\captures\\f012000.png",
+      "discHash": "61bda52faf1007a7666bac48e5854faa",
+      "bios": "Panasonic FZ-10J"
+    },
+    "pga tour 96 (1995)(ea sports)(eu)[!].chd": {
+      "file": "PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "title": "PGA Tour 96",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pga-tour-96\\captures\\f012000.png",
+      "discHash": "b8f303f065ca131ef5f0976363af03f3",
+      "bios": "Panasonic FZ-10"
+    },
+    "phoenix 3 (1995)(studio 3do)(eu)[!].chd": {
+      "file": "Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "Phoenix 3",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\phoenix-3\\captures\\f012000.png",
+      "discHash": "c39e4193cdb09c59a2b343b3b536efa5",
+      "bios": "Panasonic FZ-10"
+    },
+    "plumbers don't wear ties (1994)(kirin entertainment)(us)[!].chd": {
+      "file": "Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd",
+      "title": "Plumbers Don't Wear Ties",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\plumbers-don-t-wear-ties\\captures\\f012000.png",
+      "discHash": "1e6d3539091fcd823bb858e374aa5716",
+      "bios": "Panasonic FZ-10"
+    },
+    "po'ed (1995)(studio 3do)(eu-us)[!].chd": {
+      "file": "PO'ed (1995)(Studio 3DO)(EU-US)[!].chd",
+      "title": "PO'ed",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\po-ed\\captures\\f012000.png",
+      "discHash": "2fd69cad68a09c9bb3c905b8cabc15b7",
+      "bios": "Panasonic FZ-10"
+    },
+    "policenauts (1995)(konami)(jp)(disc 1 of 2)[!].chd": {
+      "file": "Policenauts (1995)(Konami)(JP)(Disc 1 of 2)[!].chd",
+      "title": "Policenauts",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\policenauts\\captures\\f012000.png",
+      "discHash": "9a293b56247906bd9687db5410619570",
+      "bios": "Panasonic FZ-10J"
+    },
+    "policenauts - pilot disk (1995)(konami)(jp)[!].chd": {
+      "file": "Policenauts - Pilot Disk (1995)(Konami)(JP)[!].chd",
+      "title": "Policenauts - Pilot Disk",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\policenauts-pilot-disk\\captures\\f012000.png",
+      "discHash": "113842b2169f59a4a0df5b602cda07cb",
+      "bios": "Panasonic FZ-10J"
+    },
+    "powers kingdom (1994)(panasonic)(eu)[!].chd": {
+      "file": "Powers Kingdom (1994)(Panasonic)(EU)[!].chd",
+      "title": "Powers Kingdom",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\powers-kingdom\\captures\\f012000.png",
+      "discHash": "14f7638d69ec532c2104e55c02ddc3d7",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    },
+    "powerslide (2007)(oldergames)(disc 2 of 2)[!][powerslide bonus disk - footie].chd": {
+      "file": "Powerslide (2007)(Oldergames)(Disc 2 of 2)[!][Powerslide Bonus Disk - Footie].chd",
+      "title": "Powerslide",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\powerslide\\captures\\f012000.png",
+      "discHash": "e31e74eb2774df52ffc6720c67966370",
+      "bios": "Panasonic FZ-10J"
+    },
+    "primal rage v1.0 (1995)(goldstar)(eu-us)(m7)[!].chd": {
+      "file": "Primal Rage v1.0 (1995)(GoldStar)(EU-US)(M7)[!].chd",
+      "title": "Primal Rage",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\primal-rage\\captures\\f012000.png",
+      "discHash": "ac774f767560507d214e2c947a716917",
+      "bios": "Panasonic FZ-10"
+    },
+    "princess maker 2 (1995)(micro cabin)(jp)[!].chd": {
+      "file": "Princess Maker 2 (1995)(Micro Cabin)(JP)[!].chd",
+      "title": "Princess Maker 2",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\princess-maker-2\\captures\\f012000.png",
+      "discHash": "f0ed0be4fac19c1363b74d210b46bcd7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "pro stadium (1995)(sanyo)(jp)[!].chd": {
+      "file": "Pro Stadium (1995)(Sanyo)(JP)[!].chd",
+      "title": "Pro Stadium",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pro-stadium\\captures\\f012000.png",
+      "discHash": "96c99d845e4842fd322588df8f53f457",
+      "bios": "Panasonic FZ-10J"
+    },
+    "pro yakyuu virtual stadium - professional baseball (1995)(ea sports)(jp)[!].chd": {
+      "file": "Pro Yakyuu Virtual Stadium - Professional Baseball (1995)(EA Sports)(JP)[!].chd",
+      "title": "Pro Yakyuu Virtual Stadium - Professional Baseball",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pro-yakyuu-virtual-stadium-professional-baseball\\captures\\f012000.png",
+      "discHash": "478c86ff26172ec233131585bd8493a0",
+      "bios": "Panasonic FZ-10J"
+    },
+    "psychic detective (1995)(electronic arts)(eu)(disc 1 of 3)[!].chd": {
+      "file": "Psychic Detective (1995)(Electronic Arts)(EU)(Disc 1 of 3)[!].chd",
+      "title": "Psychic Detective",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\psychic-detective\\captures\\f012000.png",
+      "discHash": "193555448b046d2996221f0aa1827c2c",
+      "bios": "Panasonic FZ-10"
+    },
+    "puppet tale (1994)(microcabin - panasonic)(jp)[!].chd": {
+      "file": "Puppet Tale (1994)(Microcabin - Panasonic)(JP)[!].chd",
+      "title": "Puppet Tale",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\puppet-tale\\captures\\f012000.png",
+      "discHash": "d9c961a3986b1d5025cab9fcfbad21f1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "putt-putt goes to the moon (1993)(humongous entertainment)(us)[!].chd": {
+      "file": "Putt-Putt Goes to the Moon (1993)(Humongous Entertainment)(US)[!].chd",
+      "title": "Putt-Putt Goes to the Moon",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\putt-putt-goes-to-moon\\captures\\f012000.png",
+      "discHash": "1fec4ec733483a5225fe90aa0c08a509",
+      "bios": "Panasonic FZ-10"
+    },
+    "putt-putt joins the parade (1993)(humongous entertainment)(us)[!][cq 6922-2].chd": {
+      "file": "Putt-Putt Joins the Parade (1993)(Humongous Entertainment)(US)[!][CQ 6922-2].chd",
+      "title": "Putt-Putt Joins the Parade",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\putt-putt-joins-parade\\captures\\f012000.png",
+      "discHash": "534ae001d9074c732a70fa6bbe240377",
+      "bios": "Panasonic FZ-10"
+    },
+    "putt-putt to parade ni ikou! (1994)(media vision)(jp)(en-ja)[!].chd": {
+      "file": "Putt-Putt to Parade ni Ikou! (1994)(Media Vision)(JP)(en-ja)[!].chd",
+      "title": "Putt-Putt to Parade ni Ikou!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\putt-putt-to-parade-ni-ikou\\captures\\f012000.png",
+      "discHash": "754d9779752ed90d7aa3f0ba70a0e423",
+      "bios": "Panasonic FZ-10J"
+    },
+    "putt-putt's fun pack (1993)(humongous entertainment)(us)[!].chd": {
+      "file": "Putt-Putt's Fun Pack (1993)(Humongous Entertainment)(US)[!].chd",
+      "title": "Putt-Putt's Fun Pack",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\putt-putt-s-fun-pack\\captures\\f012000.png",
+      "discHash": "8f1bb94cf06b498ae9592694b235dea8",
+      "bios": "Panasonic FZ-10"
+    },
+    "puzzle bobble (1995)(micro cabin)(jp)[!].chd": {
+      "file": "Puzzle Bobble (1995)(Micro Cabin)(JP)[!].chd",
+      "title": "Puzzle Bobble",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\bust-a-move\\captures\\f012000.png",
+      "discHash": "4cf3778f41ad587ce70f49d4e8d32296",
+      "bios": "Panasonic FZ-10J"
+    },
+    "pyramid intruder (1995)(taito)(jp)(en)[!].chd": {
+      "file": "Pyramid Intruder (1995)(Taito)(JP)(en)[!].chd",
+      "title": "Pyramid Intruder",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\pyramid-intruder\\captures\\f012000.png",
+      "discHash": "04d3fe945f3434fcbcd8a10173d5617e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "quarantine (1994)(gametek - imagineer)(jp-us)(m5)[!][im-ts9503, 439480068501re3].chd": {
+      "file": "Quarantine (1994)(Gametek - Imagineer)(JP-US)(M5)[!][IM-TS9503, 439480068501RE3].chd",
+      "title": "Quarantine",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\quarantine\\captures\\f012000.png",
+      "discHash": "8dad7d7e8f77568b2e7bd428bb88e204",
+      "bios": "Panasonic FZ-10J"
+    },
+    "quarterback attack - the professional quarterback simulator (1995)(digital pictures)(us)[!].chd": {
+      "file": "Quarterback Attack - The Professional Quarterback Simulator (1995)(Digital Pictures)(US)[!].chd",
+      "title": "Quarterback Attack - The Professional Quarterback Simulator",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\quarterback-attack-professional-quarterback-simulator\\captures\\f012000.png",
+      "discHash": "9897452b914535d9d59d29c6c9ba7ec8",
+      "bios": "Panasonic FZ-10"
+    },
+    "real pinball (1994)(panasonic)(us)[!].chd": {
+      "file": "Real Pinball (1994)(Panasonic)(US)[!].chd",
+      "title": "Real Pinball",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\real-pinball\\captures\\f012000.png",
+      "discHash": "1ea203a314cdc49ce3c26545c6909cc2",
+      "bios": "Panasonic FZ-10"
+    },
+    "reika - virtual puppet (1994)(h.a.n.d)(jp).chd": {
+      "file": "Reika - Virtual Puppet (1994)(H.A.N.D)(JP).chd",
+      "title": "Reika - Virtual Puppet",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\reika-virtual-puppet\\captures\\f012000.png",
+      "discHash": "5abd7ef062af265c3c29669546f8cc22",
+      "bios": "Panasonic FZ-10J"
+    },
+    "remute 3d (europe) (en,de) (unl).chd": {
+      "file": "Remute 3D (Europe) (En,De) (Unl).chd",
+      "title": "Remute 3D",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\remute-3d\\captures\\f012000.png",
+      "discHash": "3331db41068b10ed0d2c29b78717f7cb",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    },
+    "return fire - maps o' death v1.0 fb13.1.0 (1995)(prolific)(us)[!][data disc].chd": {
+      "file": "Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd",
+      "title": "Return Fire - Maps O' Death",
+      "status": "Title-only",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\return-fire-maps-o-death\\captures\\f012000.png",
+      "discHash": "3e1fee64f45350a4ff6adeed08a4016f",
+      "bios": "Panasonic FZ-10"
+    },
+    "return fire v1.0 f306.1.2 (1994)(prolific - silent software)(eu-us)[!].chd": {
+      "file": "Return Fire v1.0 F306.1.2 (1994)(Prolific - Silent Software)(EU-US)[!].chd",
+      "title": "Return Fire",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\return-fire\\captures\\f012000.png",
+      "discHash": "a8c7b8ffc2af9f93adc9a14dc73d6835",
+      "bios": "Panasonic FZ-10"
+    },
+    "rise of the robots (1995)(absolute)(us)(m3)[!].chd": {
+      "file": "Rise of the Robots (1995)(Absolute)(US)(M3)[!].chd",
+      "title": "Rise of the Robots",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\rise-of-robots\\captures\\f012000.png",
+      "discHash": "a3704048f8faeb676d4f4fb268200662",
+      "bios": "Panasonic FZ-10"
+    },
+    "road rash (1994)(electronic arts)(us)[!].chd": {
+      "file": "Road Rash (1994)(Electronic Arts)(US)[!].chd",
+      "title": "Road Rash",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\road-rash\\captures\\f012000.png",
+      "discHash": "d76725503d3ae78eddfa76704ef69926",
+      "bios": "Panasonic FZ-10"
+    },
+    "robinson's requiem (1996)(readysoft - silmarils)(us)[!].chd": {
+      "file": "Robinson's Requiem (1996)(ReadySoft - Silmarils)(US)[!].chd",
+      "title": "Robinson's Requiem",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\robinson-s-requiem\\captures\\f012000.png",
+      "discHash": "6cf870fccfc85dc8e8a6173325bd0f43",
+      "bios": "Panasonic FZ-10"
+    },
+    "royal pro wrestling - jikkyou live!! (1996)(natsume)(jp)[!].chd": {
+      "file": "Royal Pro Wrestling - Jikkyou Live!! (1996)(Natsume)(JP)[!].chd",
+      "title": "Royal Pro Wrestling - Jikkyou Live!!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\royal-pro-wrestling-jikkyou-live\\captures\\f012000.png",
+      "discHash": "d55a86f2485f672756d57644df049358",
+      "bios": "Panasonic FZ-10J"
+    },
+    "samurai shodown (1994)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Samurai Shodown (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Samurai Shodown",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\samurai-shodown\\captures\\f012000.png",
+      "discHash": "2aaba5b90f51a301d3a693d0cfa0fe1c",
+      "bios": "Panasonic FZ-10"
+    },
+    "san diego zoo presents... the animals!, the (1993)(software toolworks)(us)[!].chd": {
+      "file": "San Diego Zoo Presents... The Animals!, The (1993)(Software Toolworks)(US)[!].chd",
+      "title": "San Diego Zoo Presents... The Animals!, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\san-diego-zoo-presents-animals\\captures\\f012000.png",
+      "discHash": "8057c4becf1389eec9db913d023f4a89",
+      "bios": "Panasonic FZ-10"
+    },
+    "sangokushi iv (1995)(koei)(jp)[!].chd": {
+      "file": "Sangokushi IV (1995)(KOEI)(JP)[!].chd",
+      "title": "Sangokushi IV",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sangokushi-iv\\captures\\f012000.png",
+      "discHash": "8304078b4ba1e44eda9404dfdefa422f",
+      "bios": "Panasonic FZ-10J"
+    },
+    "scramble cobra (1995)(panasonic)(us)[!].chd": {
+      "file": "Scramble Cobra (1995)(Panasonic)(US)[!].chd",
+      "title": "Scramble Cobra",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\scramble-cobra\\captures\\f012000.png",
+      "discHash": "9b87e5d747b51dea2c91d572a42d4756",
+      "bios": "Panasonic FZ-10"
+    },
+    "scramble cobra - premium version (japan).chd": {
+      "file": "Scramble Cobra - Premium Version (Japan).chd",
+      "title": "Scramble Cobra - Premium Version",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\scramble-cobra-premium-version\\captures\\f012000.png",
+      "discHash": "daa3ff6cc8413544fcdacc191c6c8b73",
+      "bios": "Panasonic FZ-10J"
+    },
+    "seal of the pharaoh (1994)(panasonic)(us)[!].chd": {
+      "file": "Seal of the Pharaoh (1994)(Panasonic)(US)[!].chd",
+      "title": "Seal of the Pharaoh",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\seal-of-pharaoh\\captures\\f012000.png",
+      "discHash": "1757408b5d319af71e932d886486eb70",
+      "bios": "Panasonic FZ-10"
+    },
+    "seimeihandan (1995)(ariadne)(jp)[!].chd": {
+      "file": "Seimeihandan (1995)(Ariadne)(JP)[!].chd",
+      "title": "Seimeihandan",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\seimeihandan\\captures\\f012000.png",
+      "discHash": "77a963a0cb364155f73dbc9daec1f147",
+      "bios": "Panasonic FZ-10J"
+    },
+    "sekure fuumin no omocha hako (1994)(glams)(jp)[!].chd": {
+      "file": "Sekure Fuumin no Omocha Hako (1994)(GLAMS)(JP)[!].chd",
+      "title": "Sekure Fuumin no Omocha Hako",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sekure-fuumin-no-omocha-hako\\captures\\f012000.png",
+      "discHash": "b988259b615821d2fd2162c0c2a5d495",
+      "bios": "Panasonic FZ-10J"
+    },
+    "sento monogatari - sono i (1995)(ariadne)(jp)[!].chd": {
+      "file": "Sento Monogatari - Sono I (1995)(Ariadne)(JP)[!].chd",
+      "title": "Sento Monogatari - Sono I",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sento-monogatari-sono-i\\captures\\f012000.png",
+      "discHash": "971d507577cabca2566396a539d80e16",
+      "bios": "Panasonic FZ-10J"
+    },
+    "sesame street - numbers (1994)(ea kids)(us)[!].chd": {
+      "file": "Sesame Street - Numbers (1994)(EA Kids)(US)[!].chd",
+      "title": "Sesame Street - Numbers",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sesame-street-numbers\\captures\\f012000.png",
+      "discHash": "d0e970b0ace46ee117da35cf9d30c362",
+      "bios": "Panasonic FZ-10"
+    },
+    "sewer shark (1994)(digital pictures)(us)[!].chd": {
+      "file": "Sewer Shark (1994)(Digital Pictures)(US)[!].chd",
+      "title": "Sewer Shark",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sewer-shark\\captures\\f012000.png",
+      "discHash": "646467ce57ddc5f5b05418951989d68b",
+      "bios": "Panasonic FZ-10"
+    },
+    "sex (1994)(vivid interactive)(us).chd": {
+      "file": "Sex (1994)(Vivid Interactive)(US).chd",
+      "title": "Sex",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sex\\captures\\f012000.png",
+      "discHash": "6fefa094487e26275f57b3b9c129324e",
+      "bios": "Panasonic FZ-10"
+    },
+    "shadow - war of succession (1994)(tribeca digital studios)(us)[!].chd": {
+      "file": "Shadow - War of Succession (1994)(Tribeca Digital Studios)(US)[!].chd",
+      "title": "Shadow - War of Succession",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shadow-war-of-succession\\captures\\f012000.png",
+      "discHash": "7ec6dceceb95ab947125ca160acb8777",
+      "bios": "Panasonic FZ-10"
+    },
+    "shadow warriors (1994)(t&e soft)(jp)(en)[!].chd": {
+      "file": "Shadow Warriors (1994)(T&E Soft)(JP)(en)[!].chd",
+      "title": "Shadow Warriors",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shadow-warriors\\captures\\f012000.png",
+      "discHash": "002c924f19d7b178966546f18d23cc72",
+      "bios": "Panasonic FZ-10J"
+    },
+    "shanghai - banri no choujou (1994)(activision)(jp)[!].chd": {
+      "file": "Shanghai - Banri no Choujou (1994)(Activision)(JP)[!].chd",
+      "title": "Shanghai - Banri no Choujou",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shanghai-banri-no-choujou\\captures\\f012000.png",
+      "discHash": "28049ba35744fb1671299b515f112977",
+      "bios": "Panasonic FZ-10J"
+    },
+    "shanghai - triple-threat (1994)(activision)(us)[!][02500-2.4].chd": {
+      "file": "Shanghai - Triple-Threat (1994)(Activision)(US)[!][02500-2.4].chd",
+      "title": "Shanghai - Triple-Threat",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shanghai-triple-threat\\captures\\f012000.png",
+      "discHash": "cca6a6594eeda6c3b86c27916996eddf",
+      "bios": "Panasonic FZ-10"
+    },
+    "shelley duvall's it's a bird's life (1992)(sanctuary woods)(us)[!].chd": {
+      "file": "Shelley Duvall's It's A Bird's Life (1992)(Sanctuary Woods)(US)[!].chd",
+      "title": "Shelley Duvall's It's A Bird's Life",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shelley-duvall-s-it-s-bird-s-life\\captures\\f012000.png",
+      "discHash": "538bc2b0f3f5c5feff56a5c271cc9b04",
+      "bios": "Panasonic FZ-10"
+    },
+    "shock wave (1994)(electronic arts)(eu)[!].chd": {
+      "file": "Shock Wave (1994)(Electronic Arts)(EU)[!].chd",
+      "title": "Shock Wave",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shock-wave\\captures\\f012000.png",
+      "discHash": "ca4dc585eca6df9bf770e2c0b549d2cb",
+      "bios": "Panasonic FZ-10"
+    },
+    "shock wave - operation jumpgate (1994)(electronic arts)(eu-us)[!][data disc].chd": {
+      "file": "Shock Wave - Operation JumpGate (1994)(Electronic Arts)(EU-US)[!][data disc].chd",
+      "title": "Shock Wave - Operation JumpGate",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shock-wave-operation-jumpgate\\captures\\f012000.png",
+      "discHash": "c1a13ca8e3f2b32d6a5908df1efb4980",
+      "bios": "Panasonic FZ-10"
+    },
+    "shockwave 2 - beyond the gate (1995)(electronic arts)(eu)(disc 1 of 2)[!].chd": {
+      "file": "Shockwave 2 - Beyond the Gate (1995)(Electronic Arts)(EU)(Disc 1 of 2)[!].chd",
+      "title": "Shockwave 2 - Beyond the Gate",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shockwave-2-beyond-gate\\captures\\f012000.png",
+      "discHash": "9e74feb22fce6567a49f8ca1181adedb",
+      "bios": "Panasonic FZ-10"
+    },
+    "shootout at old tucson (usa) (re3) (arcade cd-rom).chd": {
+      "file": "Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd",
+      "title": "Shootout at Old Tucson",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\shootout-at-old-tucson\\captures\\f012000.png",
+      "discHash": "ea0682730fe2b5425a1db250d2a56605",
+      "bios": "Panasonic FZ-10 (No RSA)"
+    },
+    "short warp - warp's short game colection (1996)(warp)(jp)[!].chd": {
+      "file": "Short Warp - Warp's Short Game Colection (1996)(Warp)(JP)[!].chd",
+      "title": "Short Warp - Warp's Short Game Colection",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\short-warp-warp-s-short-game-colection\\captures\\f012000.png",
+      "discHash": "6635d01c96b0c4cf43f8040c8a769a9d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "sid meier's c.p.u. bach (1994)(microprose)(us)[!].chd": {
+      "file": "Sid Meier's C.P.U. Bach (1994)(MicroProse)(US)[!].chd",
+      "title": "Sid Meier's C.P.U. Bach",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sid-meier-s-c-p-u-bach\\captures\\f012000.png",
+      "discHash": "3402900ab856b50c8fdc0fe1aff77baa",
+      "bios": "Panasonic FZ-10"
+    },
+    "slam 'n jam '95 (1994)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Slam 'N Jam '95 (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Slam 'N Jam '95",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\slam-n-jam-95\\captures\\f012000.png",
+      "discHash": "181a66f14b2158de45d0bfb121eb7c12",
+      "bios": "Panasonic FZ-10"
+    },
+    "slayer (1994)(mindscape)(eu)[!].chd": {
+      "file": "Slayer (1994)(Mindscape)(EU)[!].chd",
+      "title": "Slayer",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\slayer\\captures\\f012000.png",
+      "discHash": "6b1a7fedc32a75e6c68a800adbc9caab",
+      "bios": "Panasonic FZ-10"
+    },
+    "slopestyle - an interactive learning cube (1994)(l3)(us)[!].chd": {
+      "file": "Slopestyle - An Interactive Learning Cube (1994)(L3)(US)[!].chd",
+      "title": "Slopestyle - An Interactive Learning Cube",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\slopestyle-interactive-learning-cube\\captures\\f012000.png",
+      "discHash": "42ac5a01bb9514c3d64f9db5f7459efc",
+      "bios": "Panasonic FZ-10"
+    },
+    "snow job starring tracy scoggins (1995)(studio 3do)(us)(disc 1 of 2)[!].chd": {
+      "file": "Snow Job Starring Tracy Scoggins (1995)(Studio 3DO)(US)(Disc 1 of 2)[!].chd",
+      "title": "Snow Job Starring Tracy Scoggins",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\snow-job-starring-tracy-scoggins\\captures\\f012000.png",
+      "discHash": "8d202445c25cd670d78421b08c1429d7",
+      "bios": "Panasonic FZ-10"
+    },
+    "soccer kid (1994)(studio 3do)(us)[!].chd": {
+      "file": "Soccer Kid (1994)(Studio 3DO)(US)[!].chd",
+      "title": "Soccer Kid",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\soccer-kid\\captures\\f012000.png",
+      "discHash": "0703f25551b7e9b66fcaaa5f0def3cb1",
+      "bios": "Panasonic FZ-10"
+    },
+    "sotsugyou graduation final (1994)(shar rock)(jp)[!].chd": {
+      "file": "Sotsugyou Graduation Final (1994)(Shar Rock)(JP)[!].chd",
+      "title": "Sotsugyou Graduation Final",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sotsugyou-graduation-final\\captures\\f012000.png",
+      "discHash": "fc91499c362cccd6e33d2fd8790ddf70",
+      "bios": "Panasonic FZ-10J"
+    },
+    "sotsugyou ii - neo generation special (1995)(shar rock)(jp)[!].chd": {
+      "file": "Sotsugyou II - Neo Generation Special (1995)(Shar Rock)(JP)[!].chd",
+      "title": "Sotsugyou II - Neo Generation Special",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sotsugyou-ii-neo-generation-special\\captures\\f012000.png",
+      "discHash": "162bb9b84ad0736459adce89bea5b4d0",
+      "bios": "Panasonic FZ-10J"
+    },
+    "space ace (1995)(readysoft)(us)[!][dh 65008 re-1].chd": {
+      "file": "Space Ace (1995)(ReadySoft)(US)[!][DH 65008 RE-1].chd",
+      "title": "Space Ace",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\space-ace\\captures\\f012000.png",
+      "discHash": "112b53d0a045484c6b61dbe4a5683759",
+      "bios": "Panasonic FZ-10"
+    },
+    "space hulk - vengeance of the blood angels (1995)(electronic arts)(eu)[!].chd": {
+      "file": "Space Hulk - Vengeance of the Blood Angels (1995)(Electronic Arts)(EU)[!].chd",
+      "title": "Space Hulk - Vengeance of the Blood Angels",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\blood-angels-space-hulk\\captures\\f012000.png",
+      "discHash": "813e41b197d8879554f8effd3d2a7144",
+      "bios": "Panasonic FZ-10"
+    },
+    "space invaders invaders (2014)(mihai, sebastian).chd": {
+      "file": "Space Invaders Invaders (2014)(Mihai, Sebastian).chd",
+      "title": "Space Invaders Invaders",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\space-invaders-invaders\\captures\\f012000.png",
+      "discHash": "971b56941e45a4406aab42698e46a407",
+      "bios": "Panasonic FZ-10J"
+    },
+    "space pirates (1994)(american laser games)(us)[!].chd": {
+      "file": "Space Pirates (1994)(American Laser Games)(US)[!].chd",
+      "title": "Space Pirates",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\space-pirates\\captures\\f012000.png",
+      "discHash": "07d402d195eccbf1890a18e5fe14b273",
+      "bios": "Panasonic FZ-10"
+    },
+    "space shuttle (1993)(software toolworks)(us)[!].chd": {
+      "file": "Space Shuttle (1993)(Software Toolworks)(US)[!].chd",
+      "title": "Space Shuttle",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\space-shuttle\\captures\\f012000.png",
+      "discHash": "fdd9ada0f08c99e1fa510616207903de",
+      "bios": "Panasonic FZ-10"
+    },
+    "star control ii (1994)(crystal dynamics)(eu-us)[!].chd": {
+      "file": "Star Control II (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "title": "Star Control II",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\star-control-ii\\captures\\f012000.png",
+      "discHash": "18c186d94ed73ecd96634fcfe76b84c9",
+      "bios": "Panasonic FZ-10"
+    },
+    "star fighter (1995)(studio 3do)(eu-us)[!].chd": {
+      "file": "Star Fighter (1995)(Studio 3DO)(EU-US)[!].chd",
+      "title": "Star Fighter",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\star-fighter\\captures\\f012000.png",
+      "discHash": "5a129b01b54ea2a320a2d6d83858a941",
+      "bios": "Panasonic FZ-10"
+    },
+    "star wars - rebel assault v1.0 (1993)(electronic arts)(eu-us)[!].chd": {
+      "file": "Star Wars - Rebel Assault v1.0 (1993)(Electronic Arts)(EU-US)[!].chd",
+      "title": "Star Wars - Rebel Assault",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\star-wars-rebel-assault\\captures\\f012000.png",
+      "discHash": "62b99b17a91ee1fa207d242608626a8e",
+      "bios": "Panasonic FZ-10"
+    },
+    "star wars - rebel assault v1.0j (1993)(electronic arts)(jp)[!].chd": {
+      "file": "Star Wars - Rebel Assault v1.0J (1993)(Electronic Arts)(JP)[!].chd",
+      "title": "Star Wars - Rebel Assault .0J",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\star-wars-rebel-assault-0j\\captures\\f012000.png",
+      "discHash": "5af82a460688ee9e215a650280c5e2b6",
+      "bios": "Panasonic FZ-10J"
+    },
+    "starblade (1994)(panasonic)(ca)[!].chd": {
+      "file": "StarBlade (1994)(Panasonic)(CA)[!].chd",
+      "title": "StarBlade",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\starblade\\captures\\f012000.png",
+      "discHash": "a7f26d1ffd41f89cf2e9615b712d5403",
+      "bios": "Panasonic FZ-10"
+    },
+    "stellar 7 - draxon no gyakushuu (1994)(dynamix)(jp)[!].chd": {
+      "file": "Stellar 7 - Draxon no Gyakushuu (1994)(Dynamix)(JP)[!].chd",
+      "title": "Stellar 7 - Draxon no Gyakushuu",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\stellar-7-draxon-no-gyakushuu\\captures\\f012000.png",
+      "discHash": "7b5f394b32fabeb8655abb485f974da6",
+      "bios": "Panasonic FZ-10J"
+    },
+    "stellar 7 - draxon's revenge (1993)(dynamix)(us)[!].chd": {
+      "file": "Stellar 7 - Draxon's Revenge (1993)(Dynamix)(US)[!].chd",
+      "title": "Stellar 7 - Draxon's Revenge",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\stellar-7-draxon-s-revenge\\captures\\f012000.png",
+      "discHash": "b4c72191af344bce21372e750c077062",
+      "bios": "Panasonic FZ-10"
+    },
+    "stniccc2000 3do (2019)(optimus).chd": {
+      "file": "STNICCC2000 3DO (2019)(Optimus).chd",
+      "title": "STNICCC2000 3DO",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\stniccc2000-3do\\captures\\f012000.png",
+      "discHash": "67d836fbc6a0f27df7462221d7a9f3d7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "strahl (1995)(panasonic)(us)[!].chd": {
+      "file": "Strahl (1995)(Panasonic)(US)[!].chd",
+      "title": "Strahl",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\strahl\\captures\\f012000.png",
+      "discHash": "ca135a3493f6f9f6afe59ef35eac6cff",
+      "bios": "Panasonic FZ-10"
+    },
+    "striker - world cup special (1995)(panasonic)(eu)[!].chd": {
+      "file": "Striker - World Cup Special (1995)(Panasonic)(EU)[!].chd",
+      "title": "Striker - World Cup Special",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\world-cup-special\\captures\\f012000.png",
+      "discHash": "a48456f4a1bdde641631709320814227",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    },
+    "super model, the - gail mckenna (1995)(transpegasus)(jp).chd": {
+      "file": "Super Model, The - Gail McKenna (1995)(Transpegasus)(JP).chd",
+      "title": "Super Model, The - Gail McKenna",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-model-gail-mckenna\\captures\\f012000.png",
+      "discHash": "82bf275840c64c716cda4ae620e47b7b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "super nova - battery navi (japan).chd": {
+      "file": "Super Nova - Battery Navi (Japan).chd",
+      "title": "Super Nova - Battery Navi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-nova-battery-navi\\captures\\f012000.png",
+      "discHash": "cb0317d10e338f3d0ae3ee32df418c70",
+      "bios": "Panasonic FZ-10J"
+    },
+    "super real mahjong p.v (1995)(seta)(jp)[!].chd": {
+      "file": "Super Real Mahjong P.V (1995)(Seta)(JP)[!].chd",
+      "title": "Super Real Mahjong P.V",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-real-mahjong-p-v\\captures\\f012000.png",
+      "discHash": "439cef832a58ef9a46f8183a8f55463b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "super real mahjong piv   aishou shindan (japan).chd": {
+      "file": "Super Real Mahjong PIV   Aishou Shindan (Japan).chd",
+      "title": "Super Real Mahjong PIV Aishou Shindan",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-real-mahjong-piv-aishou-shindan\\captures\\f012000.png",
+      "discHash": "c8dd7a63e4a4cf7c7feabf8e9995804b",
+      "bios": "Panasonic FZ-10J"
+    },
+    "super street fighter ii turbo (1994)(panasonic)(ca-us)[!][sm3851-2 re1].chd": {
+      "file": "Super Street Fighter II Turbo (1994)(Panasonic)(CA-US)[!][SM3851-2 RE1].chd",
+      "title": "Super Street Fighter II Turbo",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-street-fighter-ii-turbo\\captures\\f012000.png",
+      "discHash": "dbb419fa0f5935176a01e58c9ff498ba",
+      "bios": "Panasonic FZ-10"
+    },
+    "super wing commander (1994)(origin)(us)[!].chd": {
+      "file": "Super Wing Commander (1994)(Origin)(US)[!].chd",
+      "title": "Super Wing Commander",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\super-wing-commander\\captures\\f012000.png",
+      "discHash": "c3285976afc8f285f6b2979c55a92437",
+      "bios": "Panasonic FZ-10"
+    },
+    "supermodels go wild (1994)(vivid interactive)(us).chd": {
+      "file": "SuperModels Go Wild (1994)(Vivid Interactive)(US).chd",
+      "title": "SuperModels Go Wild",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\supermodels-go-wild\\captures\\f012000.png",
+      "discHash": "b7cd8729f9e3f178e80a3280983a4cc1",
+      "bios": "Panasonic FZ-10"
+    },
+    "supreme warrior (usa) (disc 1) (fire & earth).chd": {
+      "file": "Supreme Warrior (USA) (Disc 1) (Fire & Earth).chd",
+      "title": "Supreme Warrior",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\supreme-warrior\\captures\\f012000.png",
+      "discHash": "9d963926b5fcbae985cc7fa245086062",
+      "bios": "Panasonic FZ-10"
+    },
+    "supreme warrior - ying heung (1994)(digital pictures)(us)(en-zh)(disc 2 of 2)[!][wind & fang tu].chd": {
+      "file": "Supreme Warrior - Ying Heung (1994)(Digital Pictures)(US)(en-zh)(Disc 2 of 2)[!][Wind & Fang Tu].chd",
+      "title": "Supreme Warrior - Ying Heung",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\supreme-warrior-ying-heung\\captures\\f012000.png",
+      "discHash": "659789938106cb35b66724ffac4abd91",
+      "bios": "Panasonic FZ-10"
+    },
+    "sword & sorcery (1995)(micro cabin)(jp)[!].chd": {
+      "file": "Sword & Sorcery (1995)(Micro Cabin)(JP)[!].chd",
+      "title": "Sword & Sorcery",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\sword-and-sorcery\\captures\\f012000.png",
+      "discHash": "32af9fe09534e741f8d842714ad7da1c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "syndicate (1995)(electronic arts)(eu)[!].chd": {
+      "file": "Syndicate (1995)(Electronic Arts)(EU)[!].chd",
+      "title": "Syndicate",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\syndicate\\captures\\f012000.png",
+      "discHash": "08456921707ee5c12f3d77b38ed8f5ae",
+      "bios": "Panasonic FZ-10"
+    },
+    "system catalog - kigyou-muke system no goannai (japan).chd": {
+      "file": "System Catalog - Kigyou-muke System no Goannai (Japan).chd",
+      "title": "System Catalog - Kigyou-muke System no Goannai",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\system-catalog-kigyou-muke-system-no-goannai\\captures\\f012000.png",
+      "discHash": "67f665938c4afcce9554d9a6dd5964fb",
+      "bios": "Panasonic FZ-10J"
+    },
+    "t&e vr golf - waialae no kiseki (japan).chd": {
+      "file": "T&E VR Golf - Waialae no Kiseki (Japan).chd",
+      "title": "T&E VR Golf - Waialae no Kiseki",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\t-and-e-vr-golf-waialae-no-kiseki\\captures\\f012000.png",
+      "discHash": "5c359f556b63bd11dbbd5a75b58b62dd",
+      "bios": "Panasonic FZ-10J"
+    },
+    "taiketsu rumiizu! (japan).chd": {
+      "file": "Taiketsu Rumiizu! (Japan).chd",
+      "title": "Taiketsu Rumiizu!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\taiketsu-rumiizu\\captures\\f012000.png",
+      "discHash": "b3152065c66f143280ca7590dbf44b8a",
+      "bios": "Panasonic FZ-10J"
+    },
+    "takeru (1994)(panasonic)(jp)[!].chd": {
+      "file": "Takeru (1994)(Panasonic)(JP)[!].chd",
+      "title": "Takeru",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\takeru\\captures\\f012000.png",
+      "discHash": "c0d9b015c13591d1bc39787f12ab3d64",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tanjou debut - pure (1996)(shar rock)(jp)[!].chd": {
+      "file": "Tanjou Debut - Pure (1996)(Shar Rock)(JP)[!].chd",
+      "title": "Tanjou Debut - Pure",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tanjou-debut-pure\\captures\\f012000.png",
+      "discHash": "82127c92ebeae1c3d1c7df9c87f6fcfa",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tarot uranai (1995)(ariadne)(jp)[!].chd": {
+      "file": "Tarot Uranai (1995)(Ariadne)(JP)[!].chd",
+      "title": "Tarot Uranai",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tarot-uranai\\captures\\f012000.png",
+      "discHash": "50453a9310343402ab9d5ebe51c0d9b1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tetsujin returns (1995)(synergy)(jp)[!].chd": {
+      "file": "Tetsujin Returns (1995)(Synergy)(JP)[!].chd",
+      "title": "Tetsujin Returns",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tetsujin-returns\\captures\\f012000.png",
+      "discHash": "dfd1b0b66cf0e4f432b3d378c5df0b7d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "theatre wars - goraku no dendou (1994)(panasonic)(jp)[!].chd": {
+      "file": "Theatre Wars - Goraku no Dendou (1994)(Panasonic)(JP)[!].chd",
+      "title": "Theatre Wars - Goraku no Dendou",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\theatre-wars-goraku-no-dendou\\captures\\f012000.png",
+      "discHash": "1dd6c305604e940c42282cf5088a4bcf",
+      "bios": "Panasonic FZ-10J"
+    },
+    "theme park (1994)(electronic arts)(eu)(en-fr)[!].chd": {
+      "file": "Theme Park (1994)(Electronic Arts)(EU)(en-fr)[!].chd",
+      "title": "Theme Park",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\theme-park\\captures\\f012000.png",
+      "discHash": "33e5afe454a7c4da20b419a09e2045e2",
+      "bios": "Panasonic FZ-10"
+    },
+    "toki o koeta tegami - the letter that over came time (1994)(panasonic)(jp)[!].chd": {
+      "file": "Toki o Koeta Tegami - The Letter That Over Came Time (1994)(Panasonic)(JP)[!].chd",
+      "title": "Toki o Koeta Tegami - The Letter That Over Came Time",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\toki-o-koeta-tegami-letter-that-over-came-time\\captures\\f012000.png",
+      "discHash": "6f7fabd43267a515fea9586ce6153fe6",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tokimeki mahjong paradise special - koi no tenpai beat (1996)(sonnet)(jp).chd": {
+      "file": "Tokimeki Mahjong Paradise Special - Koi no Tenpai Beat (1996)(Sonnet)(JP).chd",
+      "title": "Tokimeki Mahjong Paradise Special - Koi no Tenpai Beat",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tokimeki-mahjong-paradise-special-koi-no-tenpai-beat\\captures\\f012000.png",
+      "discHash": "56a9dfc88092edfedda78955136d9528",
+      "bios": "Panasonic FZ-10J"
+    },
+    "toon time... in the classroom (1994)(videoactv)(us)[!].chd": {
+      "file": "Toon Time... In the Classroom (1994)(VideoactV)(US)[!].chd",
+      "title": "Toon Time... In the Classroom",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\toon-time-in-classroom\\captures\\f012000.png",
+      "discHash": "f3ada8c1ad657c1a84d41ded04d2f053",
+      "bios": "Panasonic FZ-10"
+    },
+    "total eclipse (1993)(crystal dynamics)(us)[!][3drm-1214760].chd": {
+      "file": "Total Eclipse (1993)(Crystal Dynamics)(US)[!][3DRM-1214760].chd",
+      "title": "Total Eclipse",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\total-eclipse\\captures\\f012000.png",
+      "discHash": "12ef1f8439f58ccf7b5f8a1c2681f002",
+      "bios": "Panasonic FZ-10"
+    },
+    "totsugeki karakuri! megadas!! (japan).chd": {
+      "file": "Totsugeki Karakuri! Megadas!! (Japan).chd",
+      "title": "Totsugeki Karakuri! Megadas!!",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\totsugeki-kikan-megadasu\\captures\\f012000.png",
+      "discHash": "f2397262811d7c0859bb38cbaffe02b1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "touhaiden akagi (1996)(micronet)(jp).chd": {
+      "file": "Touhaiden Akagi (1996)(Micronet)(JP).chd",
+      "title": "Touhaiden Akagi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\touhaiden-akagi\\captures\\f012000.png",
+      "discHash": "3f6c2bb49e11b424e6e4fcf8ade3575d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tower, the (1996)(openbook)(jp)[!].chd": {
+      "file": "Tower, The (1996)(OPeNBooK)(JP)[!].chd",
+      "title": "Tower, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tower\\captures\\f012000.png",
+      "discHash": "640563c2599a69093a19fe8f54b64a3c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "toyopet outdoor world (1995)(toyota)(jp).chd": {
+      "file": "TOYOPET OutDoor World (1995)(Toyota)(JP).chd",
+      "title": "TOYOPET OutDoor World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\toyopet-outdoor-world\\captures\\f012000.png",
+      "discHash": "050f32bea7bfc47008ae08e58f3c5bd1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "toyopet rv paddock (1995)(toyota)(jp).chd": {
+      "file": "TOYOPET RV Paddock (1995)(Toyota)(JP).chd",
+      "title": "TOYOPET RV Paddock",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\toyopet-rv-paddock\\captures\\f012000.png",
+      "discHash": "f268cf598407b49126457da059aae3a4",
+      "bios": "Panasonic FZ-10J"
+    },
+    "toyopet rv world (japan).chd": {
+      "file": "Toyopet RV World (Japan).chd",
+      "title": "Toyopet RV World",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\toyopet-rv-world\\captures\\f012000.png",
+      "discHash": "f9891e6c71a6e38a8f80ce572b43d814",
+      "bios": "Panasonic FZ-10J"
+    },
+    "tozasareta yakata (1995)(studio 3do)(jp)[!].chd": {
+      "file": "Tozasareta Yakata (1995)(Studio 3DO)(JP)[!].chd",
+      "title": "Tozasareta Yakata",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tozasareta-yakata\\captures\\f012000.png",
+      "discHash": "ae1c19b5c9cea96adefc644521791743",
+      "bios": "Panasonic FZ-10J"
+    },
+    "trip'd (1995)(panasonic)(eu-us)[!].chd": {
+      "file": "Trip'd (1995)(Panasonic)(EU-US)[!].chd",
+      "title": "Trip'd",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\trip-d\\captures\\f012000.png",
+      "discHash": "b887f0bc61e06812d91fd66abd408091",
+      "bios": "Panasonic FZ-10"
+    },
+    "true golf classics - waialae country club (germany).chd": {
+      "file": "True Golf Classics - Waialae Country Club (Germany).chd",
+      "title": "True Golf Classics - Waialae Country Club",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\true-golf-classics-waialae-country-club\\captures\\f012000.png",
+      "discHash": "b985cc21cf9e6abdcff8417648fbcf16",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    },
+    "tsuukai gameshow - twisted (1994)(electronic arts)(jp)[!].chd": {
+      "file": "Tsuukai Gameshow - Twisted (1994)(Electronic Arts)(JP)[!].chd",
+      "title": "Tsuukai Gameshow - Twisted",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\tsuukai-gameshow-twisted\\captures\\f012000.png",
+      "discHash": "127bf39cc19962871eba5f85b1646c42",
+      "bios": "Panasonic FZ-10J"
+    },
+    "twinkle knights (1995)(intarus)(jp).chd": {
+      "file": "Twinkle Knights (1995)(Intarus)(JP).chd",
+      "title": "Twinkle Knights",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\twinkle-knights\\captures\\f012000.png",
+      "discHash": "695d4bf4c676d34a89e468fede3b1983",
+      "bios": "Panasonic FZ-10J"
+    },
+    "twisted - the game show (1993)(electronic arts)(us)[!][730807-2 r73].chd": {
+      "file": "Twisted - The Game Show (1993)(Electronic Arts)(US)[!][730807-2 R73].chd",
+      "title": "Twisted - The Game Show",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\twisted-game-show\\captures\\f012000.png",
+      "discHash": "a7c4ee5313354b2306950b04bb4cdd8c",
+      "bios": "Panasonic FZ-10"
+    },
+    "uchuu seifutsu furopon-kun (1994)(san-ei shobo publishing)(jp)[!].chd": {
+      "file": "Uchuu Seifutsu Furopon-kun (1994)(San-Ei Shobo Publishing)(JP)[!].chd",
+      "title": "Uchuu Seifutsu Furopon-kun",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\uchuu-seifutsu-furopon-kun\\captures\\f012000.png",
+      "discHash": "0b879be47c7d4cce0cd6d74263d39c31",
+      "bios": "Panasonic FZ-10J"
+    },
+    "ultraman powered (1994)(bandai)(jp)[!].chd": {
+      "file": "Ultraman Powered (1994)(Bandai)(JP)[!].chd",
+      "title": "Ultraman Powered",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\ultraman-powered\\captures\\f012000.png",
+      "discHash": "645923d2eaa6f7448d7196c51cbda860",
+      "bios": "Panasonic FZ-10J"
+    },
+    "v goal soccer '96 (1996)(tecmo)(jp)(en).chd": {
+      "file": "V Goal Soccer '96 (1996)(Tecmo)(JP)(en).chd",
+      "title": "V Goal Soccer '96",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\v-goal-soccer-96\\captures\\f012000.png",
+      "discHash": "5d2222b9c3fb89dd83e85317343f8c48",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual cameraman part 1 - naomi sawada & anna juri (1995)(transpegasus)(jp)[!].chd": {
+      "file": "Virtual Cameraman Part 1 - Naomi Sawada & Anna Juri (1995)(Transpegasus)(JP)[!].chd",
+      "title": "Virtual Cameraman Part 1 - Naomi Sawada & Anna Juri",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-cameraman-part-1-naomi-sawada-and-anna-juri\\captures\\f012000.png",
+      "discHash": "bb76354a08a059e5ca031a243ead9775",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual cameraman part 2 - natsumi kawai & kimi tachihara (1995)(transpegasus)(jp).chd": {
+      "file": "Virtual Cameraman Part 2 - Natsumi Kawai & Kimi Tachihara (1995)(Transpegasus)(JP).chd",
+      "title": "Virtual Cameraman Part 2 - Natsumi Kawai & Kimi Tachihara",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-cameraman-part-2-natsumi-kawai-and-kimi-tachihara\\captures\\f012000.png",
+      "discHash": "9ece34c339eb5638d2af412087d400ac",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual cameraman part 3 - yumika sugimoto (1995)(transpegasus)(jp).chd": {
+      "file": "Virtual Cameraman Part 3 - Yumika Sugimoto (1995)(Transpegasus)(JP).chd",
+      "title": "Virtual Cameraman Part 3 - Yumika Sugimoto",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-cameraman-part-3-yumika-sugimoto\\captures\\f012000.png",
+      "discHash": "e9c1f7a3227121c3bfbd09f03052c567",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual cameraman part 4 - shiori fujitani (1995)(transpegasus)(jp)[!].chd": {
+      "file": "Virtual Cameraman Part 4 - Shiori Fujitani (1995)(Transpegasus)(JP)[!].chd",
+      "title": "Virtual Cameraman Part 4 - Shiori Fujitani",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-cameraman-part-4-shiori-fujitani\\captures\\f012000.png",
+      "discHash": "ff2ecfc0aeedcbd427f7413168adc79e",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual cameraman part 5 - yuri andou (1995)(transpegasus)(jp)[!].chd": {
+      "file": "Virtual Cameraman Part 5 - Yuri Andou (1995)(Transpegasus)(JP)[!].chd",
+      "title": "Virtual Cameraman Part 5 - Yuri Andou",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-cameraman-part-5-yuri-andou\\captures\\f012000.png",
+      "discHash": "df04f6e7037575d63d468ea37c34d87a",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual horror - norowareta tachi (1994)(electronic arts)(jp)[!].chd": {
+      "file": "Virtual Horror - Norowareta Tachi (1994)(Electronic Arts)(JP)[!].chd",
+      "title": "Virtual Horror - Norowareta Tachi",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-horror-norowareta-tachi\\captures\\f012000.png",
+      "discHash": "9215ea1b6263f1c6c0ec6c135972333d",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual quest - pharaoh no fuuin (1994)(ask kodansha)(jp)[!].chd": {
+      "file": "Virtual Quest - Pharaoh no Fuuin (1994)(ASK KODANSHA)(JP)[!].chd",
+      "title": "Virtual Quest - Pharaoh no Fuuin",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-quest-pharaoh-no-fuuin\\captures\\f012000.png",
+      "discHash": "a4b2b740df6cde84286e67ab10b74c3f",
+      "bios": "Panasonic FZ-10J"
+    },
+    "virtual vivid (1993)(vivid interactive)(us)[!][gl virtua re-1].chd": {
+      "file": "Virtual Vivid (1993)(Vivid Interactive)(US)[!][GL VIRTUA RE-1].chd",
+      "title": "Virtual Vivid",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtual-vivid\\captures\\f012000.png",
+      "discHash": "d6dfe5f72e8d537aa3c2ff52d9119f84",
+      "bios": "Panasonic FZ-10"
+    },
+    "virtuoso (1995)(data east)(us)[!].chd": {
+      "file": "Virtuoso (1995)(Data East)(US)[!].chd",
+      "title": "Virtuoso",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\virtuoso\\captures\\f012000.png",
+      "discHash": "932a49c69553dc2a64befdb1dcb5e578",
+      "bios": "Panasonic FZ-10"
+    },
+    "vr stalker (1994)(american laser games)(us)[!].chd": {
+      "file": "VR Stalker (1994)(American Laser Games)(US)[!].chd",
+      "title": "VR Stalker",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\vr-stalker\\captures\\f012000.png",
+      "discHash": "832b2bd52f89f0c1ee7048ebda885808",
+      "bios": "Panasonic FZ-10"
+    },
+    "waialae country club (1994)(panasonic)(ca-us)[!].chd": {
+      "file": "Waialae Country Club (1994)(Panasonic)(CA-US)[!].chd",
+      "title": "Waialae Country Club",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\waialae-country-club\\captures\\f012000.png",
+      "discHash": "73b19fcbce6795f5ebd556a9385cc605",
+      "bios": "Panasonic FZ-10"
+    },
+    "warner music group (usa).chd": {
+      "file": "Warner Music Group (USA).chd",
+      "title": "Warner Music Group",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\warner-music-group\\captures\\f012000.png",
+      "discHash": "669c06caf2ce3f9769d00666cef89b97",
+      "bios": "Panasonic FZ-10"
+    },
+    "way of the warrior (1994)(universal interactive studios)(ntsc)(us)[!].chd": {
+      "file": "Way of the Warrior (1994)(Universal Interactive Studios)(NTSC)(US)[!].chd",
+      "title": "Way of the Warrior",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\way-of-warrior\\captures\\f012000.png",
+      "discHash": "53afaf33673064b0e3ecf718a436068b",
+      "bios": "Panasonic FZ-10"
+    },
+    "where is derpy v1.3 final (2014)(gameblabla)[unencrypted, req. rsa disable].chd": {
+      "file": "Where is Derpy v1.3 Final (2014)(Gameblabla)[unencrypted, req. RSA disable].chd",
+      "title": "Where is Derpy Final",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\where-is-derpy-final\\captures\\f012000.png",
+      "discHash": "8dc7ef43b92e9092f0f26e4320a489d1",
+      "bios": "Panasonic FZ-10J"
+    },
+    "who shot johnny rock (1994)(american laser games)(us)[!].chd": {
+      "file": "Who Shot Johnny Rock (1994)(American Laser Games)(US)[!].chd",
+      "title": "Who Shot Johnny Rock",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\who-shot-johnny-rock\\captures\\f012000.png",
+      "discHash": "98440c807db8cb45db03970e0944bd8f",
+      "bios": "Panasonic FZ-10"
+    },
+    "wicked 18 (1994)(panasonic)(us)[!].chd": {
+      "file": "Wicked 18 (1994)(Panasonic)(US)[!].chd",
+      "title": "Wicked 18",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\wicked-18\\captures\\f012000.png",
+      "discHash": "c305a4c5357f70ce9de580c0091c5fa9",
+      "bios": "Panasonic FZ-10"
+    },
+    "wing commander iii - heart of the tiger (1995)(origin)(eu-us)(disc 1 of 4)[!].chd": {
+      "file": "Wing Commander III - Heart of the Tiger (1995)(Origin)(EU-US)(Disc 1 of 4)[!].chd",
+      "title": "Wing Commander III - Heart of the Tiger",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\wing-commander-iii-heart-of-tiger\\captures\\f012000.png",
+      "discHash": "a407d519aca4e1ab81633ff246ee3232",
+      "bios": "Panasonic FZ-10"
+    },
+    "winning post (1994)(koei)(jp)[!].chd": {
+      "file": "Winning Post (1994)(KOEI)(JP)[!].chd",
+      "title": "Winning Post",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\winning-post\\captures\\f012000.png",
+      "discHash": "1167308b9bbb96e45add4a906cfc6ab7",
+      "bios": "Panasonic FZ-10J"
+    },
+    "wolfenstein 3d (1994)(interplay)(us)[!].chd": {
+      "file": "Wolfenstein 3D (1994)(Interplay)(US)[!].chd",
+      "title": "Wolfenstein 3D",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\wolfenstein-3d\\captures\\f012000.png",
+      "discHash": "3dfcdbbff14ffb59e157e27f18d9df7b",
+      "bios": "Panasonic FZ-10"
+    },
+    "woody woodpecker and friends - volume one (1994)(mca universal home video)(us)[!].chd": {
+      "file": "Woody Woodpecker and Friends - Volume One (1994)(MCA Universal Home Video)(US)[!].chd",
+      "title": "Woody Woodpecker and Friends - Volume One",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\woody-woodpecker-and-friends-volume-one\\captures\\f012000.png",
+      "discHash": "0972ffccee21e10a7c730b198f47e441",
+      "bios": "Panasonic FZ-10"
+    },
+    "woody woodpecker and friends - volume three (1994)(mca universal home video)(us).chd": {
+      "file": "Woody Woodpecker and Friends - Volume Three (1994)(MCA Universal Home Video)(US).chd",
+      "title": "Woody Woodpecker and Friends - Volume Three",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\woody-woodpecker-and-friends-volume-three\\captures\\f012000.png",
+      "discHash": "59e949e58355f8446b0b9d2aeaebc607",
+      "bios": "Panasonic FZ-10"
+    },
+    "woody woodpecker and friends - volume two (1994)(mca universal home video)(us)[!].chd": {
+      "file": "Woody Woodpecker and Friends - Volume Two (1994)(MCA Universal Home Video)(US)[!].chd",
+      "title": "Woody Woodpecker and Friends - Volume Two",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\woody-woodpecker-and-friends-volume-two\\captures\\f012000.png",
+      "discHash": "7c290450acb269fdd9135c3020f9ad9b",
+      "bios": "Panasonic FZ-10"
+    },
+    "world cup golf - hyatt dorado beach (1994)(u.s. gold)(eu)[!].chd": {
+      "file": "World Cup Golf - Hyatt Dorado Beach (1994)(U.S. Gold)(EU)[!].chd",
+      "title": "World Cup Golf - Hyatt Dorado Beach",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\world-cup-golf-hyatt-dorado-beach\\captures\\f012000.png",
+      "discHash": "2f258d361dcd3631e6d32ff0a92edff3",
+      "bios": "Panasonic FZ-10"
+    },
+    "worldcup super stadium (1995)(gaga)(jp).chd": {
+      "file": "Worldcup Super Stadium (1995)(GAGA)(JP).chd",
+      "title": "Worldcup Super Stadium",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\worldcup-super-stadium\\captures\\f012000.png",
+      "discHash": "56927592fcf540759cfa4ffc4f3d60e5",
+      "bios": "Panasonic FZ-10J"
+    },
+    "yakyuuken special, the (1994)(societa daikanyama)(jp)[!].chd": {
+      "file": "Yakyuuken Special, The (1994)(Societa Daikanyama)(JP)[!].chd",
+      "title": "Yakyuuken Special, The",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\yakyuuken-special\\captures\\f012000.png",
+      "discHash": "e4fbb91ec3414a78d278fb21d837ead2",
+      "bios": "Panasonic FZ-10J"
+    },
+    "yamada kamachi bijutsukan - kamachi's museum (1995)(tv asahi)(jp)[!].chd": {
+      "file": "Yamada Kamachi Bijutsukan - Kamachi's Museum (1995)(TV Asahi)(JP)[!].chd",
+      "title": "Yamada Kamachi Bijutsukan - Kamachi's Museum",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\yamada-kamachi-bijutsukan-kamachi-s-museum\\captures\\f012000.png",
+      "discHash": "322b9ef376dfb3ed9d49607a768b6065",
+      "bios": "Panasonic FZ-10J"
+    },
+    "yamamura misa suspense - kyoto kurama sansou satsujin jiken (1994)(pack-in-video - panasonic)(jp)(disc 1 of 2)[!].chd": {
+      "file": "Yamamura Misa Suspense - Kyoto Kurama Sansou Satsujin Jiken (1994)(Pack-In-Video - Panasonic)(JP)(Disc 1 of 2)[!].chd",
+      "title": "Yamamura Misa Suspense - Kyoto Kurama Sansou Satsujin Jiken",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\yamamura-misa-suspense-kyoto-kurama-sansou-satsujin-jiken\\captures\\f012000.png",
+      "discHash": "0e787ffe915d7f42be5b214d988b632c",
+      "bios": "Panasonic FZ-10J"
+    },
+    "yuu yuu hakusho (1994)(tomy)(jp)[!].chd": {
+      "file": "Yuu Yuu Hakusho (1994)(Tomy)(JP)[!].chd",
+      "title": "Yuu Yuu Hakusho",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\yuu-yuu-hakusho\\captures\\f012000.png",
+      "discHash": "9a8187d128743bad453fad2508068166",
+      "bios": "Panasonic FZ-10J"
+    },
+    "zhadnost - the peoples party (1995)(studio 3do)(eu)[!].chd": {
+      "file": "Zhadnost - The Peoples Party (1995)(Studio 3DO)(EU)[!].chd",
+      "title": "Zhadnost - The Peoples Party",
+      "status": "Playable",
+      "date": "2026-11-08",
+      "screenshot": "artifacts\\beyond-title\\zhadnost-people-s-party\\captures\\f012000.png",
+      "discHash": "d7801a0f20ac545249efbecde31b90cf",
+      "bios": "Panasonic FZ-10E (Anvil)"
+    }
+  }
+}
