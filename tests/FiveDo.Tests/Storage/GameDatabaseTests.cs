@@ -249,6 +249,33 @@ public sealed class InputProfileTests
     }
 
     [Fact]
+    public void Normalize_FillsMissingPlayersAndNullBindings()
+    {
+        var profile = new InputProfile
+        {
+            Players =
+            [
+                new PlayerProfile
+                {
+                    Name = null!,
+                    Keyboard = null!,
+                    Gamepad = null!,
+                },
+            ],
+            Hotkeys = null!,
+        };
+
+        profile.Normalize();
+
+        Assert.Equal(PbusEncoder.MaxPorts, profile.Players.Length);
+        Assert.Equal("Player 1", profile.Players[0].Name);
+        Assert.NotNull(profile.Players[0].Keyboard);
+        Assert.NotNull(profile.Players[0].Gamepad);
+        Assert.Equal("Player 2", profile.Players[1].Name);
+        Assert.NotEmpty(profile.Hotkeys);
+    }
+
+    [Fact]
     public void Load_CreatesDefaultsWhenMissing()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-profile-{Guid.NewGuid():N}", "input.json");

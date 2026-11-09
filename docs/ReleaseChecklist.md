@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.5.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.6.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
@@ -11,6 +11,8 @@ database work, memory capacity options, and eight PBUS ports; v1.3.0 adds
 480i/240p detection, deinterlacing, and field blending; v1.4.0 adds online cover art,
 latency controls, unsigned-disc support, and the exact NTSC field clock; v1.5.0 adds
 GPU HQx, the 24-bit VDL background, reference field-boundary timing, and CD parity.
+v1.6.0 completes the 378-title compatibility matrix, tightens CD poll/speed/session
+behavior, and hardens settings/NVRAM persistence.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -151,6 +153,40 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.6.0 compatibility-completion gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.6.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.6.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
+- [x] Update the MkDocs navigation and the curated wiki sidebar with the 1.6.0 pages.
+- [x] Full suite **2,061/2,061** passes in Debug;
+      `dotnet format --verify-no-changes` is clean;
+      `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Verify the CD poll reset, guest drive speed, SESSION INFO, TOC Q-position,
+      volume-header readable-disc limit, FIQ source tracing, and CD-ROM state v5 are
+      documented and covered by tests.
+- [x] Verify the 378-title ledger and comparison outputs:
+      `tools/verify-beyond-title-ledger.py` passes with 375 Playable, 0 Behind/Regression,
+      and a strict peer superset; `tools/generate-compat-comparison.py --check` reports
+      the committed outputs are current.
+- [x] Verify settings/NVRAM persistence fallback, newer-schema backup, and input
+      normalization with unit tests and the locked-settings desktop reproduction.
+- [x] Build all six framework-dependent single-file bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
+      Local bundles: `5do-1.6.0-{win-x64,win-arm64}.zip` and
+      `5do-1.6.0-{linux-x64,linux-arm64,osx-x64,osx-arm64}.tar.gz`.
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.6.0 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      (`FRONTEND SMOKE OK 1.6.0`); CI verifies the arm64/macOS apphost machine types.
+- [ ] Create and push tag `v1.6.0`; the release workflow publishes six versioned
+      bundles and `SHA256SUMS.txt`.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.6.0 release page, What's New, release notes, and wiki page.
+
+---
+
 ## Cover-art hosting gate
 
 - [ ] Run `packaging/package-covers.ps1`; review `artifacts/covers/v1/report.json`.
@@ -248,13 +284,13 @@ been validated.**
 | Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
 | Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64/arm64 built and architecture-validated | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
 | Desktop arm64 | **Built and architecture-validated**; runtime validation post-1.0 | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
-| Compatibility set | 12 boot-validated titles, with 5 showcase titles | Per-title status must be honest |
+| Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.5.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-08** | v1.5.0 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.6.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-08** | v1.6.0 bundles and checksums are attached to the GitHub release |
 
 ---
 

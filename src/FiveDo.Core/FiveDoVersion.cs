@@ -12,5 +12,5 @@ public static class FiveDoVersion
     public const string NamespacePrefix = "FiveDo";
 
     /// <summary>The current release version.</summary>
-    public const string Version = "1.5.0";
+    public const string Version = "1.6.0";
 }

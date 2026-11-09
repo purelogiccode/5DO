@@ -484,7 +484,12 @@ public partial class SettingsWindow : Window
         try
         {
             AppSettings target = _settings.CreateEffectiveForGame(_gameId);
-            AppSettingsStore.Save(target, AppSettingsStore.GetProfilePath(name));
+            if (!AppSettingsStore.Save(target, AppSettingsStore.GetProfilePath(name)))
+            {
+                ProfileStatusText.Text = "Could not create the profile: the settings file could not be written.";
+                return;
+            }
+
             NewProfileBox.Text = string.Empty;
             PopulateConfigProfiles(PortablePaths.NormalizeProfileName(name));
             ProfileStatusText.Text = $"Created profile {PortablePaths.NormalizeProfileName(name)}.";
@@ -541,7 +546,12 @@ public partial class SettingsWindow : Window
         try
         {
             AppSettings imported = AppSettingsStore.Load(path);
-            AppSettingsStore.Save(imported, AppSettingsStore.GetProfilePath(name));
+            if (!AppSettingsStore.Save(imported, AppSettingsStore.GetProfilePath(name)))
+            {
+                ProfileStatusText.Text = "Import failed: the profile settings file could not be written.";
+                return;
+            }
+
             PopulateConfigProfiles(name);
             ProfileStatusText.Text = $"Imported {Path.GetFileName(path)} into {name}.";
         }
@@ -577,7 +587,12 @@ public partial class SettingsWindow : Window
 
         try
         {
-            AppSettingsStore.Save(_settings, path);
+            if (!AppSettingsStore.Save(_settings, path))
+            {
+                ProfileStatusText.Text = "Export failed: the settings file could not be written.";
+                return;
+            }
+
             ProfileStatusText.Text = $"Exported settings to {Path.GetFileName(path)}.";
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)

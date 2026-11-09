@@ -503,24 +503,40 @@ public partial class MainWindow : Window, IDisposable
 
     private void LoadConfiguredPaths()
     {
-        TryLoadConfiguredBios();
-
-        var startupDisc = Program.StartupDiscPath;
-        var discPath = startupDisc ?? _settings.DiscPath;
-        if (File.Exists(discPath))
+        try
         {
-            if (!_biosLoaded)
-            {
-                // A disc cannot boot without a BIOS. Keep the message actionable and do
-                // not treat this expected first-run state as a bug report.
-                StatusText.Text = "Open a 3DO BIOS before loading a disc.";
-                _logger.ForCategory(LogCategory.Storage).Information(
-                    "Skipped opening disc '{Disc}' because no BIOS is loaded.",
-                    discPath);
-                return;
-            }
+            TryLoadConfiguredBios();
 
-            OpenDiscPath(discPath, autoStart: startupDisc is not null);
+            var startupDisc = Program.StartupDiscPath;
+            var discPath = startupDisc ?? _settings.DiscPath;
+            if (File.Exists(discPath))
+            {
+                if (!_biosLoaded)
+                {
+                    // A disc cannot boot without a BIOS. Keep the message actionable and do
+                    // not treat this expected first-run state as a bug report.
+                    StatusText.Text = "Open a 3DO BIOS before loading a disc.";
+                    _logger.ForCategory(LogCategory.Storage).Information(
+                        "Skipped opening disc '{Disc}' because no BIOS is loaded.",
+                        discPath);
+                    return;
+                }
+
+                OpenDiscPath(discPath, autoStart: startupDisc is not null);
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or DiscImageException
+            or ArgumentException)
+        {
+            // A configured path, BIOS, disc, or settings file can be unreadable or locked.
+            // That is an environmental problem; keep the shell running and explain it.
+            StatusText.Text = $"Startup media error: {exception.Message}";
+            _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
+                exception,
+                "Configured paths could not be loaded.");
         }
     }
 
@@ -553,7 +569,10 @@ public partial class MainWindow : Window, IDisposable
                 OpenBiosPath(resolved.PrimaryPath!, resolved.SecondaryPath, persist: false, resolved.Reason);
             }
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException)
         {
             _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
                 exception,
@@ -624,19 +643,29 @@ public partial class MainWindow : Window, IDisposable
             }
 
             _settings.SetBiosOverride(_gameId, bios.Md5);
-            AppSettingsStore.Save(_settings);
+            var settingsSaved = AppSettingsStore.Save(_settings);
             StatusText.Text =
                 $"BIOS {bios.Md5[..8]} assigned to {_gameName}; restart the game to apply it.";
+            if (!settingsSaved)
+            {
+                StatusText.Text += " Settings could not be saved; check the data folder permissions.";
+            }
+
             _logger.ForCategory(LogCategory.Storage).Information(
                 "BIOS {Md5} assigned to game {GameId} ({Game}).",
                 bios.Md5,
                 _gameId,
                 _gameName);
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException)
         {
             StatusText.Text = $"BIOS assignment error: {exception.Message}";
-            _logger.ForCategory(LogCategory.Storage).Error(exception, "BIOS assignment failed.");
+            _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Error(
+                exception,
+                "BIOS assignment failed.");
             ShowError("BIOS assignment error", exception.Message);
         }
     }
@@ -650,8 +679,13 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _settings.SetBiosOverride(_gameId, null);
-        AppSettingsStore.Save(_settings);
+        var settingsSaved = AppSettingsStore.Save(_settings);
         StatusText.Text = $"Automatic BIOS selection restored for {_gameName}; restart the game to apply it.";
+        if (!settingsSaved)
+        {
+            StatusText.Text += " Settings could not be saved; check the data folder permissions.";
+        }
+
         _logger.ForCategory(LogCategory.Storage).Information(
             "BIOS override cleared for game {GameId} ({Game}).",
             _gameId,
@@ -931,11 +965,12 @@ public partial class MainWindow : Window, IDisposable
             _biosMd5 = bios.Md5;
             _bios2Md5 = bios.Md5Bios2;
             _biosSelectionReason = reason ?? string.Empty;
+            var settingsSaved = true;
             if (persist)
             {
                 _settings.BiosPath = path;
                 _settings.Bios2Path = string.IsNullOrWhiteSpace(bios2Path) ? string.Empty : bios2Path;
-                AppSettingsStore.Save(_settings);
+                settingsSaved = AppSettingsStore.Save(_settings);
             }
 
             var secondary = string.IsNullOrWhiteSpace(bios2Path)
@@ -944,6 +979,10 @@ public partial class MainWindow : Window, IDisposable
             var rsaPatch = bios.RsaPatched ? " + unsigned-disc RSA patch" : string.Empty;
             StatusText.Text =
                 $"BIOS {bios.Md5[..8]}{secondary} loaded{(bios.IsAnvil ? " (Anvil)" : string.Empty)}{rsaPatch}.";
+            if (!settingsSaved)
+            {
+                StatusText.Text += " Settings could not be saved; check the data folder permissions.";
+            }
             _logger.ForCategory(LogCategory.Storage).Information(
                 "BIOS loaded: {Path} ({Md5}, {Kind}){Rsa}{Reason}.",
                 path,
@@ -952,7 +991,10 @@ public partial class MainWindow : Window, IDisposable
                 bios.RsaPatched ? " [unsigned-disc RSA patch]" : string.Empty,
                 string.IsNullOrWhiteSpace(reason) ? string.Empty : $" [{reason}]");
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or ArgumentException)
         {
             StatusText.Text = $"BIOS error: {exception.Message}";
             _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Warning(
@@ -1420,7 +1462,7 @@ public partial class MainWindow : Window, IDisposable
                 _settings.RecentDiscs.RemoveAt(_settings.RecentDiscs.Count - 1);
             }
 
-            AppSettingsStore.Save(_settings);
+            var settingsSaved = AppSettingsStore.Save(_settings);
             UpdateRecentMenu();
             UpdateEmulationHeader();
             var biosText = string.IsNullOrWhiteSpace(_biosMd5)
@@ -1430,6 +1472,11 @@ public partial class MainWindow : Window, IDisposable
             if (_playlist is not null)
             {
                 StatusText.Text += $" ({_playlist.FormatPosition()})";
+            }
+
+            if (!settingsSaved)
+            {
+                StatusText.Text += " Settings could not be saved; check the data folder permissions.";
             }
             _logger.ForCategory(LogCategory.Storage).Information(
                 "Disc opened: {Game} ({GameId}), {Sectors} sectors, fixes 0x{FixMode:x8}, {Bios}.",
@@ -1446,10 +1493,16 @@ public partial class MainWindow : Window, IDisposable
 
             return true;
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidDataException
+            or DiscImageException
+            or ArgumentException)
         {
             StatusText.Text = $"Disc error: {exception.Message}";
-            _logger.ForCategory(LogCategory.Storage).Error(exception, "Disc open failed.");
+            _logger.ForCategory(LogCategory.Storage).WithoutBugReport().Error(
+                exception,
+                "Disc open failed.");
             ShowError("Disc error", exception.Message);
             return false;
         }
@@ -4100,7 +4153,11 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        AppSettingsStore.Save(_settings);
+        if (!AppSettingsStore.Save(_settings))
+        {
+            StatusText.Text = "Settings could not be saved; check the data folder permissions.";
+        }
+
         var coverSettingsChanged =
             !string.Equals(previousCoverDirectory, _settings.CoverDirectory, StringComparison.OrdinalIgnoreCase)
             || previousUseOnlineCovers != _settings.UseOnlineCovers

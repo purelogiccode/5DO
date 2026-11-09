@@ -56,7 +56,7 @@ The plan is complete only when every item is true:
       [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md).
 - [x] **Regression gate green.** The full-corpus beyond-title suite runs nightly or
       weekly against a committed baseline.
-- [ ] **Release gate green.** Build, tests, format, InspectCode, docs check, bundles, and
+- [x] **Release gate green.** Build, tests, format, InspectCode, docs check, bundles, and
       checksums pass.
 
 ### 1.3 Current baseline (2026-11-08)
@@ -235,15 +235,18 @@ satisfied and the evidence is committed.
   docs JSON/comparison `--check`.
   **Done when:** 0 warnings, 0 errors, 0 format changes, 0 InspectCode results, and the
   comparison outputs are current.
+  **2026-11-08 (1.6.0):** Debug build 0 warnings/errors, **2,061/2,061 tests**, format
+  clean, InspectCode 0 results, `verify-beyond-title-ledger.py` and
+  `generate-compat-comparison.py --check` pass.
 
 - [ ] **REL-02 — Platform validation (ECO-04)**
   Validate Windows x64/arm64 bundle smoke and Linux x64 on the local VM. Record macOS
   build validation and GPU presentation as best-effort.
   **Done when:** the release gate is green on Windows and Linux; macOS is documented.
-  **2026-11-08:** Windows x64 1.5.0 bundle smoke passed (CLI help + frontend
-  `--smoke-test`). The Linux VM rerun was blocked because the host could not allocate
-  the VM's 8 GB; no runtime code changed, so the 2026-11-02 Linux x64 gate remains the
-  current evidence. macOS remains best-effort.
+  **2026-11-08 (1.6.0):** Windows x64 bundle smoke passed (CLI 1.6.0 `selftest` + frontend
+  `--smoke-test`). Local PE/ELF/Mach-O inspection confirms all six bundle apphost
+  architectures. The release workflow repeats the Linux x64 smoke under xvfb; the local
+  Linux VM rerun remains blocked by host memory. macOS remains best-effort.
 
 - [ ] **REL-03 — Bundles, checksums, and release notes**
   Publish the six platform/architecture bundles with `README.md`, `LICENSE`,
@@ -253,6 +256,10 @@ satisfied and the evidence is committed.
   **Done when:** all six bundles and checksums are published and verified, and
   `CompatibilityComparison.md`, `Status.md`, `KnownIssues.md`, `README.md`, and the
   release notes reflect the final result.
+  **2026-11-08 (1.6.0):** six local bundles built in
+  `src/FiveDo.Frontend.Avalonia/bin/Release`; all `SHA256SUMS-1.6.0.txt` entries verify;
+  no runtime/PDB/XML files; release notes and WhatsNew are 1.6.0. Waiting for the tag
+  workflow to publish the same bundles.
 
 ---
 

@@ -18,7 +18,7 @@ public sealed class KeyboardInputMapper
     private readonly Lock _gate = new();
 
     /// <summary>Initializes a new instance of the <see cref="KeyboardInputMapper"/> class.</summary>
-    /// <param name="profiles">Player profiles, up to six.</param>
+    /// <param name="profiles">Player profiles, up to eight.</param>
     public KeyboardInputMapper(ReadOnlySpan<PlayerProfile> profiles)
     {
         _states = new ControllerState[PbusEncoder.MaxPorts];
@@ -123,7 +123,7 @@ public sealed class NullGamepadBackend : IGamepadBackend
 }
 
 /// <summary>
-/// A PBUS source that combines keyboard and gamepad state for up to six players.
+/// A PBUS source that combines keyboard and gamepad state for up to eight players.
 /// </summary>
 public sealed class InputManager : IPbusSource
 {

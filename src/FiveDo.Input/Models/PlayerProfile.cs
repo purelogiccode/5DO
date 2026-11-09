@@ -63,6 +63,18 @@ public sealed class PlayerProfile
         return profile;
     }
 
+    /// <summary>Repairs null members that older or hand-edited JSON can introduce.</summary>
+    public void Normalize()
+    {
+        // JSON can deserialize null despite the non-nullable annotations.
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        Name ??= string.Empty;
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        Keyboard ??= new Dictionary<string, ControllerButton>(StringComparer.Ordinal);
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        Gamepad ??= new Dictionary<string, ControllerButton>(StringComparer.Ordinal);
+    }
+
     /// <summary>Creates a deep copy of this profile.</summary>
     /// <returns>A copy that can be edited without changing the original.</returns>
     public PlayerProfile Clone()

@@ -1,118 +1,124 @@
-# What's new in 5DO 1.5.0
+# What's new in 5DO 1.6.0
 
 **Released:** 2026-11-08
 
-5DO 1.5.0 is an accuracy and presentation update on the 1.4.0 feature release. It moves
-the HQx 2x/3x/4x filters to GPU rule-table passes, fixes the last panel-wide video
-divergence, tightens CD interrupt and transfer behavior against the Opera reference, and
-makes the differential harness report instruction phase and CD cadence directly.
+5DO 1.6.0 is the **compatibility-completion update**. It closes the unique-title
+compatibility plan with **375 of 378** game-test-set titles playable under the documented
+binary beyond-title rule, publishes the authoritative 5DO/4DO/Phoenix comparison, tightens
+the remaining CD-ROM poll/speed/session behavior against Opera, and hardens settings and
+NVRAM persistence against locked or cloud-synced data folders.
 
 ## Highlights
 
-### GPU HQx 2x/3x/4x
+### Compatibility completion
 
-- HQx now runs as a shared rule-table GPU pass in **OpenGL/GLES**, **Direct3D 11**, and
-  **Vulkan**. The compact table is generated from the 4DO hq2x/hq3x/hq4x sources and
-  checked in.
-- The CPU `HqxFilter` remains the reference oracle. Rule-table tests, CPU-parity tests,
-  synthetic GPU probes, and the WGL/ANGLE probe cover all three scales.
-- On the RTX 4070, 4K HQx presentation measures **0.14-0.34 ms** per frame and the GPU
-  pass **0.09-0.17 ms**, down from **6.82/10.93 ms** CPU-bound.
+- The local collection now covers **1,371 images, 414 unique titles, and a 378-title
+  game/homebrew test set**.
+- **375 of 378** test-set titles are Playable: every title has a dated beyond-title
+  capture, BIOS, disc hash, frame, and screenshot.
+- The comparison has **0 `Behind` and 0 `Regression` rows** and is a strict superset of
+  the **252-title peer union** (167 4DO + 233 Phoenix after the one evidenced peer
+  invalidation).
+- The two remaining Title-only rows and one No-video row are non-retail/add-on images:
+  `Joypad Test v1.0`, the standalone *Return Fire - Maps O' Death* data disc, and the
+  `LameNES Emulator`.
+- [`CompatibilityComparison.md`](CompatibilityComparison.md) is the authoritative
+  per-title 5DO/4DO/Phoenix matrix; [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md)
+  holds the captures and failure reasons, and `docs/data/beyond-title-results.csv` is the
+  machine-readable ledger.
 
-### Video-clean differential panel
+### CD-ROM parity
 
-- The 3DO background register is **24-bit RGB**. 5DO previously narrowed it to five bits
-  and expanded it again, turning the reference's near-black `(1,1,1)` into `(0,0,0)`.
-  The CPU assembler and all GPU palette shaders now keep all eight bits per channel.
-- A zero VDL display-list word is a **stop** that retains the previous bitmap and control
-  word, matching `opera_vdlp.c`. 5DO previously treated it as an entry and blanked the
-  last visible scanline.
-- The 50-title panel now matches **50/50 frame hashes** at frames 60/120/300 (up from
-  32/50) with **0 errors**.
+- **Poll reset is one-shot.** `POLREMASK` performs a local FIFO reset and does not persist
+  in the poll register. Only the three interrupt enables remain set, and `POLRE` is
+  write-one-to-clear. Commands, status, and data are no longer gated by a stale reset bit.
+- **Guest drive speed.** MODE SELECT page 3 stores Opera's
+  `MEI_CDROM_DOUBLE_SPEED` byte (`0x80`) and updates the XBUS 2x status bit. A configured
+  multi-speed drive drops to 1x when the guest selects single speed; `Unbounded` remains a
+  host override.
+- **Readable-disc limit.** The drive reports the 3DO volume header's big-endian
+  `volume_block_count` (sector 0, offset `0x50`) instead of the physical image size. This
+  matches Opera's readable-disc limit on pressed discs whose padding differs from the
+  declared volume.
+- **TOC and SESSION INFO.** TOC entries carry the Q-position control bit, and SESSION INFO
+  returns the single-session payload used by the reference.
+- **Save-state section 5.** The CD-ROM state records the guest speed byte and resolved
+  sector count; version 3/4 states recover the speed byte from the XBUS status, and older
+  states still load.
 
-### Reference field boundary and checkpoint sampling
+### Persistence hardening
 
-- `RunFrame` now ends on the **263/312-line VDL field boundary** instead of a rounded
-  ARM-cycle budget, removing the accumulated per-field instruction-phase drift.
-- The differential harness captures Opera's ARM/CD state in the checkpoint's **own video
-  callback** and fills the audio hash after that field's audio callback. The same-frame
-  retired-instruction delta is **11-20** at frame 60 and **23-2,223** at frame 120.
+- Settings and NVRAM writes prefer an atomic temporary-file replace. When a cloud-sync
+  placeholder, read-only file, or another process denies the replace, 5DO copies the
+  completed temporary file over the destination instead of aborting the UI.
+- If the destination still cannot be written, the shell logs the failure and keeps running;
+  startup media loading is guarded so a configured disc, BIOS, or settings path can no
+  longer crash `OnOpened`.
+- A `settings.json` written by a newer build is preserved as
+  `settings.json.v<version>.bak` before an older build loads it.
+- Null or short `Players` arrays are normalized to eight non-null profiles with safe
+  keyboard/gamepad dictionaries.
 
-### CD interrupt and transfer parity
+### Diagnostics and desktop polish
 
-- The Opera CD poll reset keeps the three interrupt enables and the POLRE media latch,
-  and the XBUS CD FIQ is **level-held** each clock batch so READ_ID/READ_ERROR
-  completions are visible to the guest.
-- READ_DATA rejects invalid MSF and past-end transfers, aborts stale read-ahead, publishes
-  status with the first queued sector, and accumulates sector deadlines from the previous
-  deadline like `cdrom_data_schedule_next`.
-- The command-50 boot handoff fell from **+207,707 cycles / +86,511 instructions** to
-  **-818 / -376**.
-
-### Tooling and diagnostics
-
-- The differential harness reports instruction-phase (`pcPhaseFrame`,
-  `pcPhaseInstructionDelta`) and CD cadence (`cdCadence`) evidence in JSON, Markdown, and
-  HTML.
-- New CLI traces: `--cd-register-trace` and `--clio-read-trace`; new harness
-  `--timer-trace`.
-- ISO staging is atomic and retries once after a transient CHD decompression failure. A
-  per-title capture failure is reported as an error instead of aborting a panel.
-
-### Desktop launch alias
-
-- The desktop shell accepts `-fullscreen` in addition to `-f` and `--fullscreen`. The
-  smoke-test marker records `windowState=FullScreen` when the launch mode was applied.
-
-## Changed
-
-- VDLP save-state section is version 4 and Machine section is version 3. Both store the
-  24-bit background and convert packed 5-bit backgrounds from older states.
-- `--cd-commands` writes `opcode cycle pc instructions`; the differential harness
-  understands the extended form.
-- The 1.4.0 online cover art, latency controls, unsigned-disc support, exact NTSC clock,
-  and six-bundle packaging model are unchanged.
+- `--fiq-trace` and the timer trace now record the XBUS FIQ source, enable/acknowledge
+  writes, and level-held raise transitions (`xbusfiq`, `fiqgen`, `fiqwrite`, `xbussel`,
+  `xbuspoll`).
+- The differential harness can gate audio, replay scripted input, and compare a fresh run
+  against `benchmarks/diff/baseline/showcase-report.json`; a capture error fails the job.
+- Every interactive control in the Avalonia windows now has a tooltip, enforced by
+  `FrontendToolTipTests`. Fallback and cleanup paths log their expected exceptions instead
+  of swallowing them.
 
 ## Validation
 
-- Full suite **1,939/1,939** passes in Debug.
-- `dotnet build` reports **0 warnings and 0 errors**; `dotnet format --verify-no-changes`
-  and `jb inspectcode --severity=WARNING` are clean.
-- Opt-in Direct3D 11 and Vulkan HQx parity tests pass for 2x/3x/4x, and the opt-in
-  WGL/ANGLE GL probe passes the HQx rule-texture path.
-- The 5-title panel matches **5/5** frame hashes at 300 frames; the 3,000-frame showcase
-  keeps **4/5** (Road Rash remains divergent).
-- Windows x64 remains the validated target. Linux x64 full-suite and CLI/frontend smoke
-  validation pass; GPU presentation under llvmpipe/SSH remains preview/best-effort.
-  macOS and arm64 bundles are cross-published and architecture-validated.
+- Full suite **2,061/2,061** passes in Debug.
+- `dotnet build` reports **0 warnings and 0 errors**; `dotnet format
+  --verify-no-changes` and `jb inspectcode --severity=WARNING` are clean.
+- `tools/verify-beyond-title-ledger.py`: 378 ledger rows, **375 Playable**, 2 Title-only,
+  1 No-video, 0 Not-loadable, **0 Behind/Regression**, strict peer superset.
+- `tools/generate-compat-comparison.py --check` reports the committed comparison outputs
+  are current.
+- Road Rash boots for 600 frames in both the compatible and accuracy profiles after the
+  CD/volume-header changes; the 50-title differential panel remains **50/50 frame
+  hashes** at frames 60/120/300 with **0 errors**.
+- The six framework-dependent bundles contain the CLI, desktop app, README, license,
+  notices, `whatsnew.md`, and release/legal docs, with no runtime, PDB, or XML files;
+  `SHA256SUMS.txt` verifies.
+
+## Requirements
+
+- The **.NET 10 Runtime** installed on the host. The bundles are framework-dependent and
+  do **not** include the runtime. Choose the x64 or arm64 bundle that matches your OS.
+- A legally obtained 1 MB 3DO BIOS ROM (for example `panafz1.bin`).
+- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
+- Optional: network access for the online cover catalog. Local covers and the core
+  emulator work offline.
 
 ## Download
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.5.0-win-x64.zip` |
-| Windows arm64 | `5do-1.5.0-win-arm64.zip` |
-| Linux x64 | `5do-1.5.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.5.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.5.0-osx-x64.tar.gz` |
-| macOS arm64 | `5do-1.5.0-osx-arm64.tar.gz` |
+| Windows x64 | `5do-1.6.0-win-x64.zip` |
+| Windows arm64 | `5do-1.6.0-win-arm64.zip` |
+| Linux x64 | `5do-1.6.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.6.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.6.0-osx-x64.tar.gz` |
+| macOS arm64 | `5do-1.6.0-osx-arm64.tar.gz` |
 
-Each bundle contains both the desktop app and the CLI. The **.NET 10 Runtime** must be
-installed on the host; the bundles are framework-dependent and do **not** contain the
-runtime. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0) for
+Each bundle contains the framework-dependent single-file CLI and desktop app, `README.md`,
+`LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. See the
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) for
 `SHA256SUMS.txt`.
 
 ## Known limits
 
-- CD command cadence is the remaining behavioral differential on the 50-title panel; the
+- Playability follows the documented binary beyond-title rule (a distinct screen beyond
+  the title with input), not a full playthrough or a claim for every regional revision.
+- CD command cadence remains the residual differential on the 50-title panel; the
   3,000-frame showcase still diverges on Road Rash.
-- HQx GPU parity is pixel-identical on the tested synthetic probes; unusual drivers may
-  still report shader or texture-format limitations and fall back to the unfiltered scale
-  path.
+- Windows x64 remains the validated target. Linux x64 full-suite and CLI/frontend smoke
+  validation pass; GPU presentation under llvmpipe/SSH is preview/best-effort. macOS and
+  arm64 bundles are cross-published and architecture-validated.
 - VRR depends on the GPU, driver, monitor, and desktop; 5DO only avoids the blocking swap
   interval.
-- The differential panel's frame-hash matches are strong evidence, not a full
-  compatibility claim for every title.
-- See [Release notes 1.4.0](ReleaseNotes-1.4.0.md) for the cover-art, latency,
-  unsigned-disc, and exact-clock features introduced in the previous release.

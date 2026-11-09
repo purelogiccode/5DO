@@ -586,6 +586,15 @@ compatibility pass, so the 2026-11-02 Linux x64 gate above remains the current L
 evidence. Re-run the Linux gate on a host with enough free memory before a new release.
 macOS remains build-validated and best-effort.
 
+**2026-11-08 1.6.0 release note:** the six framework-dependent 1.6.0 bundles were built
+locally and verified. The Windows x64 bundle passed `FiveDo.Cli.exe --version` (1.6.0),
+`selftest --json` (all checks `ok: true`), and `FiveDo.Frontend.Avalonia.exe
+--smoke-test` (`FRONTEND SMOKE OK 1.6.0`, OpenGL 4.0 + OpenAL ready). The bundle tree has
+no runtime folder, PDB, or XML files, and all six `SHA256SUMS.txt` entries verify. Local
+PE/ELF/Mach-O inspection confirms `win-x64`/`win-arm64`, `linux-x64`/`linux-arm64`, and
+`osx-x64`/`osx-arm64` apphosts. The release workflow repeats the Linux x64 smoke under
+xvfb and validates every bundle tree and apphost architecture.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

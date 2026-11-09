@@ -10,7 +10,7 @@ using FiveDo.Input;
 namespace FiveDo.Frontend.Avalonia.Views;
 
 /// <summary>
-/// Captures keyboard bindings for the six player profiles and returns the edited profile.
+/// Captures keyboard bindings for the eight player profiles and returns the edited profile.
 /// </summary>
 public partial class InputBindingsWindow : Window
 {

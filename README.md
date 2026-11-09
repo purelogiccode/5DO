@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.5.0-orange" alt="Version 1.5.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.6.0-orange" alt="Version 1.6.0"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.5.0**, a documented-compatibility release. Windows x64 is the validated
+> 5DO is at **v1.6.0**, a documented-compatibility release. Windows x64 is the validated
 > target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
 > macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
@@ -66,12 +66,13 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.5.0` release (GitHub Releases) |
+| Version | `1.6.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 |
-| Automated tests | **2,033 tests** in the current test assembly |
+| Automated tests | **2,061 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
-| Library | **653 games** across **1,366 images**; 3 audio-only CHDs catalogued |
+| Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
+| Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
 | Desktop presentation | OpenGL/GLES required; Vulkan and Direct3D 11 optional; CPU fallback available |
@@ -89,19 +90,19 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.5.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.5.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.5.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.5.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.5.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-osx-x64.tar.gz) |
-| macOS arm64 | [`5do-1.5.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.5.0/5do-1.5.0-osx-arm64.tar.gz) |
+| Windows x64 | [`5do-1.6.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.6.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.6.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.6.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.6.0-osx-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-osx-x64.tar.gz) |
+| macOS arm64 | [`5do-1.6.0-osx-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.6.0/5do-1.6.0-osx-arm64.tar.gz) |
 
 The apps are single-file executables. **Install the .NET 10 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.5.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.5.0-win-arm64.zip`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-win-arm64.zip`.
 
 ## Features
 
@@ -141,7 +142,7 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.5.0-wi
   verification.
 - Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
   overlay.
-- Six-player keyboard and gamepad mapping; XInput on Windows and evdev on Linux;
+- Eight-player keyboard and gamepad mapping; XInput on Windows and evdev on Linux;
   joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices.
 - Portable mode, named configuration profiles, per-game profiles, and an instance lock.
 - Privacy-scrubbed diagnostics bundles and an in-app log viewer.
@@ -179,7 +180,7 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.5.0-wi
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.5.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.6.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.
@@ -275,7 +276,16 @@ build it locally or publish the wiki.
 
 ## Compatibility snapshot
 
-The first full-collection loadability sweep covered **594 disc images**:
+The compatibility-completion pass covers **1,371 images and 414 unique titles**, with a
+**378-title game/homebrew test set**:
+
+- **375 of 378** titles are Playable under the documented binary beyond-title rule.
+- **0 `Behind` and 0 `Regression` rows**; the playable set is a strict superset of the
+  **252-title 4DO/Phoenix peer union**.
+- The remaining rows are three non-retail/add-on images: two Title-only captures and one
+  No-video homebrew emulator.
+
+The earlier first full-collection loadability sweep covered **594 disc images**:
 
 - **576** loaded and rendered on the first pass.
 - **13** loaded but produced a black/blank first frame.
@@ -286,8 +296,9 @@ After triage, **593 are loadable/rendered** with **one known no-video case**
 titles require `panafz10`-class BIOS behavior; the remaining blank/black titles render
 by 6,000–9,000 frames or with the correct BIOS/region.
 
-The 12 boot-validated titles, per-disc evidence, and honest per-title limitations are
-in the [compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html)
+The per-title evidence, Tier B grades, and honest limitations are in the
+[compatibility documentation](https://purelogiccode.github.io/5DO/Compatibility.html),
+[game compatibility list](https://purelogiccode.github.io/5DO/GameCompatibilityList.html),
 and [results table](https://purelogiccode.github.io/5DO/GameCompatibilityResults.html).
 The unique-title comparison against 4DO and Phoenix is in the
 [5DO vs 4DO vs Phoenix matrix](https://purelogiccode.github.io/5DO/CompatibilityComparison.html).

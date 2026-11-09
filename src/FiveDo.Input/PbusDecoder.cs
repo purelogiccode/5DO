@@ -36,7 +36,7 @@ public static class PbusDecoder
 
     /// <summary>Decodes every controller slot into an existing destination.</summary>
     /// <param name="packet">Packet bytes, normally 16.</param>
-    /// <param name="destination">Destination span of at least six entries.</param>
+    /// <param name="destination">Destination span of at least eight entries.</param>
     /// <exception cref="ArgumentException">Thrown when the destination is too small.</exception>
     public static void Decode(ReadOnlySpan<byte> packet, Span<ControllerState> destination)
     {

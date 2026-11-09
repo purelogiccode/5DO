@@ -6,7 +6,7 @@
 # 5DO — Implementation Plan
 
 **Snapshot:** 2026-11-08 (feasibility revision)
-**Current release:** `1.5.0`
+**Current release:** `1.6.0`
 **Repository:** <https://github.com/purelogiccode/5DO><br>
 **Branch:** `master`<br>
 **Status:** **2,051 tests pass**; build, format, and InspectCode are clean. The local collection now inventories **1,371 disc images**, which collapse to **414 unique titles** and a **378-title game test set**. The new 3-way matrix matches **232 titles to 4DO** and **246 to Phoenix** (194 to both), with **0 loadability regressions**, **5 titles where 5DO is ahead of 4DO**, and **0 untested**; the four no-video results are secondary media/homebrew, not retail game regressions. Tier B batches 1-4 reviewed **107 titles** (81 `Good`, 26 `Playable`); **307 titles** still have automated loadability only. The remaining `Behind` rows are **22 vs 4DO / 25 vs Phoenix**, all explicit and documented. The 50-title accuracy panel keeps **50/50 frame hashes** and **150/150 audio hashes** at frames 60/120/300. The 594-disc legacy sweep remains **593 rendered, 1 known failure** (Crash 'n Burn Japan). Full evidence: `docs/CompatibilityComparison.md`, `docs/DifferentialHarness.md` §8, `docs/GameCompatibilityResults.md`.

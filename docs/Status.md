@@ -1,6 +1,7 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-08, after the TEST-07 audio-gating, scripted-input, and nightly
+**Snapshot:** 2026-11-08, after the 1.6.0 compatibility-completion release; the TEST-07
+audio-gating, scripted-input, and nightly
 baseline update; the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
 CD-parity update; the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
 and differential-harness update; the TEST-07 oracle increment, the VID-12 latency update,
@@ -33,6 +34,23 @@ hash, capture frame, screenshot, and failure reason live in
 `docs/data/beyond-title-results.csv`. The unique-title 5DO/4DO/Phoenix comparison is in
 [`CompatibilityComparison.md`](CompatibilityComparison.md); the 594-disc legacy sweep
 above remains the per-image baseline.
+
+**1.6.0 release update (2026-11-08):** **v1.6.0** completes the compatibility plan on the
+current corpus: **1,371 images / 414 unique titles / 378 game-test-set titles**, with
+**375 Playable**, **0 `Behind`/`Regression`**, and a strict superset of the 252-title peer
+union. The release publishes the authoritative 5DO/4DO/Phoenix matrix and the
+beyond-title ledger, tightens CD poll reset, guest drive speed, SESSION INFO, TOC
+Q-position, and volume-header readable-disc behavior, and moves the CD-ROM save-state
+section to version 5. Settings and NVRAM persistence now fall back to a direct copy when
+an atomic replace is denied, preserve newer-schema settings as
+`settings.json.v<version>.bak`, and survive null/short `Players` arrays; the desktop adds
+tooltip coverage and logs expected fallback paths. The suite is **2,061 tests**; build,
+format, and InspectCode are clean; `verify-beyond-title-ledger.py` and
+`generate-compat-comparison.py --check` pass; Road Rash boots for 600 frames in both the
+compatible and accuracy profiles. The six framework-dependent bundles and
+`SHA256SUMS.txt` are published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>. See
+[`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.6.0.md`](ReleaseNotes-1.6.0.md).
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept
@@ -632,7 +650,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   favorites, play time, launch history, and an optional offline metadata overlay
   persist in `library-state.json`/`library-metadata.json`; the game list adds star
   toggles, metadata/play-time text, collection filters, and sort orders. The settings
-  dialog edits video, audio, emulation, and paths; keyboard bindings for all six players can be captured with
+  dialog edits video, audio, emulation, and paths; keyboard bindings for all eight players can be captured with
   automatic conflict removal and reset-to-defaults; gamepads are mapped through a
   Gamepad tab (Windows XInput, Linux evdev). Save states use ten numbered slots with
   next/previous, a list/save/load/delete window, JSON metadata, and PNG thumbnails;
@@ -971,7 +989,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.5.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.6.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

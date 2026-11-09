@@ -29,7 +29,8 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Nothing happens / console closes | Launch from a terminal to see the error: `dotnet run --project src/FiveDo.Frontend.Avalonia`. |
 | `You must install .NET` | The published bundle is framework-dependent; install the .NET 10 runtime from <https://dotnet.microsoft.com/download/dotnet/10.0>. |
 | `--gl-backend does not recognize ...` | Use `auto`, `wgl`, `angle`, or `software`. |
-| Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults, but a bad custom path can still fail. |
+| Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults and is backed up. A read-only or cloud-synced data folder no longer crashes the shell; it logs the failure and continues. A bad custom path can still fail. |
+| Settings changes are not saved | The data folder is read-only, held by a sync client, or the file is locked. Check the log for "could not be written", make the folder available offline, clear the read-only attribute, or point `FIVEDO_DATA_DIR` at a local folder. |
 | Crash on close | Known Silk.NET/Avalonia shutdown ordering issue; the shell intentionally does not dispose the GL surface during close. If it persists, capture the stack trace. |
 | Missing `OpenAL32.dll` | Rebuild so `Directory.Build.targets` copies OpenAL Soft, or place the package's `soft_oal.dll` beside the executable as `OpenAL32.dll`. |
 

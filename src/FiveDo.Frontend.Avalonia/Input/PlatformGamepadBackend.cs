@@ -6,7 +6,7 @@ namespace FiveDo.Frontend.Avalonia.Input;
 
 /// <summary>
 /// The platform gamepad backend used by the desktop shell. It owns the native source and
-/// applies the current six-player input profile.
+/// applies the current eight-player input profile.
 /// </summary>
 public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
 {

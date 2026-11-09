@@ -39,6 +39,103 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Load_BacksUpANewerSchemaFileAndUsesTheSupportedDefaults()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string newer = """{"SettingsVersion":99,"BiosPath":"future.bin"}""";
+        File.WriteAllText(path, newer);
+
+        AppSettings settings = AppSettingsStore.Load(path);
+
+        Assert.Equal(AppSettings.CurrentVersion, settings.SettingsVersion);
+        Assert.Equal("future.bin", settings.BiosPath);
+        string backup = path + ".v99.bak";
+        Assert.True(File.Exists(backup));
+        Assert.Equal(newer, File.ReadAllText(backup));
+        Assert.Equal(newer, File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void Load_UsesDefaultsWhenTheFileCannotBeRead()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            // FileShare.None is enforced for managed readers on Windows only.
+            return;
+        }
+
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string json = """{"SettingsVersion":7,"BiosPath":"locked.bin"}""";
+        File.WriteAllText(path, json);
+
+        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            AppSettings settings = AppSettingsStore.Load(path);
+
+            Assert.Equal(AppSettings.CurrentVersion, settings.SettingsVersion);
+            Assert.NotEqual("locked.bin", settings.BiosPath, StringComparer.Ordinal);
+        }
+
+        Assert.Equal(json, File.ReadAllText(path));
+    }
+
+    [Fact]
+    public void Load_BacksUpTheMalformedPlayersFixtureAndUsesDefaults()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string malformed = """
+            {
+              "SettingsVersion": 7,
+              "Input": {
+                "Players": [
+                  "@{Name=Player 1; Keyboard=; Gamepad=}"
+                ]
+              }
+            }
+            """;
+        File.WriteAllText(path, malformed);
+
+        AppSettings settings = AppSettingsStore.Load(path);
+
+        Assert.Equal(AppSettings.CurrentVersion, settings.SettingsVersion);
+        Assert.NotNull(settings.Input);
+        Assert.Equal(PbusEncoder.MaxPorts, settings.Input.Players.Length);
+        Assert.All(settings.Input.Players, player => Assert.NotNull(player));
+        Assert.Single(Directory.GetFiles(temp.Path, "settings.json.invalid-*.bak"));
+    }
+
+    [Fact]
+    public void Load_NormalizesNullAndShortPlayerArrays()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string json = """
+            {
+              "SettingsVersion": 7,
+              "Input": {
+                "Players": [
+                  { "Name": null, "Keyboard": null, "Gamepad": null }
+                ]
+              }
+            }
+            """;
+        File.WriteAllText(path, json);
+
+        AppSettings settings = AppSettingsStore.Load(path);
+
+        Assert.Equal(PbusEncoder.MaxPorts, settings.Input.Players.Length);
+        Assert.Equal("Player 1", settings.Input.Players[0].Name);
+        Assert.NotNull(settings.Input.Players[0].Keyboard);
+        Assert.NotNull(settings.Input.Players[0].Gamepad);
+        Assert.Equal("Player 2", settings.Input.Players[1].Name);
+        Assert.NotNull(settings.Input.Players[1].Keyboard);
+        Assert.NotNull(settings.Input.Players[1].Gamepad);
+    }
+
+    [Fact]
     public void Save_WritesTheCurrentVersionAndRoundtrips()
     {
         using var temp = new TemporaryDirectory();
@@ -77,6 +174,39 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(3, loaded.FrameDelayFrames);
         Assert.True(loaded.Vrr);
         Assert.Equal(-40, loaded.AudioSyncMilliseconds);
+    }
+
+    [Fact]
+    public void Save_ReturnsFalseWhenTheDestinationCannotBeWritten()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        Directory.CreateDirectory(path);
+
+        Assert.False(AppSettingsStore.Save(new AppSettings(), path));
+        Assert.Empty(Directory.GetFiles(temp.Path, "*.tmp"));
+    }
+
+    [Fact]
+    public void Save_CopiesOverADeleteLockedDestination()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            // The file-share semantics that block File.Move while allowing File.Copy
+            // are only enforced on Windows.
+            return;
+        }
+
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        Assert.True(AppSettingsStore.Save(new AppSettings { BiosPath = "old.bin" }, path));
+
+        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            Assert.True(AppSettingsStore.Save(new AppSettings { BiosPath = "new.bin" }, path));
+        }
+
+        Assert.Equal("new.bin", AppSettingsStore.Load(path).BiosPath);
     }
 
     [Fact]
@@ -748,6 +878,21 @@ public sealed class AppSettingsStoreTests
             $"\"SettingsVersion\": {AppSettings.CurrentVersion}",
             File.ReadAllText(path),
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Migrate_BacksUpANewerSchemaFileBeforeRewriting()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string newer = """{"SettingsVersion":99,"BiosPath":"future.bin"}""";
+        File.WriteAllText(path, newer);
+
+        Assert.Equal(99, AppSettingsStore.Migrate(path));
+
+        Assert.True(File.Exists(path + ".v99.bak"));
+        Assert.Equal(newer, File.ReadAllText(path + ".v99.bak"));
+        Assert.Equal(AppSettings.CurrentVersion, AppSettingsStore.Inspect(path).Version);
     }
 
     [Fact]

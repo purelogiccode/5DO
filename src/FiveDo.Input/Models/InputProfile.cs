@@ -5,11 +5,11 @@ namespace FiveDo.Input;
 
 
 /// <summary>
-/// Complete input configuration: up to six player profiles plus console hotkeys.
+/// Complete input configuration: up to eight player profiles plus console hotkeys.
 /// </summary>
 public sealed class InputProfile
 {
-    /// <summary>Gets player profiles. The array always has six entries.</summary>
+    /// <summary>Gets player profiles. The array always has eight entries.</summary>
     public PlayerProfile[] Players { get; set; } = CreateDefaultPlayers();
 
     /// <summary>Gets console hotkeys (action name to key name).</summary>
@@ -32,10 +32,37 @@ public sealed class InputProfile
     };
 
     /// <summary>Creates the default input profile.</summary>
-    /// <returns>A profile with six players and default hotkeys.</returns>
+    /// <returns>A profile with eight players and default hotkeys.</returns>
     public static InputProfile CreateDefault()
     {
         return new InputProfile();
+    }
+
+    /// <summary>Repairs missing players, null profiles, and null binding dictionaries.</summary>
+    /// <remarks>
+    /// JSON and hand-edited profiles can contain a null or short player array. The
+    /// emulator always needs <see cref="PbusEncoder.MaxPorts"/> non-null profiles, so
+    /// missing entries are filled with defaults instead of failing input initialization.
+    /// </remarks>
+    public void Normalize()
+    {
+        PlayerProfile[]? source = Players;
+        var players = new PlayerProfile[PbusEncoder.MaxPorts];
+        for (var i = 0; i < players.Length; i++)
+        {
+            PlayerProfile? profile = source is not null && i < source.Length ? source[i] : null;
+            profile ??= PlayerProfile.CreateDefault(i + 1);
+            profile.Normalize();
+            if (string.IsNullOrEmpty(profile.Name))
+            {
+                profile.Name = $"Player {i + 1}";
+            }
+
+            players[i] = profile;
+        }
+
+        Players = players;
+        AddMissingDefaultHotkeys();
     }
 
     /// <summary>Adds hotkeys introduced after an older profile was saved.</summary>

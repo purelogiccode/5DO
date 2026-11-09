@@ -66,6 +66,56 @@ public sealed class NvramStoreTests
     }
 
     [Fact]
+    public void Save_CopiesOverADeleteLockedImage()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            // The file-share semantics that block File.Move while allowing File.Copy
+            // are only enforced on Windows.
+            return;
+        }
+
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        using var store = new NvramStore(path);
+        var first = NvramImage.CreateFresh().ToArray();
+        first[200] = 0x11;
+        store.Save(first);
+
+        var second = NvramImage.CreateFresh().ToArray();
+        second[200] = 0x22;
+        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            store.Save(second);
+        }
+
+        Assert.Equal(0x22, File.ReadAllBytes(path)[200]);
+    }
+
+    [Fact]
+    public void LoadOrCreate_DoesNotThrowWhenTheInvalidImageCannotBeMoved()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "nvram.ram");
+        File.WriteAllBytes(path, new byte[100]);
+
+        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            var store = new NvramStore(path);
+            NvramImage image = store.LoadOrCreate();
+
+            Assert.Equal(EmulatorConstants.NvramSize, image.Data.Length);
+        }
+
+        Assert.False(File.Exists(path + ".bad"));
+    }
+
+    [Fact]
     public void LoadOrCreate_PreservesInvalidImageAsBackup()
     {
         using var directory = new TempDirectory();

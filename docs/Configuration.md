@@ -59,11 +59,17 @@ acquires `<data>/5do.instance.lock` at startup; a second process using the same 
 shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Different
 profiles or data directories use different lock files and may run together.
 
-Settings are written atomically (temporary file + replace) and carry
-`"SettingsVersion": 7`. An older file is migrated in place on the next load.
-A malformed `settings.json` is copied to `settings.json.invalid-<timestamp>.bak`
-before defaults are used, so the original bytes are never silently lost. Back up or
-delete the file to reset the desktop configuration.
+Settings are written through a temporary file and an atomic replace by default and carry
+`"SettingsVersion": 7`. An older file is loaded with defaults for new properties and
+rewritten at the current version on the next save. If a cloud-sync provider, read-only
+file, or another process denies the atomic replace, the store copies the completed
+temporary file over the destination; if even that write is denied, the application keeps
+running and logs a warning instead of failing the action. A file written by a newer build
+is copied to `settings.json.v<version>.bak` before it is loaded, so the newer bytes are
+never silently replaced; unknown fields are not preserved in the rewritten file, so use
+the newer build to keep them. A malformed `settings.json` is copied to
+`settings.json.invalid-<timestamp>.bak` before defaults are used, so the original bytes
+are never silently lost. Back up or delete the file to reset the desktop configuration.
 
 ---
 
@@ -172,7 +178,7 @@ every serialized property in `AppSettings`.
 | `ActiveInputDevices` | int? | `null` (automatic) | Maximum polled PBUS devices, 0-8. `0` reports no devices; `8` allows every port. Automatic keeps one joypad and grows to the highest configured peripheral port. |
 | `InputDeviceOverrides` | object | `{}` | Per-game eight-device lists keyed by game ID. An override wins over `InputDevices`. |
 | `AutoInputDevices` | bool | `true` | Seed a lightgun or Orbatak trackball override for known titles when the game has no override. |
-| `Input` | object | defaults | Six-player keyboard/gamepad bindings plus hotkeys. |
+| `Input` | object | defaults | Eight-player keyboard/gamepad bindings plus hotkeys. |
 
 The legacy `PreferOpenGl` boolean is still read when loading older files; `false` maps to
 `Renderer: "Software"`. New files write `Renderer` instead.
@@ -379,7 +385,7 @@ player-1 defaults. See section 3 for the full input structure.
 }
 ```
 
-In a real file `Players` has six entries. Players 2-6 have no keyboard bindings by
+In a real file `Players` has eight entries. Players 2-8 have no keyboard bindings by
 default but do have the default gamepad mapping.
 
 ### BIOS selection
@@ -406,7 +412,7 @@ warn when the loaded BIOS hash differs from the state header.
 
 `AppSettings.Input` is an `InputProfile`:
 
-- `Players`: array of six `PlayerProfile` objects.
+- `Players`: array of eight `PlayerProfile` objects.
 - `Hotkeys`: action-name to key-name map.
 
 Each `PlayerProfile`:

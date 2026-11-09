@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
 using FiveDo.Host.Osd;
 using FiveDo.Input;
 
@@ -18,7 +19,7 @@ namespace FiveDo.Host;
 public sealed record SettingsFileInfo(bool Exists, bool Valid, int Version, string? Error);
 
 /// <summary>
-/// Loads and saves <see cref="AppSettings"/> atomically as JSON.
+/// Loads and saves <see cref="AppSettings"/> as JSON, preferring an atomic replace.
 /// </summary>
 public static class AppSettingsStore
 {
@@ -84,6 +85,10 @@ public static class AppSettingsStore
         {
             return new SettingsFileInfo(true, false, 0, exception.Message);
         }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return new SettingsFileInfo(true, false, 0, exception.Message);
+        }
     }
 
     /// <summary>Loads, normalizes, and rewrites a settings file at the current schema version.</summary>
@@ -91,6 +96,7 @@ public static class AppSettingsStore
     /// <returns>The schema version read before migration.</returns>
     /// <exception cref="FileNotFoundException">The settings file does not exist.</exception>
     /// <exception cref="InvalidDataException">The settings file is not valid JSON.</exception>
+    /// <exception cref="IOException">The migrated settings file could not be written.</exception>
     public static int Migrate(string? path = null)
     {
         var resolved = path ?? DefaultPath;
@@ -106,7 +112,11 @@ public static class AppSettingsStore
         }
 
         AppSettings settings = Load(resolved);
-        Save(settings, resolved);
+        if (!Save(settings, resolved))
+        {
+            throw new IOException($"Settings file '{resolved}' could not be written.");
+        }
+
         return info.Version;
     }
 
@@ -129,18 +139,33 @@ public static class AppSettingsStore
                 AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
             if (settings.SettingsVersion > AppSettings.CurrentVersion)
             {
-                Serilog.Log.Warning(
-                    "Settings file {Path} uses schema version {Version}; this build supports version {Supported}.",
-                    resolved,
-                    settings.SettingsVersion,
-                    AppSettings.CurrentVersion);
+                int fileVersion = settings.SettingsVersion;
+                if (TryBackupNewerSchemaFile(resolved, fileVersion))
+                {
+                    Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                        "Settings file {Path} uses schema version {Version}; this build supports version {Supported}. "
+                        + "The original was preserved as {Backup}.",
+                        resolved,
+                        fileVersion,
+                        AppSettings.CurrentVersion,
+                        GetNewerSchemaBackupPath(resolved, fileVersion));
+                }
+                else
+                {
+                    Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                        "Settings file {Path} uses schema version {Version}; this build supports version {Supported}. "
+                        + "The original could not be backed up.",
+                        resolved,
+                        fileVersion,
+                        AppSettings.CurrentVersion);
+                }
             }
 
             ApplyLegacyRendererPreference(json, settings);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
-            settings.Input.AddMissingDefaultHotkeys();
+            settings.Input.Normalize();
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.BiosOverrides ??= new Dictionary<string, string>(StringComparer.Ordinal);
@@ -396,7 +421,19 @@ public static class AppSettingsStore
         catch (JsonException exception)
         {
             TryBackupInvalidFile(resolved);
-            Serilog.Log.Warning(exception, "Settings file {Path} is invalid; using defaults.", resolved);
+            Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                exception,
+                "Settings file {Path} is invalid; using defaults.",
+                resolved);
+            return new AppSettings { SettingsVersion = AppSettings.CurrentVersion };
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            TryBackupInvalidFile(resolved);
+            Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                exception,
+                "Settings file {Path} could not be read; using defaults.",
+                resolved);
             return new AppSettings { SettingsVersion = AppSettings.CurrentVersion };
         }
     }
@@ -410,7 +447,32 @@ public static class AppSettingsStore
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Serilog.Log.Warning(exception, "Could not back up the invalid settings file {Path}.", path);
+            Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                exception,
+                "Could not back up the invalid settings file {Path}.",
+                path);
+        }
+    }
+
+    private static string GetNewerSchemaBackupPath(string path, int version)
+    {
+        return $"{path}.v{version}.bak";
+    }
+
+    private static bool TryBackupNewerSchemaFile(string path, int version)
+    {
+        try
+        {
+            File.Copy(path, GetNewerSchemaBackupPath(path, version), overwrite: true);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                exception,
+                "Could not back up the newer settings file {Path}.",
+                path);
+            return false;
         }
     }
 
@@ -427,22 +489,18 @@ public static class AppSettingsStore
         }
     }
 
-    /// <summary>Saves settings atomically.</summary>
+    /// <summary>Saves settings, preferring an atomic replace.</summary>
     /// <param name="settings">Settings to save.</param>
     /// <param name="path">Settings path. Defaults to <see cref="DefaultPath"/>.</param>
-    public static void Save(AppSettings settings, string? path = null)
+    /// <returns><see langword="true"/> when the file was written; otherwise <see langword="false"/>.</returns>
+    public static bool Save(AppSettings settings, string? path = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         var resolved = path ?? DefaultPath;
-        var directory = Path.GetDirectoryName(Path.GetFullPath(resolved));
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
         settings.SettingsVersion = AppSettings.CurrentVersion;
-        var temporary = resolved + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings));
-        File.Move(temporary, resolved, overwrite: true);
+        return AtomicFile.WriteAllText(
+            resolved,
+            JsonSerializer.Serialize(settings, AppSettingsJsonContext.Default.AppSettings),
+            "settings file");
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
 using FiveDo.Storage;
 
 namespace FiveDo.Host;
@@ -15,7 +16,9 @@ namespace FiveDo.Host;
 /// The emulation core never touches the filesystem. The host calls <see cref="MarkChanged"/>
 /// with a snapshot of the machine's NVRAM and <see cref="FlushIfDue"/> from its frame loop;
 /// writes happen at most once per <see cref="FlushInterval"/> and use a temporary file plus
-/// an atomic replace. <see cref="Flush"/> forces a write on pause/stop.
+/// an atomic replace. A rejected replace falls back to a direct copy, and a failed write
+/// leaves the image dirty so a later flush retries. <see cref="Flush"/> forces a write on
+/// pause/stop.
 /// </remarks>
 public sealed class NvramStore : IDisposable
 {
@@ -82,8 +85,11 @@ public sealed class NvramStore : IDisposable
             {
                 // Preserve the bad image for diagnosis and start from a fresh volume.
                 // Do not silently fall back to an older image after primary corruption.
-                Serilog.Log.Warning(exception, "NVRAM image {Path} is invalid; starting a fresh volume.", _path);
-                File.Move(_path, _path + ".bad", overwrite: true);
+                Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                    exception,
+                    "NVRAM image {Path} is invalid; starting a fresh volume.",
+                    _path);
+                TryPreserveInvalidImage();
                 return NvramImage.CreateFresh();
             }
         }
@@ -193,15 +199,25 @@ public sealed class NvramStore : IDisposable
 
     private void WritePending()
     {
-        var directory = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(_path));
-        if (!string.IsNullOrEmpty(directory))
+        if (AtomicFile.WriteAllBytes(_path, _pending, "NVRAM image"))
         {
-            Directory.CreateDirectory(directory);
+            _dirty = false;
         }
+        // On failure the dirty flag remains set so a later flush retries.
+    }
 
-        var temporary = _path + ".tmp";
-        File.WriteAllBytes(temporary, _pending);
-        File.Move(temporary, _path, overwrite: true);
-        _dirty = false;
+    private void TryPreserveInvalidImage()
+    {
+        try
+        {
+            File.Move(_path, _path + ".bad", overwrite: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Warning(
+                exception,
+                "The invalid NVRAM image {Path} could not be kept as a .bad file.",
+                _path);
+        }
     }
 }

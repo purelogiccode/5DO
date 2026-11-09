@@ -31,7 +31,7 @@ public static class InputProfileStore
                 throw new InvalidDataException($"Input profile '{path}' is empty.");
             }
 
-            profile.AddMissingDefaultHotkeys();
+            profile.Normalize();
             return profile;
         }
         catch (JsonException exception)

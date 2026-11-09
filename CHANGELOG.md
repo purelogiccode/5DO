@@ -1,9 +1,84 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.5.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.6.0, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.6.0] - 2026-11-08
+
+### Added
+
+- **Compatibility completion pass.** The unique-title corpus now covers **1,371 images /
+  414 unique titles / 378 game-test-set titles**. Under the documented binary
+  beyond-title rule, **375 of 378** are Playable, with **0 `Behind` and 0 `Regression`**
+  rows and a strict superset of the **252-title peer union**. The two Title-only rows and
+  one No-video row are non-retail/add-on images documented in `BeyondTitleEvidence.md`.
+- **5DO vs 4DO vs Phoenix comparison.** `CompatibilityComparison.md` and
+  `docs/data/compatibility-comparison.json` provide the authoritative per-title matrix,
+  peer verdicts, and evidence; `tools/generate-compat-comparison.py --check` keeps the
+  outputs current.
+- **Weekly compatibility baseline.** `compat-baseline.yml` runs the full beyond-title gate
+  on the self-hosted 3DO runner and uploads the ledger/baseline evidence.
+- **Differential panel audio gating and scripted input.** The harness can gate audio,
+  replay input scripts, and compare a fresh run against the checked-in
+  `benchmarks/diff/baseline/showcase-report.json`; a capture error now fails the job.
+- **FIQ source tracing.** `--fiq-trace` and the timer trace now record the XBUS source,
+  FIQ enable/acknowledge writes, and level-held raise transitions (`xbusfiq`, `fiqgen`,
+  `fiqwrite`, `xbussel`, `xbuspoll`).
+- **Tooltip coverage.** Every interactive control in the Avalonia windows has a
+  `ToolTip.Tip`, enforced by `FrontendToolTipTests`; fallback and cleanup paths now log
+  their expected exceptions.
+
+### Changed
+
+- **CD-ROM parity.** `POLREMASK` is a one-shot FIFO reset instead of a persistent gate;
+  only the three interrupt enables persist in the low poll nibble, and `POLRE` is
+  write-one-to-clear. This matches Opera's poll reset semantics and removes the stale
+  command/status/data gate.
+- **Guest drive speed.** MODE SELECT page 3 stores the Opera `MEI_CDROM_DOUBLE_SPEED`
+  byte (`0x80`), sets the XBUS 2x status bit, and caps a configured multi-speed drive at
+  1x when the guest selects single speed. `CdSpeed.Unbounded` remains a host override.
+- **Readable-disc limit and TOC metadata.** The CD device reports the volume header's
+  big-endian `volume_block_count` (sector 0, offset `0x50`) as the readable limit and
+  sets the TOC Q-position control bit. SESSION INFO returns the single-session payload.
+- **CD-ROM save-state section is version 5.** It stores the guest drive-speed byte and
+  the resolved sector count; version 3/4 states recover the speed byte from the XBUS
+  status, and older states remain loadable.
+- `FiveDo.Cli` and `FiveDo.Frontend.Avalonia` now generate XML documentation; internal
+  `Program` members and `AsyncEvent.Run` use internal visibility, and the two production
+  async methods without an `Async` suffix were renamed.
+
+### Fixed
+
+- **Settings persistence no longer aborts the desktop shell** when the data folder denies
+  an atomic replace (a cloud-synced placeholder, a read-only file, or a file held open
+  without delete sharing). The store copies the completed temporary file over the
+  destination, falls back to a logged warning if that also fails, and startup continues.
+- **NVRAM writes** use the same fallback and keep the image dirty for a later retry
+  instead of throwing during pause or shutdown.
+- **Newer-schema settings** are copied to `settings.json.v<version>.bak` before an older
+  build rewrites them. Expected schema/invalid-file warnings no longer create bug reports.
+- **Input settings** with a null or short `Players` array are normalized to eight
+  non-null profiles with safe binding dictionaries.
+- **Disc-open and BIOS errors** caused by unreadable files or paths are shown in the UI
+  without filing a bug report; startup configured paths are guarded.
+- **Documentation and evidence counts** were refreshed for the 414-title corpus, the
+  378-title test set, and the final test count.
+
+### Validation
+
+- Full suite **2,061/2,061** passes in Debug; `dotnet build` reports **0 warnings and
+  0 errors**; `dotnet format --verify-no-changes` and
+  `jb inspectcode --severity=WARNING` are clean.
+- `tools/verify-beyond-title-ledger.py` passes: 378 ledger rows, **375 Playable**, 2
+  Title-only, 1 No-video, 0 Not-loadable, **0 Behind/Regression**, strict peer superset.
+- `tools/generate-compat-comparison.py --check` reports the committed comparison outputs
+  are current.
+- Road Rash boots for 600 frames in both the compatible and accuracy profiles after the
+  CD/volume-header changes; the 50-title differential panel remains **50/50 frame
+  hashes** at frames 60/120/300 with **0 errors**.
+- Six framework-dependent bundles are published with `README.md`, `LICENSE`,
+  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, the release/legal docs, no runtime, and no
+  PDB/XML files; `SHA256SUMS.txt` verifies.
 
 ## [1.5.0] - 2026-11-08
 

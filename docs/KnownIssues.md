@@ -1,6 +1,6 @@
 # Known Issues
 
-**Snapshot:** 2026-11-08, v1.5.0. This list covers the supported local corpus and the
+**Snapshot:** 2026-11-08, v1.6.0. This list covers the supported local corpus and the
 current prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
@@ -39,6 +39,16 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - The weekly regression gate is `.github/workflows/compat-baseline.yml` on a Windows
   self-hosted runner with the collection mounted, backed by
   `docs/data/beyond-title-baseline.json` and `tools/run-beyond-title-gate.ps1`.
+
+## Settings storage (2026-11-08)
+
+- Settings and NVRAM writes use a temporary file plus an atomic replace. If a cloud-sync
+  provider, read-only destination, or another process denies the replace, the store copies
+  the completed temporary file over the destination; if that also fails, the desktop logs
+  the error and keeps running instead of aborting startup.
+- A `settings.json` written by a newer build is copied to `settings.json.v<version>.bak`
+  before the older build loads it. The newer fields are not preserved in the rewritten
+  file, so run the newer build (or a separate profile) to keep them.
 
 ## Online cover art (2026-11-07)
 
