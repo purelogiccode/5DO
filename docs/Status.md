@@ -85,7 +85,11 @@ release also updates Avalonia to 12.1.6, System.CommandLine to 3.0.0, and
 Microsoft.NET.Test.Sdk to 18.11.1. A 20-second desktop Road Rash run reports **0 audio
 underruns** and no skipped frames. The suite is **2,125 tests**; build, format, and
 InspectCode are clean. Fresh Windows/Linux/macOS x64/arm64 bundles are built from the
-`v1.7.1` tag. See [`WhatsNew.md`](WhatsNew.md) and
+`v1.7.1` tag. The release run
+<https://github.com/purelogiccode/5DO/actions/runs/42898378598> built and published all
+six bundles; docs run
+<https://github.com/purelogiccode/5DO/actions/runs/42897688864> deployed Pages and the
+wiki. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.1.md`](ReleaseNotes-1.7.1.md).
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the

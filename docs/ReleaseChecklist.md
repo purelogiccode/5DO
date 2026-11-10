@@ -263,9 +263,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `whatsnew.md`, the 1.7.1 release notes, and the legal notices, and contains no
       `runtime/`, `*.pdb`, or `*.xml` files.
 - [x] Create and push tag `v1.7.1`; the release workflow publishes six versioned bundles
-      and `SHA256SUMS.txt`.
+      and `SHA256SUMS.txt`. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42898378598> passed all six
+      bundle jobs and the publish job at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.7.1>; all six checksums
+      verify and the assets were copied into
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
 - [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.7.1 release.
+      1.7.1 release. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42897688864> passed build,
+      Pages deploy, and wiki publish; `WhatsNew.html`, `ReleaseNotes-1.7.1.html`, and
+      `wiki/Release-1.7.1` return HTTP 200.
 
 ---
 
