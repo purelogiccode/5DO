@@ -390,7 +390,7 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0; the
       framework-dependent single-file bundles are the release artifacts.
 - [x] Native platform runtime smoke passes on macOS x64/arm64, Linux arm64, and
-      Windows arm64 (2026-11-10, run 42768268965): CLI `selftest` and frontend
+      Windows arm64 (2026-11-10, run 42770783778): CLI `selftest` and frontend
       `--smoke-test` on each runner.
 
 Suggested commands:

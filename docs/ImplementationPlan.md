@@ -122,8 +122,8 @@ and a linked capture for every promotion or documented limit.
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **PLAT-02** | S | **Linux x64 GPU presentation**: run the GL probe on a real Linux GPU host, not llvmpipe over SSH; record presenter results. | The renderer and probe already exist; a GPU-capable Linux host or VM is the only missing resource. | A dated probe result is recorded in [Compatibility.md](Compatibility.md) §10.3; Linux GPU status moves from preview/best-effort to validated or a precise limitation. |
-| **PLAT-03 — Done** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | Hosted macOS runners run both bundles natively. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42768268965 (2026-11-10), [Compatibility.md](Compatibility.md) §10.3. |
-| **PLAT-04 — Done** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | Hosted arm64 runners run both bundles natively. | CLI and frontend smoke pass on both arm64 targets; results are recorded. Evidence: `platform-runtime.yml` run 42768268965 (2026-11-10). |
+| **PLAT-03 — Done** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | Hosted macOS runners run both bundles natively. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10), [Compatibility.md](Compatibility.md) §10.3. |
+| **PLAT-04 — Done** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | Hosted arm64 runners run both bundles natively. | CLI and frontend smoke pass on both arm64 targets; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10). |
 | **PLAT-05** | S | **macOS gamepad backend**: physical detection for the new IOKit HID source. The source and pure mapping layer are implemented; 21 mapping/profile tests pass. | The remaining check needs a macOS host with a connected controller. | A macOS gamepad is detected and mapped through the existing eight-player profile; the mapping is already unit-tested. |
 | **PLAT-06** | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: complete the missing presentation/performance matrix. | The renderer and benchmark harness exist; the work is measurement on available hardware. | Results are recorded in [Performance.md](Performance.md), with every residual labeled `validated` or `best-effort`. |
 | **PLAT-07** | S | **Done (2026-11-10).** Frontend NativeAOT audio validation: both 600 s soaks report 0 drops and 0 underruns. | CLI AOT and trimmed IL audio were already validated; the frontend AOT path is now validated too. | Evidence recorded in [Audio.md](Audio.md) §9. |
@@ -142,7 +142,7 @@ all eight Europe-only/PAL-sensitive titles produced dated PAL1 captures with
 ([PalValidation.md](PalValidation.md)). `PLAT-03` and `PLAT-04` are closed by
 `.github/workflows/platform-runtime.yml`: macOS x64, macOS arm64, Linux arm64, and
 Windows arm64 each publish the framework-dependent CLI/frontend, run `selftest`, and
-pass the frontend `--smoke-test` (run 42768268965, 2026-11-10).
+pass the frontend `--smoke-test` (run 42770783778, 2026-11-10).
 
 ### 3.4 P1 — Release and packaging
 

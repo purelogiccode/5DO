@@ -3468,7 +3468,7 @@ frontend on each native runner and runs the CLI `selftest` plus the frontend
 | Linux arm64 | `ubuntu-24.04-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` under Xvfb |
 | Windows arm64 | `windows-11-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
 
-Run: <https://github.com/purelogiccode/5DO/actions/runs/42768268965> (all four jobs
+Run: <https://github.com/purelogiccode/5DO/actions/runs/42770783778> (all four jobs
 passed, 2026-11-10). The apphosts were confirmed as Mach-O x86_64, Mach-O arm64, ELF
 aarch64, and PE arm64 respectively. This closes PLAT-03 and PLAT-04. The frontend
 smoke hides the GL surface, so it validates startup/XAML/settings, not GPU

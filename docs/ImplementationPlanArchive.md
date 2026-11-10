@@ -387,7 +387,7 @@ Append new entries here; do not delete history. Each entry is a completed canoni
   publishes the framework-dependent CLI/frontend on macOS x64 (`macos-15-intel`),
   macOS arm64 (`macos-latest`), Linux arm64 (`ubuntu-24.04-arm`), and Windows arm64
   (`windows-11-arm`); every target reports `5DO 1.6.0`, `selftest ok: true`, and
-  `FRONTEND SMOKE OK 1.6.0` (run 42768268965). Raised the CD wire limit to Opera's
+  `FRONTEND SMOKE OK 1.6.0` (run 42770783778). Raised the CD wire limit to Opera's
   2449 bytes, accepted 2352-byte digital-audio blocks with the 96-byte subcode flag,
   packed the Q subchannel (control/track/index/MSF/CRC) into READ_DATA, and kept the
   10-byte READ SUB-Q response; the FZ-10 BIOS CD player now lists the A&M Music

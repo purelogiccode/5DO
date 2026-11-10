@@ -614,7 +614,7 @@ framework-dependent CLI and frontend on native macOS x64 (`macos-15-intel`), mac
 (`macos-latest`), Linux arm64 (`ubuntu-24.04-arm`), and Windows arm64
 (`windows-11-arm`). Every target reported `5DO 1.6.0`, `selftest ok: true`, and
 `FRONTEND SMOKE OK 1.6.0` (Linux under Xvfb). Run
-<https://github.com/purelogiccode/5DO/actions/runs/42768268965> passed all four jobs.
+<https://github.com/purelogiccode/5DO/actions/runs/42770783778> passed all four jobs.
 The smoke hides the GL surface, so GPU presentation on macOS/Linux remains
 preview/best-effort; Windows WGL/ANGLE remains the validated GL path.
 
