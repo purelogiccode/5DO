@@ -159,6 +159,9 @@ Supported gamepad backends:
 
 - Windows: XInput (`xinput1_4`, `xinput1_3`, or `xinput9_1_0`).
 - Linux: evdev (`/dev/input/event*`; the user normally needs the `input` group).
+- macOS: IOKit HID (Generic Desktop Joystick, Gamepad, or Multi-axis Controller).
+  macOS may request Input Monitoring permission; without it the frontend falls back
+  to the keyboard.
 - macOS: no platform backend yet; use a keyboard.
 
 Windows/Linux backends hot-plug controllers. The **About** dialog reports the number
@@ -238,6 +241,14 @@ first, and at least one keyframe is always retained. Keyframes are compressed on
 emulation thread, so a very slow machine may see a brief hitch when one is captured
 (every 120 frames by default).
 
+### Focus behavior
+
+Every time the desktop window loses focus, 5DO releases all held keyboard and PBUS
+input so a direction or action cannot stay latched in the guest. **Settings >
+Emulation > Pause when the window loses focus** additionally pauses a running machine;
+returning focus resumes it only when the pause was automatic. A manual pause, start,
+or stop clears that state, so the setting never overrides a deliberate choice.
+
 ### Cheats
 
 **Emulation > Cheats...** opens the per-game cheat manager. Each game has a JSON file
@@ -278,6 +289,13 @@ dotnet run --project src/FiveDo.Cli -- run game.chd --bios panafz1.bin `
 
 If the recording started after a save state was loaded, add `--script-base state` so
 the script's frame numbers are shifted by the loaded frame count.
+
+Input recordings capture the player-1 pad only. To drive a mouse, lightgun, arcade
+lightgun, or Orbatak trackball in a script, add a pointer token to a line manually:
+`@mouse dx dy [left,middle,right,shift]`, `@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, or
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. Select the same device with
+`--input-device <port>=<device>`; see [`CliReference.md`](CliReference.md#input-and-automation-options).
 
 ### TAS movies
 
@@ -321,7 +339,11 @@ a game ejects the disc, 5DO advances to the next playlist entry automatically by
 `5do disc verify game.chd` reads every native sector and reports the first read errors,
 the verified sector count, and a content hash; use it to distinguish a bad dump from an
 emulator issue. Add `--dat path/to/redump.dat` to match the native track CRC-32/MD5/SHA-1
-against a Redump/No-Intro DAT; a matching dump reports the game/ROM and a mismatch exits 1. The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
+against a Redump/No-Intro DAT; a matching dump reports the game/ROM and a mismatch exits 1.
+`5do disc convert game.chd --out game.iso` converts a data-only image to ISO, BIN, CUE,
+or a flat CHD and verifies the game ID; see
+[`CliReference.md`](CliReference.md#6-disc). The CLI can list a playlist with
+`disc playlist game.m3u`, open its first entry with
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 
@@ -386,7 +408,10 @@ native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, n
 internal CEL rendering. **Overscan crop L/T/R/B** (Settings > Video) hides 0-32 pixels
 from each edge for TVs and captures that show the outer frame; native screenshots use
 the same crop, and per-game profiles can store their own crop. **Void border** draws a
-0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image.
+0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image;
+the adjacent **pattern** selector draws solid, checkerboard, grid, or scanline fills in
+the same color. Patterns are shell-composited, so they sit behind OpenGL, GLES, Vulkan,
+and Direct3D 11 output identically.
 Both options change presentation only, not emulation, input, audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report

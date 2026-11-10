@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C follow-up batch (11 titles)",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "insect-war-play3",
+      "name": "Insect War",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Insect War (1994)(Panasonic)(JP)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/insect-war-play3.txt",
+      "frames": 48000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000,
+        42000,
+        48000
+      ]
+    },
+    {
+      "id": "carrier-play4",
+      "name": "Carrier - Fortress at Sea",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/carrier-play4.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "jurassic-park-play3",
+      "name": "Jurassic Park Interactive",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/jurassic-park-play3.txt",
+      "frames": 48000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000,
+        42000,
+        48000
+      ]
+    },
+    {
+      "id": "deathkeep-play4",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-play4.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "pga-play3",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        18000,
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "family-feud-play3",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "guardian-war-play3",
+      "name": "Guardian War",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Guardian War (1994)(Panasonic)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/guardian-war-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        3600,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "nob-play3",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        9000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "bladeforce-play3",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "hell-play3",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        18000,
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "slayer-play4",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-play4.txt",
+      "frames": 60000,
+      "captureFrames": [
+        36000,
+        42000,
+        48000,
+        54000,
+        60000
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Slayer: move from Load Game to Create Character and continue.
+24000 C
+24020 None
+30000 C
+30020 None
+48000 Down
+48020 None
+48400 Down
+48420 None
+49000 C
+49020 None
+50000 C
+50020 None
+52000 C
+52020 None
+54000 Down
+54020 None
+54400 C
+54420 None
+56000 C
+56020 None
+58000 C
+58020 None
+60000 C
+60020 None

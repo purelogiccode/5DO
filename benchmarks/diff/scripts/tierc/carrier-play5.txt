@@ -1,0 +1,17 @@
+# Carrier - Fortress at Sea: briefing room to a live trap approach.
+6000 Up
+6060 None
+6120 Down
+6180 None
+6240 Left
+6300 None
+6360 Right
+6420 None
+6480 A
+6540 None
+6600 B
+6660 None
+6720 C
+6780 None
+6900 A
+6960 None

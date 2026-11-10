@@ -129,6 +129,13 @@ internal static class Program
                 continue;
             }
 
+            if (HasPointerDevice(title.InputDevice ?? manifest.Defaults?.InputDevice))
+            {
+                throw new InvalidDataException(
+                    $"{title.Id}: the reference OperaCore bridge is joypad-only; "
+                    + "rerun pointer-device titles with --no-opera.");
+            }
+
             Console.Write($"[{title.Id}] Opera ... ");
             opera = LoadOrCapture(
                 operaPath,
@@ -726,6 +733,16 @@ internal static class Program
         }
 
         return harness;
+    }
+
+    private static bool HasPointerDevice(string? inputDevice)
+    {
+        return !string.IsNullOrWhiteSpace(inputDevice)
+            && (inputDevice.Contains("mouse", StringComparison.OrdinalIgnoreCase)
+                || inputDevice.Contains("lightgun", StringComparison.OrdinalIgnoreCase)
+                || inputDevice.Contains("arcadegun", StringComparison.OrdinalIgnoreCase)
+                || inputDevice.Contains("trackball", StringComparison.OrdinalIgnoreCase)
+                || inputDevice.Contains("orbatak", StringComparison.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<DiffTitle> FilterTitles(DiffManifest manifest, HarnessOptions harness)

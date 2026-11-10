@@ -107,8 +107,11 @@ try {
     }
 
     if ($Rid -like 'linux-*') {
-        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do.desktop') `
-            -Destination $staging -Force
+        # The portable bundle has no /usr/bin/5do symlink, so point the entry at the
+        # apphost directly. The .deb/.rpm installers replace this with the package
+        # entry that launches the /usr/bin/5do wrapper.
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do-portable.desktop') `
+            -Destination (Join-Path $staging '5do.desktop') -Force
     }
 
     if ([string]::IsNullOrWhiteSpace($Version)) {

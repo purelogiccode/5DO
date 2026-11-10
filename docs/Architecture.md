@@ -201,7 +201,8 @@ CHD details:
 - `SectorCount` comes from the first data track's `Frames`; the 3DO volume header remains the authoritative sector count for the emulated CD device.
 - Differential parent/child CHDs are supported via an optional parent path (`ChdFile.Open(path, parentPath, ...)`). Standalone CHDs are the common case.
 - `ConfigureReadAhead(n)` is enabled by default (4 hunks) because 3DO games stream data sequentially. The core reads on one thread; the CHD reader is not shared across threads.
-- Flat CHDs with 2048-byte units (cooked ISOs converted with `chdman createdvd`, or `createhd` with 2048-byte units) have no track table; they are exposed as a single data track. DVD/HDD/raw CHDs with other unit sizes and audio-only CHDs are rejected with a clear `InvalidDataException`.
+- Flat CHDs with 2048-byte units (cooked ISOs converted with `chdman createdvd`, or `createhd` with 2048-byte units) have no track table; they are exposed as a single data track. DVD/HDD/raw CHDs with other unit sizes are rejected with a clear `InvalidDataException`; audio-only CHDs open with a TOC-derived ID and a track table but no 3DO data track.
+- `DiscImageWriter` writes ISO, cooked BIN, CUE, and flat 2048-unit CHD output; `disc convert` verifies the game ID after conversion.
 - CHD is a **first-class v1 format**, not a later optional add-on. The game library scans `.chd` alongside `.iso`, `.bin`, and `.cue`.
 
 ---
@@ -619,7 +620,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 |---|---|---|
 | Video presenter | `IFrameSink` / `IVideoRenderer` | OpenGL (required), CPU BGRA fallback, null/hash sink |
 | Audio output | `IAudioSink` | null, WAV, OpenAL |
-| Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, scripted replay |
+| Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, IOKit HID, scripted replay |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
 | Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
 | Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, FSR |

@@ -150,6 +150,16 @@ public sealed class InputManager : IPbusSource
     /// <summary>Gets the per-port device selection and peripheral state.</summary>
     public InputDeviceSet Devices => _devices;
 
+    /// <summary>Releases every keyboard binding.</summary>
+    /// <remarks>
+    /// PBUS device state is rebuilt from the keyboard and the polled gamepad on the next
+    /// <see cref="Update"/>, so this method is safe to call from the UI thread.
+    /// </remarks>
+    public void Reset()
+    {
+        _keyboard.Reset();
+    }
+
     /// <summary>Sets the device type on a port.</summary>
     /// <param name="port">Zero-based port index.</param>
     /// <param name="device">Device type.</param>

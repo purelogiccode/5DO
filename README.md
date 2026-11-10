@@ -28,8 +28,9 @@
 
 > [!IMPORTANT]
 > 5DO is at **v1.6.0**, a documented-compatibility release. Windows x64 is the validated
-> target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
-> macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
+> GPU target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
+> macOS x64/arm64, Linux arm64, and Windows arm64 pass the native CLI/frontend runtime
+> smoke (2026-11-10). No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
@@ -60,7 +61,9 @@ test harness designed for reproducible compatibility evidence.
 - **One bundle per system and architecture.** Windows, Linux, and macOS bundles for x64
   and arm64 contain both the framework-dependent single-file CLI and desktop app, plus
   the docs/notices. The .NET 10 runtime is a prerequisite and is **not** bundled.
-  Optional NativeAOT CLI builds remain available for developers.
+  Optional NativeAOT CLI builds remain available for developers. Unsigned Windows/Linux
+  installers and macOS `.dmg`/`.pkg` scaffolding register `.iso`/`.cue`/`.chd` file
+  associations; signing/notarization stays conditional on certificates.
 
 ## Status at a glance
 
@@ -118,10 +121,10 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
 - MADAM CEL engine, matrix engine, pixel bus, CCB parsing, and pixel decoding.
 - 3DO DSP with exact 44.1 kHz output, CD-DA mixing, and WAV analysis.
 - SPORT VRAM fill/copy, VDLP display-list parsing, and CPU frame assembly.
-- Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, multi-track CUE/CHD,
-  M3U playlists, and ODE-style disc swapping.
-- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs and bounded
-  read-ahead prefetch.
+- Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, READ_DATA subcode/Q
+  packing, multi-track CUE/CHD, M3U playlists, and ODE-style disc swapping.
+- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs, bounded read-ahead
+  prefetch, and `disc convert` between ISO/BIN/CUE/flat CHD.
 
 ### Desktop experience
 
@@ -142,8 +145,9 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
   verification.
 - Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
   overlay.
-- Eight-player keyboard and gamepad mapping; XInput on Windows and evdev on Linux;
-  joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices.
+- Eight-player keyboard and gamepad mapping; XInput on Windows, evdev on Linux, and
+  IOKit HID on macOS; joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak
+  trackball devices.
 - Portable mode, named configuration profiles, per-game profiles, and an instance lock.
 - Privacy-scrubbed diagnostics bundles and an in-app log viewer.
 
@@ -162,10 +166,10 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
 | Platform | Desktop | CLI | Status |
 |---|:---:|:---:|---|
 | Windows x64 | ✅ | ✅ | **Validated target** |
-| Windows arm64 | ✅ | ✅ | Published; runtime validation pending |
-| Linux x64 | ✅ | ✅ | Published; local VM smoke validation |
-| Linux arm64 | ✅ | ✅ | Published; runtime validation pending |
-| macOS x64 / arm64 | ✅ | ✅ | Published; runtime validation pending |
+| Windows arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
+| Linux x64 | ✅ | ✅ | Local VM smoke; GPU presentation preview/best-effort |
+| Linux arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
+| macOS x64 / arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10); GPU best-effort |
 | Raspberry Pi 4/5 (GLES 3.1) | — | — | Post-1.0 target |
 
 ## Quick start

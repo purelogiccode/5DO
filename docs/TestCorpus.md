@@ -3202,3 +3202,318 @@ Phoenix**; all of the new rows are explicit `Playable` grades with a recorded re
 missing title-specific script, not loadability regressions. Five titles are now ahead of
 4DO. The ~100-title Tier B target is met; converting the remaining `Playable` menus into
 confirmed gameplay is the next grade-gap increment.
+
+### 1.1bm TEST-06 Tier C: first gameplay-depth increment (2026-11-09)
+
+Tier C targets the 25 titles still graded `Playable` after Tier B. The Tier B generic
+script presses A early and often stops before the menu appears; the 3DO **C button is
+the usual confirm/select button** in these menus. Added:
+
+- `benchmarks/diff/tierc-panel.json` - the 25-title remaining-`Playable` gap.
+- `benchmarks/diff/tierc-batch-3.json` and `tierc-batch-4.json` - the C-button and
+  follow-up batches.
+- `benchmarks/diff/scripts/tierc/` - title-specific start and gameplay scripts.
+- `artifacts/tierc-baseline` - a 25-title baseline with the generic Tier B script;
+  **25/25 completed** with exit code 0 and all captures written.
+
+The scripts use C for menu confirmation, press it at the frame where the menu is
+actually visible, and switch to A/B/directions for gameplay. A `Good` grade requires
+reaching gameplay and completing the checkpoint window without a hang or crash.
+
+**Promoted to `Good` in this increment (batch `tierc-1`):**
+
+| Title | Evidence |
+|---|---|
+| Olympic Soccer | `tierc/olympic-soccer-play.txt`: ARCADE -> team select -> **FULL-TIME** at 18,000 frames; returns to the menu by 36,000. |
+| John Madden Football | `tierc/john-madden-c2.txt`: C through the Scouting Report and play selection; live football field, players, and clock at 12,000/24,000/36,000 frames. |
+| Crime Patrol | `tierc/crime-patrol-c2.txt`: C selects PLAY and 1 PLAYER; live-action lightgun scene at 48,000 frames. |
+| Mad Dog II - The Lost Gold | `tierc/mad-dog-ii-c2.txt`: C selects Play and 1 Player; live-action stage at 48,000 frames. |
+| Shootout at Old Tucson | `tierc/shootout-c2.txt`: skips the credits with C; live-action lightgun scene with the ammo HUD at 48,000 frames. |
+| Guardian War | `tierc/guardian-war-play3.txt`: keeps the game in play after the opening battle; Goddess dialogue at 18,000 and the world-map character at 24,000/36,000 frames. |
+| Hell - A Cyberpunk Thriller | `tierc/hell-play6.txt`: A activates the menu, three Downs select Start New Game, and A confirms; character select at 40,000 and 3D adventure gameplay at 44,000/48,000 frames. |
+| Slayer | `tierc/slayer-play8.txt`: Create Character, Choose Face, and Dungeon Settings confirmed; first-person dungeon gameplay with map and HP/FD HUD at 80,000/90,000 frames. |
+
+The CSV ledger now has **101 rows: 84 `Good`, 17 `Playable`**. The remaining `Playable`
+rows are five media/reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN
+Golf, Life Stage), the *Return Fire - Maps O' Death* data disc, and eleven game/script
+gaps. The strongest remaining leads are BladeForce (3D mission/cinematic scenes at
+24,000/36,000; interactive gameplay not yet confirmed), PGA Tour 96 (Player List, Pro
+Info, and Golf Bag; bag confirm not scripted), N.O.B. (SURVIVE scene at 18,000), Insect War (3D content at
+30,000), DeathKeep (late title menu), Kingdom (late title menu), Family Feud (two-stage
+game options), and Jurassic Park (play-level screen). Carrier's briefing room appears
+to be pointer-driven, so the scripted pad cannot select `Challenge!`; it stays
+`Playable` with that reason.
+
+**Fixed-script recheck (2026-11-09):** an early batch generator emitted a press and
+its `None` release at the same frame. `InputScript.Parse` coalesces duplicate frames,
+so the press could be discarded. Every affected script was repaired with an explicit
+20-frame hold and the affected titles were re-run in `artifacts/tierc-fixed`,
+`tierc-batch-7`, and `tierc-batch-8`. The corrected runs confirmed John Madden, Crime
+Patrol, Mad Dog II, Shootout at Old Tucson, Guardian War, Hell, and Slayer, and
+**withdrew the PGA Tour 96 promotion** because the fixed script stays on the Player
+List. The paired BladeForce input/no-input probe now shows a real input effect, but both
+runs only expose live-action cutscenes and return to the menu; BladeForce remains
+`Playable`.
+
+The Tier C workflow and grade rules are in
+[`CompatibilitySweep.md`](CompatibilitySweep.md) 4.3.
+
+### 1.1bn TEST-06 Tier C: remaining-lead probes (2026-11-09)
+
+Batches 9-12 targeted the last `Playable` leads with longer windows, alternate confirm
+buttons, a mouse-device probe, and paired input/no-input runs:
+
+- **PGA Tour 96.** The C-driven path reaches the Player List, adds a pro (Stadler/Tom
+  Kite/Brad Faxon), opens **Pro Info**, and reaches the **Golf Bag** screen. Confirming
+  the bag cycles back to Pro Info instead of starting a round. Evidence:
+  `artifacts/tierc-batch-10`, `tierc-batch-11`, `tierc-batch-12`.
+- **Family Feud.** The options screen is reached, but Down/C toggles SPEECH and RAPID
+  PLAY values and does not reliably reach DONE or the Game Options screen. Evidence:
+  `artifacts/tierc-batch-9/family-feud-play6`.
+- **DeathKeep.** Selecting Start Game plays the stained-glass intro and then a black
+  screen at 44,000/48,000; no gameplay. Evidence:
+  `artifacts/tierc-batch-9/deathkeep-play7`.
+- **Kingdom - The Far Reaches.** A-only and repeated A/C title input start the intro and
+  return to the title by 60,000/90,000; no gameplay. Evidence:
+  `artifacts/tierc-batch-9/kingdom-play5`.
+- **BladeForce.** The 60,000-frame input run still only exposes live-action cutscenes and
+  returns to Main Options; the paired no-input run stays on the menu. Remains
+  `Playable` as FMV-heavy content. Evidence: `artifacts/tierc-batch-5/bladeforce-*`,
+  `artifacts/tierc-batch-9/bladeforce-play4`.
+- **Carrier - Fortress at Sea.** The briefing room is unchanged with both the pad and the
+  `1=mouse` device; the pointer-driven UI cannot be scripted with the current source.
+  Evidence: `artifacts/tierc-batch-9/carrier-mouse`.
+
+No grade changes came from these probes; the ledger stays **101 rows: 84 `Good`, 17
+`Playable`**.
+
+### 1.1bo TEST-06 Tier C: second gameplay-depth increment (2026-11-09)
+
+The second increment added pointer state to the input-script format and re-checked the
+menu leads whose earlier scripts pressed buttons before the menu was visible.
+
+**Input-script pointer support.** `InputScript` now accepts one optional pointer token
+per line after the pad buttons: `@mouse dx dy [left,middle,right,shift]`,
+`@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. `ScriptedPbusSource` applies
+the state to every port configured with that device, keeps buttons held, and treats
+relative mouse/trackball motion as a one-frame impulse. The parser and source are
+covered by six new `InputScriptTests`. The reference `OperaCore` bridge is still
+joypad-only, so pointer scripts are 5DO-only evidence.
+
+**Promoted to `Good` (`tierc-2`):**
+
+| Title | Evidence |
+|---|---|
+| Carrier - Fortress at Sea | `tierc/carrier-play5.txt`: the briefing room's pad path opens the trap menu (DAY/NIGHT/WEATHER TRAPS, PREFLIGHT BRIEFING), then starts a live trap approach with the 3D ocean, aircraft HUD, and a WAVE OFF glide-slope message at 8,000/14,000 frames. The earlier probe pressed buttons before the briefing room appeared, which is why it looked pointer-only. |
+| Family Feud | `tierc/family-feud-play7.txt`: eight Down presses move from the options rows to DONE; the game-mode menu opens and FAMILY VS 3DO SYSTEM starts the show. Live questions, host, contestants, the $2,000/$3,000 bank, and the letter keyboard render at 9,000/12,000 frames. |
+| Insect War | `tierc/insect-war-play5.txt`: Story Mode, character confirm, and match start reach the first-person HUD (timer, health bars, radar, crosshair) at 58,000/62,000 frames; the WARNING/explosion state follows. No crash through 72,000. |
+| N. O. B. - Neo Organic Bioform | `tierc/nob-c2.txt`: SURVIVE starts and reaches the first-person corridor with the VITALITY HUD at 9,000 frames. The session later returns to MODE SELECT, and the script re-enters. No crash through 36,000. |
+
+The four promotions and the BladeForce path are reproducible from
+`benchmarks/diff/tierc-batch-13.json`:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-13.json `
+  --out artifacts/tierc-batch-13 --jobs 4
+```
+
+At the end of this increment, the ledger was **101 rows: 88 `Good`, 13 `Playable`**.
+Seven of the remaining `Playable` rows were media/reference/add-on discs (20th Century
+Video Almanac, Club 3DO,
+Dennis Miller, Digital Dreamware, ESPN Golf, Life Stage, and the Return Fire Maps O'
+Death data disc). At the end of this increment, the six remaining game leads were
+BladeForce, DeathKeep, Jurassic Park, Kingdom, Off-world Interceptor, and PGA Tour 96.
+Jurassic Park's Operations hub shows
+the pause menu's `TIME LEFT`/`LIVES LEFT` session state, but no in-park mini-game was
+opened; PGA Tour 96 still cycles Golf Bag -> Pro Info, and Off-world Interceptor remains
+in the pre-mission shop.
+
+**DeathKeep differential (2026-11-09).** The Tier C black-screen lead is not a 5DO
+defect: the reference OperaCore reached 48,000 frames with the same script and its
+`f048000.bmp` capture is also pure black, while 5DO's `f048000.png` is black at the
+same checkpoint. The only comparison field that diverged at 48,000 was the sample count
+(35,315,280 vs 35,315,323, the documented 1.214 ppm reference-clock alignment). The
+Start Game path therefore leads to a legitimate long black screen/load on both engines,
+not a 5DO renderer or CD regression. Evidence:
+`artifacts/diff/tierc-triage2/deathkeep-play7`.
+
+**BladeForce differential (2026-11-09).** The reference core reaches the same Main
+Options menu at 60,000 frames; the only comparison difference is the documented sample
+count (44,144,100 vs 44,144,154). A new script (`tierc/bladeforce-play6.txt`) moves
+Right to START NEW GAME, confirms the name entry, and plays the live-action intro and
+character-platform cutscenes through 100,000 frames.
+The menu/cutscene loop is therefore a content/script limit, not a 5DO input or renderer
+bug; BladeForce stays `Playable` because no interactive mission was reached. Evidence:
+`artifacts/bladeforce-play6`; `artifacts/diff/tierc-triage2/bladeforce-play4`.
+
+**Kingdom differential (2026-11-09).** A 60,000-frame comparison
+(`artifacts/diff/kingdom-triage-60k`) captures the same *Kingdom - The Far Reaches*
+title screen on 5DO and OperaCore. The A/C intro loop is therefore a content/script
+limit on both engines, not a 5DO boot or renderer defect; Kingdom stays `Playable`
+because this script starts no scenario.
+
+### 1.1bp P0 quality closure: BladeForce, Jurassic Park, Off-world, PGA Tour, and Alone (2026-11-09)
+
+The P0 pass replaced the remaining generic menu scripts with title-specific boot
+scripts. Every script is boot-absolute and reproducible from
+`benchmarks/diff/p0-quality-batch.json`:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/p0-quality-batch.json `
+  --out artifacts/p0-quality --jobs 3
+```
+
+| Title | Script | Result |
+|---|---|---|
+| BladeForce | `tierc/bladeforce-mission-boot.txt` | The name-entry screen needs `A` to type a letter, `Down` to select **START GAME**, and `A` to confirm. The script then advances the Training Mission (65,000) and Recon Maps (66,000) screens and reaches the Supply Depot first-person mission at 70,000/80,000/90,000 frames. The HUD, gun, crates, and enemies render; no crash. Promoted to `Good`. |
+| Jurassic Park Interactive | `tierc/jurassic-park-terminal-boot.txt` | From the Operations map, `R` selects **SECURITY SYSTEMS** and `A` opens **SECURITY TRACKING** at 42,000/52,000 frames. The terminal scene renders the park map and personnel markers. No in-park gameplay was reached, so the row stays `Playable` with the terminal gap closed. |
+| Off-world Interceptor | `tierc/offworld-gameplay-boot.txt` | From the vehicle shop, `Down`, `Right`, and `A` open the loadout; `Up` selects **PLAY** and `A` launches the first mission at 12,000 frames. The 3D vehicle, chase HUD, and enemies render at 14,000/16,000; the run returns to the shop after vehicle loss without a crash. Promoted to `Good`. |
+| PGA Tour 96 | `tierc/pga-round-boot.txt` | Golf Bag `B` opens Rules, `C` opens the Player List, three `Right` presses select the check mark, and `C` advances through Scoring, Course Selection, and Round. `C` starts **Hole 1** at 64,000 frames; the tee, scorecard, and golf HUD render at 66,000-80,000. Promoted to `Good`. |
+| Alone in the Dark | `tierc/alone-room-boot.txt` | The intro reaches the room at 30,000-35,000 frames with the character, table lamp, and dog. `B` opens the **Actions** menu (`Fight`, `Open/Search`, `Close`, `Push`); movement and the monster encounter are visible at 34,000. Already `Good`; inventory/interaction evidence added. |
+
+The ledger moved from **101 rows: 88 `Good`, 13 `Playable`** to
+**101 rows: 91 `Good`, 10 `Playable`**. The remaining `Playable` rows are seven
+media/reference/add-on discs plus DeathKeep, Kingdom, and Jurassic Park.
+
+**Road Rash full-race residual.** A fresh 150,000-frame `--autopilot road` run from
+boot reaches the race and cycles through traffic/wrecks, but ends at frame 150,000 with
+the rider off the bike on the sidewalk (`autopilotCrashRestart: true`,
+`autopilotRoadCoverage: 0.355`). The full 5.5-mile race is still not finished; this is a
+driving/start-line and traffic-avoidance limit, not the old CD wait. It is tracked as
+`QUAL-05B` in the blocked/residual section of the implementation plan. Evidence:
+`artifacts/p0-rr-auto-boot` (captures every 10,000 frames).
+
+**AUD-01 audio soak.** Lemmings (USA), 36,000 frames (600.6 seconds) with
+`--audio openal --realtime` on Windows: the OpenAL null driver and the default Windows
+playback device both reported **0 dropped samples / 0 underrun buffers**, with the DSP
+running. Linux Mint 22.3 on the Hyper-V VM ran the same real-time length with
+**Smashing Drive (USA)** through the OpenAL null driver: 600.6 seconds, 0 dropped
+samples, 0 underruns, 18 queued buffers, 66.7 ms latency. The VM has no PCM playback
+endpoint, so a Linux real-device soak remains a hardware limitation. See
+[`Audio.md`](Audio.md) §9.
+
+**Evidence paths.** The canonical captures are under `artifacts/p0-quality/`
+(`bladeforce-mission`, `jurassic-park-terminal`, `offworld-mission`, `pga-round`,
+and `alone-room`). The earlier direct runs are retained under
+`artifacts/p0-blade-mission-boot`, `artifacts/p0-jurassic-terminal-boot`,
+`artifacts/p0-offworld-boot-gameplay`, `artifacts/p0-pga-round-boot`, and
+`artifacts/p0-alone-room`. The Alone Actions-menu captures are under
+`artifacts/p0-quality/alone-actions` (`f031500.png`, `f032000.png`, `f033000.png`).
+
+### 1.1bq Platform and packaging validation (2026-11-10)
+
+**PLAT-05 macOS gamepad.** Added `MacOsGamepadSource` (IOKit HID Manager) and the pure
+`MacOsHidGamepadMapper`. The mapper covers Button-page 1-14, Generic Desktop X/Y/Rx/Ry,
+Z/Rz triggers, signed Z/Rz right-stick fallback, eight- and four-direction hat
+switches, and the default eight-player profile. `MacOsGamepadMapperTests` passes
+**21/21**. The source matches Generic Desktop Joystick, Gamepad, and Multi-axis
+Controller devices and rescans every two seconds. Physical detection requires a macOS
+host; no macOS controller was available here. See
+[`Installation.md`](Installation.md).
+
+**PLAT-07 frontend NativeAOT audio.** The opt-in win-x64 NativeAOT frontend ran the real
+`FiveDoMachine`/`CoreRunner`/`OpenAlAudioOutput` path with `--audio-soak 600`:
+
+| Device | Frames | Elapsed | Samples pushed | Dropped | Underruns | Queued | Latency |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| OpenAL null driver (`ALSOFT_DRIVERS=null`) | 35,968 | 600.07 s | 26,462,916 | 0 | 0 | 15 | 50.0 ms |
+| `OpenAL Soft on PG34WQ15R2B (NVIDIA High Definition Audio)` | 35,966 | 600.03 s | 26,461,445 | 0 | 0 | 12 | 55.1 ms |
+
+Both report `nativeAot: true`, `dspRunning: true`, 0 OpenAL errors, and
+`samplesProduced == samplesPushed`. Evidence:
+`artifacts/plat07/aot-null-600s.json` and
+`artifacts/plat07/aot-real-nvidia-600s.json`. A preliminary default-device run selected
+an endpoint that opened but did not consume samples (1 queued buffer, 11,382
+underruns); passing the working NVIDIA device explicitly produced the zero-underrun
+result above. Later repeats on the same HDMI endpoint produced 1-2 transient underruns
+and then lost the endpoint entirely (`No OpenAL playback device was found`), while
+sample drops remained 0. That is host endpoint power/session behavior.
+
+**PLAT-09 PAL library.** The eight PAL-sensitive matrix titles ran with
+`--bios bios/panafz10e-anvil.bin` (MD5 `a48e6746bd7edec0f40cff078f0bb19f`),
+`--region pal1`, the Tier B input script, and a fresh per-title NVRAM. All eight
+completed with `fieldRate=50` and rendered captures: Battle Chess (Europe) 36,000
+frames, `0xFED6B558`; Defcon 5 `0xD104CFA8`; Panasonic PAL Sampler `0x5ADC825B`
+(384x288); Powers Kingdom `0x64D95FAA` (384x288); Remute 3D `0x0CDEA189`; Striker
+`0x26BB8706`; True Golf Classics `0x92A0F10D`; Zhadnost `0x449D3BBD`. A PAL2 probe of
+Battle Chess at 600 frames rendered 384x288 at 50 Hz with `0x466A198C`. Summary:
+`docs/data/pal-validation.csv`; captures under `artifacts/pal-validation/`. See
+[`PalValidation.md`](PalValidation.md).
+
+**UX-16 installer/package scaffolding (2026-11-10).** Added the Inno Setup Windows
+installer (`packaging/windows/5do.iss` + build script), Linux `.deb`/`.rpm` scripts
+with desktop entry/icon/`application/x-3do-disc` MIME, and macOS `.app`/`.dmg`/`.pkg`
+scripts with a document UTI and conditional signing/notarization. Windows x64:
+installer built, silent install/launch/association/uninstall passed; `.iso`, `.cue`,
+`.chd`, `.bin` map to `5DO.Disc`, `.m3u` to `5DO.Playlist`, and the open command
+launches the installed frontend. Windows arm64 installer built. Linux x64:
+`5do_1.6.0_amd64.deb` and `5do-1.6.0-1.x86_64.rpm` built with the expected payload;
+`desktop-file-validate` exits 0 and `update-mime-database` registers the disc globs.
+macOS packaging requires a macOS host. See [`Installers.md`](Installers.md) and
+`packaging/README.md`. The full suite passes **2,098/2,098**; `dotnet format
+--verify-no-changes` is clean and InspectCode reports 0 results.
+
+### 1.1br Native platform runtime smoke (2026-11-10)
+
+`.github/workflows/platform-runtime.yml` publishes the framework-dependent CLI and
+frontend on each native runner and runs the CLI `selftest` plus the frontend
+`--smoke-test`:
+
+| Target | Runner | CLI | Frontend |
+|---|---|---|---|
+| macOS x64 | `macos-15-intel` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+| macOS arm64 | `macos-latest` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+| Linux arm64 | `ubuntu-24.04-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` under Xvfb |
+| Windows arm64 | `windows-11-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+
+Run: <https://github.com/purelogiccode/5DO/actions/runs/42770783778> (all four jobs
+passed, 2026-11-10). The apphosts were confirmed as Mach-O x86_64, Mach-O arm64, ELF
+aarch64, and PE arm64 respectively. This closes PLAT-03 and PLAT-04. The frontend
+smoke hides the GL surface, so it validates startup/XAML/settings, not GPU
+presentation; Linux GPU presentation remains preview/best-effort.
+
+### 1.1bs CD subcode, disc conversion, focus, void patterns, and pixel formats (2026-11-10)
+
+**CD subcode (ACC-03).** `CdromDevice` now uses Opera's 2449-byte maximum wire size,
+so `MODE SET` density `0x82` with a 2352-byte block and the `0x40` subcode flag is
+accepted. `READ_DATA` returns the 2352-byte audio/data sector followed by a 96-byte
+subcode block whose Q channel is packed into bit 6 of each byte; the 12-byte Q
+payload carries control/ADR, track, index, absolute MSF, relative MSF, and the
+inverted CRC-16/CCITT. `READ SUB-Q` still returns its 10-byte payload. Tests:
+`ModeSetAcceptsDigitalAudioWithSubcodeAndReadDataCarriesQ` and
+`ReadSubQStillReturnsTheTenBytePayload`.
+
+**Audio-only CD player (SYS-01).** With `panafz10.bin`, the A&M Music Sampler now
+lists track 1 and draws the player transport (`REPEAT OFF / NORMAL / STEREO`,
+`STOP`, `0:00`) instead of the earlier empty list. The transport controls remain
+inert and the WAV capture is silent; the 4DO reference documents the same BIOS
+limitation. SYS-01 moved to §4 of the implementation plan.
+
+**Disc conversion (SYS-22).** `5do disc convert <source> --out <path>` writes ISO,
+BIN, CUE, or a flat 2048-unit CHD and verifies the `GameId` hash. Lemmings (USA)
+round-tripped CHD → ISO/BIN/CUE/CHD with the same
+`discHash` (`0be38b22987b40b5d48f70a167656049`) and a 600-frame `frameHash` of
+`675291253` on every output; CUE → CHD reports the same hash. Tests:
+`DiscImageWriterTests` (four containers) and
+`CliProcessTests.DiscConvert_RoundTripsIsoAndReportsJson`. Evidence:
+`artifacts/sys22/`.
+
+**Focus pause (UX-25).** The desktop shell releases keyboard and PBUS input on every
+deactivation. The new `PauseOnFocusLoss` setting pauses a running machine and resumes
+it only when the pause was automatic; a manual start/stop clears the state.
+`FocusPausePolicyTests` covers enabled/disabled/idle transitions and the manual clear.
+
+**Void patterns (VID-17).** The void area is now a shell-composited `DrawingBrush`
+selected by `VoidAreaPattern` (`Solid`, `Checker`, `Grid`, `Scanline`) and shared by
+OpenGL/GLES/Vulkan/D3D11 because it sits behind every presenter. Settings >
+Video exposes the pattern next to the border/color controls; `VoidPatternTests` and
+the settings round-trip cover parsing and fallback.
+
+**VDLP pixel formats (VID-16).** `FrameAssembler.Assemble1555`, `Assemble565`, and
+`AssembleXrgb8888` convert the same expanded palette pixels to packed 0RGB1555,
+RGB565, and opaque XRGB8888. `FrameAssemblerTests` checks each format against the
+CPU palette reference on a synthetic two-pixel line; the default BGRA path and frame
+hashes are unchanged. The full suite passes **2,119/2,119**; `dotnet format
+--verify-no-changes` is clean.

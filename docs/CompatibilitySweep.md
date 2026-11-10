@@ -377,10 +377,80 @@ The 2026-11-08 beyond-title pass recorded these format checks:
   the swap, the reported `discHash` changed to Disc 2, all 7,200 frames completed, and
   the final capture was live-action video (`artifacts/compat-checks/f007200.png`).
 - **CD-DA.** The audio-only A&M Music Sampler and the Oyaji Hunter Mahjong CD-Audio
-  image both reached the 3DO CD player, but the track list stayed empty and the WAV
-  capture had peak/RMS 0. This is the documented SYS-01 CD-DA read-ahead/subcode and
-  audio-only-TOC residual, not a title beyond-title blocker. All 378 game titles use a
-  data track 1.
+  image both reach the FZ-10 BIOS CD player. After the 2026-11-10 subcode fix the
+  player lists track 1 at `0:00`; the transport controls remain inert and the WAV
+  capture has peak/RMS 0. This is the documented SYS-01 audio-only BIOS-player
+  residual, not a title beyond-title blocker. All 378 game titles use a data track 1.
+
+### 4.3 Tier C gameplay-depth pass
+
+Tier B answers "does 5DO reach and sustain gameplay?" with a generic 10-minute script.
+Tier C closes the quality gap for the titles that stop at a menu: it gives each
+remaining `Playable` title a title-specific start/menu script and records a `Good`
+grade only when the run reaches gameplay and survives the full checkpoint window.
+
+The remaining-`Playable` gap is tracked in `benchmarks/diff/tierc-panel.json`; the
+scripts live in `benchmarks/diff/scripts/tierc/`. Run the baseline and a probe batch
+with:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-panel.json `
+  --out artifacts/tierc-baseline --jobs 6
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-3.json `
+  --out artifacts/tierc-batch-3 --jobs 6
+python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-4.json `
+  --out artifacts/tierc-batch-4 --jobs 6
+```
+
+The 3DO **C button is the usual confirm/select button** in these menus. The Tier B
+generic script presses A early and stops before many menus appear, which is why titles
+such as PGA Tour 96, N.O.B., and BladeForce stay on their first screen. Tier C scripts
+use C for menu confirmation, press it at the frame where the menu is actually visible,
+and switch to A/B/directions for gameplay.
+
+Grade rules:
+
+- **Good:** reaches gameplay, survives the scripted window (usually 36,000 frames, about
+  10 minutes) without a hang or crash, and has no player-visible rendering defect.
+- **Playable:** runs but still has a documented gap (menu-only, media/reference disc, or
+  a script that cannot start a round).
+- **Unplayable:** does not reach or sustain gameplay.
+
+Input scripts must hold a button for at least one field. Write `3600 C` followed by
+`3620 None`, not two entries at frame 3600: `InputScript.Parse` coalesces duplicate
+frames and keeps the last entry, so a same-frame press/release can discard the press.
+The Tier C batches were re-run with explicit 20-frame holds after an early generator
+emitted same-frame releases.
+
+Media and reference discs (Club 3DO, Dennis Miller, Digital Dreamware, ESPN Golf,
+Life Stage) stay `Playable` with a non-game note; the *Return Fire - Maps O' Death*
+standalone data disc keeps its documented peer invalidation. The quality result is
+recorded in `docs/data/playability-grades.csv` under the `tierc-*` batch name.
+
+The Tier C input format accepts one optional pointer token per line after the pad
+buttons: `@mouse dx dy [left,middle,right,shift]`,
+`@lightgun x y [trigger,option,reload,offscreen]`,
+`@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
+`@trackball dx dy [start1,start2,coin1,coin2,service]`. Select the matching device with
+`--input-device <port>=<device>`; pointer buttons persist and relative motion applies to
+one frame. The reference `OperaCore` bridge is joypad-only, so pointer runs are 5DO-only
+evidence. See [`CliReference.md`](CliReference.md#input-and-automation-options).
+
+The second Tier C increment promoted **Carrier - Fortress at Sea**, **Family Feud**,
+**Insect War**, and **N. O. B.** to `Good`. The P0 quality pass then promoted
+**BladeForce**, **Off-world Interceptor**, and **PGA Tour 96** to `Good` and opened the
+Jurassic Park **Security Systems** terminal. The ledger is **91 `Good`, 10 `Playable`**:
+seven media/reference/add-on discs plus DeathKeep, Kingdom, and Jurassic Park.
+See [`TestCorpus.md`](TestCorpus.md) 1.1bo and 1.1bp.
+
+The suspected core-defect triage is closed: DeathKeep's Start Game black screen also
+appears on OperaCore at 48,000 frames, and Kingdom's intro returns to the same title
+screen on both engines at 60,000, so both are content/script limits. BladeForce was also
+a script limit, and the P0 pass now clears it: the name-entry screen needs `A`, `Down`,
+`A` to start the Training Mission and reach the Supply Depot. The weekly
+`compat-baseline.yml` workflow now includes a `quality-ledger` job that runs
+`tools/verify-playability-grades.py` against
+`docs/data/playability-grades-baseline.json` and fails on a `Good` -> `Playable` drop.
 
 ---
 

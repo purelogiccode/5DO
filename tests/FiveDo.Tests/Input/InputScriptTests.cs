@@ -147,4 +147,127 @@ public sealed class InputScriptTests
         var source = new ScriptedPbusSource([]);
         Assert.Throws<ArgumentOutOfRangeException>(() => source.AdvanceTo(-1));
     }
+
+    [Fact]
+    public void Parse_ReadsMousePointerAndPadButtons()
+    {
+        IReadOnlyList<InputScriptEntry> entries =
+            InputScript.Parse("10 A @mouse 40 -20 left,right\n");
+
+        InputScriptEntry entry = Assert.Single(entries);
+        Assert.Equal(10, entry.Frame);
+        Assert.Equal(ControllerButton.A, entry.State.Buttons);
+        Assert.Equal(InputScriptPointerKind.Mouse, entry.PointerState.Kind);
+        Assert.Equal(40, entry.PointerState.Mouse.DeltaX);
+        Assert.Equal(-20, entry.PointerState.Mouse.DeltaY);
+        Assert.True(entry.PointerState.Mouse.Left);
+        Assert.False(entry.PointerState.Mouse.Middle);
+        Assert.True(entry.PointerState.Mouse.Right);
+    }
+
+    [Fact]
+    public void Parse_ReadsLightgunArcadeAndTrackballPointers()
+    {
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse(
+            """
+            0 @lightgun 160 120 trigger,option,offscreen
+            10 @arcadegun 12 34 trigger,service,coins,start,holster
+            20 @orbatak 3 -2 start1,start2,coin1,coin2,service
+            """);
+
+        Assert.Equal(3, entries.Count);
+        Assert.Equal(InputScriptPointerKind.Lightgun, entries[0].PointerState.Kind);
+        Assert.Equal(160, entries[0].PointerState.Lightgun.X);
+        Assert.Equal(120, entries[0].PointerState.Lightgun.Y);
+        Assert.True(entries[0].PointerState.Lightgun.Trigger);
+        Assert.True(entries[0].PointerState.Lightgun.Option);
+        Assert.True(entries[0].PointerState.Lightgun.OffScreen);
+
+        Assert.Equal(InputScriptPointerKind.ArcadeLightgun, entries[1].PointerState.Kind);
+        Assert.True(entries[1].PointerState.ArcadeLightgun.Trigger);
+        Assert.True(entries[1].PointerState.ArcadeLightgun.Service);
+        Assert.True(entries[1].PointerState.ArcadeLightgun.Coins);
+        Assert.True(entries[1].PointerState.ArcadeLightgun.Start);
+        Assert.True(entries[1].PointerState.ArcadeLightgun.Holster);
+
+        Assert.Equal(InputScriptPointerKind.Trackball, entries[2].PointerState.Kind);
+        Assert.Equal(3, entries[2].PointerState.Trackball.DeltaX);
+        Assert.Equal(-2, entries[2].PointerState.Trackball.DeltaY);
+        Assert.True(entries[2].PointerState.TrackballButtons.StartP1);
+        Assert.True(entries[2].PointerState.TrackballButtons.StartP2);
+        Assert.True(entries[2].PointerState.TrackballButtons.CoinP1);
+        Assert.True(entries[2].PointerState.TrackballButtons.CoinP2);
+        Assert.True(entries[2].PointerState.TrackballButtons.Service);
+    }
+
+    [Fact]
+    public void Parse_AcceptsNoneForPointerButtons()
+    {
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse("0 @mouse 0 0 None\n");
+        InputScriptEntry entry = Assert.Single(entries);
+        Assert.Equal(InputScriptPointerKind.Mouse, entry.PointerState.Kind);
+        Assert.False(entry.PointerState.Mouse.Left);
+        Assert.False(entry.PointerState.Mouse.Right);
+    }
+
+    [Fact]
+    public void Parse_RejectsMalformedPointers()
+    {
+        Assert.Throws<FormatException>(() => InputScript.Parse("0 @mouse 1\n"));
+        Assert.Throws<FormatException>(() => InputScript.Parse("0 @mouse 1 2 turbo\n"));
+        Assert.Throws<FormatException>(() => InputScript.Parse("0 @lightgun a 2\n"));
+        Assert.Throws<FormatException>(() => InputScript.Parse("0 @unknown 1 2\n"));
+    }
+
+    [Fact]
+    public void ScriptedSource_AppliesPointerStateAndClearsMotionAfterSample()
+    {
+        var source = new ScriptedPbusSource(
+            InputScript.Parse("0 @mouse 40 -20 left\n20 @mouse 0 0\n"));
+        source.Source.SetDevice(0, InputDeviceType.Mouse);
+        source.Source.SetControllerCount(1);
+
+        source.AdvanceTo(0);
+        Assert.Equal(InputScriptPointerKind.Mouse, source.CurrentPointerState.Kind);
+        Assert.Equal(40, source.Source.Devices.GetMouse(0).DeltaX);
+        Assert.Equal(-20, source.Source.Devices.GetMouse(0).DeltaY);
+        Assert.True(source.Source.Devices.GetMouse(0).Left);
+
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        _ = source.GetPbusData(packet);
+        Assert.Equal(0, source.Source.Devices.GetMouse(0).DeltaX);
+        Assert.Equal(0, source.Source.Devices.GetMouse(0).DeltaY);
+        Assert.True(source.Source.Devices.GetMouse(0).Left);
+
+        source.AdvanceTo(20);
+        Assert.False(source.Source.Devices.GetMouse(0).Left);
+    }
+
+    [Fact]
+    public void ScriptedSource_OnlyAppliesPointerToMatchingPorts()
+    {
+        var source = new ScriptedPbusSource(InputScript.Parse("0 @lightgun 160 120 trigger\n"));
+        source.Source.SetDevice(0, InputDeviceType.Joypad);
+        source.Source.SetDevice(1, InputDeviceType.Lightgun);
+        source.Source.SetControllerCount(2);
+
+        source.AdvanceTo(0);
+        Assert.Equal(LightgunState.Empty, source.Source.Devices.GetLightgun(0));
+        Assert.Equal(160, source.Source.Devices.GetLightgun(1).X);
+        Assert.Equal(120, source.Source.Devices.GetLightgun(1).Y);
+        Assert.True(source.Source.Devices.GetLightgun(1).Trigger);
+    }
+
+    [Fact]
+    public void Offset_PreservesPointerState()
+    {
+        IReadOnlyList<InputScriptEntry> entries = InputScript.Parse("0 @mouse 5 -6 left\n");
+        IReadOnlyList<InputScriptEntry> shifted = InputScript.Offset(entries, 91_000);
+
+        Assert.Equal(91_000, shifted[0].Frame);
+        Assert.Equal(InputScriptPointerKind.Mouse, shifted[0].PointerState.Kind);
+        Assert.Equal(5, shifted[0].PointerState.Mouse.DeltaX);
+        Assert.Equal(-6, shifted[0].PointerState.Mouse.DeltaY);
+        Assert.True(shifted[0].PointerState.Mouse.Left);
+    }
 }

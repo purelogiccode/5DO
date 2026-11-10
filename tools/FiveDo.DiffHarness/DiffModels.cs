@@ -36,6 +36,9 @@ internal sealed class DiffDefaults
     /// <summary>Gets the optional input script path.</summary>
     public string? InputScript { get; init; }
 
+    /// <summary>Gets the optional <c>--input-device</c> selection.</summary>
+    public string? InputDevice { get; init; }
+
     /// <summary>Gets the machine options.</summary>
     public DiffMachineOptions? Options { get; init; } = new();
 
@@ -81,6 +84,9 @@ internal sealed class DiffTitle
 
     /// <summary>Gets the optional input-script override.</summary>
     public string? InputScript { get; init; }
+
+    /// <summary>Gets the optional <c>--input-device</c> override.</summary>
+    public string? InputDevice { get; init; }
 
     /// <summary>Gets the optional machine-option override.</summary>
     public DiffMachineOptions? Options { get; init; }

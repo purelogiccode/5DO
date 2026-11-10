@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C script probe (6 titles, 12k frames)",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 12000,
+    "captureFrames": [
+      3000,
+      3600,
+      4800,
+      6000,
+      9000,
+      12000
+    ],
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "family-feud",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-start.txt"
+    },
+    {
+      "id": "kingdom---the-far-reaches",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-start.txt"
+    },
+    {
+      "id": "n.-o.-b.---neo-organic-bioform",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/nob-start.txt"
+    },
+    {
+      "id": "off-world-interceptor",
+      "name": "Off-world Interceptor",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/offworld-start.txt"
+    },
+    {
+      "id": "olympic-soccer",
+      "name": "Olympic Soccer",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/olympic-soccer-start.txt"
+    },
+    {
+      "id": "pga-tour-96",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-start.txt"
+    }
+  ]
+}

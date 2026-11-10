@@ -1,0 +1,27 @@
+# DeathKeep: choose Start Game from the late title menu.
+3600 P
+3620 None
+6000 C
+6020 None
+12000 C
+12020 None
+24000 C
+24020 None
+36000 Down
+36020 None
+36200 Down
+36220 None
+36400 Down
+36420 None
+36600 C
+36620 None
+38000 C
+38020 None
+40000 C
+40020 None
+42000 A
+42020 None
+44000 B
+44020 None
+46000 C
+46020 None

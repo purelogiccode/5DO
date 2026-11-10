@@ -252,6 +252,7 @@ public partial class SettingsWindow : Window
         ResolutionCombo.SelectedItem = _resolutionOptions.FirstOrDefault(option => option.Value == settings.OutputResolution)
             ?? _resolutionOptions[0];
         FilterCombo.ItemsSource = Enum.GetValues<VideoFilter>();
+        VoidPatternCombo.ItemsSource = Enum.GetValues<VoidPattern>();
         FilterCombo.SelectedItem = settings.Filter;
         DeinterlaceCombo.ItemsSource = _deinterlaceOptions;
         DeinterlaceCombo.SelectedItem = _deinterlaceOptions.FirstOrDefault(
@@ -283,6 +284,7 @@ public partial class SettingsWindow : Window
         OverscanBottomBox.Text = overscan.Bottom.ToString(CultureInfo.InvariantCulture);
         VideoBorderBox.Text = settings.VideoBorderPixels.ToString(CultureInfo.InvariantCulture);
         VoidAreaColorBox.Text = settings.ResolveVoidAreaColor();
+        VoidPatternCombo.SelectedItem = settings.ResolveVoidAreaPattern();
         OverlayCheck.IsChecked = settings.ShowOverlay;
         InputPlayerCombo.ItemsSource = new[] { 1, 2, 3, 4, 5, 6 };
         InputPlayerCombo.SelectedItem = Math.Clamp(settings.InputDisplayPlayer, 1, 6);
@@ -370,6 +372,7 @@ public partial class SettingsWindow : Window
         OperaDipirCheck.IsChecked = settings.OperaDipir;
         OperaSoftResetCheck.IsChecked = settings.OperaSoftReset;
         SwiHleCheck.IsChecked = settings.SwiHle;
+        PauseOnFocusLossCheck.IsChecked = settings.PauseOnFocusLoss;
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
@@ -1160,6 +1163,9 @@ public partial class SettingsWindow : Window
         }
 
         settings.VoidAreaColor = voidColor!;
+        settings.VoidAreaPattern = (VoidPatternCombo.SelectedItem is VoidPattern pattern
+            ? pattern
+            : VoidPattern.Solid).ToString();
         settings.ShowOverlay = OverlayCheck.IsChecked == true;
         settings.InputDisplayPlayer = InputPlayerCombo.SelectedItem is int inputPlayer
             ? inputPlayer
@@ -1271,6 +1277,7 @@ public partial class SettingsWindow : Window
         }
 
         settings.RewindEnabled = RewindCheck.IsChecked == true;
+        settings.PauseOnFocusLoss = PauseOnFocusLossCheck.IsChecked == true;
         var rewindSecondsText = RewindSecondsBox.Text?.Trim();
         if (string.IsNullOrEmpty(rewindSecondsText))
         {

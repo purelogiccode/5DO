@@ -596,6 +596,12 @@ Resolved in the 2026-10-23 M9P pass:
 - `VdlFrameMailbox` copies only the visible width; the present delegate is cached.
 - Real benchmark harness with synthetic and real-disc modes.
 
+Native platform runtime smoke (2026-11-10) validates CLI/frontend startup on macOS
+x64/arm64, Linux arm64, and Windows arm64, but it hides the GL surface; the GPU
+measurements below therefore remain open. `FrameAssembler` now exposes 0RGB1555,
+RGB565, and XRGB8888 conversion paths for presentation parity, and the shell's void
+patterns are composited behind every presenter; the default BGRA path is unchanged.
+
 Still open:
 
 1. Physical-pixel sizing from `Bounds * RenderScaling` is implemented; manual

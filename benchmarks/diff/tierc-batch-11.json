@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 11: PGA player selection",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 60000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "pga-play5",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-play5.txt",
+      "frames": 60000,
+      "captureFrames": [
+        48000,
+        50000,
+        52000,
+        54000,
+        58000,
+        60000
+      ]
+    }
+  ]
+}

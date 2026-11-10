@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 9: remaining leads",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "pga-pro2",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-pro2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "family-feud-play6",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play6.txt",
+      "frames": 60000,
+      "captureFrames": [
+        44000,
+        46000,
+        50000,
+        54000,
+        60000
+      ]
+    },
+    {
+      "id": "deathkeep-play7",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-play7.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "kingdom-play5",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-play5.txt",
+      "frames": 90000,
+      "captureFrames": [
+        36000,
+        50000,
+        60000,
+        75000,
+        90000
+      ]
+    },
+    {
+      "id": "bladeforce-play4",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-play4.txt",
+      "frames": 60000,
+      "captureFrames": [
+        24000,
+        36000,
+        48000,
+        60000
+      ]
+    },
+    {
+      "id": "carrier-mouse",
+      "name": "Carrier - Fortress at Sea",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/carrier-mouse.txt",
+      "frames": 24000,
+      "captureFrames": [
+        6000,
+        12000,
+        18000,
+        24000
+      ],
+      "inputDevice": "1=mouse"
+    }
+  ]
+}

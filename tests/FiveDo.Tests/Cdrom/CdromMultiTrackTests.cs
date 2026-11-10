@@ -122,6 +122,74 @@ public sealed class CdromMultiTrackTests
     }
 
     [Fact]
+    public void ModeSetAcceptsDigitalAudioWithSubcodeAndReadDataCarriesQ()
+    {
+        var disc = new TrackedMemoryDisc(dataSectors: 4, audioSectors: 2);
+        var cd = new CdromDevice();
+        cd.InsertDisc(disc);
+
+        // MODE SET page 0: density 0x82 (digital audio), block length 2352,
+        // flag 0x40 (subcode). Opera accepts this as a 2448-byte wire transfer.
+        Send(cd, 0x09, 0x00, 0x82, 0x09, 0x30, 0x40);
+        byte[] modeStatus = ReadStatus(cd, 2);
+        Assert.Equal(0x09, modeStatus[0]);
+        Assert.Equal(0, modeStatus[1] & 0x10);
+        Assert.Equal(2352, cd.ReadSectorSize);
+
+        // AUDIO track 2 starts at LBA 4 = 00:02:04. Read the 2352-byte sector
+        // plus the 96-byte subcode block.
+        Send(cd, 0x10, 0x00, 0x02, 0x04, 0x00, 0x00, 0x01);
+        byte[] transfer = ReadData(cd, 2448);
+        Assert.Equal(disc.AudioSector(0), transfer[..2352]);
+
+        byte[] q = DecodeSubcodeQ(transfer.AsSpan(2352, 96));
+        Assert.Equal(0x00, q[0]);
+        Assert.Equal(0x01, q[1]);
+        Assert.Equal(0x02, q[2]);
+        Assert.Equal(0x01, q[3]);
+        Assert.Equal(0x00, q[4]);
+        Assert.Equal(0x02, q[5]);
+        Assert.Equal(0x04, q[6]);
+        Assert.Equal(0x00, q[7]);
+        Assert.Equal(0x00, q[8]);
+        Assert.Equal(0x00, q[9]);
+        Assert.NotEqual(0, q[10] | q[11]);
+    }
+
+    [Fact]
+    public void ReadSubQStillReturnsTheTenBytePayload()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new TrackedMemoryDisc(dataSectors: 4, audioSectors: 2));
+
+        Send(cd, 0x87);
+        byte[] subQ = ReadStatus(cd, 12);
+        Assert.Equal(0x87, subQ[0]);
+        Assert.Equal(0x00, subQ[1]);
+        Assert.Equal(0x41, subQ[2]);
+        Assert.Equal(0x01, subQ[3]);
+        Assert.Equal(0x01, subQ[4]);
+        Assert.Equal(0x00, subQ[5]);
+        Assert.Equal(0x02, subQ[6]);
+        Assert.Equal(0x00, subQ[7]);
+        Assert.Equal(0xe3, subQ[11]);
+    }
+
+    private static byte[] DecodeSubcodeQ(ReadOnlySpan<byte> subcode)
+    {
+        var q = new byte[12];
+        for (var bit = 0; bit < 96; bit++)
+        {
+            if ((subcode[bit] & 0x40) != 0)
+            {
+                q[bit >> 3] |= (byte)(1 << (7 - (bit & 7)));
+            }
+        }
+
+        return q;
+    }
+
+    [Fact]
     public void ModeSetRejectsAnOversizedBlock()
     {
         var cd = new CdromDevice();

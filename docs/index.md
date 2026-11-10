@@ -101,8 +101,9 @@
   rendered**, **13 black/blank**, and **5 not loadable** on the first pass. After
   triage: **593 loadable/rendered**, **1 known no-video case** (`Crash 'n Burn` Japan),
   and **0 not-loadable rows**.
-- Windows x64 is the validated target. Linux x64 full suite passed; GPU
-  presentation is preview/best-effort. macOS and arm64 validation are post-1.0.
+- Windows x64 is the validated GPU target. Linux x64 full suite passed; GPU
+  presentation is preview/best-effort. macOS x64/arm64, Linux arm64, and Windows
+  arm64 pass the native CLI/frontend runtime smoke (2026-11-10).
 - v1.6.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI, desktop app,
   and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
@@ -146,7 +147,8 @@ the remaining work.
 
 - [Architecture](Architecture.md) — dependency rules, runtime composition, and state ownership.
 - [Developer guide](DeveloperGuide.md) — source map, invariants, extension points, and conventions.
-- [Build and test](BuildAndTest.md) — prerequisites, build/test/format, benchmarks, publish, CI.
+- [Build and test](BuildAndTest.md) - prerequisites, build/test/format, benchmarks, publish, CI.
+- [Installers and file associations](Installers.md) - Windows/Linux/macOS packages, signing, and MIME/registry hooks.
 - [Test strategy](TestStrategy.md) — unit, integration, golden, differential, fuzz, and performance testing.
 - [Porting notes](PortingNotes.md) — C++ to C# rules and reference quirks.
 - [Reference strategy](ReferenceStrategy.md) — Opera/libopera hierarchy and differential procedure.
@@ -155,12 +157,13 @@ the remaining work.
 - [Documentation guide](Documentation.md) — build the site, preview locally, and publish the wiki.
 - [Status](Status.md) — current position, completion estimate, and next steps.
 - [Roadmap](Roadmap.md) — concise milestone summary.
-- [Implementation plan](ImplementationPlan.md) — active compatibility completion task list.
-- [Implementation plan archive](ImplementationPlanArchive.md) — former plan, completed log, and evidence.
+- [Implementation plan](ImplementationPlan.md) — consolidated achievable backlog after compatibility completion.
+- [Implementation plan archive](ImplementationPlanArchive.md) — completed log, stable IDs, evidence, and history.
 - [Release checklist](ReleaseChecklist.md) — v1.1 scope and gates.
 - [Release legal review](ReleaseLegalReview.md) — attribution and distribution decisions.
 - [OpenAL Soft notice](OpenALSoft.md) — LGPL notice, source offer, and relinking rights.
-- [Test corpus](TestCorpus.md) — machine-specific BIOS/disc evidence commands (not committed assets).
+- [Test corpus](TestCorpus.md) - machine-specific BIOS/disc evidence commands (not committed assets).
+- [PAL library validation](PalValidation.md) - Europe-only matrix captures with the documented PAL BIOS.
 - [Documentation source guide](DocumentationSource.md) — conventions for editing this documentation set.
 
 ## Project links

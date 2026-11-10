@@ -1,0 +1,27 @@
+# Off-world Interceptor: move to EXIT in the shop grid and launch.
+0 None
+3000 None
+3600 Down
+3620 None
+3700 Down
+3720 None
+3800 Right
+3820 None
+3900 Right
+3920 None
+4000 A
+4020 None
+4500 A
+4520 None
+5000 A
+5020 None
+6000 A
+6020 None
+7000 A
+7020 None
+8000 A
+8020 None
+9000 A
+9020 None
+10000 A
+10020 None

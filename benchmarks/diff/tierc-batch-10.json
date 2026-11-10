@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C batch 10: PGA Tour 96 round start",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 60000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "pga-play4",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-play4.txt",
+      "frames": 60000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000,
+        52000,
+        60000
+      ]
+    }
+  ]
+}

@@ -12,3 +12,7 @@
 *.md       text eol=lf
 *.sln      text eol=crlf
 *.slnx     text eol=lf
+*.sh       text eol=lf
+*.desktop  text eol=lf
+*.iss      text eol=crlf
+*.plist    text eol=lf

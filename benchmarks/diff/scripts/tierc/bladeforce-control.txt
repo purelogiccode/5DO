@@ -1,0 +1,9 @@
+# BladeForce: start a mission, then no input (control).
+3600 Right
+3620 None
+3800 C
+3820 None
+4200 Down
+4220 None
+4400 C
+4420 None

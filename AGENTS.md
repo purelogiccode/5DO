@@ -25,7 +25,7 @@ is documented as preview/best-effort. Record new Linux evidence in
 dotnet build 5DO.sln -c Debug
 dotnet test 5DO.sln -c Debug --no-build --no-restore
 dotnet format 5DO.sln --verify-no-changes --no-restore
-jb inspectcode 5DO.sln --severity=WARNING --no-updates
+jb inspectcode 5DO.sln --severity=WARNING --no-updates --no-build --output=inspectcode.sarif
 ```
 
 Run the release gate commands from `docs/ReleaseChecklist.md` before tagging a release.
@@ -51,8 +51,9 @@ GitHub release without the built artifacts is not a complete release.
 
 ## Documentation rules
 
-- `docs/ImplementationPlan.md` is the active compatibility task list. Historical status,
-  milestones, evidence, and the completed log live in `docs/ImplementationPlanArchive.md`.
+- `docs/ImplementationPlan.md` is the active implementation and missing-feature backlog.
+  Historical status, milestones, evidence, and the completed log live in
+  `docs/ImplementationPlanArchive.md`.
 - v1.0 is a **documented-compatibility** release. Full compatibility, M13.5/M13.6
   visual/high-resolution review, and M14 high-resolution CEL research are post-1.0.
 - Legal/attribution sign-off is recorded under the FreeDO modified GNU LGPL as free,

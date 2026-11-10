@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C - remaining Playable titles (25)",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "captureFrames": [
+      600,
+      3600,
+      18000,
+      36000
+    ],
+    "inputScript": "benchmarks/diff/scripts/tierb-10min.txt",
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "20th-century-video-almanac",
+      "name": "20th Century Video Almanac",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/20th Century Video Almanac (1993)(Software Toolworks)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "bladeforce",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "carrier---fortress-at-sea",
+      "name": "Carrier - Fortress at Sea",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Carrier - Fortress at Sea (1995)(Panasonic)(US).chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "club-3do---station-invasion",
+      "name": "Club 3DO - Station Invasion",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Club 3DO - Station Invasion (1994)(Studio 3DO)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "deathkeep",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "dennis-miller---thats-news-to-me",
+      "name": "Dennis Miller - That's News To Me",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good",
+      "disc": "${root}/Dennis Miller - That's News To Me (1994)(Sanctuary Woods)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "digital-dreamware",
+      "name": "Digital Dreamware",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Digital Dreamware (1995)(Virgin)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "espn-golf---lower-your-score-with-tom-kite---shot-making",
+      "name": "ESPN Golf - Lower Your Score With Tom Kite - Shot Making",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Playable; Phoenix Good",
+      "disc": "${root}/ESPN Golf - Lower Your Score With Tom Kite - Shot Making (1994)(IntelliPlay)(US)(Disc 1 of 3)[!][Shot Making Disc 1].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "family-feud",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "hell---a-cyberpunk-thriller",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "insect-war",
+      "name": "Insect War",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Insect War (1994)(Panasonic)(JP)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "john-madden-football",
+      "name": "John Madden Football",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "jurassic-park-interactive",
+      "name": "Jurassic Park Interactive",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "kingdom---the-far-reaches",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "life-stage,-the---virtual-house",
+      "name": "Life Stage, The - Virtual House",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Life Stage, The - Virtual House (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "n.-o.-b.---neo-organic-bioform",
+      "name": "N. O. B. - Neo Organic Bioform",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "off-world-interceptor",
+      "name": "Off-world Interceptor",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "olympic-soccer",
+      "name": "Olympic Soccer",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "pga-tour-96",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "return-fire---maps-o-death",
+      "name": "Return Fire - Maps O' Death",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Return Fire - Maps O' Death v1.0 FB13.1.0 (1995)(Prolific)(US)[!][data disc].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "crime-patrol",
+      "name": "Crime Patrol",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Crime Patrol (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "guardian-war",
+      "name": "Guardian War",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Guardian War (1994)(Panasonic)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "mad-dog-ii",
+      "name": "Mad Dog II - The Lost Gold",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "shootout-old-tucson",
+      "name": "Shootout at Old Tucson",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=arcade-lightgun",
+      "note": "5DO ahead of 4DO; arcade lightgun",
+      "disc": "${root}/Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd",
+      "tierC": "remaining-playable"
+    },
+    {
+      "id": "slayer",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
-> **Archived 2026-11-08.** This is the former implementation plan. It is kept for
-> traceability, stable IDs, evidence, and completed history. Do not add new tasks here.
-> The active task list is [ImplementationPlan.md](ImplementationPlan.md).
+> **Archived 2026-11-08; merged 2026-11-09.** This is the former implementation plan. It is
+> kept for traceability, stable IDs, evidence, and completed history. Do not add new tasks
+> here. The consolidated actionable plan is
+> [ImplementationPlan.md](ImplementationPlan.md); this file is the raw evidence and
+> completed-log store.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -379,6 +381,46 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 ## 9. Completed log
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
+
+- **2026-11-10 - PLAT-03/PLAT-04 native runtime, ACC-03 subcode, SYS-22 conversion,
+  UX-25 focus, VID-16/VID-17.** Added `.github/workflows/platform-runtime.yml`, which
+  publishes the framework-dependent CLI/frontend on macOS x64 (`macos-15-intel`),
+  macOS arm64 (`macos-latest`), Linux arm64 (`ubuntu-24.04-arm`), and Windows arm64
+  (`windows-11-arm`); every target reports `5DO 1.6.0`, `selftest ok: true`, and
+  `FRONTEND SMOKE OK 1.6.0` (run 42770783778). Raised the CD wire limit to Opera's
+  2449 bytes, accepted 2352-byte digital-audio blocks with the 96-byte subcode flag,
+  packed the Q subchannel (control/track/index/MSF/CRC) into READ_DATA, and kept the
+  10-byte READ SUB-Q response; the FZ-10 BIOS CD player now lists the A&M Music
+  Sampler's first track but its transport remains inert, so SYS-01 moved to §4.
+  Added `disc convert` for ISO/BIN/CUE/flat CHD with game-ID verification (Lemmings
+  USA: `0be38b22987b40b5d48f70a167656049`, 600-frame `675291253` on every output).
+  Added opt-in focus-loss pausing with full input release, selectable void patterns
+  (solid/checker/grid/scanline), and 0RGB1555/RGB565/XRGB8888 frame conversion helpers.
+  Evidence: [TestCorpus.md](TestCorpus.md) 1.1br/1.1bs, [Compatibility.md](Compatibility.md)
+  §10.3, [Audio.md](Audio.md) §9, [CliReference.md](CliReference.md) §6.
+
+- **2026-11-10 - PLAT-05/PLAT-07/PLAT-09 and UX-16 scaffolding.** macOS gamepad:
+  added `MacOsGamepadSource` on IOKit HID Manager plus the pure
+  `MacOsHidGamepadMapper`; `MacOsGamepadMapperTests` covers face buttons, sticks,
+  triggers, signed Z/Rz fallback, hats, button-only d-pads, and the eight-player
+  profile (**21/21**). Physical detection still needs a macOS host. NativeAOT frontend
+  audio: added the headless `--audio-soak` mode (real `FiveDoMachine`/`CoreRunner`/
+  `OpenAlAudioOutput` path); the win-x64 AOT binary ran Lemmings (USA) for 600 s on
+  the null device (35,968 frames, 26,462,916 samples) and the NVIDIA playback endpoint
+  (35,966 frames, 26,461,445 samples), both **0 dropped samples / 0 underruns / 0
+  OpenAL errors** with the DSP running. Later HDMI-endpoint repeats produced 1-2
+  transient underruns and then lost the endpoint; sample drops stayed 0, and the
+  documented 0/0 result is the uninterrupted run. PAL: all eight Europe-only/PAL-sensitive
+  matrix titles captured with `panafz10e-anvil.bin` and `--region pal1` at 50 Hz
+  (Battle Chess, Defcon 5, PAL Sampler, Powers Kingdom, Remute 3D, Striker, True Golf
+  Classics, Zhadnost); a PAL2 probe rendered 384x288. Packaging: unsigned Inno Setup
+  Windows installer with `.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, Linux
+  `.deb`/`.rpm` with desktop/MIME, and macOS `.app`/`.dmg`/`.pkg` scaffolding with
+  conditional signing/notarization; Windows install/launch/association/uninstall and
+  Linux package metadata/MIME validated. Evidence: `Audio.md` §9,
+  `PalValidation.md`, `Installers.md`, `docs/data/pal-validation.csv`.
+  **2,098/2,098 tests pass**, format is clean, and InspectCode reports 0 results;
+  see `TestCorpus.md` 1.1bq.
 
 - **2026-11-08 - TEST-06 Tier B batch 4 (last 32 peer-flagged titles).** Generated `benchmarks/diff/tierb-panel-4.json` and ran the 36,000-frame `--bios-auto` pass. All 32 completed with exit code 0 and `dspRunning: true`; **27 promoted to `Good`** and **5 kept `Playable`** (N.O.B., Off-world Interceptor, Olympic Soccer, PGA Tour 96, Return Fire - Maps O' Death). Title-specific `tierb-panzer-start` and `tierb-quarterback-start` scripts confirmed Panzer General's scenario map and Quarterback Attack's kickoff/football gameplay; a 5-frame Real Pinball recheck showed the full table at frame 30,000 and confirmed the dark frame is the attract/transition view. The comparison now has **107 reviewed titles** (81 `Good`, 26 `Playable`), **307 automated loadability only**, **22 `Behind` vs 4DO / 25 vs Phoenix**, and **5 titles where 5DO is ahead of 4DO**. The higher `Behind` count is the explicit grade gap, not a loadability regression. See `TestCorpus.md` §1.1bl.
 

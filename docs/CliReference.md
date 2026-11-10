@@ -22,7 +22,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 - A flag followed by a non-`--` token consumes that token as its value. Put boolean
   flags last or before another `--option` to avoid ambiguity.
 - The first non-option token is the positional path for `run`, `trace`, `info`,
-  `disc dump`, `disc tracks`, `disc playlist`, `bios info`, `audio analyze`, `state inspect`,
+  `disc convert`, `disc dump`, `disc tracks`, `disc playlist`, `bios info`, `audio analyze`, `state inspect`,
   `settings validate|migrate`, and `disasm` (disc or file, depending on the command). `fs` uses fixed positional
   subcommand/path positions.
 - Integer options accept decimal and, where noted, `0x` hexadecimal. Some address
@@ -59,6 +59,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `gamedb scan <folder> --out <file>` | Derive XML records from disc IDs and filenames. |
 | `gamedb export --out <file>` | Export the embedded database. |
 | `gamedb merge <file> --out <file>` | Merge a fragment into the embedded database for review. |
+| `disc convert <disc> --out <path> [--format iso\|bin\|cue\|chd]` | Convert a data-only image and verify the game ID. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
@@ -239,6 +240,31 @@ Separators are comma, plus, or vertical bar. `None` or an empty field releases a
 buttons. The state persists until the next entry. Duplicate frames keep the last entry.
 With `--state-in`, a script starting at `0` applies its last entry immediately unless
 `--script-base state` is used.
+
+A line may also carry one pointer-device state after the pad buttons. The device must
+be selected with `--input-device` on the same port; otherwise the pointer state is
+ignored. Pointer buttons persist until the next entry, while relative mouse and
+trackball motion applies to one frame only:
+
+```text
+# frame  pad buttons  pointer token
+300      A            @mouse 40 -20 left
+320      None         @mouse 0 0
+340      None         @lightgun 160 120 trigger
+360      None         @arcadegun 200 150 trigger,coins
+380      None         @trackball 6 -2 start1,coin2
+```
+
+| Token | Coordinates | Optional buttons |
+|---|---|---|
+| `@mouse` | relative `dx dy`, each -512..511 | `left`, `middle`, `right`, `shift` |
+| `@lightgun` (`@gun`) | screen `x y`, 0-319/0-239 | `trigger`, `option`, `reload`, `offscreen` |
+| `@arcadegun` (`@arcade`) | screen `x y` | `trigger`, `service`, `coins`, `start`, `holster`, `offscreen` |
+| `@trackball` (`@orbatak`) | relative `dx dy`, each -24..24 | `start1`, `start2`, `coin1`, `coin2`, `service` |
+
+A line without a pointer token releases every pointer button. The reference
+`OperaCore` wrapper used by the differential harness currently exposes only a joypad,
+so pointer scripts produce 5DO-only evidence until that bridge gains pointer support.
 
 ### Output options
 
@@ -508,6 +534,20 @@ either the database title or `unknown`.
 ---
 
 ## 6. `disc`
+
+### `disc convert`
+
+```powershell
+5do disc convert game.chd --out game.iso
+5do disc convert game.chd --out game.cue --format cue --json
+```
+
+Converts a data-only image between ISO, BIN, CUE, and a flat 2048-unit CHD. The
+format is inferred from `--out` or set with `--format iso|bin|cue|chd`. CUE output
+writes a companion BIN and a single `MODE1/2048` track. The command reopens the
+output, computes both `GameId` hashes, and exits 1 on a mismatch. JSON fields:
+`ok`, `source`, `output`, `format`, `sectors`, `bytes`, `sourceHash`, `outputHash`.
+Audio-track images are rejected until a raw audio writer is added.
 
 ### `disc dump`
 

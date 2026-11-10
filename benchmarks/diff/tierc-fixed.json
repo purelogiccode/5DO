@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "name": "Tier C fixed-script verification (13 titles)",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "frames": 36000,
+    "audio": "null",
+    "prefetch": true
+  },
+  "titles": [
+    {
+      "id": "john-madden-fixed",
+      "name": "John Madden Football",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/John Madden Football (1994)(EA Sports)(US)[!][722007-2 70].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/john-madden-c2.txt",
+      "frames": 36000,
+      "captureFrames": [
+        12000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "crime-patrol-fixed",
+      "name": "Crime Patrol",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Crime Patrol (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/crime-patrol-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "mad-dog-ii-fixed",
+      "name": "Mad Dog II - The Lost Gold",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=lightgun",
+      "note": "lightgun title",
+      "disc": "${root}/Mad Dog II - The Lost Gold (1994)(American Laser Games)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/mad-dog-ii-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "shootout-fixed",
+      "name": "Shootout at Old Tucson",
+      "bios": "bios/panafz10-patched.bin",
+      "inputDevice": "1=arcade-lightgun",
+      "note": "5DO ahead of 4DO; arcade lightgun",
+      "disc": "${root}/Shootout at Old Tucson (USA) (RE3) (Arcade CD-ROM).chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/shootout-c2.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "pga-fixed",
+      "name": "PGA Tour 96",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "guardian-war-fixed",
+      "name": "Guardian War",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Guardian War (1994)(Panasonic)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/guardian-war-play3.txt",
+      "frames": 36000,
+      "captureFrames": [
+        12000,
+        18000,
+        24000,
+        36000
+      ]
+    },
+    {
+      "id": "bladeforce-input-fixed",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-input.txt",
+      "frames": 36000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "bladeforce-control-fixed",
+      "name": "BladeForce",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-control.txt",
+      "frames": 36000,
+      "captureFrames": [
+        24000,
+        30000,
+        36000
+      ]
+    },
+    {
+      "id": "family-feud-fixed",
+      "name": "Family Feud",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play5.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "slayer-fixed",
+      "name": "Slayer",
+      "note": "5DO Playable, 4DO/Phoenix Good",
+      "disc": "${root}/Slayer (1994)(Mindscape)(EU)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/slayer-play6.txt",
+      "frames": 60000,
+      "captureFrames": [
+        48000,
+        54000,
+        60000
+      ]
+    },
+    {
+      "id": "deathkeep-fixed",
+      "name": "DeathKeep",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/DeathKeep (1995)(SSi)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/deathkeep-play6.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "hell-fixed",
+      "name": "Hell - A Cyberpunk Thriller",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Hell - A Cyberpunk Thriller (1994)(Take 2)(US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/hell-play5.txt",
+      "frames": 48000,
+      "captureFrames": [
+        36000,
+        40000,
+        44000,
+        48000
+      ]
+    },
+    {
+      "id": "kingdom-fixed",
+      "name": "Kingdom - The Far Reaches",
+      "biosAuto": "bios",
+      "note": "5DO Rendered; 4DO Good; Phoenix Good",
+      "disc": "${root}/Kingdom - The Far Reaches (1994)(Interplay)(EU-US)[!].chd",
+      "tierC": "remaining-playable",
+      "inputScript": "benchmarks/diff/scripts/tierc/kingdom-play4.txt",
+      "frames": 90000,
+      "captureFrames": [
+        36000,
+        60000,
+        72000,
+        90000
+      ]
+    }
+  ]
+}

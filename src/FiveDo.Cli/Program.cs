@@ -2929,7 +2929,7 @@ internal static class Program
     {
         if (args.Length < 2)
         {
-            throw new ArgumentException("disc needs the 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'convert', 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
         }
 
         if (string.Equals(args[1], "playlist", StringComparison.OrdinalIgnoreCase))
@@ -3050,6 +3050,66 @@ internal static class Program
             return result.Ok && (result.Dat is null || result.Dat.KnownDump) ? 0 : 1;
         }
 
+        if (string.Equals(args[1], "convert", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions options = Parse(args, startIndex: 2);
+            var convertSourcePath = options.Positional
+                ?? throw new ArgumentException("disc convert needs a source disc path.", nameof(args));
+            var convertOutputPath = options.Get("--out")
+                ?? throw new ArgumentException("disc convert needs --out <path>.", nameof(args));
+            DiscImageFormat format;
+            var formatOption = options.Get("--format");
+            if (formatOption is not null)
+            {
+                if (!DiscImageWriter.TryParseFormat(formatOption, out format))
+                {
+                    throw new ArgumentException(
+                        $"Unknown disc format '{formatOption}'. Supported: iso, bin, cue, chd.",
+                        nameof(args));
+                }
+            }
+            else if (!DiscImageWriter.TryInferFormat(convertOutputPath, out format))
+            {
+                throw new ArgumentException(
+                    "disc convert needs --format iso|bin|cue|chd or a .iso/.bin/.cue/.chd output path.",
+                    nameof(args));
+            }
+
+            using IDiscSource convertSource = DiscImageFactory.Open(convertSourcePath);
+            var sourceHash = GameId.Compute(convertSource);
+            int sectors = DiscImageWriter.Write(convertSource, convertOutputPath, format);
+            using IDiscSource converted = DiscImageFactory.Open(convertOutputPath);
+            var outputHash = GameId.Compute(converted);
+            var convertResult = new CliDiscConvertResult(
+                string.Equals(sourceHash, outputHash, StringComparison.OrdinalIgnoreCase),
+                convertSourcePath,
+                convertOutputPath,
+                format.ToString().ToLowerInvariant(),
+                sectors,
+                (long)sectors * IsoImage.SectorBytes,
+                sourceHash,
+                outputHash);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    convertResult,
+                    CliJsonContext.Default.CliDiscConvertResult));
+            }
+            else
+            {
+                Console.WriteLine($"source:      {convertResult.Source}");
+                Console.WriteLine($"output:      {convertResult.Output}");
+                Console.WriteLine($"format:      {convertResult.Format}");
+                Console.WriteLine($"sectors:     {convertResult.Sectors}");
+                Console.WriteLine($"bytes:       {convertResult.Bytes}");
+                Console.WriteLine($"source hash: {convertResult.SourceHash}");
+                Console.WriteLine($"output hash: {convertResult.OutputHash}");
+                Console.WriteLine($"ok:          {convertResult.Ok}");
+            }
+
+            return convertResult.Ok ? 0 : 1;
+        }
+
         if (string.Equals(args[1], "tracks", StringComparison.OrdinalIgnoreCase))
         {
             ParsedOptions options = Parse(args, startIndex: 2);
@@ -3111,7 +3171,7 @@ internal static class Program
 
         if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("disc needs the 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'convert', 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
         }
 
         ParsedOptions dumpOptions = Parse(args, startIndex: 2);
@@ -5746,6 +5806,8 @@ internal static class Program
         Console.WriteLine("  gamedb scan <folder> --out path      Derive XML records from disc IDs and filenames.");
         Console.WriteLine("  gamedb export --out path             Export the embedded game database.");
         Console.WriteLine("  gamedb merge <path> --out path       Merge a fragment into the embedded database.");
+        Console.WriteLine("  disc convert <disc> --out path [--format iso|bin|cue|chd]");
+        Console.WriteLine("                                       Convert a data-only image and verify the game ID.");
         Console.WriteLine("  disc tracks <disc> [--json]          List every CUE/CHD track (data and audio).");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");

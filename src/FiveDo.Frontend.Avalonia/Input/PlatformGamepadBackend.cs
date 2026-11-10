@@ -136,6 +136,11 @@ internal static class PlatformRawGamepadSource
             return EvdevGamepadSource.TryCreate() ?? (IRawGamepadSource)NullRawGamepadSource.Instance;
         }
 
+        if (OperatingSystem.IsMacOS())
+        {
+            return MacOsGamepadSource.TryCreate() ?? (IRawGamepadSource)NullRawGamepadSource.Instance;
+        }
+
         return NullRawGamepadSource.Instance;
     }
 }

@@ -389,6 +389,9 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
       [`Compatibility.md`](Compatibility.md) §10.3.
 - [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0; the
       framework-dependent single-file bundles are the release artifacts.
+- [x] Native platform runtime smoke passes on macOS x64/arm64, Linux arm64, and
+      Windows arm64 (2026-11-10, run 42770783778): CLI `selftest` and frontend
+      `--smoke-test` on each runner.
 
 Suggested commands:
 
@@ -396,8 +399,9 @@ Suggested commands:
 dotnet build 5DO.sln -c Release
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release
 dotnet format 5DO.sln --verify-no-changes
-jb inspectcode 5DO.sln --sEverity=WARNING --no-build
+jb inspectcode 5DO.sln --severity=WARNING --no-build
 dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600 --gate
+gh workflow run platform-runtime.yml
 ```
 
 ---
@@ -580,8 +584,12 @@ inside the bundle.
   are out of scope.
 - Tier B 1080p60 timing, 3D CEL profiling, hot-path optimization, and the
   same-machine relative benchmark gate on stable CI hardware.
-- MSIX/dmg/AppImage installers, signing/notarization, and file associations.
-  Frontend NativeAOT audio remains unvalidated; the CLI AOT path is validated.
+- Signed/notarized installers remain conditional on certificates/accounts. Unsigned
+  Windows (Inno Setup), Linux (`.deb`/`.rpm` + desktop/MIME), and macOS
+  (`.app`/`.dmg`/`.pkg`) packaging scaffolding is in `packaging/`; the Windows
+  installer and Linux package metadata were validated on 2026-11-10. See
+  [`Installers.md`](Installers.md). Frontend NativeAOT audio is covered by the
+  2026-11-10 soak; the CLI AOT path remains validated.
 - ViewModel tests and UI polish.
 - Optional M12 managed ARM JIT (profile first; not needed for v1).
 

@@ -1,0 +1,25 @@
+# BladeForce: start a mission, then gameplay input without pauses.
+3600 Right
+3620 None
+3800 C
+3820 None
+4200 Down
+4220 None
+4400 C
+4420 None
+6000 A
+6020 None
+10000 Right
+10020 None
+14000 A
+14020 None
+18000 B
+18020 None
+22000 Down
+22020 None
+26000 A
+26020 None
+30000 B
+30020 None
+34000 Right
+34020 None

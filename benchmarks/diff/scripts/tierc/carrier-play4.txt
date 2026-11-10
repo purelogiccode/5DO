@@ -1,0 +1,21 @@
+# Carrier: select Challenge! from the late briefing room.
+36000 Down
+36020 None
+36200 Down
+36220 None
+36400 Right
+36420 None
+36600 Right
+36620 None
+36800 C
+36820 None
+38000 C
+38020 None
+40000 C
+40020 None
+42000 A
+42020 None
+44000 B
+44020 None
+46000 C
+46020 None

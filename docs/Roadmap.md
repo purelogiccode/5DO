@@ -6,42 +6,55 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.1.0 documented-compatibility release** (published on GitHub).
+The project is at the **v1.6.0 compatibility-completion release** (published on GitHub).
+The compatibility plan is complete:
 
-**M13 — compatibility sweep and status merge**
+- **378 game-test-set titles** are classified beyond the title screen with dated evidence.
+- **375 are playable**; the other three are non-retail/add-on images with documented root
+  causes. The comparison has **0 `Behind` and 0 `Regression` rows**.
+- 5DO is a strict superset of the **252-title peer union**, ahead of 4DO's **167** and
+  Phoenix's **233** playable titles.
+- The six framework-dependent bundles and `SHA256SUMS.txt` are published. Windows x64 is
+  the validated desktop; Linux x64 build/test and smoke pass in CI, and macOS remains
+  best-effort.
 
-- Loadability is complete: 594 images tested, **593 render**, 1 known no-video case
-  (`Crash 'n Burn` Japan), and zero not-loadable rows.
-- The in-game/visual review (M13.5) and high-resolution pass (M13.6) are post-1.0.
-- Linux x64 full suite passed; GPU presentation is preview/best-effort.
-- The remaining v1.0 work is the tag and artifact attachment.
+## Post-1.6
 
-**M14 — high-resolution CEL research (post-1.0)**
+**Playability depth (in progress):**
 
-- Measure the current opt-in 640×480 mode.
-- Prototype true internal high-resolution and 2× supersampling approaches.
-- Decide whether the feature ships, remains opt-in, or moves to the post-1.0 backlog.
+- Tier C gameplay-depth pass: the first increment promoted eight titles to `Good`
+  (Olympic Soccer, John Madden Football, Crime Patrol, Mad Dog II, Shootout at Old
+  Tucson, Guardian War, Hell - A Cyberpunk Thriller, and Slayer). The second increment
+  added pointer-device input scripts and promoted four more: **Carrier - Fortress at
+  Sea**, **Family Feud**, **Insect War**, and **N. O. B.**. The P0 pass promoted
+  **BladeForce**, **Off-world Interceptor**, and **PGA Tour 96**, and opened the
+  Jurassic Park Security Systems terminal. The ledger is **91 `Good`, 10 `Playable`**;
+  the remaining game rows are DeathKeep, Jurassic Park, and Kingdom, alongside seven
+  media/reference/add-on discs.
+- Full-race Road Rash evidence and a longer Alone inventory/exploration sequence.
+  Alone now reaches the room and the Actions menu; Road Rash still cycles through
+  wrecks under the autopilot.
 
-## Release status
+**Accuracy residuals (not release blockers):**
 
-v1.1.0 is published on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.1.0) as one
-bundle per system (Windows/Linux/macOS x64) with the CLI and desktop app. The .NET 10
-runtime is required on the host and is not bundled.
+- Road Rash's long-run frame divergence from the reference core.
+- CD command-cadence residual and audio-only BIOS CD-player transport (the TOC now
+  lists; playback remains a documented BIOS limit).
+- Crash 'n Burn (Japan) BIOS/dump boot limitation.
 
-Full compatibility and M14 research are **not** v1.0 gates. CI is green, the soak is
-complete, and the legal/attribution sign-off is recorded.
+**Platform and product:**
 
-## Post-1.0
-
-- Full-race and long-playthrough evidence for the remaining scripted titles.
-- GLES 3.1 and desktop arm64 validation. WebAssembly, Android/iOS, and Raspberry Pi are out of scope.
-- Tier B performance timing, DPI validation, and presentation polish.
-- Installers, signing, and file associations.
-- Optional managed IL JIT for guest ARM blocks.
+- GLES 3.1, Linux/macOS GPU presentation, and Tier B timing validation. Native
+  CLI/frontend runtime smoke now passes on macOS x64/arm64, Linux arm64, and Windows
+  arm64 (2026-11-10); desktop arm64 is no longer an open platform item.
+- M14 high-resolution CEL research.
+- Signed/notarized installers. Unsigned Windows/Linux/macOS packaging and file
+  associations are in place (2026-11-10); macOS packaging needs a macOS host, and
+  signing remains conditional on certificates.
 - Additional metadata providers and media in the library.
 - More TAS tooling, Lua scripting, and an input timeline.
-- Full PAL library validation and CD subcode work.
+- CD subcode is complete (2026-11-10); full PAL library validation was completed on
+  2026-11-10.
 
 Out of scope for v1: netplay, achievements, a full debugger UI, and 4K *internal* CEL
 rendering. 4K output upscaling is supported.

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-3do-disc">
+    <comment>3DO disc image</comment>
+    <comment xml:lang="de">3DO-Disk-Image</comment>
+    <comment xml:lang="fr">Image de disque 3DO</comment>
+    <glob pattern="*.iso" weight="10"/>
+    <glob pattern="*.cue" weight="10"/>
+    <glob pattern="*.chd" weight="10"/>
+    <glob pattern="*.bin" weight="5"/>
+    <magic priority="50">
+      <match value="CD001" type="string" offset="32769"/>
+    </magic>
+    <generic-icon name="application-x-executable"/>
+  </mime-type>
+</mime-info>

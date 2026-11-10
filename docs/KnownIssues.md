@@ -1,11 +1,14 @@
 # Known Issues
 
-**Snapshot:** 2026-11-08, v1.6.0. This list covers the supported local corpus and the
-current prototype state. It is not a compatibility guarantee.
+**Snapshot:** 2026-11-10, v1.6.0 plus the P0 quality pass, native platform runtime
+smoke, CD subcode, disc conversion, focus/void/pixel-format work. This list covers the
+supported local corpus and the current prototype state. It is not a compatibility
+guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
-extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi/arm64
-validation, installers, and the optional JIT are post-1.0. See
+extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi, and
+the optional JIT are post-1.0. arm64 runtime smoke and unsigned installers were added
+after 1.0 (2026-11-10). See
 [`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is published on
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
@@ -32,10 +35,14 @@ checksums are attached, and legal/attribution sign-off is recorded.
   mouse (Marine Tour), lightgun, arcade lightgun, and the Orbatak trackball. Panzer
   General and Quarterback Attack use title-specific start scripts; both reach gameplay.
 - **Format checks:** Night Trap Disc 1 was swapped to Disc 2 at frame 3,600 and
-  completed 7,200 frames with the Disc 2 hash. Audio-only CD-DA discs reach the 3DO CD
-  player but the track list stays empty and the WAV capture is silent; this is the
-  documented SYS-01 CD-DA read-ahead/audio-only-TOC residual, not a beyond-title
-  blocker.
+  completed 7,200 frames with the Disc 2 hash. Audio-only CD-DA discs now reach the
+  FZ-10 BIOS CD player and list track 1: the 2352-byte digital-audio block plus the
+  96-byte subcode block is accepted after the 2026-11-10 wire-size fix. The transport
+  controls remain inert and the WAV capture is silent; this is the documented SYS-01
+  audio-only BIOS-player residual, not a beyond-title blocker. The exact reproduction
+  is *A&M Music Sampler* (`[CD-Audio].chd`): `disc tracks` reports **14 audio tracks,
+  no data track**, the player shows track 1 at `0:00`, and the WAV capture is silent.
+  No matrix game needs the behavior.
 - The weekly regression gate is `.github/workflows/compat-baseline.yml` on a Windows
   self-hosted runner with the collection mounted, backed by
   `docs/data/beyond-title-baseline.json` and `tools/run-beyond-title-gate.ps1`.
@@ -166,9 +173,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent
   audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
   probe timed out in the VM's SSH/llvmpipe session, so GPU presentation on Linux is
-  unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS
-  validation is post-1.0. The local Linux target is the Hyper-V `LinuxMint` VM
-  (`D:\Hyper-V\VMs\LinuxMint`).
+  unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS x64 and
+  arm64, Linux arm64, and Windows arm64 now pass the native CLI/frontend runtime smoke
+  (2026-11-10); macOS GPU presentation remains best-effort. The local Linux target is
+  the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`).
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
   sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
   restriction.
@@ -179,8 +187,12 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 |---|---|---|
 | Wolfenstein 3D | Boots, starts FLOOR 1-1, walk/turn/fire, save/load roundtrip | The fresh-game level load can stay static; A every 300 frames advances it through character select to FLOOR 1-1 (64,000 frames, hash `0x2F5B9864`) |
 | Lemmings | Boots, title/passcode, pure D-pad Fun 4 passcode, gameplay, save/load, 640x480 title | The passcode is typed from a passcode-screen state; the title-to-passcode transition still uses the existing `Down`/`A` script |
-| Road Rash | Boots, 3D race renders, `BUSTED`/race-select/new-race flow works, autopilot cycles race -> wreck -> menu -> new race to 100k, save/load roundtrip | A full 5.5-mile race is not finished; the autopilot still wrecks or ends on a sidewalk. The old ~42k/~92k READ_ID wait is fixed by the CD media-access pulse |
-| Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro, scripted room movement with save/load roundtrip | The intro needs A input; inventory interaction and a longer exploration sequence are not scripted |
+| Road Rash | Boots, 3D race renders, `BUSTED`/race-select/new-race flow works, autopilot cycles race -> wreck -> menu -> new race, save/load roundtrip | A full 5.5-mile race is still not finished. A fresh 150,000-frame autopilot run ends with the rider off the bike on the sidewalk; the residual is driving/start-line and traffic avoidance, not the old CD wait |
+| Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro, room exploration, **Actions** menu (`Fight`/`Open/Search`/`Close`/`Push`), save/load roundtrip | The intro needs A input; the scripted pass reaches the room and opens the Actions menu, but a longer inventory-use/exploration sequence is still open |
+| BladeForce | Boots, name entry, Training Mission, Recon Maps, Supply Depot first-person mission with HUD/gun/enemies | No longer menu-only. The scripted mission runs through 90,000 frames without a crash; deeper mission/level completion is not claimed |
+| Jurassic Park Interactive | Boots, Operations map, Security Systems terminal, **Security Tracking** map | A terminal now opens, but no in-park gameplay or mini-game is reached |
+| Off-world Interceptor | Boots, vehicle shop, loadout, **PLAY**, first mission with 3D vehicle/HUD/enemies | The scripted mission returns to the shop after vehicle loss; continuous 10-minute mission survival is not yet scripted |
+| PGA Tour 96 | Boots, Golf Bag, Rules, Player List, Scoring, Course Selection, Round, **Hole 1** tee/gameplay | A round starts and renders; a full hole/round completion is not claimed |
 | Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | A long no-input continuation after the 15,000-frame interactive state reaches a black wait screen; longer input-driven scene/decision validation is still needed |
 
 ## Renderer
@@ -229,7 +241,8 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside `OpenGlRenderer.Present`
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
-- Linux/macOS OpenGL launch validation is not complete.
+- Linux/macOS OpenGL GPU presentation is not fully validated; the native runtime smoke
+  hides the GL surface and validates startup/XAML/settings instead.
 - The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) hosts a native
   Win32 child window inside the Avalonia window on Windows, so the desktop path has no
   CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn
@@ -261,22 +274,27 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 
 ## Packaging and platforms
 
-- CI builds three x64 bundles: Windows, Linux, and macOS. Windows and Linux run the CLI
-  and frontend smoke tests; the macOS x64 bundle is cross-published on Linux and
-  validated as Mach-O x86_64, but it is not executed, so macOS runtime validation is
-  post-1.0.
-- arm64 (Windows/Linux/macOS) is not hardware-validated.
+- CI builds all six bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
+  tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
+  smoke on macOS x64, macOS arm64, Linux arm64, and Windows arm64 (run 42770783778,
+  2026-11-10). The smoke hides the GL surface, so GPU presentation is not covered.
+- macOS physical gamepad detection and Linux/macOS GPU presentation remain unvalidated.
 - **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishTrimmed=false`); the .NET 10 runtime must be
   installed on the host and is **not** bundled. PDB and XML documentation files are
   removed from the bundles. Trimming remains available for developer and NativeAOT
   experiments. See
   [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
-- NativeAOT, installers, signing, and notarization are not complete. The opt-in
-  win-x64 CLI AOT build is validated, including live OpenAL; the frontend AOT build
-  starts/renders and its bundled OpenAL path was validated with OpenAL's null device
-  (`ALSOFT_DRIVERS=null`) on 2026-10-29.
-- The macOS gamepad backend is not implemented.
+- Installer/package scaffolding is implemented for Windows, Linux, and macOS, but
+  signing and notarization are not complete. The Windows Inno Setup installer and Linux
+  `.deb`/`.rpm` metadata were built and validated unsigned on 2026-11-10; the macOS
+  `.dmg`/`.pkg` script requires a macOS host. The opt-in win-x64 CLI AOT build is
+  validated, including live OpenAL; the frontend AOT audio soak is recorded in
+  [`Audio.md`](Audio.md) §9 (2026-11-10).
+- The macOS gamepad backend is implemented on IOKit HID and its mapping layer is
+  unit-tested, but no physical macOS controller has been detected in this environment.
+  macOS may require Input Monitoring permission; without it the frontend falls back to
+  the keyboard.
 - The bundled OpenAL Soft 1.23.1 runtime adds an LGPL-2.0-or-later binary
   distribution obligation to the release. The notice, complete license text,
   three-year written source offer, and relinking instructions ship in
@@ -304,7 +322,8 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   cosine 0.9994, 441.4 Hz tone identical). The only remaining audio check is a
   manual DSP mode-change listen, and no current title was observed stopping the DSP
   mid-run.
-- Frontend NativeAOT audio is not validated; the trimmed IL and CLI AOT paths are.
+- Frontend NativeAOT audio is validated on Windows with the null and default playback
+  devices (0 drops/0 underruns, 600 s each); Linux/macOS AOT audio is not claimed.
 
 ## Emulation
 
@@ -330,10 +349,12 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   processor tests and bob-vs-auto hash comparison are the current evidence. A woven capture
   is 320x480 (PAL 320x576) with half-height pixels, and the settings dialog and CLI
   report the configured mode and detector verdict.
-- PAL video, guest ODE prompts, CD-DA read-ahead/subcode, netplay, and additional
-  peripherals are out of scope for v1. Multi-track TOC, raw CD-DA sectors with
-  volume/mute, and M3U multi-disc playlists are implemented; known-title disc audio
-  evidence remains pending.
+- PAL1/PAL2 video and per-game PAL BIOS selection are implemented; the Europe-only
+  matrix titles have dated PAL captures in [PalValidation.md](PalValidation.md).
+  Guest ODE prompts, audio-only BIOS playback, netplay, and additional peripherals
+  remain out of scope for v1. Multi-track TOC, raw CD-DA sectors with volume/mute,
+  READ_DATA subcode/Q packing, and M3U multi-disc playlists are implemented;
+  known-title disc audio evidence remains pending.
 - Portfolio OS SWI HLE (`--swi-hle`) is an opt-in performance mode, not a timing model.
   The host math matches `opera_fixedpoint_math.c`, but HLE skips the guest handler's
   cycles and register clobbers. AutoBahn Tokio and Ballz boot and run with HLE but

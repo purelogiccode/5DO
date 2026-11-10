@@ -163,38 +163,30 @@ public partial class ScreenshotGalleryWindow : Window
                 return;
             }
 
-            try
-            {
-                IStorageFile? file = await StorageProvider.SaveFilePickerAsync(
-                    new FilePickerSaveOptions
-                    {
-                        Title = "Export screenshot",
-                        SuggestedFileName = row.Entry.FileName,
-                        DefaultExtension = "png",
-                        FileTypeChoices =
-                        [
-                            new FilePickerFileType("PNG image") { Patterns = ["*.png"] },
-                        ],
-                    }).ConfigureAwait(true);
-                var destination = file?.TryGetLocalPath();
-                if (string.IsNullOrWhiteSpace(destination))
+            IStorageFile? file = await StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions
                 {
-                    return;
-                }
-
-                var exported = ScreenshotLibrary.Export(row.Entry.Path, destination);
-                StatusText.Text = $"Exported to {exported}.";
-            }
-            catch (Exception exception)
+                    Title = "Export screenshot",
+                    SuggestedFileName = row.Entry.FileName,
+                    DefaultExtension = "png",
+                    FileTypeChoices =
+                    [
+                        new FilePickerFileType("PNG image") { Patterns = ["*.png"] },
+                    ],
+                }).ConfigureAwait(true);
+            var destination = file?.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(destination))
             {
-                // An exception escaping an async void handler terminates the process, so
-                // every failure (including picker and platform errors) must be contained.
-                Serilog.Log.Error(exception, "Screenshot export failed.");
-                StatusText.Text = $"Could not export the screenshot: {exception.Message}";
+                return;
             }
+
+            var exported = ScreenshotLibrary.Export(row.Entry.Path, destination);
+            StatusText.Text = $"Exported to {exported}.";
         }
         catch (Exception exception)
         {
+            // An exception escaping an async void handler terminates the process, so
+            // every failure (including picker and platform errors) must be contained.
             Serilog.Log.Error(exception, "Screenshot export failed.");
             StatusText.Text = $"Could not export the screenshot: {exception.Message}";
         }
@@ -210,21 +202,13 @@ public partial class ScreenshotGalleryWindow : Window
                 return;
             }
 
-            try
-            {
-                var window = new ScreenshotCompareWindow(selected[0].Entry, selected[1].Entry);
-                await window.ShowDialog(this).ConfigureAwait(true);
-            }
-            catch (Exception exception)
-            {
-                // An exception escaping an async void handler terminates the process, so
-                // every failure (including window lifetime errors) must be contained.
-                Serilog.Log.Error(exception, "Screenshot comparison failed.");
-                StatusText.Text = $"Could not compare the screenshots: {exception.Message}";
-            }
+            var window = new ScreenshotCompareWindow(selected[0].Entry, selected[1].Entry);
+            await window.ShowDialog(this).ConfigureAwait(true);
         }
         catch (Exception exception)
         {
+            // An exception escaping an async void handler terminates the process, so
+            // every failure (including window lifetime errors) must be contained.
             Serilog.Log.Error(exception, "Screenshot comparison failed.");
             StatusText.Text = $"Could not compare the screenshots: {exception.Message}";
         }

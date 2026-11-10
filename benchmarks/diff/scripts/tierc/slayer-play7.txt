@@ -1,0 +1,19 @@
+# Slayer: Create Character is selected; try A then P to confirm.
+24000 C
+24020 None
+30000 C
+30020 None
+50000 Down
+50020 None
+50400 Down
+50420 None
+50800 Down
+50820 None
+51200 Down
+51220 None
+54000 A
+54020 None
+56000 P
+56020 None
+58000 A
+58020 None

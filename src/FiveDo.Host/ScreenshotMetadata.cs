@@ -70,6 +70,9 @@ public sealed class ScreenshotMetadata
     /// <summary>Gets or sets the void-area color.</summary>
     public string VoidAreaColor { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the void-area pattern.</summary>
+    public string VoidAreaPattern { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the timing profile label.</summary>
     public string Profile { get; set; } = string.Empty;
 
@@ -135,6 +138,7 @@ public sealed class ScreenshotMetadata
             OverscanBottom = crop.Bottom,
             VideoBorderPixels = settings.VideoBorderPixels,
             VoidAreaColor = settings.ResolveVoidAreaColor(),
+            VoidAreaPattern = settings.ResolveVoidAreaPattern().ToString(),
             Profile = settings.Profile.ToString(),
             ArmTiming = settings.ArmTiming.ToString(),
             ClioTimers = settings.ClioTimers.ToString(),

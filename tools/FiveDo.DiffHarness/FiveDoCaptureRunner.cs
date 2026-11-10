@@ -39,6 +39,7 @@ internal static class FiveDoCaptureRunner
         var bios = harness.BiosPath ?? DiffManifestLoader.ResolveBios(repoRoot, manifestDirectory, manifest, title);
         var disc = DiffManifestLoader.ResolvePath(repoRoot, manifestDirectory, title.Disc);
         var inputScript = DiffManifestLoader.ResolveInputScript(repoRoot, manifestDirectory, manifest, title);
+        var inputDevice = title.InputDevice ?? manifest.Defaults?.InputDevice;
         var options = DiffManifestLoader.MergeOptions(
             manifest.Defaults?.Options,
             title.Options,
@@ -121,6 +122,12 @@ internal static class FiveDoCaptureRunner
         {
             arguments.Add("--input-script");
             arguments.Add(inputScript);
+        }
+
+        if (!string.IsNullOrWhiteSpace(inputDevice))
+        {
+            arguments.Add("--input-device");
+            arguments.Add(inputDevice);
         }
 
         ProcessResult process = HarnessCommon.RunProcess(

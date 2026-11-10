@@ -120,6 +120,11 @@ embedded). The audit covered:
 - A real Lemmings (USA) boot with run-ahead 1, frame delay 1, VRR, and audio sync 40 ms.
   OpenAL initialized at 44.1 kHz through the bundled runtime with `ALSOFT_DRIVERS=null`,
   the emulation thread started, and no core fault or run-ahead auto-disable was logged.
+- The headless `--audio-soak` path ran 600 s on the null device and on
+  `OpenAL Soft on PG34WQ15R2B (NVIDIA High Definition Audio)`: 35,968/35,966 frames,
+  **0 dropped samples**, **0 underruns**, 0 OpenAL errors, DSP running. Later repeats
+  hit HDMI-endpoint power/session instability (1-2 transient underruns, then no
+  endpoint); sample drops stayed 0. See [`Audio.md`](Audio.md) §9.
 
 Silk.NET.Core's native-asset loader (`DefaultPathResolver`) still uses
 `Assembly.Location`/`Assembly.CodeBase` and `DependencyContext.Default`, so the ILC
@@ -292,6 +297,7 @@ The CLI and the frontend single-file layout are AOT-validated on win-x64. Remain
   `IL2104` trim warnings.
 - Cross-OS AOT publishing needs a native toolchain per target; the release bundles
   are produced on native runners and do not use AOT.
-- The frontend AOT session is validated with the OpenAL null device. A listen on a
-  physical playback endpoint and a long soak remain manual checks.
-- Installer packaging, signing, and notarization remain separate M10.7 work.
+- The frontend AOT audio path is validated for 600 s on the null device and a real
+  Windows playback endpoint. Linux/macOS AOT audio remains a separate platform check.
+- Unsigned installer/package scaffolding is in `packaging/`; signing and notarization
+  remain separate M10.7 work.

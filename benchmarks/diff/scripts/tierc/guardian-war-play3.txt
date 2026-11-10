@@ -1,0 +1,21 @@
+# Guardian War: start and keep gameplay input, no pause.
+3600 C
+3620 None
+4000 C
+4020 None
+6000 A
+6020 None
+10000 Right
+10020 None
+14000 A
+14020 None
+18000 B
+18020 None
+22000 A
+22020 None
+26000 Right
+26020 None
+30000 A
+30020 None
+34000 B
+34020 None
