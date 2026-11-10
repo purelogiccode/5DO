@@ -339,7 +339,11 @@ a game ejects the disc, 5DO advances to the next playlist entry automatically by
 `5do disc verify game.chd` reads every native sector and reports the first read errors,
 the verified sector count, and a content hash; use it to distinguish a bad dump from an
 emulator issue. Add `--dat path/to/redump.dat` to match the native track CRC-32/MD5/SHA-1
-against a Redump/No-Intro DAT; a matching dump reports the game/ROM and a mismatch exits 1. The CLI can list a playlist with `disc playlist game.m3u`, open its first entry with
+against a Redump/No-Intro DAT; a matching dump reports the game/ROM and a mismatch exits 1.
+`5do disc convert game.chd --out game.iso` converts a data-only image to ISO, BIN, CUE,
+or a flat CHD and verifies the game ID; see
+[`CliReference.md`](CliReference.md#6-disc). The CLI can list a playlist with
+`disc playlist game.m3u`, open its first entry with
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 
