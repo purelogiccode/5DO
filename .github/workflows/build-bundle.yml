@@ -174,8 +174,10 @@ jobs:
           set -euo pipefail
           file artifacts/bundle-smoke/FiveDo.Cli
           file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
-          file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit ${{ matrix.arch }}'
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit ${{ matrix.arch }}'
+          file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit'
+          file artifacts/bundle-smoke/FiveDo.Cli | grep -q '${{ matrix.arch }}'
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit'
+          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q '${{ matrix.arch }}'
 
       - name: Verify Linux bundle architecture
         if: startsWith(matrix.rid, 'linux-')
