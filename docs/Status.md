@@ -71,7 +71,10 @@ and InspectCode are clean. CI run
 <https://github.com/purelogiccode/5DO/actions/runs/42877150967> passed every required
 job, including the six bundle jobs and both native macOS DMG builds; native runtime
 smoke run <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
-x64/arm64, Linux arm64, and Windows arm64. See [`WhatsNew.md`](WhatsNew.md) and
+x64/arm64, Linux arm64, and Windows arm64. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42878260384> published the six assets
+at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published checksums
+verify. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the

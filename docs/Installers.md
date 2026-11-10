@@ -80,6 +80,7 @@ macOS x64/arm64 (native CI, 2026-11-10):
   release workflow publishes the DMG instead of the internal tar.gz.
 - The app bundle declares `com.5do.disc-image` and a `CFBundleDocumentTypes` viewer entry.
   Signing/notarization are skipped when no Developer ID/keychain profile is supplied.
-- Local copies of both DMGs and all four Windows/Linux bundles are in
-  `src/FiveDo.Frontend.Avalonia/bin/Release`; all six `5do-1.7.0-*` SHA-256 entries
-  verify.
+- The six assets are published at
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0> with `SHA256SUMS.txt`.
+  Local copies are in `src/FiveDo.Frontend.Avalonia/bin/Release`; all six
+  `5do-1.7.0-*` SHA-256 entries verify.

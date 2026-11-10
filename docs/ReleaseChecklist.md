@@ -227,10 +227,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       publishes the macOS DMG. Native runtime smoke run
       <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
       x64/arm64, Linux arm64, and Windows arm64.
-- [ ] Create and push tag `v1.7.0`; verify the release workflow publishes six versioned
-      bundles (macOS as DMG) and `SHA256SUMS.txt`.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.7.0 release page, What's New, release notes, and wiki page.
+- [x] Create and push tag `v1.7.0`; the release workflow published six versioned bundles
+      (macOS as DMG) and `SHA256SUMS.txt`:
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42878260384> passed all six
+      bundle jobs and the publish job. All six published checksums verify locally, and
+      the release assets were copied into
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.7.0 release page, What's New, release notes, and wiki page. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42878398641> passed build,
+      Pages deploy, and wiki publish.
 
 ---
 

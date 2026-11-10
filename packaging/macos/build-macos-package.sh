@@ -132,13 +132,25 @@ cp -a "$app" "$dmg_root/"
 ln -s /Applications "$dmg_root/Applications"
 
 dmg="$output_dir/5do-${version}-${rid}.dmg"
-rm -f "$dmg"
-hdiutil create \
-    -volname "5DO $version" \
-    -srcfolder "$dmg_root" \
-    -ov \
-    -format UDZO \
-    "$dmg" >/dev/null
+created=0
+for attempt in 1 2 3 4 5; do
+    rm -f "$dmg"
+    if hdiutil create \
+        -volname "5DO $version" \
+        -srcfolder "$dmg_root" \
+        -ov \
+        -format UDZO \
+        "$dmg" >/dev/null; then
+        created=1
+        break
+    fi
+    echo "hdiutil create attempt $attempt failed; retrying..." >&2
+    sleep $((attempt * 2))
+done
+if [[ "$created" -ne 1 ]]; then
+    echo "hdiutil create failed after 5 attempts: $dmg" >&2
+    exit 1
+fi
 
 pkg_root="$work/pkg"
 mkdir -p "$pkg_root"

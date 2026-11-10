@@ -3544,6 +3544,9 @@ The full suite passes **2,124/2,124**; build, format, and InspectCode are clean.
 <https://github.com/purelogiccode/5DO/actions/runs/42877150967> passed every required
 job, including the six bundle jobs and both native macOS DMG builds. Native runtime
 smoke run <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
-x64/arm64, Linux arm64, and Windows arm64. Local PE/ELF inspection confirmed the
-x64/arm64 apphosts for the four Windows/Linux bundles, and the macOS DMGs were downloaded
-from the CI artifacts into `src/FiveDo.Frontend.Avalonia/bin/Release`.
+x64/arm64, Linux arm64, and Windows arm64. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42878260384> published the six assets
+at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published checksums
+verify. Local PE/ELF inspection confirmed the x64/arm64 apphosts for the four
+Windows/Linux bundles, and the published assets (including both macOS DMGs) were copied
+into `src/FiveDo.Frontend.Avalonia/bin/Release`.
