@@ -27,6 +27,7 @@ public sealed class ScreenshotMetadataTests
                 OverscanBottom = 4,
                 VideoBorderPixels = 8,
                 VoidAreaColor = "#FF202020",
+                VoidAreaPattern = "Checker",
                 Profile = FiveDo.Core.EmulationProfile.Accuracy,
                 ArmTiming = FiveDo.Core.ArmTimingMode.Arm60Datasheet,
                 ClioTimers = FiveDo.Core.ClioTimerMode.OperaScheduler,
@@ -59,6 +60,7 @@ public sealed class ScreenshotMetadataTests
                 loaded.OverscanBottom));
             Assert.Equal(8, loaded.VideoBorderPixels);
             Assert.Equal("#FF202020", loaded.VoidAreaColor);
+            Assert.Equal("Checker", loaded.VoidAreaPattern);
             Assert.Equal("Accuracy", loaded.Profile);
             Assert.Equal(1.25, loaded.CpuClockMultiplier);
             Assert.Equal("Weave", loaded.Deinterlace);
