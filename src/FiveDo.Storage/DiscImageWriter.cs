@@ -122,7 +122,7 @@ public static class DiscImageWriter
         text.AppendLine($"FILE \"{binName}\" BINARY");
         text.AppendLine("  TRACK 01 MODE1/2048");
         text.AppendLine("    INDEX 01 00:00:00");
-        File.WriteAllText(cuePath, text.ToString(), Encoding.UTF8);
+        File.WriteAllText(cuePath, text.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 
     /// <summary>Parses a container name.</summary>

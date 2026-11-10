@@ -121,10 +121,10 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
 - MADAM CEL engine, matrix engine, pixel bus, CCB parsing, and pixel decoding.
 - 3DO DSP with exact 44.1 kHz output, CD-DA mixing, and WAV analysis.
 - SPORT VRAM fill/copy, VDLP display-list parsing, and CPU frame assembly.
-- Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, multi-track CUE/CHD,
-  M3U playlists, and ODE-style disc swapping.
-- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs and bounded
-  read-ahead prefetch.
+- Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, READ_DATA subcode/Q
+  packing, multi-track CUE/CHD, M3U playlists, and ODE-style disc swapping.
+- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs, bounded read-ahead
+  prefetch, and `disc convert` between ISO/BIN/CUE/flat CHD.
 
 ### Desktop experience
 
