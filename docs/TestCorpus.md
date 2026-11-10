@@ -3493,9 +3493,10 @@ limitation. SYS-01 moved to §4 of the implementation plan.
 
 **Disc conversion (SYS-22).** `5do disc convert <source> --out <path>` writes ISO,
 BIN, CUE, or a flat 2048-unit CHD and verifies the `GameId` hash. Lemmings (USA)
-round-tripped CHD → ISO/BIN/CUE/CHD with `discHash
-0be38b22987b40b5d48f70a167656049` and a 600-frame `frameHash` of `675291253` on
-every output. Tests: `DiscImageWriterTests` (four containers) and
+round-tripped CHD → ISO/BIN/CUE/CHD with the same
+`discHash` (`0be38b22987b40b5d48f70a167656049`) and a 600-frame `frameHash` of
+`675291253` on every output; CUE → CHD reports the same hash. Tests:
+`DiscImageWriterTests` (four containers) and
 `CliProcessTests.DiscConvert_RoundTripsIsoAndReportsJson`. Evidence:
 `artifacts/sys22/`.
 
