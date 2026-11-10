@@ -24,7 +24,12 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 {
     private const int RequestSize = 2048;
 
-    private const int MaxSectorSize = 2352;
+    // Opera: CDROM_MAX_SECTOR_SIZE. A digital-audio transfer may carry the
+    // 2352-byte sector plus 96 bytes of subcode (and one error byte), so the
+    // maximum wire size is 2449 rather than the 2352-byte raw sector.
+    private const int MaxSectorSize = 2449;
+
+    private const int RawSectorSize = 2352;
 
     private const int SubcodeSize = 96;
 
@@ -64,8 +69,8 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
     private readonly byte[] _status = new byte[256];
     private readonly byte[] _data = new byte[MaxSectorSize];
-    private readonly byte[] _trackSector = new byte[MaxSectorSize];
-    private readonly byte[] _audioSector = new byte[MaxSectorSize];
+    private readonly byte[] _trackSector = new byte[RawSectorSize];
+    private readonly byte[] _audioSector = new byte[RawSectorSize];
     private readonly byte[] _command = new byte[7];
 
     private IDiscSource? _disc;
@@ -1998,25 +2003,47 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             {
                 _trackSector.AsSpan(offset, copy).CopyTo(_data);
             }
-
-            return;
         }
-
-        if (available >= _readSectorSize)
+        else if (available >= _readSectorSize)
         {
             _trackSector.AsSpan(0, _readSectorSize).CopyTo(_data);
-            return;
         }
-
-        if (!track.IsAudio && available == RequestSize)
+        else if (!track.IsAudio && available == RequestSize)
         {
             // A cooked 2048-byte track was asked for a raw 2352-byte sector. Build a
             // Mode 1 frame so command transcripts and disc tools see the expected shape.
             BuildRawDataSector(_trackSector, sector, _data);
-            return;
+        }
+        else
+        {
+            _trackSector.AsSpan(0, Math.Min(available, _data.Length)).CopyTo(_data);
         }
 
-        _trackSector.AsSpan(0, Math.Min(available, _data.Length)).CopyTo(_data);
+        if ((_blockFlags & BlockFlagSubcode) != 0
+            && _readSectorSize + SubcodeSize <= _data.Length
+            && TryBuildSubQ(tracked, sector, out byte[] q))
+        {
+            FillSubcode(_data.AsSpan(_readSectorSize, SubcodeSize), q);
+        }
+    }
+
+    /// <summary>
+    /// Packs the 96-bit Q subchannel into the 96-byte subcode block: bit 6 of each
+    /// byte carries one Q bit, most-significant bit first. Opera zeroes the subcode
+    /// block; 5DO exposes the real Q position so a guest CD player can follow the
+    /// track list and read-ahead state.
+    /// </summary>
+    private static void FillSubcode(Span<byte> destination, ReadOnlySpan<byte> q)
+    {
+        destination.Clear();
+        for (var bit = 0; bit < SubcodeSize; bit++)
+        {
+            int source = bit >> 3;
+            if (source < q.Length && ((q[source] >> (7 - (bit & 7))) & 1) != 0)
+            {
+                destination[bit] |= 0x40;
+            }
+        }
     }
 
     private static void BuildRawDataSector(ReadOnlySpan<byte> userData, int lba, Span<byte> destination)
@@ -2077,6 +2104,23 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private bool TryBuildSubQPayload(ITrackedDiscSource tracked, out byte[] payload)
     {
         int lba = _audioPlaying ? AudioPositionLba : _currentSector;
+        if (!TryBuildSubQ(tracked, lba, out byte[] q))
+        {
+            payload = [];
+            return false;
+        }
+
+        payload = q[..10];
+        return true;
+    }
+
+    /// <summary>
+    /// Builds the 12-byte Q subchannel for <paramref name="lba"/>: control/ADR,
+    /// track, index, absolute MSF, relative MSF, and CRC-16. The READ SUB-Q command
+    /// returns the first ten bytes; the READ_DATA subcode block carries all twelve.
+    /// </summary>
+    private static bool TryBuildSubQ(ITrackedDiscSource tracked, int lba, out byte[] payload)
+    {
         DiscTrack? track = tracked.FindTrack(lba);
         if (track is null)
         {
@@ -2100,8 +2144,32 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             ToBcd(Math.Max(0, relative) / (60 * 75)),
             ToBcd((Math.Max(0, relative) / 75) % 60),
             ToBcd(Math.Max(0, relative) % 75),
+            0x00,
+            0x00,
         ];
+        ushort crc = ComputeSubQCrc(payload.AsSpan(0, 10));
+        payload[10] = (byte)(crc >> 8);
+        payload[11] = (byte)crc;
         return true;
+    }
+
+    /// <summary>
+    /// CRC-16/CCITT (polynomial 0x1021, initial 0) over the ten Q data bytes. The
+    /// CD Q subchannel transmits the complement of the CRC.
+    /// </summary>
+    private static ushort ComputeSubQCrc(ReadOnlySpan<byte> data)
+    {
+        ushort crc = 0;
+        foreach (byte value in data)
+        {
+            crc ^= (ushort)(value << 8);
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (ushort)((crc & 0x8000) != 0 ? (crc << 1) ^ 0x1021 : crc << 1);
+            }
+        }
+
+        return (ushort)~crc;
     }
 
     private void SetTocEntry(int index, byte control, byte track, byte minute, byte second, byte frame)
