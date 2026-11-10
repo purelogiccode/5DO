@@ -625,7 +625,12 @@ macOS as a drag-to-Applications DMG; the internal `5do-1.7.0-osx-*.tar.gz` is on
 extraction/smoke intermediate. The Windows x64 bundle passes `FiveDo.Cli.exe --version`
 (1.7.0), `selftest --json`, and the frontend `--smoke-test` (`FRONTEND SMOKE OK 1.7.0`).
 The bundle tree has no runtime, PDB, or XML files, and the published `SHA256SUMS.txt`
-entries verify. Release and docs run links are recorded in the release checklist.
+entries verify. CI run <https://github.com/purelogiccode/5DO/actions/runs/42877150967>
+passed every required job, including the six bundle jobs and both native macOS DMG
+builds; platform runtime smoke run
+<https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS x64/arm64,
+Linux arm64, and Windows arm64. Release and docs run links are recorded in the release
+checklist.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

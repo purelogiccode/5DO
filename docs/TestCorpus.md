@@ -3540,5 +3540,10 @@ covers the parse path.
 only the CI extraction/smoke intermediate. `build-bundle.yml` runs the macOS jobs on
 native runners and uploads the DMG.
 
-The full suite passes **2,124/2,124**; build, format, and InspectCode are clean. Native
-runtime smoke and the six bundle jobs are recorded on the v1.7.0 release run.
+The full suite passes **2,124/2,124**; build, format, and InspectCode are clean. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/42877150967> passed every required
+job, including the six bundle jobs and both native macOS DMG builds. Native runtime
+smoke run <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
+x64/arm64, Linux arm64, and Windows arm64. Local PE/ELF inspection confirmed the
+x64/arm64 apphosts for the four Windows/Linux bundles, and the macOS DMGs were downloaded
+from the CI artifacts into `src/FiveDo.Frontend.Avalonia/bin/Release`.

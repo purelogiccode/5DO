@@ -67,7 +67,11 @@ remain loadable. `disc convert` writes data-only ISO/BIN/CUE/flat CHD and verifi
 game ID, and CHD conversion no longer collides with a same-stem source BIN. The desktop
 adds focus-loss pausing, selectable void patterns, and pointer input scripts; macOS
 gains a native IOKit HID gamepad source. The suite is **2,124 tests**; build, format,
-and InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md) and
+and InspectCode are clean. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/42877150967> passed every required
+job, including the six bundle jobs and both native macOS DMG builds; native runtime
+smoke run <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
+x64/arm64, Linux arm64, and Windows arm64. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the

@@ -212,16 +212,21 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       formats, pointer input scripts, and the macOS HID mapper are covered by tests.
 - [x] Verify the extraction bug fixes: CHD conversion preserves a same-stem BIN and a CUE
       output cannot overwrite the source BIN.
-- [ ] Build all six framework-dependent bundles and keep local copies in
+- [x] Build all six framework-dependent bundles and keep local copies in
       `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
-      Local Windows/Linux bundles are built; the macOS DMGs are produced by the native
-      CI job.
-- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      Local copies: `5do-1.7.0-{win-x64,win-arm64}.zip`,
+      `5do-1.7.0-{linux-x64,linux-arm64}.tar.gz`, and
+      `5do-1.7.0-{osx-x64,osx-arm64}.dmg`. CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/42877150967> passed every
+      required job, including both native macOS DMG builds.
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the 1.7.0 release notes, and the legal notices, and contains no
-      `runtime/`, `*.pdb`, or `*.xml` files.
-- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      `runtime/`, `*.pdb`, or `*.xml` files. CI and the local PE/ELF checks passed.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
       (`FRONTEND SMOKE OK 1.7.0`); CI verifies the arm64/macOS apphost machine types and
-      publishes the macOS DMG.
+      publishes the macOS DMG. Native runtime smoke run
+      <https://github.com/purelogiccode/5DO/actions/runs/42876332881> passed macOS
+      x64/arm64, Linux arm64, and Windows arm64.
 - [ ] Create and push tag `v1.7.0`; verify the release workflow publishes six versioned
       bundles (macOS as DMG) and `SHA256SUMS.txt`.
 - [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
