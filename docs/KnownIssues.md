@@ -275,7 +275,7 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 
 - CI builds all six bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
-  smoke on macOS x64, macOS arm64, Linux arm64, and Windows arm64 (run 42763235870,
+  smoke on macOS x64, macOS arm64, Linux arm64, and Windows arm64 (run 42768268965,
   2026-11-10). The smoke hides the GL surface, so GPU presentation is not covered.
 - macOS physical gamepad detection and Linux/macOS GPU presentation remain unvalidated.
 - **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app

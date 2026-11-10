@@ -1,7 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-09, after the two Tier C gameplay-depth increments and the 1.6.0
-compatibility-completion release; the TEST-07
+**Snapshot:** 2026-11-10, after the native platform runtime smoke, CD subcode, disc
+conversion, focus/void/pixel-format work, the two Tier C gameplay-depth increments, and
+the 1.6.0 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
 baseline update; the 1.5.0 GPU-HQx, video-clean VDLP, field-boundary, and
 CD-parity update; the 1.4.0 cover-art, latency, unsigned-disc, exact-clock,
@@ -112,7 +113,7 @@ run ends with the rider off the bike. See [`TestCorpus.md`](TestCorpus.md) 1.1bp
 macOS x64 (`macos-15-intel`), macOS arm64 (`macos-latest`), Linux arm64
 (`ubuntu-24.04-arm`), and Windows arm64 (`windows-11-arm`): each target runs the CLI
 `selftest` and the frontend `--smoke-test` (`FRONTEND SMOKE OK 1.6.0`). Run
-<https://github.com/purelogiccode/5DO/actions/runs/42763235870> passed all four jobs,
+<https://github.com/purelogiccode/5DO/actions/runs/42768268965> passed all four jobs,
 closing PLAT-03/PLAT-04. The CD-ROM wire size now accepts Opera's 2449-byte maximum,
 so a 2352-byte digital-audio block plus 96-byte subcode is valid; READ_DATA exposes
 the Q subchannel and the FZ-10 BIOS CD player lists the A&M Music Sampler's first
