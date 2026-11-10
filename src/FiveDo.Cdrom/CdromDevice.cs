@@ -449,7 +449,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 }
             }
 
-            if (_audioSampleOffset + 4 > MaxSectorSize)
+            if (_audioSampleOffset + 4 > _audioSector.Length)
             {
                 _audioSampleLba++;
                 _audioSampleOffset = 0;
@@ -459,7 +459,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             short left = (short)(_audioSector[_audioSampleOffset] | (_audioSector[_audioSampleOffset + 1] << 8));
             short right = (short)(_audioSector[_audioSampleOffset + 2] | (_audioSector[_audioSampleOffset + 3] << 8));
             _audioSampleOffset += 4;
-            if (_audioSampleOffset >= MaxSectorSize)
+            if (_audioSampleOffset >= _audioSector.Length)
             {
                 _audioSampleOffset = 0;
                 _audioSampleLba++;

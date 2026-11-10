@@ -101,6 +101,54 @@ public sealed class FrameAssemblerTests
     }
 
     [Fact]
+    public void Assemble1555_PacksBackgroundAndClutPixels()
+    {
+        var frame = CreateTwoPixelFrame();
+        var destination = new ushort[2];
+
+        FrameAssembler.Assemble1555(frame, destination, 2, 2, 1);
+
+        Assert.Equal(0x0886, destination[0]);
+        Assert.Equal(0x0c41, destination[1]);
+    }
+
+    [Fact]
+    public void Assemble565_PacksBackgroundAndClutPixels()
+    {
+        var frame = CreateTwoPixelFrame();
+        var destination = new ushort[2];
+
+        FrameAssembler.Assemble565(frame, destination, 2, 2, 1);
+
+        Assert.Equal(0x1106, destination[0]);
+        Assert.Equal(0x18a1, destination[1]);
+    }
+
+    [Fact]
+    public void AssembleXrgb8888_PacksBackgroundAndClutPixels()
+    {
+        var frame = CreateTwoPixelFrame();
+        var destination = new uint[2];
+
+        FrameAssembler.AssembleXrgb8888(frame, destination, 2, 2, 1);
+
+        Assert.Equal(0xff102030u, destination[0]);
+        Assert.Equal(0xff1e140au, destination[1]);
+    }
+
+    private static VdlFrame CreateTwoPixelFrame()
+    {
+        var frame = new VdlFrame();
+        frame[0].Background = 0x00102030;
+        frame[0].PixelBuffer[0] = 0;
+        frame[0].PixelBuffer[1] = 1 | (1 << 5) | (1 << 10);
+        frame[0].ClutB[1] = 10;
+        frame[0].ClutG[1] = 20;
+        frame[0].ClutR[1] = 30;
+        return frame;
+    }
+
+    [Fact]
     public void Expand5_ReplicatesBits()
     {
         Assert.Equal(0, FrameAssembler.Expand5(0));

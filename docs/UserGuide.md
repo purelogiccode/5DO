@@ -241,6 +241,14 @@ first, and at least one keyframe is always retained. Keyframes are compressed on
 emulation thread, so a very slow machine may see a brief hitch when one is captured
 (every 120 frames by default).
 
+### Focus behavior
+
+Every time the desktop window loses focus, 5DO releases all held keyboard and PBUS
+input so a direction or action cannot stay latched in the guest. **Settings >
+Emulation > Pause when the window loses focus** additionally pauses a running machine;
+returning focus resumes it only when the pause was automatic. A manual pause, start,
+or stop clears that state, so the setting never overrides a deliberate choice.
+
 ### Cheats
 
 **Emulation > Cheats...** opens the per-game cheat manager. Each game has a JSON file
@@ -396,7 +404,10 @@ native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, n
 internal CEL rendering. **Overscan crop L/T/R/B** (Settings > Video) hides 0-32 pixels
 from each edge for TVs and captures that show the outer frame; native screenshots use
 the same crop, and per-game profiles can store their own crop. **Void border** draws a
-0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image.
+0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image;
+the adjacent **pattern** selector draws solid, checkerboard, grid, or scanline fills in
+the same color. Patterns are shell-composited, so they sit behind OpenGL, GLES, Vulkan,
+and Direct3D 11 output identically.
 Both options change presentation only, not emulation, input, audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report

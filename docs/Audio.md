@@ -397,6 +397,20 @@ was added after that run; the final AOT build passed a 10 s null/real sanity pas
 [`tools/frontend-audio-soak.ps1`](https://github.com/purelogiccode/5DO/blob/master/tools/frontend-audio-soak.ps1)
 or the direct command shown in [`BuildAndTest.md`](BuildAndTest.md).
 
+### CD-DA subcode and audio-only TOC (ACC-03, 2026-11-10)
+
+The CD-ROM wire size now matches Opera's 2449-byte maximum. A `MODE SET` block page
+of density `0x82`, length 2352, and flag `0x40` is accepted, and each `READ_DATA`
+transfer returns the 2352-byte audio/data sector followed by a 96-byte subcode block.
+The Q subchannel is packed into bit 6 of each subcode byte (MSB first) and carries
+control/ADR, track, index, absolute MSF, relative MSF, and the inverted CRC-16/CCITT.
+`READ SUB-Q` still returns its 10-byte payload.
+
+The FZ-10 BIOS CD player can now read the A&M Music Sampler's TOC and shows track 1 at
+`0:00` with the `STOP` transport; the controls remain inert and the WAV capture is
+silent. The 4DO reference documents the same BIOS limitation, so audio-only playback
+is tracked as SYS-01 in the blocked section of the plan.
+
 Run the opt-in audio test with a null backend on a headless machine:
 
 ```powershell
@@ -428,8 +442,10 @@ dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQua
 
 ## 11. Limitations
 
-- No CD-DA/Red Book audio, multi-track playback, or CD swapping. The CD device streams
-  the data track only.
+- CD-DA/Red Book sectors, PLAY_AUDIO position, multi-track TOC, CD-DA volume/mute,
+  READ_DATA subcode/Q packing, and multi-disc playlists are implemented. Audio-only
+  discs still do not start playback in the FZ-10 BIOS CD player; the transport is
+  inert after the TOC is listed (see [KnownIssues.md](KnownIssues.md)).
 - No platform-native audio backend beyond OpenAL Soft.
 - No audio resampling in 5DO; OpenAL/the device handles the 44.1 kHz stream.
 - The frontend NativeAOT path is validated on Windows with the null and default playback

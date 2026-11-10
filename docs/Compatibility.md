@@ -124,7 +124,7 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
 | CUE + BIN | v1 | Multi-file/multi-track CUE, MODE1/2048, MODE1/2352, audio tracks, `INDEX`/`PREGAP`/`POSTGAP` |
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
-| Multi-track / CD-DA | Partial (2026-11-01) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, and M3U multi-disc swap are implemented; read-ahead/subcode and known-title evidence remain |
+| Multi-track / CD-DA | Partial (2026-11-10) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and M3U multi-disc swap are implemented; audio-only BIOS playback and known-title disc audio evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN or the CHD data track's frame count.
@@ -140,7 +140,8 @@ CHD specifics:
 - Flat CHDs with 2048-byte units are also supported and exposed as one data track. This covers
   cooked ISOs converted with `chdman createdvd` (or `createhd` with 2048-byte units), which
   have no CD track table. CD audio is unavailable for these data-only images.
-- DVD/HDD/raw CHDs with other unit sizes and audio-only CHDs are rejected; 3DO software is CD-ROM based.
+- DVD/HDD/raw CHDs with other unit sizes are rejected. Audio-only CHDs open with a
+  TOC-derived ID and a track table but no 3DO data track; 3DO software is CD-ROM based.
 - Read-ahead is enabled by default (4 hunks) for sequential streaming.
 
 Game ID is the MD5 of the first two 2048-byte sectors (4096 bytes), matching 4DO. This ID keys save states, screenshots, and optional per-game settings. It must never change, or existing save data will be orphaned.
@@ -295,7 +296,7 @@ does not need a separate high-resolution input path.
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
 | AOT live audio | Validated for the win-x64 NativeAOT CLI and frontend with the bundled runtime; frontend null/real soaks report 0 drops/0 underruns | Linux/macOS AOT audio is not claimed |
-| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, and Settings/CLI controls; read-ahead/subcode and known-title evidence remain |
+| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and Settings/CLI controls; audio-only BIOS playback remains blocked by the guest player |
 | Multi-disc | Partial | M3U/M3U8 playlist, F3/UI/CLI swap, guest inject, and per-disc hash; guest ODE prompts and a known multi-disc title remain |
 
 ---
@@ -325,8 +326,9 @@ does not need a separate high-resolution input path.
 
 - No netplay.
 - Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, multi-track/CD-DA
-  sectors, CD-DA volume/mute, and multi-disc playlists are implemented;
-  CD-DA read-ahead/subcode, guest ODE prompts, and known-title disc audio evidence remain.
+  sectors, CD-DA volume/mute, READ_DATA subcode/Q packing, and multi-disc playlists
+  are implemented; audio-only BIOS playback, guest ODE prompts, and known-title disc
+  audio evidence remain.
 - PAL1/PAL2 are implemented and the Europe-only matrix titles have dated captures in
   [PalValidation.md](PalValidation.md).
 - High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
@@ -585,7 +587,8 @@ passed both `FiveDo.Cli.exe --help` and `FiveDo.Frontend.Avalonia.exe --smoke-te
 VM because the host could not allocate the memory; no runtime code changed in the
 compatibility pass, so the 2026-11-02 Linux x64 gate above remains the current Linux
 evidence. Re-run the Linux gate on a host with enough free memory before a new release.
-macOS remains build-validated and best-effort.
+macOS is runtime-validated for the CLI/frontend on both architectures but remains
+best-effort for GPU presentation and physical gamepad detection.
 
 **2026-11-08 1.6.0 release note:** the six framework-dependent 1.6.0 bundles were built
 locally and verified. The Windows x64 bundle passed `FiveDo.Cli.exe --version` (1.6.0),
@@ -605,6 +608,15 @@ real Windows devices ([Audio.md](Audio.md) §9). The unsigned Windows installer 
 Linux `.deb`/`.rpm` packages were built and validated, including `.iso`/`.cue`/`.chd`
 associations and the Linux MIME/desktop entry ([Installers.md](Installers.md)). Full
 PAL evidence is in [PalValidation.md](PalValidation.md).
+
+**2026-11-10 native runtime smoke:** `.github/workflows/platform-runtime.yml` ran the
+framework-dependent CLI and frontend on native macOS x64 (`macos-15-intel`), macOS arm64
+(`macos-latest`), Linux arm64 (`ubuntu-24.04-arm`), and Windows arm64
+(`windows-11-arm`). Every target reported `5DO 1.6.0`, `selftest ok: true`, and
+`FRONTEND SMOKE OK 1.6.0` (Linux under Xvfb). Run
+<https://github.com/purelogiccode/5DO/actions/runs/42763235870> passed all four jobs.
+The smoke hides the GL surface, so GPU presentation on macOS/Linux remains
+preview/best-effort; Windows WGL/ANGLE remains the validated GL path.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
@@ -790,6 +802,7 @@ pass and fails on a Playable regression.
 
 Format checks: Night Trap Disc 1 was swapped to Disc 2 at frame 3,600 and completed
 7,200 frames with the Disc 2 hash; the final capture is live-action video. Audio-only
-CD-DA images reach the 3DO CD player but the track list is empty and the WAV capture is
-silent; this is the documented SYS-01 CD-DA read-ahead/audio-only-TOC residual, not a
+CD-DA images now reach the FZ-10 BIOS CD player and list track 1 (the 2352+96 subcode
+mode is accepted), but the transport controls remain inert and the WAV capture is
+silent; this is the documented SYS-01 audio-only BIOS-player residual, not a
 beyond-title blocker.

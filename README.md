@@ -28,8 +28,9 @@
 
 > [!IMPORTANT]
 > 5DO is at **v1.6.0**, a documented-compatibility release. Windows x64 is the validated
-> target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
-> macOS/arm64 validation is post-1.0. No BIOS ROMs, game images, or extracted game
+> GPU target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
+> macOS x64/arm64, Linux arm64, and Windows arm64 pass the native CLI/frontend runtime
+> smoke (2026-11-10). No BIOS ROMs, game images, or extracted game
 > assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
@@ -165,10 +166,10 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
 | Platform | Desktop | CLI | Status |
 |---|:---:|:---:|---|
 | Windows x64 | ✅ | ✅ | **Validated target** |
-| Windows arm64 | ✅ | ✅ | Published; runtime validation pending |
-| Linux x64 | ✅ | ✅ | Published; local VM smoke validation |
-| Linux arm64 | ✅ | ✅ | Published; runtime validation pending |
-| macOS x64 / arm64 | ✅ | ✅ | Published; runtime validation pending |
+| Windows arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
+| Linux x64 | ✅ | ✅ | Local VM smoke; GPU presentation preview/best-effort |
+| Linux arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
+| macOS x64 / arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10); GPU best-effort |
 | Raspberry Pi 4/5 (GLES 3.1) | — | — | Post-1.0 target |
 
 ## Quick start

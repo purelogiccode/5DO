@@ -159,14 +159,16 @@ Named profiles live under `profiles/<name>/` and can be selected with
   Monitoring permission; without it the frontend falls back to the keyboard.
 - The `.dmg`/`.pkg` script in [`packaging/macos`](https://github.com/purelogiccode/5DO/tree/master/packaging/macos)
   declares the disc UTI and document type. Building it requires a macOS host.
-- Runtime validation is post-1.0 work. Please report platform-specific findings with
-  a [diagnostics bundle](Diagnostics.md).
+- The `osx-x64` and `osx-arm64` bundles pass the native CLI `selftest` and frontend
+  `--smoke-test` on hosted macOS runners (2026-11-10). GPU presentation remains
+  best-effort. Report platform-specific findings with a
+  [diagnostics bundle](Diagnostics.md).
 
 ### arm64
 
 Windows, Linux, and macOS arm64 bundles are produced and architecture-verified by CI.
-Runtime validation on arm64 hardware is post-1.0; report findings with a diagnostics
-bundle. Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See
+All three pass the native CLI `selftest` and frontend `--smoke-test` on hosted arm64
+runners (2026-11-10). Raspberry Pi, Android/iOS, and WebAssembly are out of scope. See
 [Performance](Performance.md) for the current status.
 
 ## GPU and audio troubleshooting

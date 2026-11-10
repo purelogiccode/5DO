@@ -93,7 +93,9 @@ jobs:
           file artifacts/runtime/${{ matrix.rid }}/cli/FiveDo.Cli
           file artifacts/runtime/${{ matrix.rid }}/frontend/FiveDo.Frontend.Avalonia
           artifacts/runtime/${{ matrix.rid }}/cli/FiveDo.Cli --version
-          artifacts/runtime/${{ matrix.rid }}/cli/FiveDo.Cli selftest --json | tee artifacts/runtime/${{ matrix.rid }}/selftest.json
+          artifacts/runtime/${{ matrix.rid }}/cli/FiveDo.Cli selftest --json \
+            > artifacts/runtime/${{ matrix.rid }}/selftest.json
+          cat artifacts/runtime/${{ matrix.rid }}/selftest.json
 
       - name: Frontend smoke (Linux)
         if: matrix.rid == 'linux-arm64'
@@ -148,5 +150,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: platform-runtime-${{ matrix.rid }}
-          path: artifacts/runtime/${{ matrix.rid }}/*.json
+          path: |
+            artifacts/runtime/${{ matrix.rid }}/*.json
+            artifacts/runtime/${{ matrix.rid }}/frontend-smoke.txt
           if-no-files-found: warn

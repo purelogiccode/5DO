@@ -108,6 +108,23 @@ limitation. Road Rash's full 5.5-mile race is still open; a fresh 150,000-frame 
 run ends with the rider off the bike. See [`TestCorpus.md`](TestCorpus.md) 1.1bp and
 [`Audio.md`](Audio.md) §9.
 
+**Platform and feature update (2026-11-10):** native runtime smoke now passes on
+macOS x64 (`macos-15-intel`), macOS arm64 (`macos-latest`), Linux arm64
+(`ubuntu-24.04-arm`), and Windows arm64 (`windows-11-arm`): each target runs the CLI
+`selftest` and the frontend `--smoke-test` (`FRONTEND SMOKE OK 1.6.0`). Run
+<https://github.com/purelogiccode/5DO/actions/runs/42763235870> passed all four jobs,
+closing PLAT-03/PLAT-04. The CD-ROM wire size now accepts Opera's 2449-byte maximum,
+so a 2352-byte digital-audio block plus 96-byte subcode is valid; READ_DATA exposes
+the Q subchannel and the FZ-10 BIOS CD player lists the A&M Music Sampler's first
+track (transport playback remains a documented BIOS limit). `disc convert` writes
+ISO/BIN/CUE/flat CHD and verifies the game ID; Lemmings (USA) round-trips with
+`discHash 0be38b22987b40b5d48f70a167656049` and a 600-frame hash of `675291253`.
+The desktop adds opt-in focus-loss pausing with input release, selectable void
+patterns (solid/checker/grid/scanline), and 0RGB1555/RGB565/XRGB8888 frame conversion
+helpers. The suite is **2,118 tests**; build, format, and InspectCode are clean. See
+[`TestCorpus.md`](TestCorpus.md) 1.1br/1.1bs, [`Compatibility.md`](Compatibility.md)
+§10.3, and [`KnownIssues.md`](KnownIssues.md).
+
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept
 as the reference oracle. The 3DO background is now 24-bit end to end, a zero VDL

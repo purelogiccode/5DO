@@ -1,6 +1,6 @@
 # 5DO — Consolidated Implementation Plan
 
-**Snapshot:** 2026-11-09
+**Snapshot:** 2026-11-10
 **Release:** v1.6.0
 **Status:** the compatibility program is complete. This file is the single actionable plan;
 it tracks only **achievable post-1.6 work**.
@@ -47,7 +47,7 @@ loadability and duplicate coverage.
 | Release | **v1.6.0** six framework-dependent bundles and `SHA256SUMS.txt`; all checksums verify | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
-| Platform | Windows x64 validated; Linux x64 full-suite and smoke passed; macOS/arm64 cross-published | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
+| Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux GPU presentation remains preview/best-effort | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
 
 The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
 (static pad card), `LameNES Emulator` (minimal “HELLO, WORLD!” frame), and the standalone
@@ -56,9 +56,10 @@ The remaining non-playable rows are three non-retail/add-on images: `Joypad Test
 ### 1.3 Completed stable IDs
 
 The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
-REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **PLAT-01**, **PLAT-07**,
-**PLAT-09**, **TEST-06/07/08**, **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**,
-and the shipped **SYS-06/07/08/12/17/18**, **UX-26**, **VID-04/12** items.
+REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **PLAT-01**,
+**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-09**, **TEST-06/07/08**,
+**CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
+**SYS-06/07/08/12/17/18/22**, **UX-25**, **UX-26**, **VID-04/12/16/17** items.
 
 `ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
 §4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
@@ -121,8 +122,8 @@ and a linked capture for every promotion or documented limit.
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **PLAT-02** | S | **Linux x64 GPU presentation**: run the GL probe on a real Linux GPU host, not llvmpipe over SSH; record presenter results. | The renderer and probe already exist; a GPU-capable Linux host or VM is the only missing resource. | A dated probe result is recorded in [Compatibility.md](Compatibility.md) §10.3; Linux GPU status moves from preview/best-effort to validated or a precise limitation. |
-| **PLAT-03** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | macOS CI runners are available for build; runtime smoke needs a macOS runner or host. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. |
-| **PLAT-04** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | arm64 runners/hardware are obtainable; the bundles already build. | CLI and frontend smoke pass on both arm64 targets; results are recorded. |
+| **PLAT-03** | **Done** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | Hosted macOS runners run both bundles natively. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42763235870 (2026-11-10), [Compatibility.md](Compatibility.md) §10.3. |
+| **PLAT-04** | **Done** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | Hosted arm64 runners run both bundles natively. | CLI and frontend smoke pass on both arm64 targets; results are recorded. Evidence: `platform-runtime.yml` run 42763235870 (2026-11-10). |
 | **PLAT-05** | S | **macOS gamepad backend**: physical detection for the new IOKit HID source. The source and pure mapping layer are implemented; 21 mapping/profile tests pass. | The remaining check needs a macOS host with a connected controller. | A macOS gamepad is detected and mapped through the existing eight-player profile; the mapping is already unit-tested. |
 | **PLAT-06** | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: complete the missing presentation/performance matrix. | The renderer and benchmark harness exist; the work is measurement on available hardware. | Results are recorded in [Performance.md](Performance.md), with every residual labeled `validated` or `best-effort`. |
 | **PLAT-07** | S | **Done (2026-11-10).** Frontend NativeAOT audio validation: both 600 s soaks report 0 drops and 0 underruns. | CLI AOT and trimmed IL audio were already validated; the frontend AOT path is now validated too. | Evidence recorded in [Audio.md](Audio.md) §9. |
@@ -138,7 +139,10 @@ OpenAL path for 600 s on the null device and on the NVIDIA playback endpoint, bo
 0 dropped samples and 0 underruns ([Audio.md](Audio.md) §9). `PLAT-09` is closed:
 all eight Europe-only/PAL-sensitive titles produced dated PAL1 captures with
 `panafz10e-anvil.bin`, and a Battle Chess PAL2 probe rendered 384x288 at 50 Hz
-([PalValidation.md](PalValidation.md)).
+([PalValidation.md](PalValidation.md)). `PLAT-03` and `PLAT-04` are closed by
+`.github/workflows/platform-runtime.yml`: macOS x64, macOS arm64, Linux arm64, and
+Windows arm64 each publish the framework-dependent CLI/frontend, run `selftest`, and
+pass the frontend `--smoke-test` (run 42763235870, 2026-11-10).
 
 ### 3.4 P1 — Release and packaging
 
@@ -157,23 +161,22 @@ the signing item stays in §4 until the credentials exist. Evidence:
 
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
-| **SYS-01** | M | **CD-DA audio-only TOC and playback**: make an audio-only disc list its tracks and play them through the guest CD player, including read-ahead/track-list behavior. | The disc parser already reports the 14-track *A&M Music Sampler* correctly; only the guest-facing path and read-ahead are missing. | A known audio-only disc lists and plays its tracks; WAV capture is non-silent; the result is recorded in [KnownIssues.md](KnownIssues.md). |
-| **ACC-03** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test and one matrix title if available. | The CD sector path already exists; subcode is an additive command/transport feature. No matrix title currently requires it. | A synthetic subcode test passes; any title that needs it is verified or the residual is documented. |
+| **ACC-03 — Done** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test. | The CD sector path already existed; the 2352+96 wire size and Q packing are now implemented. | A synthetic subcode test passes and the Q payload decodes to the same control/track/index/MSF values. Evidence: `CdromMultiTrackTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 
-`SYS-01` and `ACC-03` are optional: no current matrix title blocks on them. Keep them behind
-P0/P1 unless a title changes status. The Road Rash and CD-cadence residuals are documented
-in §4 because they already have measurements and revisit conditions.
+`SYS-01` is now in §4: the FZ-10 BIOS CD player lists the audio-only TOC after the
+subcode fix, but its transport controls remain inert and the 4DO reference documents
+the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode.
 
 ### 3.6 P3 — Product features
 
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
-| **SYS-22** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI and UI. | The readers and writers already parse these formats; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. |
+| **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **UX-09** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. |
-| **UX-25** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already exist; this is a policy + settings feature. | Focus loss pauses or releases input per the setting; tests cover the transition. |
-| **VID-17** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The presenter already draws a void color; patterns are a shader/overlay addition. | Patterns render in OpenGL/GLES/Vulkan/D3D11 and are covered by probe captures. |
-| **VID-16** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. |
+| **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
+| **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
+| **VID-16 — Done** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. Evidence: `FrameAssemblerTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **UX-28** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. |
 | **UX-29** | L | **TAS Lua scripting and input timeline**: script input/movies and edit an input timeline in the shell. | The deterministic movie container, editor, and PBUS packet format already exist. | A Lua-authored movie replays deterministically; the timeline edits and round-trips a movie. |
 | **UX-30** | M | **4DO `.4dosav` import/export (best-effort)**: map the native state to/from 4DO’s format. | The native state sections are versioned and documented; the mapping is additive and optional. | A known 4DO state imports with warnings where fields are unsupported; export round-trips in 5DO. |
@@ -192,6 +195,7 @@ documented limitation, not that it is unachievable.
 | **SYS-05 embedded boot ROM** | GPL-2.0-only licensing risk; no distributable ROM exists. Retail titles still need a user BIOS. | Legal sign-off and a distributable ROM exist. |
 | **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
+| **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player now lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
 | **CORE-05 threaded DSP** | Closed: DSP is ~14% of frame time; handoff/validation cost exceeds the work. | A title spends >30% of frame time in DSP. |
 | **PERF-08 managed JIT** | Closed: the interpreter remains faster on real titles and is the accuracy oracle. | A measured 1.5× end-to-end win on a real title. |
@@ -220,15 +224,17 @@ documented limitation, not that it is unachievable.
 2. **P0 evidence:** `AUD-01` is complete on Windows (null + real) and Linux (null); the
    Linux real-device path is a hardware limitation. Keep the quality-ledger gate green
    after every batch.
-3. **P1 platform:** `PLAT-02` → `PLAT-03` → `PLAT-04` → `PLAT-05` (IOKit source and
-   mapping tests done; physical detection pending a macOS host) → `PLAT-06` →
-   `PLAT-07` (**done**) → `PLAT-08` → `PLAT-09` (**done**).
+3. **P1 platform:** `PLAT-02` remains blocked on a GPU-capable Linux host; `PLAT-03`
+   and `PLAT-04` are **done** via `.github/workflows/platform-runtime.yml`; `PLAT-05`
+   needs physical macOS controller detection; `PLAT-06` remains partial (GLES/DPI/Tier B);
+   `PLAT-07` and `PLAT-09` are **done**; `PLAT-08` remains the Vulkan surface work.
 4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
    stay blocked in §4 until certificates/accounts exist.
-5. **P2 accuracy:** `SYS-01` → `ACC-03`. These are optional unless a title changes status.
-   The `ACC-01` and `CORE-04` residuals stay in §4 until their revisit conditions are met.
-6. **P3 product:** work in the order the product roadmap accepts; none of these block a
-   release.
+5. **P2 accuracy:** `ACC-03` is **done**; `SYS-01` moved to §4 after the BIOS CD player
+   listed the TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until
+   their revisit conditions are met.
+6. **P3 product:** `SYS-22`, `UX-25`, `VID-16`, and `VID-17` are **done**. The remaining
+   product items do not block a release.
 
 **Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
 P1 platform smoke is failing.
@@ -264,6 +270,13 @@ dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/
 
 # Frontend smoke
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
+
+# Native platform runtime smoke (macOS x64/arm64, Linux arm64, Windows arm64)
+gh workflow run platform-runtime.yml
+
+# Disc conversion round-trip
+5do disc convert game.chd --out game.iso --json
+5do disc convert game.chd --out game.chd --format chd --json
 
 # Release bundles
 pwsh -NoProfile -File packaging/package-bundle.ps1

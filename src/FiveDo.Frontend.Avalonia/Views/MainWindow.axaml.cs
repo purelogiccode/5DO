@@ -144,6 +144,7 @@ public partial class MainWindow : Window, IDisposable
     private long _displayPresents;
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
     private bool _runAheadAutoDisabledShown;
+    private readonly FocusPausePolicy _focusPause = new();
 
     /// <summary>
     /// Creates the main emulator window and wires drag-and-drop, activation, and
@@ -155,17 +156,8 @@ public partial class MainWindow : Window, IDisposable
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
         AddHandler(DragDrop.DropEvent, OnWindowDrop);
-        Deactivated += (_, _) => CancelFastForward();
-        Activated += (_, _) =>
-        {
-            if (_displayFrameLoop)
-            {
-                // Restart the chain with a fresh generation so a stale callback that
-                // stalled while the window was minimized cannot duplicate it.
-                int generation = ++_displayFrameGeneration;
-                RequestDisplayFrame(generation);
-            }
-        };
+        Deactivated += (_, _) => OnWindowDeactivated();
+        Activated += (_, _) => OnWindowActivated();
         Video.FramePresented += OnFramePresented;
         Direct3DVideo.FramePresented += OnFramePresented;
         VulkanVideo.FramePresented += OnFramePresented;
@@ -1515,6 +1507,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void TogglePlayPause()
     {
+        _focusPause.Clear();
         if (_running)
         {
             PauseEmulation(showLibrary: false);
@@ -1527,6 +1520,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void StartEmulation(bool showGameView)
     {
+        _focusPause.Clear();
         if ((!_biosLoaded && _moviePlayback is null) || _machine is null || _runner is null)
         {
             StatusText.Text = "Open a 3DO BIOS before starting emulation.";
@@ -1611,6 +1605,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void StopEmulation()
     {
+        _focusPause.Clear();
         StopAudioRecording();
         StopGifRecording();
         StopMovie(save: true);
@@ -2984,6 +2979,37 @@ public partial class MainWindow : Window, IDisposable
         _donationBannerMessage = null;
         AppSettingsStore.Save(_settings);
         UpdateDonationBanner();
+    }
+
+    private void OnWindowDeactivated()
+    {
+        CancelFastForward();
+
+        // Release every held key and pad button so a focus switch cannot leave a
+        // direction or action latched in the guest.
+        _input.Reset();
+
+        if (_focusPause.OnDeactivated(_settings.PauseOnFocusLoss, _running))
+        {
+            PauseEmulation(showLibrary: false);
+        }
+    }
+
+    private void OnWindowActivated()
+    {
+        if (_focusPause.OnActivated(_running))
+        {
+            StartEmulation(showGameView: false);
+            ShowOsd("Resumed after focus returned.");
+        }
+
+        if (_displayFrameLoop)
+        {
+            // Restart the chain with a fresh generation so a stale callback that
+            // stalled while the window was minimized cannot duplicate it.
+            int generation = ++_displayFrameGeneration;
+            RequestDisplayFrame(generation);
+        }
     }
 
     private void OnDonationCheckActivated(object? sender, EventArgs e)
@@ -5629,22 +5655,98 @@ public partial class MainWindow : Window, IDisposable
     private void ApplyVideoPresentationSettings()
     {
         int border = Math.Clamp(_settings.VideoBorderPixels, 0, 64);
-        IBrush brush;
+        Color color;
         try
         {
-            brush = Brush.Parse(_settings.ResolveVoidAreaColor());
+            color = Color.Parse(_settings.ResolveVoidAreaColor());
         }
         catch (FormatException exception)
         {
             _logger.ForCategory(LogCategory.Host).Debug(
                 exception,
                 "The configured void-area color could not be parsed; using the default.");
-            brush = Brush.Parse(AppSettings.DefaultVoidAreaColor);
+            color = Color.Parse(AppSettings.DefaultVoidAreaColor);
         }
 
+        IBrush brush = CreateVoidBrush(color, _settings.ResolveVoidAreaPattern());
         VideoFrameBorder.Padding = new Thickness(border);
         VideoFrameBorder.Background = brush;
         VideoHost.Background = brush;
+    }
+
+    private static IBrush CreateVoidBrush(Color color, VoidPattern pattern)
+    {
+        if (pattern == VoidPattern.Solid)
+        {
+            return new SolidColorBrush(color);
+        }
+
+        Color accent = Color.FromArgb(
+            color.A,
+            (byte)Math.Min(255, color.R + 28),
+            (byte)Math.Min(255, color.G + 28),
+            (byte)Math.Min(255, color.B + 28));
+        var drawing = new DrawingGroup();
+        drawing.Children.Add(new GeometryDrawing
+        {
+            Brush = new SolidColorBrush(color),
+            Geometry = new RectangleGeometry(new Rect(0, 0, 16, 16)),
+        });
+
+        switch (pattern)
+        {
+            case VoidPattern.Checker:
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new SolidColorBrush(accent),
+                    Geometry = new GeometryGroup
+                    {
+                        Children =
+                        {
+                            new RectangleGeometry(new Rect(0, 0, 8, 8)),
+                            new RectangleGeometry(new Rect(8, 8, 8, 8)),
+                        },
+                    },
+                });
+                break;
+
+            case VoidPattern.Grid:
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new SolidColorBrush(accent),
+                    Geometry = new GeometryGroup
+                    {
+                        Children =
+                        {
+                            new RectangleGeometry(new Rect(0, 0, 16, 1)),
+                            new RectangleGeometry(new Rect(0, 0, 1, 16)),
+                        },
+                    },
+                });
+                break;
+
+            case VoidPattern.Scanline:
+                var lines = new GeometryGroup();
+                for (var y = 0; y < 16; y += 4)
+                {
+                    lines.Children.Add(new RectangleGeometry(new Rect(0, y, 16, 1)));
+                }
+
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new SolidColorBrush(accent),
+                    Geometry = lines,
+                });
+                break;
+        }
+
+        return new DrawingBrush
+        {
+            Drawing = drawing,
+            TileMode = TileMode.Tile,
+            DestinationRect = new RelativeRect(0, 0, 16, 16, RelativeUnit.Absolute),
+            Stretch = Stretch.None,
+        };
     }
 
     private void OnFramePresented(object? sender, FramePresentedEventArgs e)

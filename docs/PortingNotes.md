@@ -949,7 +949,9 @@ M1 implements the section primitive used by all later chips:
 - A loaded state with local reset asserted runs the same reset after the payload is
   restored.
 - CD-DA read-ahead (48 sectors) and audio burst scheduling remain with SYS-01. The
-  `0x40` READ_ID idle heuristic remains until command transcripts replace it.
+  2352+96 subcode wire size and Q packing were added on 2026-11-10 (ACC-03); audio-only
+  BIOS playback remains blocked. The `0x40` READ_ID idle heuristic remains until command
+  transcripts replace it.
 
 ### 12.24 OP-SYS-01 ROM overlay (2026-10-31)
 

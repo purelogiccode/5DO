@@ -22,7 +22,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 - A flag followed by a non-`--` token consumes that token as its value. Put boolean
   flags last or before another `--option` to avoid ambiguity.
 - The first non-option token is the positional path for `run`, `trace`, `info`,
-  `disc dump`, `disc tracks`, `disc playlist`, `bios info`, `audio analyze`, `state inspect`,
+  `disc convert`, `disc dump`, `disc tracks`, `disc playlist`, `bios info`, `audio analyze`, `state inspect`,
   `settings validate|migrate`, and `disasm` (disc or file, depending on the command). `fs` uses fixed positional
   subcommand/path positions.
 - Integer options accept decimal and, where noted, `0x` hexadecimal. Some address
@@ -59,6 +59,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `gamedb scan <folder> --out <file>` | Derive XML records from disc IDs and filenames. |
 | `gamedb export --out <file>` | Export the embedded database. |
 | `gamedb merge <file> --out <file>` | Merge a fragment into the embedded database for review. |
+| `disc convert <disc> --out <path> [--format iso\|bin\|cue\|chd]` | Convert a data-only image and verify the game ID. |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
@@ -533,6 +534,20 @@ either the database title or `unknown`.
 ---
 
 ## 6. `disc`
+
+### `disc convert`
+
+```powershell
+5do disc convert game.chd --out game.iso
+5do disc convert game.chd --out game.cue --format cue --json
+```
+
+Converts a data-only image between ISO, BIN, CUE, and a flat 2048-unit CHD. The
+format is inferred from `--out` or set with `--format iso|bin|cue|chd`. CUE output
+writes a companion BIN and a single `MODE1/2048` track. The command reopens the
+output, computes both `GameId` hashes, and exits 1 on a mismatch. JSON fields:
+`ok`, `source`, `output`, `format`, `sectors`, `bytes`, `sourceHash`, `outputHash`.
+Audio-track images are rejected until a raw audio writer is added.
 
 ### `disc dump`
 

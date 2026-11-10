@@ -38,19 +38,23 @@ The compatibility plan is complete:
 **Accuracy residuals (not release blockers):**
 
 - Road Rash's long-run frame divergence from the reference core.
-- CD command-cadence residual and CD-DA audio-only TOC/track-list evidence.
+- CD command-cadence residual and audio-only BIOS CD-player transport (the TOC now
+  lists; playback remains a documented BIOS limit).
 - Crash 'n Burn (Japan) BIOS/dump boot limitation.
 
 **Platform and product:**
 
-- GLES 3.1, desktop arm64, and Linux/macOS GPU validation.
+- GLES 3.1, Linux/macOS GPU presentation, and Tier B timing validation. Native
+  CLI/frontend runtime smoke now passes on macOS x64/arm64, Linux arm64, and Windows
+  arm64 (2026-11-10); desktop arm64 is no longer an open platform item.
 - M14 high-resolution CEL research.
 - Signed/notarized installers. Unsigned Windows/Linux/macOS packaging and file
   associations are in place (2026-11-10); macOS packaging needs a macOS host, and
   signing remains conditional on certificates.
 - Additional metadata providers and media in the library.
 - More TAS tooling, Lua scripting, and an input timeline.
-- CD subcode work. Full PAL library validation was completed on 2026-11-10.
+- CD subcode is complete (2026-11-10); full PAL library validation was completed on
+  2026-11-10.
 
 Out of scope for v1: netplay, achievements, a full debugger UI, and 4K *internal* CEL
 rendering. 4K output upscaling is supported.

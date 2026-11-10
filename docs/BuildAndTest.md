@@ -12,7 +12,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | Requirement | Version / notes |
 |---|---|
 | .NET SDK | **10.0.301** (pinned by `global.json` with `rollForward: disable`). |
-| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. Linux and macOS bundles are built and architecture-validated; runtime validation is post-1.0. |
+| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. All six x64/arm64 bundles are built and architecture-validated; macOS x64/arm64, Linux arm64, and Windows arm64 pass native CLI/frontend runtime smoke (2026-11-10). |
 | GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
@@ -479,6 +479,7 @@ Separate workflows add:
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `docs.yml` | Push/PR touching docs or the wiki, manual | Strict MkDocs build, GitHub Pages deployment from `master`, and curated wiki publishing. |
+| `platform-runtime.yml` | Push touching `src/`, `packaging/`, or the workflow; manual | Native CLI `selftest` and frontend `--smoke-test` on macOS x64/arm64, Linux arm64, and Windows arm64. |
 | `release.yml` | Tag push or manual | Builds the six x64/arm64 bundles, writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
 | `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
 | `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |

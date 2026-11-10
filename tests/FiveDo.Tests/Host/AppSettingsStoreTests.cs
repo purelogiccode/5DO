@@ -459,6 +459,7 @@ public sealed class AppSettingsStoreTests
             OverscanBottom = 8,
             VideoBorderPixels = 12,
             VoidAreaColor = "#ff202020",
+            VoidAreaPattern = "Checker",
         };
 
         AppSettingsStore.Save(settings, path);
@@ -467,17 +468,20 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(new CropInsets(2, 4, 6, 8), loaded.ResolveOverscan());
         Assert.Equal(12, loaded.VideoBorderPixels);
         Assert.Equal("#ff202020", loaded.VoidAreaColor);
+        Assert.Equal(VoidPattern.Checker, loaded.ResolveVoidAreaPattern());
 
         settings.OverscanLeft = 99;
         settings.OverscanTop = -4;
         settings.VideoBorderPixels = 500;
         settings.VoidAreaColor = "bad";
+        settings.VoidAreaPattern = "spiral";
         AppSettingsStore.Save(settings, path);
         loaded = AppSettingsStore.Load(path);
 
         Assert.Equal(new CropInsets(32, 0, 6, 8), loaded.ResolveOverscan());
         Assert.Equal(64, loaded.VideoBorderPixels);
         Assert.Equal(AppSettings.DefaultVoidAreaColor, loaded.VoidAreaColor);
+        Assert.Equal(VoidPattern.Solid, loaded.ResolveVoidAreaPattern());
     }
 
     [Fact]

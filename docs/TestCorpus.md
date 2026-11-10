@@ -3454,3 +3454,64 @@ launches the installed frontend. Windows arm64 installer built. Linux x64:
 macOS packaging requires a macOS host. See [`Installers.md`](Installers.md) and
 `packaging/README.md`. The full suite passes **2,098/2,098**; `dotnet format
 --verify-no-changes` is clean and InspectCode reports 0 results.
+
+### 1.1br Native platform runtime smoke (2026-11-10)
+
+`.github/workflows/platform-runtime.yml` publishes the framework-dependent CLI and
+frontend on each native runner and runs the CLI `selftest` plus the frontend
+`--smoke-test`:
+
+| Target | Runner | CLI | Frontend |
+|---|---|---|---|
+| macOS x64 | `macos-15-intel` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+| macOS arm64 | `macos-latest` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+| Linux arm64 | `ubuntu-24.04-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` under Xvfb |
+| Windows arm64 | `windows-11-arm` | `5DO 1.6.0`; selftest `ok: true` | `FRONTEND SMOKE OK 1.6.0` |
+
+Run: <https://github.com/purelogiccode/5DO/actions/runs/42763235870> (all four jobs
+passed, 2026-11-10). The apphosts were confirmed as Mach-O x86_64, Mach-O arm64, ELF
+aarch64, and PE arm64 respectively. This closes PLAT-03 and PLAT-04. The frontend
+smoke hides the GL surface, so it validates startup/XAML/settings, not GPU
+presentation; Linux GPU presentation remains preview/best-effort.
+
+### 1.1bs CD subcode, disc conversion, focus, void patterns, and pixel formats (2026-11-10)
+
+**CD subcode (ACC-03).** `CdromDevice` now uses Opera's 2449-byte maximum wire size,
+so `MODE SET` density `0x82` with a 2352-byte block and the `0x40` subcode flag is
+accepted. `READ_DATA` returns the 2352-byte audio/data sector followed by a 96-byte
+subcode block whose Q channel is packed into bit 6 of each byte; the 12-byte Q
+payload carries control/ADR, track, index, absolute MSF, relative MSF, and the
+inverted CRC-16/CCITT. `READ SUB-Q` still returns its 10-byte payload. Tests:
+`ModeSetAcceptsDigitalAudioWithSubcodeAndReadDataCarriesQ` and
+`ReadSubQStillReturnsTheTenBytePayload`.
+
+**Audio-only CD player (SYS-01).** With `panafz10.bin`, the A&M Music Sampler now
+lists track 1 and draws the player transport (`REPEAT OFF / NORMAL / STEREO`,
+`STOP`, `0:00`) instead of the earlier empty list. The transport controls remain
+inert and the WAV capture is silent; the 4DO reference documents the same BIOS
+limitation. SYS-01 moved to §4 of the implementation plan.
+
+**Disc conversion (SYS-22).** `5do disc convert <source> --out <path>` writes ISO,
+BIN, CUE, or a flat 2048-unit CHD and verifies the `GameId` hash. Lemmings (USA)
+round-tripped CHD → ISO/BIN/CUE/CHD with `discHash
+0be38b22987b40b5d48f70a167656049` and a 600-frame `frameHash` of `675291253` on
+every output. Tests: `DiscImageWriterTests` (four containers). Evidence:
+`artifacts/sys22/`.
+
+**Focus pause (UX-25).** The desktop shell releases keyboard and PBUS input on every
+deactivation. The new `PauseOnFocusLoss` setting pauses a running machine and resumes
+it only when the pause was automatic; a manual start/stop clears the state.
+`FocusPausePolicyTests` covers enabled/disabled/idle transitions and the manual clear.
+
+**Void patterns (VID-17).** The void area is now a shell-composited `DrawingBrush`
+selected by `VoidAreaPattern` (`Solid`, `Checker`, `Grid`, `Scanline`) and shared by
+OpenGL/GLES/Vulkan/D3D11 because it sits behind every presenter. Settings >
+Video exposes the pattern next to the border/color controls; `VoidPatternTests` and
+the settings round-trip cover parsing and fallback.
+
+**VDLP pixel formats (VID-16).** `FrameAssembler.Assemble1555`, `Assemble565`, and
+`AssembleXrgb8888` convert the same expanded palette pixels to packed 0RGB1555,
+RGB565, and opaque XRGB8888. `FrameAssemblerTests` checks each format against the
+CPU palette reference on a synthetic two-pixel line; the default BGRA path and frame
+hashes are unchanged. The full suite passes **2,118/2,118**; `dotnet format
+--verify-no-changes` is clean.

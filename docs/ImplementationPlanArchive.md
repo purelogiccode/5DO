@@ -382,6 +382,23 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-10 - PLAT-03/PLAT-04 native runtime, ACC-03 subcode, SYS-22 conversion,
+  UX-25 focus, VID-16/VID-17.** Added `.github/workflows/platform-runtime.yml`, which
+  publishes the framework-dependent CLI/frontend on macOS x64 (`macos-15-intel`),
+  macOS arm64 (`macos-latest`), Linux arm64 (`ubuntu-24.04-arm`), and Windows arm64
+  (`windows-11-arm`); every target reports `5DO 1.6.0`, `selftest ok: true`, and
+  `FRONTEND SMOKE OK 1.6.0` (run 42763235870). Raised the CD wire limit to Opera's
+  2449 bytes, accepted 2352-byte digital-audio blocks with the 96-byte subcode flag,
+  packed the Q subchannel (control/track/index/MSF/CRC) into READ_DATA, and kept the
+  10-byte READ SUB-Q response; the FZ-10 BIOS CD player now lists the A&M Music
+  Sampler's first track but its transport remains inert, so SYS-01 moved to §4.
+  Added `disc convert` for ISO/BIN/CUE/flat CHD with game-ID verification (Lemmings
+  USA: `0be38b22987b40b5d48f70a167656049`, 600-frame `675291253` on every output).
+  Added opt-in focus-loss pausing with full input release, selectable void patterns
+  (solid/checker/grid/scanline), and 0RGB1555/RGB565/XRGB8888 frame conversion helpers.
+  Evidence: [TestCorpus.md](TestCorpus.md) 1.1br/1.1bs, [Compatibility.md](Compatibility.md)
+  §10.3, [Audio.md](Audio.md) §9, [CliReference.md](CliReference.md) §6.
+
 - **2026-11-10 - PLAT-05/PLAT-07/PLAT-09 and UX-16 scaffolding.** macOS gamepad:
   added `MacOsGamepadSource` on IOKit HID Manager plus the pure
   `MacOsHidGamepadMapper`; `MacOsGamepadMapperTests` covers face buttons, sticks,

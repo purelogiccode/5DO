@@ -144,7 +144,9 @@
                                      ToolTip.Tip="Border thickness in screen pixels (0-64)." />
                             <TextBox x:Name="VoidAreaColorBox" Width="110"
                                      ToolTip.Tip="Void-area and border color as #RRGGBB or #AARRGGBB." />
-                            <TextBlock Text="px / color" VerticalAlignment="Center" Opacity="0.7" />
+                            <ComboBox x:Name="VoidPatternCombo" Width="110"
+                                      ToolTip.Tip="Void-area pattern: solid, checkerboard, grid, or scanlines. The pattern is presentation-only and is shared by every renderer." />
+                            <TextBlock Text="px / color / pattern" VerticalAlignment="Center" Opacity="0.7" />
                         </StackPanel>
                         <TextBlock Grid.Row="30" Grid.Column="1"
                                    Text="The crop is presentation-only. Per-game profiles can store their own crop; the border and void color are global."
@@ -201,7 +203,7 @@
             </TabItem>
 
             <TabItem Header="Audio" ToolTip.Tip="OpenAL output, volume, CD-DA mix, and test-tone settings.">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Output" VerticalAlignment="Center"
                                ToolTip.Tip="Enable or disable live OpenAL playback." />
                     <CheckBox x:Name="AudioCheck" Grid.Row="0" Grid.Column="1" Content="Enable OpenAL output"
@@ -265,7 +267,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, Opera DIPIR/soft reset, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -434,6 +436,9 @@
                     <CheckBox x:Name="SwiHleCheck" Grid.Row="37" Grid.Column="1" Margin="0,12,0,0"
                                Content="Portfolio OS SWI HLE (performance, opt-in)"
                                ToolTip.Tip="Handle Portfolio OS fixed-point math SWIs on the host. This mirrors Opera's opera_swi_hle option, is disabled by default, and restarts the machine when changed." />
+                    <CheckBox x:Name="PauseOnFocusLossCheck" Grid.Row="38" Grid.Column="1" Margin="0,12,0,0"
+                               Content="Pause when the window loses focus"
+                               ToolTip.Tip="Pause emulation when the desktop window is deactivated and resume it when focus returns. Held keyboard and pad input is released either way." />
                     <TextBlock Grid.Row="27" Grid.Column="0" Text="Pointer calibration" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Scale and offset applied to the host pointer before it reaches the emulated device." />
                     <StackPanel Grid.Row="27" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">

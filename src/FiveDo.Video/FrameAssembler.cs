@@ -122,6 +122,96 @@ public sealed class FrameAssembler
         return (byte)((value << 3) | (value >> 2));
     }
 
+    /// <summary>Converts a VDL frame to packed 0RGB1555 pixels.</summary>
+    /// <param name="source">Source VDL frame.</param>
+    /// <param name="destination">Destination pixels, one <see cref="ushort"/> per pixel.</param>
+    /// <param name="stride">Destination stride in pixels.</param>
+    /// <param name="copyWidth">Number of pixels to copy per line.</param>
+    /// <param name="copyHeight">Number of lines to copy.</param>
+    /// <exception cref="ArgumentNullException">Thrown when a frame is null.</exception>
+    public static void Assemble1555(
+        VdlFrame source,
+        Span<ushort> destination,
+        int stride,
+        int copyWidth,
+        int copyHeight)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var width = Math.Min(Math.Min(copyWidth, stride), EmulatorConstants.VdlLineMaxPixels);
+        var height = Math.Min(copyHeight, VdlFrame.MaxLines);
+        for (var line = 0; line < height; line++)
+        {
+            VdlLine sourceLine = source.Lines[line];
+            Span<ushort> sourcePixels = sourceLine.PixelBuffer;
+            int lineStart = line * stride;
+            for (var x = 0; x < width && lineStart + x < destination.Length; x++)
+            {
+                ExpandPixel(sourceLine, sourcePixels[x], out var r, out var g, out var b);
+                destination[lineStart + x] = (ushort)(((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3));
+            }
+        }
+    }
+
+    /// <summary>Converts a VDL frame to packed RGB565 pixels.</summary>
+    /// <param name="source">Source VDL frame.</param>
+    /// <param name="destination">Destination pixels, one <see cref="ushort"/> per pixel.</param>
+    /// <param name="stride">Destination stride in pixels.</param>
+    /// <param name="copyWidth">Number of pixels to copy per line.</param>
+    /// <param name="copyHeight">Number of lines to copy.</param>
+    /// <exception cref="ArgumentNullException">Thrown when a frame is null.</exception>
+    public static void Assemble565(
+        VdlFrame source,
+        Span<ushort> destination,
+        int stride,
+        int copyWidth,
+        int copyHeight)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var width = Math.Min(Math.Min(copyWidth, stride), EmulatorConstants.VdlLineMaxPixels);
+        var height = Math.Min(copyHeight, VdlFrame.MaxLines);
+        for (var line = 0; line < height; line++)
+        {
+            VdlLine sourceLine = source.Lines[line];
+            Span<ushort> sourcePixels = sourceLine.PixelBuffer;
+            int lineStart = line * stride;
+            for (var x = 0; x < width && lineStart + x < destination.Length; x++)
+            {
+                ExpandPixel(sourceLine, sourcePixels[x], out var r, out var g, out var b);
+                destination[lineStart + x] = (ushort)(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+            }
+        }
+    }
+
+    /// <summary>Converts a VDL frame to XRGB8888 pixels with an opaque alpha channel.</summary>
+    /// <param name="source">Source VDL frame.</param>
+    /// <param name="destination">Destination pixels, one <see cref="uint"/> per pixel.</param>
+    /// <param name="stride">Destination stride in pixels.</param>
+    /// <param name="copyWidth">Number of pixels to copy per line.</param>
+    /// <param name="copyHeight">Number of lines to copy.</param>
+    /// <exception cref="ArgumentNullException">Thrown when a frame is null.</exception>
+    public static void AssembleXrgb8888(
+        VdlFrame source,
+        Span<uint> destination,
+        int stride,
+        int copyWidth,
+        int copyHeight)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var width = Math.Min(Math.Min(copyWidth, stride), EmulatorConstants.VdlLineMaxPixels);
+        var height = Math.Min(copyHeight, VdlFrame.MaxLines);
+        for (var line = 0; line < height; line++)
+        {
+            VdlLine sourceLine = source.Lines[line];
+            Span<ushort> sourcePixels = sourceLine.PixelBuffer;
+            int lineStart = line * stride;
+            for (var x = 0; x < width && lineStart + x < destination.Length; x++)
+            {
+                ExpandPixel(sourceLine, sourcePixels[x], out var r, out var g, out var b);
+                destination[lineStart + x] = 0xff000000u | ((uint)r << 16) | ((uint)g << 8) | b;
+            }
+        }
+    }
+
     private static byte[] CreateFixedClut()
     {
         var result = new byte[FixedClutSize];

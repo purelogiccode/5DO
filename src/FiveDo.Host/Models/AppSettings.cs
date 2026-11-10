@@ -309,8 +309,24 @@ public sealed class AppSettings
     /// </remarks>
     public string VoidAreaColor { get; set; } = DefaultVoidAreaColor;
 
+    /// <summary>Gets or sets the void-area pattern: <c>Solid</c>, <c>Checker</c>, <c>Grid</c>, or <c>Scanline</c>.</summary>
+    public string VoidAreaPattern { get; set; } = DefaultVoidAreaPattern;
+
     /// <summary>Gets the default void-area color.</summary>
     public const string DefaultVoidAreaColor = "#FF101010";
+
+    /// <summary>Gets the default void-area pattern.</summary>
+    public const string DefaultVoidAreaPattern = nameof(VoidPattern.Solid);
+
+    /// <summary>Gets the validated void-area pattern.</summary>
+    /// <returns>The parsed pattern, or <see cref="VoidPattern.Solid"/> when the value is invalid.</returns>
+    public VoidPattern ResolveVoidAreaPattern()
+    {
+        return Enum.TryParse(VoidAreaPattern, ignoreCase: true, out VoidPattern pattern)
+            && Enum.IsDefined(pattern)
+            ? pattern
+            : VoidPattern.Solid;
+    }
 
     /// <summary>Gets the effective per-edge crop, honoring the legacy uniform value.</summary>
     /// <returns>A clamped crop.</returns>
@@ -927,6 +943,9 @@ public sealed class AppSettings
     /// loaded, or the option is off, the frontend asks the user to insert a disc instead.
     /// </remarks>
     public bool AutoSwapOnEject { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether emulation pauses when the window loses focus.</summary>
+    public bool PauseOnFocusLoss { get; set; }
 
     /// <summary>Gets or sets a value indicating whether rewind history is recorded.</summary>
     public bool RewindEnabled { get; set; } = true;

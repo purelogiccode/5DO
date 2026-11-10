@@ -377,10 +377,10 @@ The 2026-11-08 beyond-title pass recorded these format checks:
   the swap, the reported `discHash` changed to Disc 2, all 7,200 frames completed, and
   the final capture was live-action video (`artifacts/compat-checks/f007200.png`).
 - **CD-DA.** The audio-only A&M Music Sampler and the Oyaji Hunter Mahjong CD-Audio
-  image both reached the 3DO CD player, but the track list stayed empty and the WAV
-  capture had peak/RMS 0. This is the documented SYS-01 CD-DA read-ahead/subcode and
-  audio-only-TOC residual, not a title beyond-title blocker. All 378 game titles use a
-  data track 1.
+  image both reach the FZ-10 BIOS CD player. After the 2026-11-10 subcode fix the
+  player lists track 1 at `0:00`; the transport controls remain inert and the WAV
+  capture has peak/RMS 0. This is the documented SYS-01 audio-only BIOS-player
+  residual, not a title beyond-title blocker. All 378 game titles use a data track 1.
 
 ### 4.3 Tier C gameplay-depth pass
 
