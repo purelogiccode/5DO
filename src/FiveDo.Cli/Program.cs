@@ -5806,6 +5806,8 @@ internal static class Program
         Console.WriteLine("  gamedb scan <folder> --out path      Derive XML records from disc IDs and filenames.");
         Console.WriteLine("  gamedb export --out path             Export the embedded game database.");
         Console.WriteLine("  gamedb merge <path> --out path       Merge a fragment into the embedded database.");
+        Console.WriteLine("  disc convert <disc> --out path [--format iso|bin|cue|chd]");
+        Console.WriteLine("                                       Convert a data-only image and verify the game ID.");
         Console.WriteLine("  disc tracks <disc> [--json]          List every CUE/CHD track (data and audio).");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
