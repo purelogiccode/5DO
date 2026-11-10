@@ -159,6 +159,9 @@ Supported gamepad backends:
 
 - Windows: XInput (`xinput1_4`, `xinput1_3`, or `xinput9_1_0`).
 - Linux: evdev (`/dev/input/event*`; the user normally needs the `input` group).
+- macOS: IOKit HID (Generic Desktop Joystick, Gamepad, or Multi-axis Controller).
+  macOS may request Input Monitoring permission; without it the frontend falls back
+  to the keyboard.
 - macOS: no platform backend yet; use a keyboard.
 
 Windows/Linux backends hot-plug controllers. The **About** dialog reports the number

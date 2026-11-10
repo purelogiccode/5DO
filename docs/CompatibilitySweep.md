@@ -437,15 +437,17 @@ one frame. The reference `OperaCore` bridge is joypad-only, so pointer runs are 
 evidence. See [`CliReference.md`](CliReference.md#input-and-automation-options).
 
 The second Tier C increment promoted **Carrier - Fortress at Sea**, **Family Feud**,
-**Insect War**, and **N. O. B.** to `Good`; the ledger is **88 `Good`, 13 `Playable`**.
-Seven remaining rows are media/reference/add-on discs, and six are game leads
-(BladeForce, DeathKeep, Jurassic Park, Kingdom, Off-world Interceptor, PGA Tour 96).
-See [`TestCorpus.md`](TestCorpus.md) 1.1bo.
+**Insect War**, and **N. O. B.** to `Good`. The P0 quality pass then promoted
+**BladeForce**, **Off-world Interceptor**, and **PGA Tour 96** to `Good` and opened the
+Jurassic Park **Security Systems** terminal. The ledger is **91 `Good`, 10 `Playable`**:
+seven media/reference/add-on discs plus DeathKeep, Kingdom, and Jurassic Park.
+See [`TestCorpus.md`](TestCorpus.md) 1.1bo and 1.1bp.
 
 The suspected core-defect triage is closed: DeathKeep's Start Game black screen also
-appears on OperaCore at 48,000 frames, Kingdom's intro returns to the same title screen
-on both engines at 60,000, and BladeForce reaches the same Main Options menu on both
-engines. All three are content/script limits, not 5DO regressions. The weekly
+appears on OperaCore at 48,000 frames, and Kingdom's intro returns to the same title
+screen on both engines at 60,000, so both are content/script limits. BladeForce was also
+a script limit, and the P0 pass now clears it: the name-entry screen needs `A`, `Down`,
+`A` to start the Training Mission and reach the Supply Depot. The weekly
 `compat-baseline.yml` workflow now includes a `quality-ledger` job that runs
 `tools/verify-playability-grades.py` against
 `docs/data/playability-grades-baseline.json` and fails on a `Good` -> `Playable` drop.

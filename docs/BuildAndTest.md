@@ -410,7 +410,21 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c R
 ```
 
 AOT is not part of the six-RID default matrix. The CLI AOT path opens live OpenAL; the
-frontend AOT audio path is not validated yet. See [`Trimming.md`](Trimming.md).
+frontend AOT binary now has a headless `--audio-soak` mode that runs the same
+`FiveDoMachine`/`CoreRunner`/`OpenAlAudioOutput` path and writes drop/underrun counters:
+
+```powershell
+# Null device (set ALSOFT_DRIVERS=null for the process)
+artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe "game.chd" --bios panafz1.bin `
+  --audio-soak 600 --audio-soak-output artifacts/audio-soak-null.json
+
+# Default Windows playback device (unset ALSOFT_DRIVERS)
+artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe "game.chd" --bios panafz1.bin `
+  --audio-soak 600 --audio-soak-output artifacts/audio-soak-real.json
+```
+
+`tools/frontend-audio-soak.ps1` wraps the build and run. The 2026-11-10 result is in
+[`Audio.md`](Audio.md) §9. See [`Trimming.md`](Trimming.md).
 
 ### Smoke tests
 

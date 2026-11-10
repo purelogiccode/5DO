@@ -36,7 +36,7 @@ src/
   FiveDo.Frontend.Avalonia/  desktop shell, video surface, dialogs, GPU probe
 tests/FiveDo.Tests/          xUnit suite, one folder per subsystem
 benchmarks/FiveDo.Benchmarks custom frame benchmark and CI gate
-packaging/                   bundle/archive scripts and Linux desktop entry
+packaging/                   bundle/archive, Windows/Linux/macOS installer scripts, desktop entry
 tools/                       release soak, collection compatibility sweep, 4DO reference/result generators, HQx rule-table generation, differential harness
 docs/                        this documentation set
 ```
@@ -373,8 +373,10 @@ lines from the current VDLP state for the optional multitask path.
 - `CpuVideoRenderer` + `WriteableBitmap` fallback.
 - `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`,
   `LogsWindow`, `WelcomeWindow`.
-- `PlatformGamepadBackend` selects XInput (Windows) or evdev (Linux); macOS has no
-  backend.
+- `PlatformGamepadBackend` selects XInput (Windows), evdev (Linux), or IOKit HID
+  (macOS); the macOS source maps Generic Desktop joystick/gamepad elements through
+  `MacOsHidGamepadMapper` and the same eight-player profile. The mapper is unit-tested
+  on every host; hardware detection requires a macOS host.
 - `GlProbeWindow`/`GlProbeOptions` implement the GPU probe.
 - Compiled bindings, no reflection-based `ViewLocator`.
 
@@ -458,7 +460,7 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
 |---|---|---|
 | Video presenter | `IFrameSink`, `IVideoRenderer` | OpenGL/GLES, CPU `WriteableBitmap`, null/hash sink |
 | Audio output | `IAudioSink` | null, WAV, OpenAL |
-| Input backend | `IPbusSource`, `IGamepadBackend` | keyboard, scripted, XInput, evdev |
+| Input backend | `IPbusSource`, `IGamepadBackend` | keyboard, scripted, XInput, evdev, IOKit HID |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
 | Save state | `IStateReader`/`IStateWriter`, `IStateSection` | native `.tdos` sections |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
@@ -639,9 +641,10 @@ These are real, current limitations. Do not "fix" them casually without tests.
 7. **Some stale code comments.** For example, `EmulatorTuning.HighResolution` says the
    mode is reserved, but it is implemented; `Vdlp` says high-res is left for M11, but it
    is implemented. Treat behavior/tests as authoritative.
-8. **Frontend NativeAOT audio is validated with OpenAL's null device.** The frontend
-   AOT build loads the bundled OpenAL Soft runtime and reports `OpenAL audio ready`
-   with `ALSOFT_DRIVERS=null`; a physical-device listen remains a manual check.
+8. **Frontend NativeAOT audio is validated on Windows.** The opt-in frontend AOT build
+   runs the real machine/CoreRunner/OpenAL path through the null and default playback
+   devices; the 2026-11-10 10-minute soaks report 0 drops/0 underruns. See
+   `Audio.md` §9.
 9. **No guest JIT.** The ARM60 interpreter is the only backend; `ICpuBackend` exists
     for a future managed IL JIT.
 10. **`AudioPipeline` is not the live path.** It is a reusable host ring sink; the

@@ -82,15 +82,31 @@ has six new tests. Four more titles were promoted to `Good`: **Carrier - Fortres
 Sea** (trap menu to a live trap approach and WAVE OFF at 14,000 frames), **Family Feud**
 (home questions and letter keyboard at 9,000/12,000), **Insect War** (first-person HUD
 and WARNING state at 58,000/62,000), and **N. O. B.** (VITALITY HUD gameplay at 9,000).
-The ledger is now **101 rows: 88 `Good`, 13 `Playable`**; seven of the remaining rows are
-media/reference/add-on discs, and six are game leads (BladeForce, DeathKeep, Jurassic
-Park, Kingdom, Off-world Interceptor, PGA Tour 96). Differential triage closed the three
+At that point the ledger was **101 rows: 88 `Good`, 13 `Playable`**; seven of the
+remaining rows were media/reference/add-on discs, and six were game leads (BladeForce,
+DeathKeep, Jurassic Park, Kingdom, Off-world Interceptor, PGA Tour 96). Differential
+triage closed the three
 suspected core defects as content/script limits: DeathKeep and Kingdom show the same
 black screen/title screen on OperaCore, and BladeForce reaches the same Main Options
 menu on both engines. The quality ledger gate (`tools/verify-playability-grades.py` and
 `compat-baseline.yml`) now fails on a `Good` -> `Playable` drop. The suite is **2,068
 tests**; build, format, and InspectCode are clean. See [`TestCorpus.md`](TestCorpus.md)
 1.1bo and [`CliReference.md`](CliReference.md#input-and-automation-options).
+
+**P0 quality closure (2026-11-09):** the remaining menu/cutscene leads were converted
+into mission, terminal, and round evidence. **BladeForce** now types a name, selects
+START GAME, and reaches the Supply Depot first-person mission at 70,000/80,000/90,000
+frames. **Off-world Interceptor** launches its first mission from the loadout at 12,000
+frames. **PGA Tour 96** reaches Hole 1 at 64,000 frames. **Jurassic Park Interactive**
+opens the Security Systems / Security Tracking terminal, and **Alone in the Dark** adds
+room exploration plus the Actions menu (`Fight`/`Open/Search`/`Close`/`Push`). The three
+promotions move the ledger to **101 rows: 91 `Good`, 10 `Playable`**. AUD-01's
+10-minute real-time soak passes on Windows with both the null and real OpenAL devices
+and on the Linux VM with the null driver: 0 dropped samples and 0 underruns on all three
+runs. The Linux VM has no PCM endpoint, so a Linux real-device soak remains a hardware
+limitation. Road Rash's full 5.5-mile race is still open; a fresh 150,000-frame autopilot
+run ends with the rider off the bike. See [`TestCorpus.md`](TestCorpus.md) 1.1bp and
+[`Audio.md`](Audio.md) §9.
 
 **1.5.0 release update (2026-11-08):** **v1.5.0** moves HQx 2x/3x/4x to shared
 rule-table GPU passes in OpenGL/GLES, Direct3D 11, and Vulkan, with the CPU filter kept
@@ -692,7 +708,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   toggles, metadata/play-time text, collection filters, and sort orders. The settings
   dialog edits video, audio, emulation, and paths; keyboard bindings for all eight players can be captured with
   automatic conflict removal and reset-to-defaults; gamepads are mapped through a
-  Gamepad tab (Windows XInput, Linux evdev). Save states use ten numbered slots with
+  Gamepad tab (Windows XInput, Linux evdev, macOS IOKit HID). Save states use ten numbered slots with
   next/previous, a list/save/load/delete window, JSON metadata, and PNG thumbnails;
   screenshots are PNG files named by game, time, and frame. **File > Disc Browser...**
   lists the current disc's Opera tree and extracts a file, directory, or the whole
@@ -760,7 +776,9 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   statistics. Exact-clock 600-frame captures: Wolfenstein 18,100 / 2,168,
   Lemmings 8,192 / 1,661, Gex 12,964 / 2,089, Road Rash 32,768 / 11,012 (2,036
   clipped), Theme Park silent; see `TestCorpus.md` 1.5a2. The trimmed win-x64 and
-  linux-x64 CLI and the opt-in NativeAOT CLI open the same backend.
+  linux-x64 CLI and the opt-in NativeAOT CLI open the same backend. The opt-in
+  NativeAOT frontend completed 10-minute null and default-device soaks with
+  **0 dropped samples / 0 underruns** (2026-11-10).
 - **Input:** joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak
   trackball devices are supported on six PBUS ports. The legacy 4DO packet remains the
   default for all-joypad configurations; selecting a peripheral emits Opera's
@@ -794,7 +812,11 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   (`-p:FiveDoNativeAot=true`) that is CI-smoke-tested with `--version`, `selftest`,
   `bench`, `info`, `fs list`, a golden 3,000-frame boot, and live OpenAL audio. The
   frontend has an opt-in NativeAOT single-file publish that passes `--smoke-test` and
-  the WGL/ANGLE parity probes. See
+  the WGL/ANGLE parity probes. Unsigned installer/package scaffolding now covers the
+  Windows Inno Setup installer with `.iso`/`.cue`/`.chd` associations, Linux
+  `.deb`/`.rpm` packages with a desktop entry and `application/x-3do-disc` MIME type,
+  and macOS `.app`/`.dmg`/`.pkg` with a document UTI. See
+  [`Installers.md`](Installers.md) and
   [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 
 ---
@@ -1019,7 +1041,7 @@ artifacts and checksums are attached to the GitHub release.
 | M9 Avalonia frontend | Feature-complete for the tested workflow | 0 (optional polish is post-1.0) |
 | M9R OpenGL presenter | Windows WGL + ANGLE validated; CPU fallback, filters, parity, 4K probe | 0 on Windows; Linux x64 full suite passed, GL probe timed out under llvmpipe |
 | M9P performance/pacing | Tier A measured, zero-allocation steady state, CI gate | 0 (Tier B/Pi and hot-path are post-1.0) |
-| M10 packaging | Unified Windows/Linux/macOS x64 bundles, framework-dependent single-file apps, optional NativeAOT | 0 (installers post-1.0) |
+| M10 packaging | Unified Windows/Linux/macOS x64 bundles, framework-dependent single-file apps, optional NativeAOT, unsigned installer/package scaffolding | 0 (signed/notarized installers require certificates; macOS package build needs a macOS host) |
 | M11 compatibility | 12 titles boot/render; five have scripted gameplay evidence; matrix and known issues documented | 0 |
 | **M13 compatibility sweep** | **Loadability complete: 594 tested, 593 render, 1 known boot failure** | M13.5/M13.6 post-1.0; Linux x64 full suite passed |
 | **M14 high-res CEL research** | **Research plan written; post-1.0** | **Not a v1.0 gate** |

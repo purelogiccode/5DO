@@ -1,412 +1,241 @@
-# 5DO — Compatibility Completion Plan
+# 5DO — Consolidated Implementation Plan
 
 **Snapshot:** 2026-11-09
-**Objective:** finish with the largest playable 3DO game set — more playable titles than
-4DO and Phoenix on the same BIOS, the same unique-title corpus, and the same input
-scripts.
-**Scope:** compatibility completion. Phase 3 tracks post-1.6 quality and accuracy work;
-it does not change a completed compatibility claim. Product, performance, research, and
-platform work do not block completion unless they stop a title from reaching the finish
-line.
-**History:** this file is the active task list. The former plan, status snapshots, stable
-IDs, evidence, completed log, appendices, and reference strategy are in
-[ImplementationPlanArchive.md](ImplementationPlanArchive.md).
+**Release:** v1.6.0
+**Status:** the compatibility program is complete. This file is the single actionable plan;
+it tracks only **achievable post-1.6 work**.
+**Merged from:** the former active plan and
+[ImplementationPlanArchive.md](ImplementationPlanArchive.md). The archive remains the raw
+evidence store, completed log, stable-ID index, and appendices.
+
+> **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
+> the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
+> blocked by licensing, missing hardware, unavailable reference captures, or open-ended
+> research are listed in §4 and are **not** checkboxes.
+>
+> **Evidence rule.** A task is complete only when its **Done when** line is satisfied and
+> the capture, hash, frame count, BIOS/disc identity, test, or release artifact is committed.
 
 ---
 
-## 1. Finish line
+## 1. Completed baseline
 
-### 1.1 Playable definition
+### 1.1 Compatibility definition (retained)
 
 A title is **Playable** when all four are true:
 
-1. It boots from its canonical image with a supported BIOS (auto-selected or a documented
-   per-title override).
+1. It boots from its canonical image with a supported BIOS.
 2. It renders at least one non-black frame.
-3. A standard input script advances past the title/attract screen to a distinct
-   interactive or content screen — a menu, options screen, character select, gameplay, or
-   FMV/content screen.
+3. A standard input script reaches a distinct interactive or content screen beyond the
+   title/attract loop.
 4. It does not hang or crash before that screen is captured.
 
-Not required: reaching deep gameplay, finishing a level, completing the game, or matching
-another emulator's timing. A loop that never leaves the title/attract screen is **not**
-Playable. A title with no separate title/attract screen is Playable when its first
-rendered interactive or content screen accepts input. The standard input script may be
-the repository's generic 10-minute script or a minimal title/device-specific boot script;
-it does not need to reach gameplay. Compatibility claims are measured on the **378 unique
-games**; the 1,371 images remain loadability and duplicate coverage, not separate
-playability claims.
+Deep gameplay, ending validation, full-game completion, and frame-perfect peer parity are
+not required. Claims are measured on the **378 unique games**; the remaining images are
+loadability and duplicate coverage.
 
-### 1.2 Completion checklist
+### 1.2 Results
 
-The plan is complete only when every item is true:
-
-- [x] **All 378 games classified.** Every title in the unique game test set has a dated
-      beyond-title result, screenshot, BIOS name, disc hash, and frame count.
-- [x] **0 `Regression` rows.** No title that 4DO or Phoenix can play fails on 5DO.
-- [x] **0 `Behind` rows.** Every peer-playable title is also 5DO-playable. A peer row may
-      be removed only when its claim is disproved with evidence.
-- [x] **Strict superset.** 5DO's playable set contains every 4DO-playable and
-      Phoenix-playable title, plus at least one title neither peer plays.
-- [x] **Higher count.** 5DO's **375** playable titles exceed 4DO's **167** and Phoenix's
-      **233** on the shared corpus (after the one evidenced peer invalidation).
-- [x] **Numeric target.** **375 of 378** games are playable; the original target was
-      **≥254**. The peer union is **252** after the *Return Fire – Maps O' Death* data
-      disc was disproved with a beyond-title capture.
-- [x] **Every failure explained.** The two remaining `Title-only` rows and one `No video`
-      row are non-retail or add-on images with root causes and captures in
-      [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md).
-- [x] **Regression gate green.** The full-corpus beyond-title suite runs nightly or
-      weekly against a committed baseline.
-- [x] **Release gate green.** Build, tests, format, InspectCode, docs check, bundles, and
-      checksums pass.
-
-### 1.3 Current baseline (2026-11-08)
-
-| Item | Value |
-|---|---:|
-| Unique games in the test set | 378 |
-| 4DO playable titles (after peer invalidation) | 167 |
-| Phoenix playable titles (after peer invalidation) | 233 |
-| Peer union (after peer invalidation) | 252 |
-| 5DO confirmed playable | **375** |
-| 5DO title-only | 2 |
-| 5DO no-video | 1 |
-| Target | **≥254 (met)** |
-
-The raw peer lists claim 168 4DO / 234 Phoenix (union 253). The standalone
-*Return Fire – Maps O' Death* data disc is recorded as `peerInvalid4do` and
-`peerInvalidPhoenix` with a beyond-title capture: the only rendered screen is a static
-box-art/title card, and the peer claim covers the expansion content used with the base
-game, not the standalone data image. The comparison counts above use the invalidated
-peer set. See [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md).
-
-The per-title state is the `Unique titles` table in
-[CompatibilityComparison.md](CompatibilityComparison.md). Its `5DO`, `vs 4DO`, and
-`vs Phoenix` columns are the authoritative per-title matrix.
+| Area | Completed result | Evidence |
+|---|---|---|
+| Corpus | 1,371 images → 414 unique titles → **378 game test set** | `artifacts/corpus/inventory.json`, `docs/data/unique-corpus.csv` |
+| 5DO playability | **375 / 378 Playable**; 2 `Title-only`; 1 `No video` | `docs/data/beyond-title-results.csv`, [BeyondTitleEvidence.md](BeyondTitleEvidence.md) |
+| Peer comparison | **0 `Behind`**, **0 `Regression`**; strict superset of the **252-title** peer union (4DO **167**, Phoenix **233**) | [CompatibilityComparison.md](CompatibilityComparison.md) |
+| Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom) | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
+| Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
+| Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
+| Release | **v1.6.0** six framework-dependent bundles and `SHA256SUMS.txt`; all checksums verify | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) |
+| Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
+| Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
+| Platform | Windows x64 validated; Linux x64 full-suite and smoke passed; macOS/arm64 cross-published | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
 
 The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
-is a static pad status card, `LameNES Emulator` renders only a minimal "HELLO, WORLD!"
-text line (0.43% non-black), and the *Return Fire – Maps O' Death* standalone data disc
-is a static box-art/title card. All are documented in the evidence page.
+(static pad card), `LameNES Emulator` (minimal “HELLO, WORLD!” frame), and the standalone
+*Return Fire – Maps O' Death* data disc (static box-art card).
 
-**Quality baseline (2026-11-09):** the Tier C ledger is **101 rows: 88 `Good`,
-13 `Playable`**. Seven `Playable` rows are media/reference/add-on discs; the six game
-leads are BladeForce, DeathKeep, Jurassic Park Interactive, Kingdom - The Far Reaches,
-Off-world Interceptor, and PGA Tour 96. This is the Phase 3 starting point; the binary
-playable count above is unchanged.
+### 1.3 Completed stable IDs
+
+The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
+REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **PLAT-01**, **PLAT-07**,
+**PLAT-09**, **TEST-06/07/08**, **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**,
+and the shipped **SYS-06/07/08/12/17/18**, **UX-26**, **VID-04/12** items.
+
+`ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
+§4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
+`QUAL-03A`…`QUAL-03D` and `QUAL-05A` are now complete; `QUAL-05B` (the full Road Rash
+race) is blocked in §4. The full completed-ID index, milestone aliases, old gates, and
+dated evidence entries are in
+[ImplementationPlanArchive.md](ImplementationPlanArchive.md). Do not reopen a completed ID
+without new measurement.
 
 ---
 
-## 2. Task list
+## 2. How the remaining backlog works
 
-| Phase | Tasks | Exit condition |
+- **Priority:** **P0** player-visible quality/evidence, **P1** release/platform hardening,
+  **P2** accuracy features, **P3** product features.
+- **Effort:** **S** under 3 developer-days, **M** 3–10, **L** 10–30, **XL** 30–90+.
+- **One feature per change.** Do not mix accuracy, rendering, and UX work in one change.
+- **One root cause per fix.** Every fix starts from a failing title, test, or panel row.
+- **No speculative work.** If a task cannot change a status, a gate, or a release artifact,
+  it does not belong in P0/P1.
+- **No duplicate entries.** Reference an ID instead of restating the same work.
+- **Blocked items stay blocked.** Moving an item from §4 to §3 requires the named blocking
+  condition to be resolved first.
+
+---
+
+## 3. Missing features — achievable backlog
+
+### 3.1 P0 — Quality closure
+
+| ID | Status | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|---|
+| **QUAL-03A** | **Done** | M | **BladeForce**: reach an interactive mission from `START NEW GAME` beyond the intro/cutscene loop. | The reference reaches the same Main Options menu; the remaining gap was a title-specific input path, not a proven core defect. | Reached the Training Mission, Recon Maps, and Supply Depot mission at 70,000/80,000/90,000 frames; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+| **QUAL-03B** | **Done** | M | **Jurassic Park Interactive**: break the Operations hub / pause-menu session loop and open a terminal or gameplay scene. | Input scripting and save states already exist; no core defect was found in triage. | Opened **Security Systems / Security Tracking** at 42,000/52,000 frames. No in-park gameplay yet; stays `Playable`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+| **QUAL-03C** | **Done** | S | **Off-world Interceptor**: pass the pre-mission shop into a mission. | Menu navigation only; no core defect is known. | Launched the first mission at 12,000 frames; 3D vehicle/HUD gameplay through 16,000; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+| **QUAL-03D** | **Done** | S | **PGA Tour 96**: break the Golf Bag → Pro Info cycle and start a round. | The game already reaches its menus; the gap was script/state sequencing. | Reached **Hole 1** at 64,000 frames; golf gameplay through 80,000; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+| **QUAL-05A** | **Done** | M | **Alone in the Dark long-play evidence**: extend the room sequence through exploration and the interaction menu. | The intro, save states, and scripted input already exist; this is script tuning and evidence capture. | Room exploration at 30,000-35,000 frames and the **Actions** menu (`Fight`/`Open/Search`/`Close`/`Push`) are scripted; the monster encounter is visible at 34,000. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+
+`QUAL-05B` (the full 5.5-mile Road Rash race) moved to §4. The current autopilot still
+ends with the rider off the bike after 150,000 frames; it is a driving/start-line and
+traffic-avoidance limit, not the old CD wait.
+
+The two reference-limited leads are **not** in this backlog: **DeathKeep** (Start Game is
+black on both 5DO and OperaCore) and **Kingdom** (intro returns to the title on both
+engines) have no known input path to gameplay. They stay documented until a reference
+capture proves a reachable scene; see §4.
+
+### 3.2 P0 — Evidence and validation
+
+| ID | Status | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|---|
+| **AUD-01** | **Done** | S | Run a 10-minute real-time audio soak on Windows and Linux with the null device and one real device; confirm zero dropped samples and zero underruns. | The counters, sync offset, and device-recreation tests already exist; only the platform soak was missing. | Windows: null and real devices pass with 0 drops/0 underruns (600.6 s each). Linux: null driver passes with 0 drops/0 underruns (600.6 s). The VM has no PCM playback endpoint, so a Linux real-device soak is a documented hardware limitation. Evidence: [Audio.md](Audio.md) §9. |
+
+The quality-ledger gate remains enforced after this work:
+`tools/verify-playability-grades.py` and `compat-baseline.yml` require a dated batch entry
+and a linked capture for every promotion or documented limit.
+
+### 3.3 P1 — Platform validation
+
+| ID | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|
+| **PLAT-02** | S | **Linux x64 GPU presentation**: run the GL probe on a real Linux GPU host, not llvmpipe over SSH; record presenter results. | The renderer and probe already exist; a GPU-capable Linux host or VM is the only missing resource. | A dated probe result is recorded in [Compatibility.md](Compatibility.md) §10.3; Linux GPU status moves from preview/best-effort to validated or a precise limitation. |
+| **PLAT-03** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | macOS CI runners are available for build; runtime smoke needs a macOS runner or host. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. |
+| **PLAT-04** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | arm64 runners/hardware are obtainable; the bundles already build. | CLI and frontend smoke pass on both arm64 targets; results are recorded. |
+| **PLAT-05** | S | **macOS gamepad backend**: physical detection for the new IOKit HID source. The source and pure mapping layer are implemented; 21 mapping/profile tests pass. | The remaining check needs a macOS host with a connected controller. | A macOS gamepad is detected and mapped through the existing eight-player profile; the mapping is already unit-tested. |
+| **PLAT-06** | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: complete the missing presentation/performance matrix. | The renderer and benchmark harness exist; the work is measurement on available hardware. | Results are recorded in [Performance.md](Performance.md), with every residual labeled `validated` or `best-effort`. |
+| **PLAT-07** | S | **Done (2026-11-10).** Frontend NativeAOT audio validation: both 600 s soaks report 0 drops and 0 underruns. | CLI AOT and trimmed IL audio were already validated; the frontend AOT path is now validated too. | Evidence recorded in [Audio.md](Audio.md) §9. |
+| **PLAT-08** | L | **Vulkan non-Windows surfaces**: add X11/Wayland/Metal presentation and validate non-Windows Vulkan devices. | The Vulkan renderer and offscreen/readback path already exist; the surface layer and device validation are missing. | X11/Wayland/Metal surfaces present correctly or are documented as unsupported; non-Windows device results are recorded. |
+| **PLAT-09** | M | **Done (2026-11-10).** Full PAL library validation: eight PAL-sensitive titles captured with the documented PAL BIOS, plus a PAL2 presentation probe. | PAL1/PAL2, 50 Hz pacing, and per-game BIOS selection are implemented. | Evidence: [PalValidation.md](PalValidation.md) and `docs/data/pal-validation.csv`. |
+
+`PLAT-05` code is complete: `MacOsGamepadSource` uses IOKit HID Manager for Generic
+Desktop joystick/gamepad/multi-axis devices, and `MacOsHidGamepadMapper` plus
+`MacOsGamepadMapperTests` cover face buttons, sticks, triggers, hats, button-only
+d-pads, and the default eight-player profile. Only physical detection on a macOS host
+remains. `PLAT-07` is closed: the NativeAOT frontend ran the real machine/CoreRunner/
+OpenAL path for 600 s on the null device and on the NVIDIA playback endpoint, both with
+0 dropped samples and 0 underruns ([Audio.md](Audio.md) §9). `PLAT-09` is closed:
+all eight Europe-only/PAL-sensitive titles produced dated PAL1 captures with
+`panafz10e-anvil.bin`, and a Battle Chess PAL2 probe rendered 384x288 at 50 Hz
+([PalValidation.md](PalValidation.md)).
+
+### 3.4 P1 — Release and packaging
+
+| ID | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|
+| **UX-16** | L | **Installer/package scaffolding (partial)**: Windows Inno Setup installer + associations, Linux `.deb`/`.rpm` + desktop entry/MIME, macOS `.app`/`.dmg`/`.pkg`. Signing/notarization remains conditional. | The unsigned Windows installer built, installed, launched, and association-checked; Linux packages built and metadata/MIME-validated on 2026-11-10. macOS packaging needs a macOS host. | The unsigned artifacts install, launch, and associate `.iso`/`.cue`/`.chd` where built; a signed/notarized release remains in §4 until certificates/accounts exist. |
+
+The packaging scaffolding is implemented and reproducible from `packaging/`. The Windows
+installer, Linux packages, desktop entry, and MIME/registry associations are unsigned by
+default. Signing and notarization require valid certificates/accounts; if those are
+unavailable, the unsigned installers and portable bundles remain the release artifacts and
+the signing item stays in §4 until the credentials exist. Evidence:
+[Installers.md](Installers.md).
+
+### 3.5 P2 — Optional accuracy features
+
+| ID | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|
+| **SYS-01** | M | **CD-DA audio-only TOC and playback**: make an audio-only disc list its tracks and play them through the guest CD player, including read-ahead/track-list behavior. | The disc parser already reports the 14-track *A&M Music Sampler* correctly; only the guest-facing path and read-ahead are missing. | A known audio-only disc lists and plays its tracks; WAV capture is non-silent; the result is recorded in [KnownIssues.md](KnownIssues.md). |
+| **ACC-03** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test and one matrix title if available. | The CD sector path already exists; subcode is an additive command/transport feature. No matrix title currently requires it. | A synthetic subcode test passes; any title that needs it is verified or the residual is documented. |
+
+`SYS-01` and `ACC-03` are optional: no current matrix title blocks on them. Keep them behind
+P0/P1 unless a title changes status. The Road Rash and CD-cadence residuals are documented
+in §4 because they already have measurements and revisit conditions.
+
+### 3.6 P3 — Product features
+
+| ID | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|
+| **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
+| **SYS-22** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI and UI. | The readers and writers already parse these formats; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. |
+| **UX-09** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. |
+| **UX-25** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already exist; this is a policy + settings feature. | Focus loss pauses or releases input per the setting; tests cover the transition. |
+| **VID-17** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The presenter already draws a void color; patterns are a shader/overlay addition. | Patterns render in OpenGL/GLES/Vulkan/D3D11 and are covered by probe captures. |
+| **VID-16** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. |
+| **UX-28** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. |
+| **UX-29** | L | **TAS Lua scripting and input timeline**: script input/movies and edit an input timeline in the shell. | The deterministic movie container, editor, and PBUS packet format already exist. | A Lua-authored movie replays deterministically; the timeline edits and round-trips a movie. |
+| **UX-30** | M | **4DO `.4dosav` import/export (best-effort)**: map the native state to/from 4DO’s format. | The native state sections are versioned and documented; the mapping is additive and optional. | A known 4DO state imports with warnings where fields are unsupported; export round-trips in 5DO. |
+
+`UX-30` is explicitly best-effort; native 4DO state compatibility is **not** a goal.
+
+---
+## 4. Blocked, residual, or not achievable (do not add checkboxes)
+
+These items stay out of §3 until the named condition changes. They are recorded here so the
+plan does not silently lose them. “Residual” means the item was measured and closed with a
+documented limitation, not that it is unachievable.
+
+| Item | Why it is not in the achievable backlog | Revisit if |
 |---|---|---|
-| **0 — Measure** | COMPAT-01 … COMPAT-06 | 378/378 classified; every failure triaged |
-| **1 — Fix** | COMPAT-07 … COMPAT-13 | 0 `Behind`/`Regression`; ≥254 playable; strict superset |
-| **2 — Lock and ship** | COMPAT-14 … COMPAT-16, REL-01 … REL-03 | regression gate green; six bundles published |
-| **3 — Post-1.6 quality** | QUAL-01 … QUAL-04, ACC-01 … ACC-02, PLAT-01 | quality ledger closed or every residual documented |
-
-All compatibility tasks are complete; **v1.6.0** shipped the six bundles. Phase 3 is the
-post-1.6 quality and accuracy program; it does not reopen a completed compatibility
-claim. A task is complete only when its **Done when** line is satisfied and the evidence
-is committed.
-
-### Phase 0 — Measure the whole corpus
-
-- [x] **COMPAT-01 — Freeze the corpus and peer baseline**
-  Refresh the image inventory, collapse duplicates, and rebuild the canonical 378-game
-  test set. Re-parse the saved 4DO and Phoenix compatibility lists, compute both playable
-  sets and their union, and commit the target counts.
-  **Done when:** `artifacts/corpus/inventory.json`, `docs/data/unique-corpus.csv`,
-  `docs/data/compatibility-comparison.json`, and the comparison page are current; every
-  game has a canonical disc; 0 titles are untested.
-  **Evidence:** `CompatibilityComparison.md`; `ImplementationPlanArchive.md` §1.
-
-- [x] **COMPAT-02 — Align the comparison with the playable rule**
-  Update `tools/generate-compat-comparison.py` and the committed JSON so peer verdicts
-  use a binary `playable` state: 5DO `Good` and `Playable` both count as playable, and
-  4DO `Good`/`Playable` and Phoenix `Good` are peer-playable. Keep the quality grade as
-  information, but do not mark a reached beyond-title screen as `Behind` merely because a
-  peer says `Good`. A `Rendered`/untested title stays `Unverified` and is excluded from
-  the playable count; it becomes `Behind` only after a beyond-title test fails.
-  **Done when:** a 5DO title that reaches beyond-title is `Parity` regardless of whether
-  its quality label is `Good` or `Playable`; `Behind` means only that 5DO failed the
-  playable rule; the matrix and target counts are regenerated.
-
-- [x] **COMPAT-03 — Build the beyond-title runner**
-  Extend `tools/playability-sweep.py` and the CLI run path with one reproducible pass:
-  auto BIOS, per-title overrides, standard input script, captures at boot/title/beyond,
-  timeout and retry, and JSON fields for status, screenshot, BIOS, disc hash, frame, and
-  failure reason.
-  **Done when:** one command classifies a title as `Playable`, `Title-only`, `No video`,
-  or `Not loadable`; known passes (Road Rash, Panzer General, Quarterback Attack) and a
-  known title-only case reproduce; results are deterministic across two runs.
-  **Implementation:** `tools/beyond-title-sweep.py` with an input/control checkpoint
-  pair; see `CompatibilitySweep.md` §4.
-
-- [x] **COMPAT-04 — Re-grade the 107 reviewed titles**
-  Apply the new playable rule to existing captures. Promote titles that already reach a
-  distinct screen beyond the title; keep title-only rows failing. Re-run only where the
-  existing evidence is missing.
-  **Done when:** all 107 reviewed titles have the new status and a linked capture.
-
-- [x] **COMPAT-05 — Run the remaining 271 titles**
-  Run every title currently marked `Rendered` (269) or `No video` (2) through the
-  beyond-title runner. Use per-title BIOS, input device, fix mode, and disc where the
-  database requires them.
-  **Done when:** **378/378** games have a dated beyond-title result and screenshot; 0
-  untested; the matrix and database are updated.
-
-- [x] **COMPAT-06 — Triage every failure**
-  Put every non-playable title into exactly one bucket: BIOS/region, disc/multi-disc,
-  input device, core/CD boot, per-title game fix, or harness/script gap. Record the
-  reproduction command and the failing frame/PC/hash.
-  **Done when:** every failure has a root cause, a linked fix task, and a stored
-  reproduction. The two current `No video` rows are homebrew images; fix or document
-  them as non-retail exceptions.
-
-### Phase 1 — Close every gap
-
-- [x] **COMPAT-07 — BIOS and region coverage (SYS-03)**
-  Verify auto-selection and per-title overrides for NTSC, PAL1/PAL2, Japan, Kanji,
-  Anvil, Arcade, and RSA-disabled images. No user should need a manual BIOS step for a
-  tested title.
-  **Done when:** every region-sensitive title reaches beyond-title with the documented
-  BIOS; no failure is caused by BIOS selection; overrides are in the game database.
-
-- [x] **COMPAT-08 — Disc and multi-disc coverage (SYS-01/02)**
-  Verify ISO, BIN, CUE+BIN, CHD, multi-track, CD-DA, M3U/M3U8, parent/child CHD, and
-  multi-disc titles that need them. Confirm the canonical image for every test-set title
-  opens and boots.
-  **Done when:** every format-sensitive title reaches beyond-title; no format-specific
-  failure remains; multi-disc and CD-DA cases have a recorded swap/playback check.
-
-- [x] **COMPAT-09 — Input-dependent boots (SYS-15)**
-  Verify titles that need joypad, mouse, lightgun, arcade lightgun, flightstick, or
-  trackball. Add a minimal boot script for each device-dependent title; a deep gameplay
-  script is not required.
-  **Done when:** every title requiring a non-default device reaches beyond-title with
-  that device selected.
-
-- [x] **COMPAT-10 — Core boot failures**
-  Fix every remaining black screen, hang, invalid PC, no-video, or not-loadable retail
-  title that a peer can play. One root cause per change, with a focused regression test.
-  **Done when:** 0 retail titles fail to reach beyond-title while a peer claims them
-  playable; each fix has a test or a dated matrix note.
-
-- [x] **COMPAT-11 — Per-title game fixes**
-  Apply the 4DO/Opera known fixes that are still relevant and add 5DO-specific fixes for
-  the remaining failures. No speculative fixes: every change starts from a failing
-  matrix row.
-  **Done when:** every remaining peer-gap title is either fixed or has evidence that the
-  peer claim does not meet the playable definition.
-
-- [x] **COMPAT-12 — Clear the peer-gap ledger (CORE-13)**
-  Re-evaluate every `Behind` row after COMPAT-02/04/05, then fix or disprove each one.
-  The current ledger under the old quality-rank model is **22 vs 4DO / 25 vs Phoenix**;
-  the target is **0**. A peer claim may be disproved only with a beyond-title capture and
-  an explicit `peerInvalid`/`peerEvidence` record in the comparison data; never drop a row
-  silently.
-  **Done when:** the comparison has 0 `Behind` and 0 `Regression` rows, and every title
-  a peer plays also reaches beyond-title on 5DO.
-
-- [x] **COMPAT-13 — Validate the wins and publish the final matrix**
-  Re-run the full corpus after the fixes. Validate every `5DO ahead` title and every
-  peer-unplayable title with a beyond-title capture. Recompute the peer union and the
-  final count; confirm the strict-superset and ≥254 targets.
-  **Done when:** the final comparison is committed, the target table is green, and every
-  claimed win has evidence.
-
-### Phase 2 — Lock the result and ship
-
-- [x] **COMPAT-14 — Full-corpus regression gate (TEST-06 / CORE-11/16)**
-  Add the 378-title beyond-title pass to the nightly or weekly run. Commit a baseline
-  status for every title and fail the run when a title changes from Playable to failing.
-  Allow only dated, justified exceptions.
-  **Done when:** the gate runs unattended, the baseline is green, and a status regression
-  fails the build.
-
-- [x] **COMPAT-15 — Accuracy smoke (TEST-07)**
-  Keep the 50-title frame/audio panel green. Investigate a divergence only if it blocks
-  beyond-title or causes a player-visible regression in a passing title.
-  **Done when:** the panel has 0 errors and no unexplained frame/audio divergence that
-  affects a playable title.
-
-- [x] **COMPAT-16 — Conditional CD and timing blockers (CORE-04 / CORE-07)**
-  Fix the CD command/cadence residual and the related timer/read path only when they
-  prevent a title from reaching beyond-title or change a status. Otherwise keep the
-  measured parity evidence and document the residual.
-  **Done when:** no compatibility blocker remains open under this item.
-
-- [x] **REL-01 — Release build gate (ENG-01/09)**
-  Run `dotnet build 5DO.sln -c Debug`, the full test suite,
-  `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING`. Run the
-  docs JSON/comparison `--check`.
-  **Done when:** 0 warnings, 0 errors, 0 format changes, 0 InspectCode results, and the
-  comparison outputs are current.
-  **2026-11-08 (1.6.0):** Debug build 0 warnings/errors, **2,061/2,061 tests**, format
-  clean, InspectCode 0 results, `verify-beyond-title-ledger.py` and
-  `generate-compat-comparison.py --check` pass.
-
-- [x] **REL-02 — Platform validation (ECO-04)**
-  Validate Windows x64/arm64 bundle smoke and Linux x64 on the local VM. Record macOS
-  build validation and GPU presentation as best-effort.
-  **Done when:** the release gate is green on Windows and Linux; macOS is documented.
-  **2026-11-08 (1.6.0):** Windows x64 bundle smoke passed (CLI 1.6.0 `selftest` + frontend
-  `--smoke-test`). Local PE/ELF/Mach-O inspection confirms all six bundle apphost
-  architectures. Release run
-  <https://github.com/purelogiccode/5DO/actions/runs/42552318341> passed the Linux x64
-  CLI/frontend smoke under xvfb and all six bundle jobs; CI run
-  <https://github.com/purelogiccode/5DO/actions/runs/42552303788> passed Windows, Linux,
-  and macOS build/test. The local Linux VM rerun remains blocked by host memory; macOS
-  remains best-effort.
-
-- [x] **REL-03 — Bundles, checksums, and release notes**
-  Publish the six platform/architecture bundles with `README.md`, `LICENSE`,
-  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. Publish
-  `SHA256SUMS.txt`; keep a local copy in
-  `src/FiveDo.Frontend.Avalonia/bin/Release`; remove PDB/XML files.
-  **Done when:** all six bundles and checksums are published and verified, and
-  `CompatibilityComparison.md`, `Status.md`, `KnownIssues.md`, `README.md`, and the
-  release notes reflect the final result.
-  **2026-11-08 (1.6.0):** six local bundles built in
-  `src/FiveDo.Frontend.Avalonia/bin/Release`; all `SHA256SUMS-1.6.0.txt` entries verify;
-  no runtime/PDB/XML files. Tag `v1.6.0` published six bundles and
-  `SHA256SUMS.txt`; all published checksums verify:
-  <https://github.com/purelogiccode/5DO/releases/tag/v1.6.0>.
-
-### Phase 3 — Post-1.6 quality and accuracy
-
-- [x] **QUAL-01 — Differential triage of suspected core defects**
-  Run **DeathKeep**, **Kingdom - The Far Reaches**, and **BladeForce** against
-  OperaCore with the same BIOS, seed, input script, and checkpoint range. DeathKeep
-  renders its stained-glass intro and then pure black through 48,000 frames while both
-  peers claim `Good`; Kingdom plays its intro and returns to the title; BladeForce
-  exposes live-action cutscenes and returns to Main Options. A reference gameplay
-  capture turns each into a core bug; a matching reference loop closes it as a content
-  or script limit.
-  **Done when:** each title either reaches the reference's beyond-title state or has a
-  dated root cause, a stored reproduction, and a focused regression test where the
-  cause is in 5DO.
-  **2026-11-09:** differential rerun with `bios/panafz10.bin` and a 1,200-second
-  timeout after the first attempt hit the harness's 180-second default; see
-  `artifacts/diff/tierc-triage2`. **DeathKeep closed as not-a-5DO-defect:** OperaCore
-  reached 48,000 frames and its `f048000.bmp` is also pure black; the only divergence
-  was the documented 1.214 ppm sample-count alignment (35,315,280 vs 35,315,323).
-  **BladeForce closed as not-a-5DO-defect:** the reference reaches the same Main Options
-  menu at 60,000 frames with only the sample-count alignment; the new
-  `bladeforce-play6` script selects START NEW GAME and reaches the intro/cutscene path
-  through 100,000 frames, but no interactive mission. **Kingdom closed as
-  not-a-5DO-defect:** a 60,000-frame comparison in
-  `artifacts/diff/kingdom-triage-60k` captures the same Kingdom title screen on both
-  engines. All three leads are content/script limits, not 5DO core regressions.
-
-- [x] **QUAL-02 — Pointer input scripting**
-  Add pointer-device state to the scripted input path so pointer-driven UI and
-  lightgun/trackball titles are testable. The format is one optional token per line
-  after the pad buttons: `@mouse dx dy [left,middle,right,shift]`,
-  `@lightgun x y [trigger,option,reload,offscreen]`,
-  `@arcadegun x y [trigger,service,coins,start,holster,offscreen]`, and
-  `@trackball dx dy [start1,start2,coin1,coin2,service]`. `ScriptedPbusSource` applies
-  the state to every matching port, holds buttons, and treats relative motion as a
-  one-frame impulse.
-  **Done when:** the CLI and scripted source support the tokens with tests and docs.
-  **2026-11-09:** `InputScript`, `InputScriptPointer`, `ScriptedPbusSource`, the CLI
-  path, `CliReference.md`, `DifferentialHarness.md`, `UserGuide.md`, and six tests are
-  in. The reference `OperaCore` wrapper remains joypad-only, so pointer runs are
-  documented as 5DO-only evidence until that bridge is extended.
-
-- [x] **QUAL-03 — Remaining Tier C game leads**
-  Close the six game rows still graded `Playable`: **BladeForce**, **DeathKeep**,
-  **Jurassic Park Interactive**, **Kingdom - The Far Reaches**, **Off-world
-  Interceptor**, and **PGA Tour 96**. The seven media/reference/add-on rows stay
-  `Playable` by design.
-  **Done when:** every game row reaches gameplay with a title-specific script, or has a
-  dated reason that names the blocking screen/input.
-  **2026-11-09:** Carrier - Fortress at Sea, Family Feud, Insect War, and N. O. B. were
-  promoted to `Good`; the ledger is **88 `Good`, 13 `Playable`**. All six remaining game
-  rows now have a dated blocking screen: BladeForce (START NEW GAME intro/cutscene loop),
-  DeathKeep (Start Game black screen on both engines), Jurassic Park (Operations hub,
-  pause menu session state, no terminal opened), Kingdom (intro returns to the title on
-  both engines), Off-world Interceptor (pre-mission shop), and PGA Tour 96 (Golf Bag ->
-  Pro Info cycle).
-
-- [x] **QUAL-04 — Quality-ledger gate**
-  Extend the weekly compatibility workflow to validate `docs/data/playability-grades.csv`
-  and fail when a title drops from `Good`, a row loses its evidence path, or the ledger
-  count changes without a dated batch entry.
-  **Done when:** the gate runs unattended and a synthetic regression fails it.
-  **2026-11-09:** `tools/verify-playability-grades.py` validates statuses, duplicates,
-  reasons, and `tierc-*` evidence, and compares against
-  `docs/data/playability-grades-baseline.json`; `compat-baseline.yml` runs it in a
-  `quality-ledger` job. The checked-in baseline is 88 `Good` / 13 `Playable`; a
-  fabricated Good -> Playable drop fails as expected.
-
-- [x] **ACC-01 — Time-boxed Road Rash long-run divergence**
-  Road Rash is the only 3,000-frame showcase title whose frame hash still differs from
-  OperaCore. Use the existing trace and CD-cadence tools to find the first divergent
-  behavior; open a core fix only when it has a player-visible effect.
-  **Done when:** the divergence is fixed with a regression panel, or documented with
-  its first mismatch, guest-visible impact, and a revisit condition.
-  **2026-11-09:** fresh 900-frame no-input run in
-  `artifacts/diff/roadrash-acc1-timers`. First behavioral divergence is f=600
-  (`0x6E906F97` vs `0xE2817090`); the CD command arrays match through index 558, then
-  Opera issues READ_ID where 5DO continues READ_DATA, both from PC `0x00022388`, with
-  the READ_ID cycles within +785. The residual is guest read-request ordering, not a
-  CD register/PC bug. Revisit if a Road Rash gameplay scene (not intro/attract) diverges
-  or a matrix title changes status. See [`DifferentialHarness.md`](DifferentialHarness.md)
-  §8.
-
-- [x] **ACC-02 — CD-DA audio-only TOC and track list**
-  Audio-only CD-DA discs reach the 3DO CD player but show an empty track list and
-  capture silence. Add the read-ahead/audio-only-TOC behavior only if a matrix title
-  needs it.
-  **Done when:** a known audio-only disc lists and plays its tracks, or the residual is
-  recorded with its exact disc and limit.
-  **2026-11-09:** recorded the exact limit: *A&M Music Sampler*
-  (`[CD-Audio].chd`) has **14 audio tracks, no data track**; `disc tracks` reports them
-  correctly, but the guest CD player shows no list and the WAV capture is silent. No
-  matrix game needs the behavior, so this stays a documented SYS-01 residual with no
-  core change. See [`KnownIssues.md`](KnownIssues.md).
-
-- [x] **PLAT-01 — macOS, arm64, and Linux GPU validation**
-  Validate macOS x64/arm64 runtime, Windows/Linux arm64 hardware, and Linux GPU
-  presentation. These are post-1.6 platform items and do not block the compatibility
-  claim.
-  **Done when:** each target has a dated smoke result or a documented best-effort
-  limitation.
-  **2026-11-09:** closed as documented best-effort limitations on the current hardware:
-  Windows x64 and Linux x64 (Hyper-V `LinuxMint`, llvmpipe) have dated smoke results;
-  macOS is cross-published as Mach-O and not executed; Windows/Linux arm64 and macOS
-  arm64 are not hardware-validated; Linux GPU presentation remains preview/best-effort.
-  The six apphost architectures are PE/ELF/Mach-O verified by the release workflow. See
-  [`KnownIssues.md`](KnownIssues.md) and [`Compatibility.md`](Compatibility.md) §10.3.
+| **SYS-05 embedded boot ROM** | GPL-2.0-only licensing risk; no distributable ROM exists. Retail titles still need a user BIOS. | Legal sign-off and a distributable ROM exist. |
+| **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
+| **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
+| **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
+| **CORE-05 threaded DSP** | Closed: DSP is ~14% of frame time; handoff/validation cost exceeds the work. | A title spends >30% of frame time in DSP. |
+| **PERF-08 managed JIT** | Closed: the interpreter remains faster on real titles and is the accuracy oracle. | A measured 1.5× end-to-end win on a real title. |
+| **VID-01 true 640×480 / 4K internal CEL** | Open-ended research; no target title and no bounded implementation path. 4K output upscaling already ships. | A bounded prototype shows a compatibility or visual win on a matrix title. |
+| **Full 594/1,371-image differential** | Replaced by the 378-title unique corpus; regional copies add noise, not signal. | A region-specific defect is suspected. |
+| **Top-100 audit** | Replaced by Tier A (378) + Tier B (~100) + Tier C (50). | The matrix shows a blind spot outside Tier B. |
+| **Hardware test ROM suite** | Dropped; the differential oracle, 2,000+ tests, and fuzz targets already catch the regressions a ROM suite would. | A hardware-only defect appears that the oracle cannot reproduce. |
+| **WebAssembly/browser, Android/iOS, Raspberry Pi, Steam Deck, libretro core** | Explicitly out of scope for the desktop product. | Product scope changes. |
+| **Netplay, achievements, full debugger UI** | Out of scope for v1. | A post-compatibility product roadmap opens. |
+| **QUAL-05B Road Rash full race** | A fresh 150,000-frame `--autopilot road` run still ends with the rider off the bike on the sidewalk; the remaining work is driving/start-line and traffic avoidance, not emulation. Evidence: `artifacts/p0-rr-auto-boot`. | A scripted driver completes the 5.5-mile race without a wreck, or a new autopilot strategy proves it can. |
+| **ACC-01 Road Rash long-run divergence** | Documented residual: first behavioral divergence is frame 600 (guest read-request ordering); no game-visible impact has been shown. | A Road Rash gameplay scene (not intro/attract) diverges, or a matrix title changes status. |
+| **CORE-04 CD command-cadence residual** | Documented residual: 11/50 panel titles still differ in CD command cadence at frame 300; video/audio match. | A title shows a player-visible CD/audio effect, or a matrix title changes status. |
+| **Crash 'n Burn (Japan)** | The Japan dump/BIOS pair is the limit; every tested BIOS stays on the Anvil boot screen. USA/Korea revisions work. | A verified Japan dump/BIOS pair renders the game. |
+| **DeathKeep / Kingdom gameplay** | Both match the reference’s black/title screen; no known input reaches gameplay. | A reference gameplay capture proves a reachable scene. |
+| **480i real-title validation** | No local title is confirmed 480i; only synthetic processor tests exist. | A confirmed 480i title or hardware capture is available. |
+| **Exact peer frame parity after beyond-title** | Not required by the playable definition. | A player-visible regression is traced to a peer divergence. |
+| **Deep playthrough of all 378 titles** | The compatibility claim is beyond-title, not full-game completion. | A title’s status or quality grade depends on deeper play. |
 
 ---
 
-## 3. Execution order
+## 5. Execution order
 
-1. **Measure:** COMPAT-01 → COMPAT-02 → COMPAT-03 → COMPAT-04 → COMPAT-05 → COMPAT-06.
-2. **Fix:** COMPAT-07 through COMPAT-13. Work the failure ledger by root-cause bucket;
-   do not start with title-specific patches.
-3. **Lock and ship:** COMPAT-14 → COMPAT-15 → COMPAT-16 → REL-01 → REL-02 → REL-03.
-4. **Post-1.6 quality:** QUAL-01 → QUAL-02 → QUAL-03 → QUAL-04, then ACC-01/ACC-02 and
-   PLAT-01. QUAL-01 comes first because a real core defect outranks a quality grade.
+1. **P0 quality:** `QUAL-03A`…`QUAL-03D` and `QUAL-05A` are complete (BladeForce,
+   Jurassic Park, Off-world, PGA Tour, and Alone). `QUAL-05B` (full Road Rash race) is in
+   §4 as a driving/autopilot limit.
+2. **P0 evidence:** `AUD-01` is complete on Windows (null + real) and Linux (null); the
+   Linux real-device path is a hardware limitation. Keep the quality-ledger gate green
+   after every batch.
+3. **P1 platform:** `PLAT-02` → `PLAT-03` → `PLAT-04` → `PLAT-05` (IOKit source and
+   mapping tests done; physical detection pending a macOS host) → `PLAT-06` →
+   `PLAT-07` (**done**) → `PLAT-08` → `PLAT-09` (**done**).
+4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
+   stay blocked in §4 until certificates/accounts exist.
+5. **P2 accuracy:** `SYS-01` → `ACC-03`. These are optional unless a title changes status.
+   The `ACC-01` and `CORE-04` residuals stay in §4 until their revisit conditions are met.
+6. **P3 product:** work in the order the product roadmap accepts; none of these block a
+   release.
 
-Rules:
-
-- **One title, one outcome.** Every game in the 378-title matrix must end as Playable,
-  not-playable with a root cause, or peer-claim-disproved.
-- **Evidence before checkbox.** Attach the BIOS, disc hash, frame count, capture, and
-  command to every claim.
-- **No speculative fixes.** Every fix starts from a failing matrix row.
-- **No deep-playthrough requirement.** Reaching a distinct screen beyond the title is
-  enough for this plan.
+**Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
+P1 platform smoke is failing.
 
 ---
 
-## 4. Verification commands
+## 6. Verification commands
 
 ```powershell
 # Build, test, format, static analysis
@@ -420,53 +249,64 @@ python tools/corpus-inventory.py --jobs 8 --out artifacts/corpus/inventory.json
 python tools/generate-compat-comparison.py --inventory artifacts/corpus/inventory.json --sweep artifacts/compat-full/summary-merged.csv --sweep artifacts/compat-unique/summary.csv
 python tools/generate-compat-comparison.py --check --inventory artifacts/corpus/inventory.json --sweep artifacts/compat-full/summary-merged.csv --sweep artifacts/compat-unique/summary.csv
 
-# Beyond-title playability pass
-python tools/playability-sweep.py --manifest benchmarks/diff/tierb-panel-4.json --out artifacts/tierb-panel-4 --jobs 4
+# Beyond-title playability and quality gates
 python tools/beyond-title-sweep.py --scope peer-gap --jobs 10 --out artifacts/beyond-title --ledger docs/data/beyond-title-results.csv
 python tools/beyond-title-report.py --ledger docs/data/beyond-title-results.csv
 python tools/verify-beyond-title-ledger.py --ledger docs/data/beyond-title-results.csv
 python tools/beyond-title-baseline.py --ledger docs/data/beyond-title-results.csv --check --require-count 378
+python tools/verify-playability-grades.py
 
 # Input-script parser and pointer-device tests
 dotnet test 5DO.sln -c Debug --filter FullyQualifiedName~InputScriptTests
 
-# Accuracy smoke (frame/audio panel)
+# Accuracy panel (frame/audio)
 dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/panel50.json --core artifacts/diff/opera-build/out/OperaCore.dll
 
 # Frontend smoke
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
+
+# Release bundles
+pwsh -NoProfile -File packaging/package-bundle.ps1
 ```
 
-The 2026-11-08 panel matches **150/150 frame hashes** and **150/150 audio fields**.
-The harness's PC/CD-command gate still reports the documented CORE-04 cadence residual;
-it does not change a frame hash or a beyond-title result.
-
-The former plan's full command reference, including GPU probes and release packaging, is
-preserved in [ImplementationPlanArchive.md](ImplementationPlanArchive.md#7-verification-commands).
+For a release, also run the commands in [ReleaseChecklist.md](ReleaseChecklist.md). Keep a
+local copy of each bundle in `src/FiveDo.Frontend.Avalonia/bin/Release`, remove PDB/XML
+files, and publish `SHA256SUMS.txt`.
 
 ---
 
-## 5. Out of scope
+## 7. Reference strategy
 
-These do not block compatibility completion and must not be added as prerequisites.
-Phase 3 treats gameplay depth and accuracy residuals as a quality program, not a
-compatibility gate:
+| Reference | Role | Use it for |
+|---|---|---|
+| `References/opera-libretro-master` | Timing/behavior oracle | CD-ROM, DSP, peripherals, SWI HLE, boot ROM, accuracy fixes |
+| `References/4DO-master` | Compatibility oracle | Game database, fix flags, known-bad titles, UI behavior |
+| `References/fourdo-code-r389-trunk` | Historical 4DO snapshot | Older behavior and regression comparisons |
+| `References/FourDO Ported` | Porting notes/code | 4DO-to-C# mapping and conventions |
+| `References/freedo-master` | Original core reference | FreeDO quirks, ARM/CLIO/MADAM/DSP baseline |
+| `References/CPP_SimpleGui` | Opera test harness | Differential runs and reference captures |
+| `References/Docs` | Hardware/SDK documentation | ARM60, 3DO, CD-ROM, VDLP, and Portfolio details |
+| `References/RMG-master`, `References/rpcs3-0.0.43` | UX benchmarks only | Library, controller profiles, packaging, per-game config |
 
-- Deep gameplay verification, ending validation, or full-game completion.
-- Frame-perfect parity with 4DO/Phoenix after the beyond-title screen.
-- Performance work, managed JIT, threaded DSP, or internal 4K CEL research.
-- Product/UX features, netplay, mobile/browser targets, Raspberry Pi, or Steam Deck.
-- Six-player/multi-tap, lightgun crosshair polish, or presentation-only filters.
-- Platform work beyond the Windows/Linux release gate; macOS remains best-effort.
+**Rules:** port behavior, not code; one reference per change; tests first; preserve
+determinism; keep the core single-threaded by default; do not anchor to Opera bugs; do not
+ship copyrighted BIOS or game content; document intentional divergence in
+[PortingNotes.md](PortingNotes.md).
 
 ---
 
-## 6. History
+## 8. Evidence and history
 
-The former plan and its completed log are archived in
-[ImplementationPlanArchive.md](ImplementationPlanArchive.md). It preserves the
-2026-11-08 status snapshot, the old A-D gates, stable IDs (`TEST-06`, `CORE-04`,
-`CORE-13`, `SYS-*`, `ECO-*`), the shipped baseline, evidence gaps, reference strategy,
-appendices, and every completed entry. Completed work must not be re-opened here;
-Phase 3 adds new post-1.6 quality IDs without changing a completed compatibility
-claim.
+- [Status](Status.md) — current position and release state.
+- [Compatibility](Compatibility.md) — supported set and platform evidence.
+- [5DO vs 4DO vs Phoenix](CompatibilityComparison.md) — unique-title matrix.
+- [BeyondTitleEvidence.md](BeyondTitleEvidence.md) — per-title captures and failure reasons.
+- [KnownIssues.md](KnownIssues.md) — current limitations.
+- [DifferentialHarness.md](DifferentialHarness.md) — Opera comparison and panel evidence.
+- [TestCorpus.md](TestCorpus.md) — test inventory and dated batches.
+- [ReleaseChecklist.md](ReleaseChecklist.md) — release gate.
+- [ImplementationPlanArchive.md](ImplementationPlanArchive.md) — merged historical plan,
+  completed log, stable-ID index, retired aliases, and appendices.
+
+The archive is retained for traceability only. New work goes in this file; completed work
+moves to §1 or the archive, not into a second backlog.

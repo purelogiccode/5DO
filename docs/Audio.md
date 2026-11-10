@@ -343,6 +343,60 @@ that crackle and lets the button test the selected device cleanly.
 | DSP tests | Instruction decode, ALU/multiplier, sample cadence, semaphore. |
 | Real-content captures | 600-frame/10 s captures and per-title WAV evidence in [`TestCorpus.md`](TestCorpus.md). |
 
+### Real-time soak (AUD-01, 2026-11-09)
+
+Lemmings (USA), `--audio openal --realtime --frames 36000` (600 seconds, 10 minutes)
+on Windows, with a fresh NVRAM per run:
+
+| Device | Frames | Elapsed | Dropped samples | Underruns | Queued buffers | Latency |
+|---|---:|---:|---:|---:|---:|---:|
+| OpenAL null driver (`ALSOFT_DRIVERS=null`) | 36,000 | 600.6 s | 0 | 0 | 17 | 66.7 ms |
+| Windows default playback device | 36,000 | 600.6 s | 0 | 0 | 14 | 60.9 ms |
+
+The DSP was running in both runs. The 10-minute soak therefore holds the documented
+zero-drop/zero-underrun result on Windows for both the null and real device paths.
+Evidence: `artifacts/aud01/windows-null.json` and
+`artifacts/aud01/windows-real.json`.
+
+Linux Mint 22.3 (Hyper-V) ran the same 36,000-frame real-time pass with
+**Smashing Drive (USA)** and `ALSOFT_DRIVERS=null`: 600.6 seconds, **0 dropped
+samples**, **0 underrun buffers**, 18 queued buffers, 66.7 ms latency, DSP running
+(`artifacts/aud01/linux-null.json` in the VM). The VM's `/dev/snd` exposes only
+`seq` and `timer`, with no PCM playback endpoint, so a Linux *real-device* soak is a
+hardware limitation rather than a code result. See [`TestCorpus.md`](TestCorpus.md)
+1.1bp.
+
+### Frontend NativeAOT soak (PLAT-07, 2026-11-10)
+
+The opt-in **NativeAOT frontend** (`-p:FiveDoNativeAot=true`, win-x64, .NET 10.0.14)
+ran Lemmings (USA) through the frontend's real `FiveDoMachine`/`CoreRunner`/
+`OpenAlAudioOutput` path with `--audio-soak 600`. The JSON reports `nativeAot: true`.
+This closes the previous frontend-AOT audio gap; the shipped release bundles remain
+trimmed IL.
+
+| Device | Frames | Elapsed | Samples pushed | Dropped | Underruns | Queued | Latency | OpenAL errors | DSP |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| OpenAL null driver (`ALSOFT_DRIVERS=null`) | 35,968 | 600.07 s | 26,462,916 | 0 | 0 | 15 | 50.0 ms | 0 | running |
+| `OpenAL Soft on PG34WQ15R2B (NVIDIA High Definition Audio)` | 35,966 | 600.03 s | 26,461,445 | 0 | 0 | 12 | 55.1 ms | 0 | running |
+
+Both runs report `samplesProduced == samplesPushed`, so the frontend consumed the
+complete DSP stream with no ring drops. Evidence:
+`artifacts/plat07/aot-null-600s.json` and
+`artifacts/plat07/aot-real-nvidia-600s.json`. The default endpoint on this host
+(Windows default playback device) opened but did not consume samples
+(`queuedBuffers: 1`, 11,382 underrun buffers in a preliminary run); selecting the
+working NVIDIA endpoint explicitly produced the zero-underrun result above. A later
+final-build repeat on the same HDMI endpoint produced 1-2 transient underruns at
+100 ms, a 150 ms repeat opened an idle/suspended endpoint that did not consume
+(`queuedBuffers: 1`), and a later warmup/repeat lost the endpoint entirely
+(`No OpenAL playback device was found`). Sample drops stayed 0 in every run. This is
+endpoint power/session instability, not a frontend AOT regression; the documented
+0/0 result is the uninterrupted NVIDIA run above. The `deviceFailed` diagnostic field
+was added after that run; the final AOT build passed a 10 s null/real sanity pass at
+0 drops and 0 underruns, and the 600 s audio path is unchanged. Reproduce with
+[`tools/frontend-audio-soak.ps1`](https://github.com/purelogiccode/5DO/blob/master/tools/frontend-audio-soak.ps1)
+or the direct command shown in [`BuildAndTest.md`](BuildAndTest.md).
+
 Run the opt-in audio test with a null backend on a headless machine:
 
 ```powershell
@@ -358,6 +412,7 @@ dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQua
 | Symptom | Cause / action |
 |---|---|
 | No sound, no error | Check `AudioEnabled`, `Volume`, and the selected device. The app logs an OpenAL warning when no device is found. The DSP still runs. |
+| Queues stay at zero or underruns spike | The endpoint may be unavailable or not consuming. Run `audio devices --json` and pass a working `--audio-device` instead of relying on the default. |
 | Constant crackle | Update to the 2026-10-28+ build (free-buffer pool). Set `FIVEDO_AUDIO_TAP` and compare tap vs loopback. |
 | Crackle only on Bluetooth | The tap is clean but the loopback is not; the issue is the Bluetooth link/codec, not the emulator. |
 | Pitch too high / capture 10.07 s for 600 frames | Old 8.24 DSP clock. Current builds produce 10.000 s. |
@@ -377,7 +432,8 @@ dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --filter "FullyQua
   the data track only.
 - No platform-native audio backend beyond OpenAL Soft.
 - No audio resampling in 5DO; OpenAL/the device handles the 44.1 kHz stream.
-- Frontend NativeAOT audio is not validated; trimmed IL and CLI AOT paths are.
+- The frontend NativeAOT path is validated on Windows with the null and default playback
+  devices (2026-11-10); Linux/macOS AOT audio is not claimed.
 - The DSP mode-change listen is still a manual check; no current title was observed
   stopping the DSP mid-run.
 - The live soft limiter changes the signal relative to the raw DSP/WAV capture by

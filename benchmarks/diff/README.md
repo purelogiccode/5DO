@@ -57,6 +57,11 @@ not product configuration.
   both claim playability but 5DO only has automated loadability evidence, uses
   `--bios-auto` so the database picks the BIOS and input device, and is reviewed
   with `python tools/tierb-contact-sheet.py`.
+- `p0-quality-batch.json` - the P0 quality-closure batch: BladeForce, Jurassic Park
+  Interactive, Off-world Interceptor, PGA Tour 96, and Alone in the Dark, each with a
+  boot-absolute title-specific script. It is consumed by
+  `python tools/playability-sweep.py`; the results are recorded under
+  `artifacts/p0-quality` and in `docs/TestCorpus.md` 1.1bp.
 
 These manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
 Relative paths resolve from the repository root. The harness stages the OperaCore

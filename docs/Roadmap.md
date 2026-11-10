@@ -26,14 +26,14 @@ The compatibility plan is complete:
   (Olympic Soccer, John Madden Football, Crime Patrol, Mad Dog II, Shootout at Old
   Tucson, Guardian War, Hell - A Cyberpunk Thriller, and Slayer). The second increment
   added pointer-device input scripts and promoted four more: **Carrier - Fortress at
-  Sea**, **Family Feud**, **Insect War**, and **N. O. B.**. The ledger is **88 `Good`,
-  13 `Playable`**; the remaining game leads are BladeForce, DeathKeep, Jurassic Park,
-  Kingdom, Off-world Interceptor, and PGA Tour 96, alongside seven media/reference/
-  add-on discs. All six now have a dated blocking screen. DeathKeep and Kingdom match
-  the reference core's black/title screens, and BladeForce matches the reference Main
-  Options menu, so none of the three is a 5DO core defect.
-- Full-race and long-playthrough evidence for Road Rash, Alone in the Dark, and the
-  remaining scripted titles.
+  Sea**, **Family Feud**, **Insect War**, and **N. O. B.**. The P0 pass promoted
+  **BladeForce**, **Off-world Interceptor**, and **PGA Tour 96**, and opened the
+  Jurassic Park Security Systems terminal. The ledger is **91 `Good`, 10 `Playable`**;
+  the remaining game rows are DeathKeep, Jurassic Park, and Kingdom, alongside seven
+  media/reference/add-on discs.
+- Full-race Road Rash evidence and a longer Alone inventory/exploration sequence.
+  Alone now reaches the room and the Actions menu; Road Rash still cycles through
+  wrecks under the autopilot.
 
 **Accuracy residuals (not release blockers):**
 
@@ -45,10 +45,12 @@ The compatibility plan is complete:
 
 - GLES 3.1, desktop arm64, and Linux/macOS GPU validation.
 - M14 high-resolution CEL research.
-- Installers, signing, and file associations.
+- Signed/notarized installers. Unsigned Windows/Linux/macOS packaging and file
+  associations are in place (2026-11-10); macOS packaging needs a macOS host, and
+  signing remains conditional on certificates.
 - Additional metadata providers and media in the library.
 - More TAS tooling, Lua scripting, and an input timeline.
-- Full PAL library validation and CD subcode work.
+- CD subcode work. Full PAL library validation was completed on 2026-11-10.
 
 Out of scope for v1: netplay, achievements, a full debugger UI, and 4K *internal* CEL
 rendering. 4K output upscaling is supported.

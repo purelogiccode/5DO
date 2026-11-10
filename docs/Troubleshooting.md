@@ -160,6 +160,8 @@ See [`Audio.md`](Audio.md) for metric definitions and the tap workflow.
 | Keyboard does nothing | Click the game view to focus it; the Library view and TextBox focus deliberately swallow game keys. |
 | Wrong buttons | Check **Input Bindings**; the defaults are arrows, Z=A, X=B, C=C, A=L, S=R, Enter=P, Backspace=X. |
 | Gamepad not detected (Windows) | Use XInput-compatible controller; check **About** for the connected count. |
+| Gamepad not detected (Linux) | Check `input` group membership and `/dev/input/event*` permissions. |
+| Gamepad not detected (macOS) | Grant Input Monitoring permission to 5DO; only Generic Desktop joystick/gamepad HID devices are matched. |
 | Gamepad not detected (Linux) | Ensure the user is in the `input` group and `/dev/input/event*` is readable. |
 | Gamepad not detected (macOS) | No platform backend yet; use a keyboard. |
 | Analog stick does nothing | Left-stick directions fall back to D-pad bindings; explicit stick bindings win. Triggers fall back to shoulders. |

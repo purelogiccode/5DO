@@ -146,7 +146,8 @@ the remaining work.
 
 - [Architecture](Architecture.md) — dependency rules, runtime composition, and state ownership.
 - [Developer guide](DeveloperGuide.md) — source map, invariants, extension points, and conventions.
-- [Build and test](BuildAndTest.md) — prerequisites, build/test/format, benchmarks, publish, CI.
+- [Build and test](BuildAndTest.md) - prerequisites, build/test/format, benchmarks, publish, CI.
+- [Installers and file associations](Installers.md) - Windows/Linux/macOS packages, signing, and MIME/registry hooks.
 - [Test strategy](TestStrategy.md) — unit, integration, golden, differential, fuzz, and performance testing.
 - [Porting notes](PortingNotes.md) — C++ to C# rules and reference quirks.
 - [Reference strategy](ReferenceStrategy.md) — Opera/libopera hierarchy and differential procedure.
@@ -155,12 +156,13 @@ the remaining work.
 - [Documentation guide](Documentation.md) — build the site, preview locally, and publish the wiki.
 - [Status](Status.md) — current position, completion estimate, and next steps.
 - [Roadmap](Roadmap.md) — concise milestone summary.
-- [Implementation plan](ImplementationPlan.md) — active compatibility completion task list.
-- [Implementation plan archive](ImplementationPlanArchive.md) — former plan, completed log, and evidence.
+- [Implementation plan](ImplementationPlan.md) — consolidated achievable backlog after compatibility completion.
+- [Implementation plan archive](ImplementationPlanArchive.md) — completed log, stable IDs, evidence, and history.
 - [Release checklist](ReleaseChecklist.md) — v1.1 scope and gates.
 - [Release legal review](ReleaseLegalReview.md) — attribution and distribution decisions.
 - [OpenAL Soft notice](OpenALSoft.md) — LGPL notice, source offer, and relinking rights.
-- [Test corpus](TestCorpus.md) — machine-specific BIOS/disc evidence commands (not committed assets).
+- [Test corpus](TestCorpus.md) - machine-specific BIOS/disc evidence commands (not committed assets).
+- [PAL library validation](PalValidation.md) - Europe-only matrix captures with the documented PAL BIOS.
 - [Documentation source guide](DocumentationSource.md) — conventions for editing this documentation set.
 
 ## Project links

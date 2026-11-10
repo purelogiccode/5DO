@@ -20,6 +20,8 @@
 
 - [Documentation site](https://purelogiccode.github.io/5DO/)
 - [What's new](https://purelogiccode.github.io/5DO/WhatsNew.html)
+- [Installers and file associations](https://purelogiccode.github.io/5DO/Installers.html)
+- [PAL validation](https://purelogiccode.github.io/5DO/PalValidation.html)
 - [User guide](https://purelogiccode.github.io/5DO/UserGuide.html)
 - [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html)
 - [Configuration](https://purelogiccode.github.io/5DO/Configuration.html)

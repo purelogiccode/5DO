@@ -113,6 +113,7 @@ nav:
   - Home: index.md
   - Getting started:
       - Installation: Installation.md
+      - Installers and file associations: Installers.md
       - User guide: UserGuide.md
       - FAQ: FAQ.md
   - Using 5DO:
@@ -121,6 +122,7 @@ nav:
       - Game compatibility list: GameCompatibilityList.md
       - 5DO vs 4DO vs Phoenix: CompatibilityComparison.md
       - Beyond-title evidence: BeyondTitleEvidence.md
+      - PAL library validation: PalValidation.md
       - Game compatibility results: GameCompatibilityResults.md
       - Cheats: Cheats.md
       - TAS movies: Tas.md

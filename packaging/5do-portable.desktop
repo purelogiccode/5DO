@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=5DO
+GenericName=3DO Emulator
+Comment=3DO Interactive Multiplayer emulator
+Exec=FiveDo.Frontend.Avalonia %f
+TryExec=FiveDo.Frontend.Avalonia
+Icon=5do
+Terminal=false
+Categories=Game;Emulator;
+Keywords=3DO;Panasonic;emulator;disc;
+StartupNotify=true
+MimeType=application/x-3do-disc;application/x-cd-image;application/x-iso9660-image;application/x-raw-disk-image;

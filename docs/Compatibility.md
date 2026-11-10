@@ -238,7 +238,7 @@ workflow.
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
 | High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; line-doubled 640x480 output | True internal 640x480 / supersampling research in M14 (post-1.0) |
-| PAL | No | Later if needed |
+| PAL | Yes: PAL1 320x288 and PAL2 384x288 at 50 Hz, with per-game BIOS selection | |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
 | Frame advance | Yes | |
@@ -294,7 +294,7 @@ does not need a separate high-resolution input path.
 | Volume/mute | Yes (output and CD-DA) | |
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
-| AOT live audio | Validated for the win-x64 NativeAOT CLI with the bundled runtime | Frontend AOT audio remains unvalidated |
+| AOT live audio | Validated for the win-x64 NativeAOT CLI and frontend with the bundled runtime; frontend null/real soaks report 0 drops/0 underruns | Linux/macOS AOT audio is not claimed |
 | CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, and Settings/CLI controls; read-ahead/subcode and known-title evidence remain |
 | Multi-disc | Partial | M3U/M3U8 playlist, F3/UI/CLI swap, guest inject, and per-disc hash; guest ODE prompts and a known multi-disc title remain |
 
@@ -327,7 +327,8 @@ does not need a separate high-resolution input path.
 - Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, multi-track/CD-DA
   sectors, CD-DA volume/mute, and multi-disc playlists are implemented;
   CD-DA read-ahead/subcode, guest ODE prompts, and known-title disc audio evidence remain.
-- No PAL.
+- PAL1/PAL2 are implemented and the Europe-only matrix titles have dated captures in
+  [PalValidation.md](PalValidation.md).
 - High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
   Lemmings title; it is FreeDO-style line doubling, not true internal 640x480.
   Output upscaling via OpenGL is supported separately. See
@@ -596,6 +597,14 @@ PE/ELF/Mach-O inspection confirms `win-x64`/`win-arm64`, `linux-x64`/`linux-arm6
 <https://github.com/purelogiccode/5DO/actions/runs/42552318341> repeated the Linux x64
 smoke under xvfb, validated every bundle tree and apphost architecture, and published
 all six bundles with `SHA256SUMS.txt`; all published checksums verify.
+
+**2026-11-10 platform/packaging note:** the macOS gamepad source now uses IOKit HID
+and its mapping layer is covered by 21 tests; physical detection still needs a macOS
+host. The frontend NativeAOT audio soak reports 0 drops/0 underruns for the null and
+real Windows devices ([Audio.md](Audio.md) §9). The unsigned Windows installer and
+Linux `.deb`/`.rpm` packages were built and validated, including `.iso`/`.cue`/`.chd`
+associations and the Linux MIME/desktop entry ([Installers.md](Installers.md)). Full
+PAL evidence is in [PalValidation.md](PalValidation.md).
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

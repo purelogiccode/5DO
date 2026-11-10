@@ -107,23 +107,75 @@ For local release copies, use:
 -OutputDirectory src/FiveDo.Frontend.Avalonia/bin/Release
 ```
 
-## Linux file association
+## Installers and file associations (UX-16)
 
-1. Extract the bundle and put `FiveDo.Frontend.Avalonia` on `PATH`.
-2. Install the desktop entry:
+The portable bundles remain the primary release artifact. The packaging directory now
+also contains unsigned installer/package scaffolding for each desktop platform. Signing
+and notarization are opt-in and only run when the certificate or Apple account is
+available.
 
-   ```sh
-   install -Dm644 5do.desktop ~/.local/share/applications/5do.desktop
-   update-desktop-database ~/.local/share/applications
-   ```
+### Windows (Inno Setup)
 
-3. Optionally install an icon named `5do` in
-   `~/.local/share/icons/hicolor/256x256/apps/`; convert
-   `src/FiveDo.Frontend.Avalonia/Assets/fivedo.ico` to a 256x256 PNG first.
+`packaging/windows/5do.iss` installs both apphosts, creates Start Menu/desktop
+shortcuts, and registers a `5DO.Disc` ProgID for `.iso`, `.cue`, `.chd`, and `.bin`
+plus `5DO.Playlist` for `.m3u`. Associations use `HKA`, so an unelevated install writes
+to `HKCU` and an elevated install writes to `HKLM`.
 
-The application accepts a positional disc path or `--disc <path>`; opening a
-`.iso`, `.bin`, `.cue`, or `.chd` file with the desktop entry loads it after the
-configured BIOS.
+```powershell
+# Build the win-x64 bundle first
+pwsh -NoProfile -File packaging/windows/build-installer.ps1 `
+  -BundleDirectory artifacts/bundle/win-x64 `
+  -Architecture x64 `
+  -OutputDirectory artifacts/installers
+
+# Optional Authenticode signing through Inno Setup's sign-tool hook
+pwsh -NoProfile -File packaging/windows/build-installer.ps1 `
+  -BundleDirectory artifacts/bundle/win-x64 `
+  -SignCommand 'signtool.exe sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a $f'
+```
+
+Requires Inno Setup 6 (`ISCC.exe`). The output is
+`5do-<version>-win-x64-setup.exe` plus a `.sha256` file. `win-arm64` uses
+`-Architecture arm64`.
+
+### Linux (.deb, .rpm, desktop entry, MIME)
+
+The Linux packages install the apphosts under `/opt/5do`, add `/usr/bin/5do` and
+`/usr/bin/5do-cli`, install the desktop entry and SVG icon, and register the
+`application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`, and `*.bin` globs.
+
+```sh
+bash packaging/linux/build-deb.sh \
+  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.6.0 \
+  --output artifacts/installers
+
+bash packaging/linux/build-rpm.sh \
+  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.6.0 \
+  --output artifacts/installers
+```
+
+The scripts require `dpkg-deb` or `rpmbuild`. Open the installed `5do` entry or a
+`.iso`/`.cue`/`.chd` file to launch the frontend with the disc path.
+
+### macOS (.app, .dmg, .pkg)
+
+`packaging/macos/build-macos-package.sh` creates a `5DO.app` with an `Info.plist`
+document type/UTI for the disc extensions, a drag-to-Applications `.dmg`, and a
+`.pkg`. Without `--sign-identity` the result is unsigned; with a Developer ID it is
+hardened and optionally notarized.
+
+```sh
+bash packaging/macos/build-macos-package.sh \
+  --bundle artifacts/bundle/osx-arm64 --rid osx-arm64 --version 1.6.0 \
+  --output artifacts/installers \
+  --sign-identity "Developer ID Application: Example (TEAMID)" \
+  --notary-profile "5do-notary"
+```
+
+Signing uses `codesign --options runtime` with the JIT entitlements in
+`packaging/macos/entitlements.plist`. Notarization uses `notarytool` and staples the
+ticket to both artifacts. Without credentials, keep the unsigned `.dmg`/`.pkg` or use
+the portable tarball.
 
 ## CI
 
@@ -134,5 +186,8 @@ proves the framework-dependent apphosts work. `.github/workflows/release.yml` pu
 the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
 documentation site and the wiki.
 
-The archives are portable bundles, not installers. MSIX/dmg/AppImage packaging,
-signing, and notarization remain post-1.0 work.
+The archives are portable bundles; the installer scripts above are additive. Unsigned
+installers can be produced locally and in CI. Authenticode signing, Developer ID
+signing, and notarization remain conditional on valid certificates and an Apple
+developer account; without them the portable bundles and unsigned installers are the
+release artifacts.

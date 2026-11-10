@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "P0 quality closure: mission/terminal/round entry",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "audio": "null",
+    "prefetch": true,
+    "timeoutSeconds": 900
+  },
+  "titles": [
+    {
+      "id": "bladeforce-mission",
+      "name": "BladeForce",
+      "disc": "${root}/BladeForce (1995)(Studio 3DO)(EU)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/bladeforce-mission-boot.txt",
+      "frames": 90000,
+      "captureFrames": [62000, 65000, 66000, 70000, 80000, 90000]
+    },
+    {
+      "id": "jurassic-park-terminal",
+      "name": "Jurassic Park Interactive",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/jurassic-park-terminal-boot.txt",
+      "frames": 52000,
+      "captureFrames": [40000, 41000, 42000, 45000, 52000]
+    },
+    {
+      "id": "offworld-mission",
+      "name": "Off-world Interceptor",
+      "disc": "${root}/Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/offworld-gameplay-boot.txt",
+      "frames": 36000,
+      "captureFrames": [7200, 9000, 11000, 12000, 14000, 16000, 20000, 24000, 30000, 36000]
+    },
+    {
+      "id": "pga-round",
+      "name": "PGA Tour 96",
+      "disc": "${root}/PGA Tour 96 (1995)(EA Sports)(EU)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/pga-round-boot.txt",
+      "frames": 82000,
+      "captureFrames": [54000, 56000, 58000, 60000, 62000, 64000, 66000, 70000, 80000]
+    },
+    {
+      "id": "alone-room",
+      "name": "Alone in the Dark",
+      "disc": "${root}/Alone in the Dark (USA).chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/alone-room-boot.txt",
+      "frames": 45000,
+      "captureFrames": [16000, 30000, 35000, 39000, 40000, 45000]
+    }
+  ]
+}

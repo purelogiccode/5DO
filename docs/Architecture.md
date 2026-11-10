@@ -619,7 +619,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 |---|---|---|
 | Video presenter | `IFrameSink` / `IVideoRenderer` | OpenGL (required), CPU BGRA fallback, null/hash sink |
 | Audio output | `IAudioSink` | null, WAV, OpenAL |
-| Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, scripted replay |
+| Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, IOKit HID, scripted replay |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
 | Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
 | Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, FSR |

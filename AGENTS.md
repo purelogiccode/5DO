@@ -51,8 +51,9 @@ GitHub release without the built artifacts is not a complete release.
 
 ## Documentation rules
 
-- `docs/ImplementationPlan.md` is the active compatibility task list. Historical status,
-  milestones, evidence, and the completed log live in `docs/ImplementationPlanArchive.md`.
+- `docs/ImplementationPlan.md` is the active implementation and missing-feature backlog.
+  Historical status, milestones, evidence, and the completed log live in
+  `docs/ImplementationPlanArchive.md`.
 - v1.0 is a **documented-compatibility** release. Full compatibility, M13.5/M13.6
   visual/high-resolution review, and M14 high-resolution CEL research are post-1.0.
 - Legal/attribution sign-off is recorded under the FreeDO modified GNU LGPL as free,

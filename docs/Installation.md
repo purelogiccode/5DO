@@ -34,6 +34,16 @@ contain a .NET runtime. Extract the bundle and run the executables.
 
 Bundles are versioned, for example `5do-1.6.0-win-arm64.zip`.
 
+### Installers and file associations
+
+Optional unsigned installers can be built from the bundles; see
+[Installers and file associations](Installers.md) and
+[`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
+The Windows installer registers `.iso`/`.cue`/`.chd`/`.bin` file associations. The Linux
+packages install a desktop entry, icon, and `application/x-3do-disc` MIME type. The
+macOS `.app` declares its document UTI. Signing and notarization run only when the
+appropriate certificate or Apple account is supplied.
+
 ## Build from source
 
 ```powershell
@@ -127,14 +137,16 @@ Named profiles live under `profiles/<name>/` and can be selected with
 - XInput controllers are supported (`xinput1_4`, `xinput1_3`, or `xinput9_1_0`).
 - The desktop uses WGL by default and can force ANGLE/GLES with
   `--gl-backend angle`.
-- A Linux `.desktop` association file and portable packaging scripts are in
-  [`packaging/`](https://github.com/purelogiccode/5DO/tree/master/packaging).
+- The optional Inno Setup installer in [`packaging/windows`](https://github.com/purelogiccode/5DO/tree/master/packaging/windows)
+  installs both apphosts and registers `5DO.Disc`/`5DO.Playlist` associations.
 
 ### Linux
 
 - Use a current desktop with OpenGL 3.3 or GLES 3.0/3.1 drivers.
 - evdev gamepads are supported; the user normally needs membership in the `input`
   group.
+- The `build-deb.sh`/`build-rpm.sh` scripts install to `/opt/5do` and register the
+  desktop entry and `application/x-3do-disc` MIME type.
 - The local validation target is a Linux Mint virtual machine. Full distribution
   coverage is still post-1.0 work.
 - The framework-dependent `linux-x64` and `linux-arm64` bundles are produced by CI.
@@ -142,7 +154,11 @@ Named profiles live under `profiles/<name>/` and can be selected with
 ### macOS
 
 - The framework-dependent `osx-x64` and `osx-arm64` bundles are produced by CI.
-- There is no platform gamepad backend yet; use the keyboard.
+- The gamepad backend uses IOKit HID (Generic Desktop Joystick/Gamepad/Multi-axis) and
+  maps through the same eight-player profile as XInput/evdev. macOS may ask for Input
+  Monitoring permission; without it the frontend falls back to the keyboard.
+- The `.dmg`/`.pkg` script in [`packaging/macos`](https://github.com/purelogiccode/5DO/tree/master/packaging/macos)
+  declares the disc UTI and document type. Building it requires a macOS host.
 - Runtime validation is post-1.0 work. Please report platform-specific findings with
   a [diagnostics bundle](Diagnostics.md).
 

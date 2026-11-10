@@ -3319,11 +3319,13 @@ python tools/playability-sweep.py --manifest benchmarks/diff/tierc-batch-13.json
   --out artifacts/tierc-batch-13 --jobs 4
 ```
 
-The ledger is now **101 rows: 88 `Good`, 13 `Playable`**. Seven of the remaining
-`Playable` rows are media/reference/add-on discs (20th Century Video Almanac, Club 3DO,
+At the end of this increment, the ledger was **101 rows: 88 `Good`, 13 `Playable`**.
+Seven of the remaining `Playable` rows were media/reference/add-on discs (20th Century
+Video Almanac, Club 3DO,
 Dennis Miller, Digital Dreamware, ESPN Golf, Life Stage, and the Return Fire Maps O'
-Death data disc). The six remaining game leads are BladeForce, DeathKeep, Jurassic Park,
-Kingdom, Off-world Interceptor, and PGA Tour 96. Jurassic Park's Operations hub shows
+Death data disc). At the end of this increment, the six remaining game leads were
+BladeForce, DeathKeep, Jurassic Park, Kingdom, Off-world Interceptor, and PGA Tour 96.
+Jurassic Park's Operations hub shows
 the pause menu's `TIME LEFT`/`LIVES LEFT` session state, but no in-park mini-game was
 opened; PGA Tour 96 still cycles Golf Bag -> Pro Info, and Off-world Interceptor remains
 in the pre-mission shop.
@@ -3351,3 +3353,104 @@ bug; BladeForce stays `Playable` because no interactive mission was reached. Evi
 title screen on 5DO and OperaCore. The A/C intro loop is therefore a content/script
 limit on both engines, not a 5DO boot or renderer defect; Kingdom stays `Playable`
 because this script starts no scenario.
+
+### 1.1bp P0 quality closure: BladeForce, Jurassic Park, Off-world, PGA Tour, and Alone (2026-11-09)
+
+The P0 pass replaced the remaining generic menu scripts with title-specific boot
+scripts. Every script is boot-absolute and reproducible from
+`benchmarks/diff/p0-quality-batch.json`:
+
+```powershell
+python tools/playability-sweep.py --manifest benchmarks/diff/p0-quality-batch.json `
+  --out artifacts/p0-quality --jobs 3
+```
+
+| Title | Script | Result |
+|---|---|---|
+| BladeForce | `tierc/bladeforce-mission-boot.txt` | The name-entry screen needs `A` to type a letter, `Down` to select **START GAME**, and `A` to confirm. The script then advances the Training Mission (65,000) and Recon Maps (66,000) screens and reaches the Supply Depot first-person mission at 70,000/80,000/90,000 frames. The HUD, gun, crates, and enemies render; no crash. Promoted to `Good`. |
+| Jurassic Park Interactive | `tierc/jurassic-park-terminal-boot.txt` | From the Operations map, `R` selects **SECURITY SYSTEMS** and `A` opens **SECURITY TRACKING** at 42,000/52,000 frames. The terminal scene renders the park map and personnel markers. No in-park gameplay was reached, so the row stays `Playable` with the terminal gap closed. |
+| Off-world Interceptor | `tierc/offworld-gameplay-boot.txt` | From the vehicle shop, `Down`, `Right`, and `A` open the loadout; `Up` selects **PLAY** and `A` launches the first mission at 12,000 frames. The 3D vehicle, chase HUD, and enemies render at 14,000/16,000; the run returns to the shop after vehicle loss without a crash. Promoted to `Good`. |
+| PGA Tour 96 | `tierc/pga-round-boot.txt` | Golf Bag `B` opens Rules, `C` opens the Player List, three `Right` presses select the check mark, and `C` advances through Scoring, Course Selection, and Round. `C` starts **Hole 1** at 64,000 frames; the tee, scorecard, and golf HUD render at 66,000-80,000. Promoted to `Good`. |
+| Alone in the Dark | `tierc/alone-room-boot.txt` | The intro reaches the room at 30,000-35,000 frames with the character, table lamp, and dog. `B` opens the **Actions** menu (`Fight`, `Open/Search`, `Close`, `Push`); movement and the monster encounter are visible at 34,000. Already `Good`; inventory/interaction evidence added. |
+
+The ledger moved from **101 rows: 88 `Good`, 13 `Playable`** to
+**101 rows: 91 `Good`, 10 `Playable`**. The remaining `Playable` rows are seven
+media/reference/add-on discs plus DeathKeep, Kingdom, and Jurassic Park.
+
+**Road Rash full-race residual.** A fresh 150,000-frame `--autopilot road` run from
+boot reaches the race and cycles through traffic/wrecks, but ends at frame 150,000 with
+the rider off the bike on the sidewalk (`autopilotCrashRestart: true`,
+`autopilotRoadCoverage: 0.355`). The full 5.5-mile race is still not finished; this is a
+driving/start-line and traffic-avoidance limit, not the old CD wait. It is tracked as
+`QUAL-05B` in the blocked/residual section of the implementation plan. Evidence:
+`artifacts/p0-rr-auto-boot` (captures every 10,000 frames).
+
+**AUD-01 audio soak.** Lemmings (USA), 36,000 frames (600.6 seconds) with
+`--audio openal --realtime` on Windows: the OpenAL null driver and the default Windows
+playback device both reported **0 dropped samples / 0 underrun buffers**, with the DSP
+running. Linux Mint 22.3 on the Hyper-V VM ran the same real-time length with
+**Smashing Drive (USA)** through the OpenAL null driver: 600.6 seconds, 0 dropped
+samples, 0 underruns, 18 queued buffers, 66.7 ms latency. The VM has no PCM playback
+endpoint, so a Linux real-device soak remains a hardware limitation. See
+[`Audio.md`](Audio.md) §9.
+
+**Evidence paths.** The canonical captures are under `artifacts/p0-quality/`
+(`bladeforce-mission`, `jurassic-park-terminal`, `offworld-mission`, `pga-round`,
+and `alone-room`). The earlier direct runs are retained under
+`artifacts/p0-blade-mission-boot`, `artifacts/p0-jurassic-terminal-boot`,
+`artifacts/p0-offworld-boot-gameplay`, `artifacts/p0-pga-round-boot`, and
+`artifacts/p0-alone-room`. The Alone Actions-menu captures are under
+`artifacts/p0-quality/alone-actions` (`f031500.png`, `f032000.png`, `f033000.png`).
+
+### 1.1bq Platform and packaging validation (2026-11-10)
+
+**PLAT-05 macOS gamepad.** Added `MacOsGamepadSource` (IOKit HID Manager) and the pure
+`MacOsHidGamepadMapper`. The mapper covers Button-page 1-14, Generic Desktop X/Y/Rx/Ry,
+Z/Rz triggers, signed Z/Rz right-stick fallback, eight- and four-direction hat
+switches, and the default eight-player profile. `MacOsGamepadMapperTests` passes
+**21/21**. The source matches Generic Desktop Joystick, Gamepad, and Multi-axis
+Controller devices and rescans every two seconds. Physical detection requires a macOS
+host; no macOS controller was available here. See
+[`Installation.md`](Installation.md).
+
+**PLAT-07 frontend NativeAOT audio.** The opt-in win-x64 NativeAOT frontend ran the real
+`FiveDoMachine`/`CoreRunner`/`OpenAlAudioOutput` path with `--audio-soak 600`:
+
+| Device | Frames | Elapsed | Samples pushed | Dropped | Underruns | Queued | Latency |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| OpenAL null driver (`ALSOFT_DRIVERS=null`) | 35,968 | 600.07 s | 26,462,916 | 0 | 0 | 15 | 50.0 ms |
+| `OpenAL Soft on PG34WQ15R2B (NVIDIA High Definition Audio)` | 35,966 | 600.03 s | 26,461,445 | 0 | 0 | 12 | 55.1 ms |
+
+Both report `nativeAot: true`, `dspRunning: true`, 0 OpenAL errors, and
+`samplesProduced == samplesPushed`. Evidence:
+`artifacts/plat07/aot-null-600s.json` and
+`artifacts/plat07/aot-real-nvidia-600s.json`. A preliminary default-device run selected
+an endpoint that opened but did not consume samples (1 queued buffer, 11,382
+underruns); passing the working NVIDIA device explicitly produced the zero-underrun
+result above. Later repeats on the same HDMI endpoint produced 1-2 transient underruns
+and then lost the endpoint entirely (`No OpenAL playback device was found`), while
+sample drops remained 0. That is host endpoint power/session behavior.
+
+**PLAT-09 PAL library.** The eight PAL-sensitive matrix titles ran with
+`--bios bios/panafz10e-anvil.bin` (MD5 `a48e6746bd7edec0f40cff078f0bb19f`),
+`--region pal1`, the Tier B input script, and a fresh per-title NVRAM. All eight
+completed with `fieldRate=50` and rendered captures: Battle Chess (Europe) 36,000
+frames, `0xFED6B558`; Defcon 5 `0xD104CFA8`; Panasonic PAL Sampler `0x5ADC825B`
+(384x288); Powers Kingdom `0x64D95FAA` (384x288); Remute 3D `0x0CDEA189`; Striker
+`0x26BB8706`; True Golf Classics `0x92A0F10D`; Zhadnost `0x449D3BBD`. A PAL2 probe of
+Battle Chess at 600 frames rendered 384x288 at 50 Hz with `0x466A198C`. Summary:
+`docs/data/pal-validation.csv`; captures under `artifacts/pal-validation/`. See
+[`PalValidation.md`](PalValidation.md).
+
+**UX-16 installer/package scaffolding (2026-11-10).** Added the Inno Setup Windows
+installer (`packaging/windows/5do.iss` + build script), Linux `.deb`/`.rpm` scripts
+with desktop entry/icon/`application/x-3do-disc` MIME, and macOS `.app`/`.dmg`/`.pkg`
+scripts with a document UTI and conditional signing/notarization. Windows x64:
+installer built, silent install/launch/association/uninstall passed; `.iso`, `.cue`,
+`.chd`, `.bin` map to `5DO.Disc`, `.m3u` to `5DO.Playlist`, and the open command
+launches the installed frontend. Windows arm64 installer built. Linux x64:
+`5do_1.6.0_amd64.deb` and `5do-1.6.0-1.x86_64.rpm` built with the expected payload;
+`desktop-file-validate` exits 0 and `update-mime-database` registers the disc globs.
+macOS packaging requires a macOS host. See [`Installers.md`](Installers.md) and
+`packaging/README.md`. The full suite passes **2,098/2,098**; `dotnet format
+--verify-no-changes` is clean and InspectCode reports 0 results.

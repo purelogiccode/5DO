@@ -60,7 +60,9 @@ test harness designed for reproducible compatibility evidence.
 - **One bundle per system and architecture.** Windows, Linux, and macOS bundles for x64
   and arm64 contain both the framework-dependent single-file CLI and desktop app, plus
   the docs/notices. The .NET 10 runtime is a prerequisite and is **not** bundled.
-  Optional NativeAOT CLI builds remain available for developers.
+  Optional NativeAOT CLI builds remain available for developers. Unsigned Windows/Linux
+  installers and macOS `.dmg`/`.pkg` scaffolding register `.iso`/`.cue`/`.chd` file
+  associations; signing/notarization stays conditional on certificates.
 
 ## Status at a glance
 
@@ -142,8 +144,9 @@ Bundles are versioned and published for x64 and arm64, for example `5do-1.6.0-wi
   verification.
 - Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
   overlay.
-- Eight-player keyboard and gamepad mapping; XInput on Windows and evdev on Linux;
-  joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak trackball devices.
+- Eight-player keyboard and gamepad mapping; XInput on Windows, evdev on Linux, and
+  IOKit HID on macOS; joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak
+  trackball devices.
 - Portable mode, named configuration profiles, per-game profiles, and an instance lock.
 - Privacy-scrubbed diagnostics bundles and an in-app log viewer.
 

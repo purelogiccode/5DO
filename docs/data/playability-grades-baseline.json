@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "ledger": "docs/data/playability-grades.csv",
   "counts": {
-    "Good": 88,
-    "Playable": 13,
+    "Good": 91,
+    "Playable": 10,
     "Unplayable": 0
   },
   "titles": {
@@ -16,7 +16,7 @@
     "Battle Pinball (1994)(Panasonic)(JP)[!].chd": "Good",
     "BattleSport (1995)(Studio 3DO)(EU)[!].chd": "Good",
     "BC Racers (1995)(GoldStar)(EU-US)[!].chd": "Good",
-    "BladeForce (1995)(Studio 3DO)(EU)[!].chd": "Playable",
+    "BladeForce (1995)(Studio 3DO)(EU)[!].chd": "Good",
     "Brain Dead 13 Starring Fritz (1995)(ReadySoft)(US)(Disc 1 of 2)[!].chd": "Good",
     "Burning Soldier (1994)(Panasonic)(US)[!].chd": "Good",
     "Bust-A-Move (1995)(Taito)(US).chd": "Good",
@@ -81,7 +81,7 @@
     "N. O. B. - Neo Organic Bioform (1995)(Sanyo)(JP).chd": "Good",
     "Need for Speed, The (1994)(Electronic Arts)(EU-US)[!].chd": "Good",
     "Novastorm (1994)(Psygnosis)(US)[!].chd": "Good",
-    "Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd": "Playable",
+    "Off-world Interceptor (1994)(Crystal Dynamics)(EU-US)[!].chd": "Good",
     "Olympic Soccer (1996)(Panasonic)(US)(M5)[!].chd": "Good",
     "Out of this World (1993)(Interplay)(US)[!][45097-1].chd": "Good",
     "OverDrivin' (1994)(Electronic Arts)(JP)[!].chd": "Good",
@@ -89,7 +89,7 @@
     "PaTaank (1994)(PF.Magic)(EU-US)[!].chd": "Good",
     "Pebble Beach Golf Links (1993)(GoldStar - Panasonic)(KR-US)(en)[!].chd": "Good",
     "Perfect General, The (1995)(Kirin Entertainment)(US)[!].chd": "Good",
-    "PGA Tour 96 (1995)(EA Sports)(EU)[!].chd": "Playable",
+    "PGA Tour 96 (1995)(EA Sports)(EU)[!].chd": "Good",
     "Phoenix 3 (1995)(Studio 3DO)(EU)[!].chd": "Good",
     "Plumbers Don't Wear Ties (1994)(Kirin Entertainment)(US)[!].chd": "Good",
     "PO'ed (1995)(Studio 3DO)(EU-US)[!].chd": "Good",

@@ -6,6 +6,7 @@ using Avalonia;
 using FiveDo.Core;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Diagnostics.Statistics;
+using FiveDo.Frontend.Avalonia.Audio;
 
 namespace FiveDo.Frontend.Avalonia;
 
@@ -245,6 +246,19 @@ internal static class Program
                 return;
             }
 
+            if (FrontendAudioSoak.TryParse(args, out FrontendAudioSoakOptions? audioSoak, out var soakError))
+            {
+                if (soakError is not null || audioSoak is null)
+                {
+                    Console.Error.WriteLine(soakError ?? "Invalid audio-soak options.");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                Environment.ExitCode = FrontendAudioSoak.Run(audioSoak);
+                return;
+            }
+
             if (GlProbe is null && VkProbe is null && D3dProbe is null && !SmokeTest)
             {
                 ApplicationStatsClient.TrackLaunch();
@@ -324,6 +338,8 @@ internal static class Program
         Console.WriteLine("  --vk-probe <json> | --vk-window-probe <json> ...");
         Console.WriteLine("  --d3d-probe <json> | --d3d-window-probe <json> ...");
         Console.WriteLine("  --smoke-test [--smoke-output <path>]");
+        Console.WriteLine("  --audio-soak <seconds> [--audio-soak-output <json>] [--audio-device <name>]");
+        Console.WriteLine("                         [--audio-buffer 20..500] [--audio-sync -250..250] [--region auto|ntsc|pal1|pal2]");
     }
 
     internal static bool HasFlag(string[] args, string flag)
@@ -348,6 +364,7 @@ internal static class Program
     internal static bool IsAutomatedRun(string[] args)
     {
         return HasFlag(args, "--smoke-test")
+               || HasFlag(args, "--audio-soak")
                || HasFlag(args, "--gl-probe")
                || HasFlag(args, "--vk-probe")
                || HasFlag(args, "--vk-window-probe")
@@ -432,6 +449,12 @@ internal static class Program
         return string.Equals(previous, "--disc", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--bios", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--audio-soak", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--audio-soak-output", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--audio-device", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--audio-buffer", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--audio-sync", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--region", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-backend", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--gl-probe-backend", StringComparison.OrdinalIgnoreCase)
