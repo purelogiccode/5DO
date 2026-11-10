@@ -389,6 +389,9 @@ in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
       [`Compatibility.md`](Compatibility.md) §10.3.
 - [x] NativeAOT CLI/frontend smoke tests are not shipped in 1.0.0; the
       framework-dependent single-file bundles are the release artifacts.
+- [x] Native platform runtime smoke passes on macOS x64/arm64, Linux arm64, and
+      Windows arm64 (2026-11-10, run 42768268965): CLI `selftest` and frontend
+      `--smoke-test` on each runner.
 
 Suggested commands:
 
@@ -396,8 +399,9 @@ Suggested commands:
 dotnet build 5DO.sln -c Release
 dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release
 dotnet format 5DO.sln --verify-no-changes
-jb inspectcode 5DO.sln --sEverity=WARNING --no-build
+jb inspectcode 5DO.sln --severity=WARNING --no-build
 dotnet run -c Release --project benchmarks/FiveDo.Benchmarks -- --frames 600 --gate
+gh workflow run platform-runtime.yml
 ```
 
 ---
