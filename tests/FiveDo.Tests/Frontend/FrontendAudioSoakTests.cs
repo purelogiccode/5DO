@@ -44,7 +44,22 @@ public sealed class FrontendAudioSoakTests
         Assert.Equal(80, options.BufferMilliseconds);
         Assert.Equal(-40, options.SyncMilliseconds);
         Assert.Equal(VideoRegion.Pal1, options.Region);
+        Assert.False(options.AutoRegion);
         Assert.True(options.AllowUnsignedDiscs);
+    }
+
+    [Fact]
+    public void TryParse_DefaultRegionUsesBiosDetection()
+    {
+        var parsed = FrontendAudioSoak.TryParse(
+            ["--audio-soak", "10"],
+            out FrontendAudioSoakOptions? options,
+            out var error);
+
+        Assert.True(parsed);
+        Assert.Null(error);
+        Assert.NotNull(options);
+        Assert.True(options.AutoRegion);
     }
 
     [Theory]

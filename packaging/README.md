@@ -3,7 +3,7 @@
   <a href="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml/badge.svg?branch=master" alt="Bundle build"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
-  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.5.0-orange" alt="Version 1.5.0"></a>
+  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.7.0-orange" alt="Version 1.7.0"></a>
 </p>
 
 # Desktop packaging
@@ -17,11 +17,13 @@ per component. Each bundle contains both the desktop app and the headless CLI:
 | Windows arm64 | `5do-<version>-win-arm64.zip` |
 | Linux x64 | `5do-<version>-linux-x64.tar.gz` |
 | Linux arm64 | `5do-<version>-linux-arm64.tar.gz` |
-| macOS x64 | `5do-<version>-osx-x64.tar.gz` |
-| macOS arm64 | `5do-<version>-osx-arm64.tar.gz` |
+| macOS x64 | `5do-<version>-osx-x64.dmg` |
+| macOS arm64 | `5do-<version>-osx-arm64.dmg` |
 
-For example, version `1.5.0` produces `5do-1.5.0-win-arm64.zip`. The version is read from
-`Directory.Build.props` by default; pass `-Version` to `package-bundle.ps1` to override it.
+For example, version `1.7.0` produces `5do-1.7.0-win-arm64.zip` or
+`5do-1.7.0-osx-arm64.dmg`. The version is read from `Directory.Build.props` by default;
+pass `-Version` to `package-bundle.ps1` to override it. On macOS the script also builds a
+`.pkg`; the internal `.tar.gz` remains the CI extraction/smoke intermediate.
 
 ## Requirements
 
@@ -99,13 +101,19 @@ pwsh -NoProfile -File packaging/package-bundle.ps1 `
 
 The script merges the two publish outputs, verifies that shared files are identical,
 removes PDB/XML files, copies the README/license/notices/whatsnew/release notes, and
-writes `PACKAGE.txt`, the versioned bundle, and `SHA256SUMS.txt`.
+writes `PACKAGE.txt`, the versioned bundle, and `SHA256SUMS.txt`. On macOS it also runs
+`packaging/macos/build-macos-package.sh` against the staged bundle and adds the DMG hash
+to `SHA256SUMS.txt`.
 
 For local release copies, use:
 
 ```powershell
 -OutputDirectory src/FiveDo.Frontend.Avalonia/bin/Release
 ```
+
+On Windows, build the Windows and Linux bundles directly. Build the macOS DMG on a macOS
+host (or download it from the CI artifact); the Windows cross-publish of `osx-*` is only
+suitable for the intermediate tarball and architecture check.
 
 ## Installers and file associations (UX-16)
 
@@ -186,8 +194,8 @@ proves the framework-dependent apphosts work. `.github/workflows/release.yml` pu
 the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
 documentation site and the wiki.
 
-The archives are portable bundles; the installer scripts above are additive. Unsigned
-installers can be produced locally and in CI. Authenticode signing, Developer ID
-signing, and notarization remain conditional on valid certificates and an Apple
-developer account; without them the portable bundles and unsigned installers are the
-release artifacts.
+The Windows/Linux archives and the macOS DMG are the portable bundles; the installer
+scripts above are additive. Unsigned installers can be produced locally and in CI.
+Authenticode signing, Developer ID signing, and notarization remain conditional on valid
+certificates and an Apple developer account; without them the portable bundles and
+unsigned installers are the release artifacts.

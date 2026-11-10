@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-10, after the native platform runtime smoke, CD subcode, disc
+**Snapshot:** 2026-11-10, v1.7.0: the native platform runtime smoke, CD subcode, disc
 conversion, focus/void/pixel-format work, the two Tier C gameplay-depth increments, and
 the 1.6.0 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
@@ -59,6 +59,16 @@ job; docs run
 <https://github.com/purelogiccode/5DO/actions/runs/42552303805> deployed Pages and the
 wiki. All published checksums verify. See
 [`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.6.0.md`](ReleaseNotes-1.6.0.md).
+
+**1.7.0 release update (2026-11-10):** **v1.7.0** publishes six bundles with macOS as a
+drag-to-Applications DMG. The CD-ROM accepts Opera's 2449-byte wire size and packs Q
+into the READ_DATA subcode block; the CD-ROM state section moves to v6 while v1-5 states
+remain loadable. `disc convert` writes data-only ISO/BIN/CUE/flat CHD and verifies the
+game ID, and CHD conversion no longer collides with a same-stem source BIN. The desktop
+adds focus-loss pausing, selectable void patterns, and pointer input scripts; macOS
+gains a native IOKit HID gamepad source. The suite is **2,124 tests**; build, format,
+and InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md) and
+[`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the
 25 titles still graded `Playable` after Tier B with title-specific start and gameplay
@@ -821,7 +831,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   (multi-block directories, `burst`/`gap` reads, invalid headers, and CLI ISO
   extraction), and BIOS catalog/scan/selection/override tests.
 - **Packaging:** CI builds/tests/formats and publishes one bundle per system
-  (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.tar.gz`). Each bundle
+  (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.dmg`). Each bundle
   contains the CLI and desktop app as framework-dependent single-file apphosts, the
   README/license/notices/whatsnew, and a generated `PACKAGE.txt`. The .NET 10 runtime
   is required on the host and is **not** bundled; PDB and XML documentation files are
@@ -1069,7 +1079,7 @@ artifacts and checksums are attached to the GitHub release.
 release scope. v1.0.0 is published on GitHub with the release artifacts.
 
 **Release decisions (2026-11-02):** Windows x64 is validated; Linux x64 CLI/frontend
-smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.6.0`;
+smoke and the full test suite passed (GPU presentation is preview/best-effort); the current release version is `1.7.0`;
 installers, signing, and notarization are post-1.0; the compatibility set is the 12
 documented titles, with five showcase titles carrying scripted gameplay evidence. The
 distribution model is recorded as **donationware** (non-commercial, source-available).

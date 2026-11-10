@@ -618,6 +618,15 @@ framework-dependent CLI and frontend on native macOS x64 (`macos-15-intel`), mac
 The smoke hides the GL surface, so GPU presentation on macOS/Linux remains
 preview/best-effort; Windows WGL/ANGLE remains the validated GL path.
 
+**2026-11-10 1.7.0 release note:** the release adds CD subcode/Q, `disc convert`,
+focus-loss pausing, void patterns, pointer input scripts, macOS IOKit HID gamepads, and
+native macOS/arm64 runtime smoke. The six framework-dependent bundles are published with
+macOS as a drag-to-Applications DMG; the internal `5do-1.7.0-osx-*.tar.gz` is only the CI
+extraction/smoke intermediate. The Windows x64 bundle passes `FiveDo.Cli.exe --version`
+(1.7.0), `selftest --json`, and the frontend `--smoke-test` (`FRONTEND SMOKE OK 1.7.0`).
+The bundle tree has no runtime, PDB, or XML files, and the published `SHA256SUMS.txt`
+entries verify. Release and docs run links are recorded in the release checklist.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

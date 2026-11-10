@@ -122,7 +122,7 @@ Machine; the table below is sorted by ID. Never renumber an existing section.
 | 6 | SPORT | 1 | `Sport` | Color, source, and destination registers. |
 | 7 | VDLP | 4 | `Vdlp` | CLUT B/G/R, 24-bit background, head/current/successor VDL, modulo, current/previous bitmap, out-control, CLUT DMA, line delay. Version 4 stores the 24-bit background; versions 1-3 convert their packed 5-bit value on load. Version 3 separates the retained head from the active successor cursor; versions 1-2 migrate the cursor. |
 | 8 | XBUS | 1 | `Xbus` | Select/poll state, status/command FIFOs, and attached-device state. The CD-ROM device is also written as section 9. |
-| 9 | CD-ROM | 5 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, readable-disc limit, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, guest drive-speed mode, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix; v5 adds the guest drive-speed mode and the volume-header readable-disc limit. Older versions derive the speed mode from the XBUS 2x bit and the readable limit from the attached disc. The timing mode itself is recorded in the Options section. |
+| 9 | CD-ROM | 6 | `CdromDevice` | Poll/status, status/data buffers, command buffer, requested count, MEI status, current sector, readable-disc limit, disc state (tracks/MSF/TOC), cycle clock, next-ready cycle, pending read-status flag, MODE SET sector size/block flags, guest drive-speed mode, PLAY_AUDIO position, CD-DA sample cursor, volume, and mute. Version 1 is accepted with a zeroed clock and pending flag; v2 adds the cycle clock; v3 adds MODE SET and audio position; v4 adds the CD-DA mix; v5 adds the guest drive-speed mode and the volume-header readable-disc limit; v6 stores the full 2449-byte transfer buffer (subcode tail included). Versions 1-5 read their historical 2352-byte data buffer and zero the new tail; they also derive the speed mode from the XBUS 2x bit and the readable limit from the attached disc. The timing mode itself is recorded in the Options section. |
 | 10 | Quartz | 4 | `Quartz` | ARM/VDL/timer accumulators, exact rational VDL accumulator, exact DSP cycle remainder, VDL line counter, Opera timer slot/gap flag and 16.16 slot accumulator. Version 4 adds the exact VDL accumulator; versions 1-3 convert their 8.24 VDL fraction on load, and versions 1-2 default the timer scheduler. |
 | 11 | Machine | 3 | `FiveDoMachine` | Compatibility flags (fix mode, Anvil, speed fixes, sf/sdf, unknown flag 11, jw, cnbfix, high-res), frame source dimensions/pixel aspect, and the visible `VdlLine` objects (width, control words, 24-bit background, CLUT, and the full pixel backing store). Version 1 wrote all 576 lines; version 2 writes only `SourceHeight` lines and copies pixels as little-endian blocks, which cut the section from ~1.54 MB to ~0.64 MB for a 240-line frame. Version 3 stores the 24-bit VDL background; versions 1-2 are converted from their packed 5-bit value on load. |
 | 12 | Options | 9 | `FiveDoMachine` | Every registered machine option: ARM timing mode, CLIO timer mode, MADAM CEL timing mode, CD-ROM timing mode, CD-ROM speed, DRAM/VRAM capacity, live video region, ARM clock, random seed (including whether the default was recorded), high-resolution mode, Opera DIPIR, Opera soft reset, Portfolio OS SWI HLE, fix mask, and CPU backend. Version 1 records only ARM timing; version 2 adds CLIO timers; version 3 adds CEL timing; version 4 adds CD timing; version 5 adds CD speed; version 6 adds the region; version 7 adds the remaining registry entries; version 8 adds the memory capacity; version 9 adds the SWI HLE flag. Loading a lower version leaves missing options at the machine default. |
@@ -165,12 +165,14 @@ Loading a state written by a newer format version is rejected with
   fractional sample position to ARM cycles; versions 1-2 default the timer slot state to
   a reset scheduler; version 3 converts the legacy 8.24 VDL fraction to the exact
   accumulator.
-- CD-ROM writes version 5 (MODE SET, guest drive-speed mode, readable-disc limit,
-  PLAY_AUDIO position, CD-DA cursor, volume, and mute) and accepts versions 1-4.
-  Version 1 uses a zeroed clock and pending flag; versions 1-2 default the MODE SET/audio
-  fields; version 3 defaults the CD-DA mix; version 4 derives the guest drive-speed mode
-  from the XBUS 2x bit and the readable-disc limit from the attached disc. The timing
-  mode itself is in the Options section.
+- CD-ROM writes version 6 (MODE SET, guest drive-speed mode, readable-disc limit,
+  PLAY_AUDIO position, CD-DA cursor, volume, mute, and the full 2449-byte transfer
+  buffer) and accepts versions 1-5. Version 1 uses a zeroed clock and pending flag;
+  versions 1-2 default the MODE SET/audio fields; version 3 defaults the CD-DA mix;
+  version 4 derives the guest drive-speed mode from the XBUS 2x bit and the readable
+  limit from the attached disc; versions 1-5 read the historical 2352-byte data buffer
+  and zero the 97-byte subcode tail added in v6. The timing mode itself is in the
+  Options section.
 - Memory writes version 4 and accepts versions 1-3. Version 3 adds the DRAM/VRAM
   configuration and the 22 MB allocation size. Version 4 stores only the live
   high-resolution backing range and clears the unused tail on load. Older states carry

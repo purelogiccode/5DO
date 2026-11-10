@@ -36,8 +36,9 @@ Every release must **produce and publish runnable bundles/binaries**. A source t
 GitHub release without the built artifacts is not a complete release.
 
 - One bundle per system and architecture: `5do-win-x64.zip`, `5do-win-arm64.zip`,
-  `5do-linux-x64.tar.gz`, `5do-linux-arm64.tar.gz`, `5do-osx-x64.tar.gz`, and
-  `5do-osx-arm64.tar.gz`.
+  `5do-linux-x64.tar.gz`, `5do-linux-arm64.tar.gz`, `5do-osx-x64.dmg`, and
+  `5do-osx-arm64.dmg`. macOS is distributed as a drag-to-Applications DMG; the
+  internal `5do-osx-*.tar.gz` is only the CI extraction/smoke intermediate.
 - Each bundle contains the framework-dependent single-file CLI and desktop apphosts,
   `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the
   release/legal docs. **No .NET runtime is bundled**; users must install the .NET 10

@@ -3517,3 +3517,28 @@ RGB565, and opaque XRGB8888. `FrameAssemblerTests` checks each format against th
 CPU palette reference on a synthetic two-pixel line; the default BGRA path and frame
 hashes are unchanged. The full suite passes **2,119/2,119**; `dotnet format
 --verify-no-changes` is clean.
+
+### 1.1bt 1.7.0 release gate and compatibility fixes (2026-11-10)
+
+**CD-ROM state compatibility.** The 2449-byte transfer buffer moved the CD-ROM section to
+version 6. `Load_AcceptsVersionFiveCdromSectionWithTheHistoricalSectorBuffer` rebuilds a
+v5 payload with its 2352-byte data buffer, verifies that it loads, and checks the MODE SET
+state survives. `FiveDoMachine` accepts CD-ROM sections through v6.
+
+**Disc conversion safety.** `disc convert` now uses a unique temporary BIN for CHD
+encoding, so `game.bin` -> `game.chd` cannot overwrite or delete the source image. A CUE
+conversion whose companion BIN is the source is rejected. Tests:
+`ChdConversion_PreservesAnExistingBinWithTheSameStem`,
+`CueConversion_RejectsABinOutputPath`, and
+`DiscConvert_RejectsACueOutputThatWouldOverwriteTheSourceBin`.
+
+**Audio soak region.** `--region auto` (and the default) resolves PAL1 from the loaded
+BIOS catalog instead of always selecting NTSC. `TryParse_DefaultRegionUsesBiosDetection`
+covers the parse path.
+
+**Release packaging.** macOS is published as `5do-1.7.0-osx-<arch>.dmg`; the tar.gz is
+only the CI extraction/smoke intermediate. `build-bundle.yml` runs the macOS jobs on
+native runners and uploads the DMG.
+
+The full suite passes **2,124/2,124**; build, format, and InspectCode are clean. Native
+runtime smoke and the six bundle jobs are recorded on the v1.7.0 release run.

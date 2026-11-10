@@ -50,12 +50,19 @@ public static class DiscImageWriter
 
         if (format == DiscImageFormat.Chd)
         {
-            string binPath = Path.ChangeExtension(outputPath, ".bin");
-            WriteSectors(source, binPath);
+            // The encoder needs a BIN input, but it must not use the natural
+            // <name>.bin path: converting game.bin -> game.chd would otherwise
+            // overwrite (and then delete) the source image.
+            string fullOutput = Path.GetFullPath(outputPath);
+            string directory = Path.GetDirectoryName(fullOutput) ?? ".";
+            string tempBin = Path.Combine(
+                directory,
+                $".{Path.GetFileNameWithoutExtension(fullOutput)}.{Guid.NewGuid():N}.bin");
+            WriteSectors(source, tempBin);
             try
             {
                 ChdEncoder.EncodeRaw(
-                    binPath,
+                    tempBin,
                     outputPath,
                     hunkBytes: 16384,
                     unitBytes: 2048,
@@ -65,7 +72,7 @@ public static class DiscImageWriter
             }
             finally
             {
-                File.Delete(binPath);
+                File.Delete(tempBin);
             }
 
             return source.SectorCount;
@@ -74,6 +81,16 @@ public static class DiscImageWriter
         if (format == DiscImageFormat.Cue)
         {
             string binPath = Path.ChangeExtension(outputPath, ".bin");
+            if (string.Equals(
+                    Path.GetFullPath(binPath),
+                    Path.GetFullPath(outputPath),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    "A CUE output path cannot use the .bin extension; the companion BIN would overwrite the CUE sheet.",
+                    nameof(outputPath));
+            }
+
             WriteSectors(source, binPath);
             WriteCue(outputPath, Path.GetFileName(binPath));
             return source.SectorCount;
@@ -126,7 +143,7 @@ public static class DiscImageWriter
     }
 
     /// <summary>Parses a container name.</summary>
-    /// <param name="value">One of <c>iso</c>, <c>bin</c>, or <c>cue</c>.</param>
+    /// <param name="value">One of <c>iso</c>, <c>bin</c>, <c>cue</c>, or <c>chd</c>.</param>
     /// <param name="format">The parsed format.</param>
     /// <returns><see langword="true"/> when the name is supported.</returns>
     public static bool TryParseFormat(string? value, out DiscImageFormat format)

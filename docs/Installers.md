@@ -1,15 +1,16 @@
 # Installers and file associations
 
-5DO ships the portable six-bundle matrix as its primary release artifact. **UX-16**
-adds unsigned installer/package scaffolding on top of those bundles. Signing and
-notarization are conditional: they run only when the required Windows certificate or
-Apple Developer ID/keychain profile is available.
+5DO ships the portable six-bundle matrix as its primary release artifact; the macOS
+bundle itself is a drag-to-Applications DMG. **UX-16** adds unsigned installer/package
+scaffolding on top of those bundles. Signing and notarization are conditional: they run
+only when the required Windows certificate or Apple Developer ID/keychain profile is
+available.
 
 | Platform | Artifact | Script | Status |
 |---|---|---|---|
 | Windows | `5do-<version>-win-x64-setup.exe`, `win-arm64` | `packaging/windows/build-installer.ps1` | x64 built and install/launch/association-tested; arm64 built (unsigned) |
 | Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm` | `packaging/linux/build-deb.sh`, `build-rpm.sh` | Built and metadata/MIME-validated (unsigned) |
-| macOS | `5do-<version>-osx-<arch>.dmg`, `.pkg` | `packaging/macos/build-macos-package.sh` | Scaffolding; requires a macOS host to build |
+| macOS | `5do-<version>-osx-<arch>.dmg`, `.pkg`, `.app` | `packaging/macos/build-macos-package.sh` | Built natively in CI; DMG is the published macOS bundle |
 
 The authoritative build instructions and script arguments are in
 [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
@@ -70,6 +71,11 @@ Linux x64 (WSL Ubuntu 22.04):
 - `desktop-file-validate` exits 0, and `update-mime-database` produces
   `application/x-3do-disc` globs for `*.iso`, `*.cue`, and `*.chd`.
 
-macOS packaging is implemented but not executed in this environment; it requires
-`hdiutil`, `pkgbuild`, and optionally `codesign`, `notarytool`, and `stapler` from a
-macOS host.
+macOS x64/arm64 (native CI, 2026-11-10):
+
+- `package-bundle.ps1` ran `build-macos-package.sh` from the staged bundle and produced
+  `5do-1.7.0-osx-x64.dmg` and `5do-1.7.0-osx-arm64.dmg` (plus `.pkg`).
+- `build-bundle.yml` selected the DMG as the release asset for each macOS RID; the
+  release workflow publishes the DMG instead of the internal tar.gz.
+- The app bundle declares `com.5do.disc-image` and a `CFBundleDocumentTypes` viewer entry.
+  Signing/notarization are skipped when no Developer ID/keychain profile is supplied.

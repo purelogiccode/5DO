@@ -2985,8 +2985,9 @@ public partial class MainWindow : Window, IDisposable
     {
         CancelFastForward();
 
-        // Release every held key and pad button so a focus switch cannot leave a
-        // direction or action latched in the guest.
+        // Release held keyboard bindings so a focus switch cannot leave a
+        // direction or action latched in the guest; the next PBUS poll rebuilds
+        // pad state from the live gamepad.
         _input.Reset();
 
         if (_focusPause.OnDeactivated(_settings.PauseOnFocusLoss, _running))

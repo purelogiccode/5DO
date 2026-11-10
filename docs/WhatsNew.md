@@ -1,90 +1,70 @@
-# What's new in 5DO 1.6.0
+# What's new in 5DO 1.7.0
 
-**Released:** 2026-11-08
+**Released:** 2026-11-10
 
-5DO 1.6.0 is the **compatibility-completion update**. It closes the unique-title
-compatibility plan with **375 of 378** game-test-set titles playable under the documented
-binary beyond-title rule, publishes the authoritative 5DO/4DO/Phoenix comparison, tightens
-the remaining CD-ROM poll/speed/session behavior against Opera, and hardens settings and
-NVRAM persistence against locked or cloud-synced data folders.
+5DO 1.7.0 is the **platform and media-polish update**. It adds CD subcode/Q data and
+`disc convert`, makes the desktop shell focus-aware with selectable void patterns,
+extends input scripts with pointer devices, closes the native runtime smoke matrix on
+macOS and arm64, and ships macOS as a drag-to-Applications **DMG**.
 
 ## Highlights
 
-### Compatibility completion
+### CD-ROM parity and disc tools
 
-- The local collection now covers **1,371 images, 414 unique titles, and a 378-title
-  game/homebrew test set**.
-- **375 of 378** test-set titles are Playable: every title has a dated beyond-title
-  capture, BIOS, disc hash, frame, and screenshot.
-- The comparison has **0 `Behind` and 0 `Regression` rows** and is a strict superset of
-  the **252-title peer union** (167 4DO + 233 Phoenix after the one evidenced peer
-  invalidation).
-- The two remaining Title-only rows and one No-video row are non-retail/add-on images:
-  `Joypad Test v1.0`, the standalone *Return Fire - Maps O' Death* data disc, and the
-  `LameNES Emulator`.
-- [`CompatibilityComparison.md`](CompatibilityComparison.md) is the authoritative
-  per-title 5DO/4DO/Phoenix matrix; [`BeyondTitleEvidence.md`](BeyondTitleEvidence.md)
-  holds the captures and failure reasons, and `docs/data/beyond-title-results.csv` is the
-  machine-readable ledger.
+- **Opera-sized CD transfers.** `MODE SET` accepts the 2449-byte maximum: a 2352-byte
+  audio/data sector plus the 96-byte subcode block (and optional error byte).
+- **READ_DATA subcode/Q.** Q is packed into bit 6 of each subcode byte (MSB first) with
+  control/ADR, track, index, absolute MSF, relative MSF, and the inverted CRC-16/CCITT.
+  `READ SUB-Q` keeps its ten-byte payload.
+- **CD-ROM state section v6.** New states preserve the full transfer buffer; version 1-5
+  states still load by reading the historical 2352-byte buffer.
+- **`disc convert`.** Data-only ISO/BIN/CUE+BIN/flat CHD conversion verifies the 3DO game
+  ID after reopening the output.
 
-### CD-ROM parity
+### Desktop and input
 
-- **Poll reset is one-shot.** `POLREMASK` performs a local FIFO reset and does not persist
-  in the poll register. Only the three interrupt enables remain set, and `POLRE` is
-  write-one-to-clear. Commands, status, and data are no longer gated by a stale reset bit.
-- **Guest drive speed.** MODE SELECT page 3 stores Opera's
-  `MEI_CDROM_DOUBLE_SPEED` byte (`0x80`) and updates the XBUS 2x status bit. A configured
-  multi-speed drive drops to 1x when the guest selects single speed; `Unbounded` remains a
-  host override.
-- **Readable-disc limit.** The drive reports the 3DO volume header's big-endian
-  `volume_block_count` (sector 0, offset `0x50`) instead of the physical image size. This
-  matches Opera's readable-disc limit on pressed discs whose padding differs from the
-  declared volume.
-- **TOC and SESSION INFO.** TOC entries carry the Q-position control bit, and SESSION INFO
-  returns the single-session payload used by the reference.
-- **Save-state section 5.** The CD-ROM state records the guest speed byte and resolved
-  sector count; version 3/4 states recover the speed byte from the XBUS status, and older
-  states still load.
+- **Focus-loss pause.** An opt-in Settings > Emulation option pauses when the window is
+  deactivated and resumes only an automatic pause when focus returns. Manual
+  pause/start/stop clears the automatic state.
+- **Void-area patterns.** Solid, checkerboard, grid, and scanline patterns join the
+  configurable void color, and screenshots record the selected pattern in their sidecar.
+- **Pixel formats.** The frame assembler emits packed 0RGB1555, RGB565, and XRGB8888.
+- **Pointer input scripts.** `@mouse`, `@lightgun`, `@arcadegun`, and `@trackball`
+  tokens add one-frame motion and persistent buttons to the scripted PBUS source.
+- **macOS gamepad input.** A native IOKit HID source maps joystick/gamepad/multi-axis
+  controllers through the eight-player profile; the pure mapper is unit-tested.
 
-### Persistence hardening
+### Packaging and platforms
 
-- Settings and NVRAM writes prefer an atomic temporary-file replace. When a cloud-sync
-  placeholder, read-only file, or another process denies the replace, 5DO copies the
-  completed temporary file over the destination instead of aborting the UI.
-- If the destination still cannot be written, the shell logs the failure and keeps running;
-  startup media loading is guarded so a configured disc, BIOS, or settings path can no
-  longer crash `OnOpened`.
-- A `settings.json` written by a newer build is preserved as
-  `settings.json.v<version>.bak` before an older build loads it.
-- Null or short `Players` arrays are normalized to eight non-null profiles with safe
-  keyboard/gamepad dictionaries.
+- **macOS DMG.** The macOS bundles are published as `.dmg` files, built natively in CI.
+- **Installer scaffolding.** Unsigned Windows, Linux `.deb`/`.rpm`, and macOS
+  `.app`/`.dmg`/`.pkg` scripts register `.iso`, `.cue`, `.chd`, and `.bin`.
+  Signing/notarization remains conditional on certificates/accounts.
+- **Native runtime smoke.** macOS x64/arm64, Linux arm64, and Windows arm64 pass the CLI
+  `selftest` and frontend `--smoke-test`.
+- **PAL validation.** Eight PAL-sensitive titles were captured with the PAL BIOS, plus a
+  PAL2 384x288/50 Hz probe.
 
-### Diagnostics and desktop polish
+## Fixed
 
-- `--fiq-trace` and the timer trace now record the XBUS FIQ source, enable/acknowledge
-  writes, and level-held raise transitions (`xbusfiq`, `fiqgen`, `fiqwrite`, `xbussel`,
-  `xbuspoll`).
-- The differential harness can gate audio, replay scripted input, and compare a fresh run
-  against `benchmarks/diff/baseline/showcase-report.json`; a capture error fails the job.
-- Every interactive control in the Avalonia windows now has a tooltip, enforced by
-  `FrontendToolTipTests`. Fallback and cleanup paths log their expected exceptions instead
-  of swallowing them.
+- CHD conversion no longer overwrites or deletes a same-stem source BIN; the encoder uses
+  a unique temporary input.
+- A CUE conversion that would overwrite the source BIN is rejected.
+- The frontend audio soak resolves `--region auto` from the loaded BIOS instead of always
+  using NTSC.
+- READ_DATA and READ SUB-Q now share one Q-subchannel builder, keeping control, track,
+  index, MSF, and CRC consistent.
 
 ## Validation
 
-- Full suite **2,061/2,061** passes in Debug.
+- Full suite **2,124/2,124** passes in Debug.
 - `dotnet build` reports **0 warnings and 0 errors**; `dotnet format
   --verify-no-changes` and `jb inspectcode --severity=WARNING` are clean.
-- `tools/verify-beyond-title-ledger.py`: 378 ledger rows, **375 Playable**, 2 Title-only,
-  1 No-video, 0 Not-loadable, **0 Behind/Regression**, strict peer superset.
-- `tools/generate-compat-comparison.py --check` reports the committed comparison outputs
-  are current.
-- Road Rash boots for 600 frames in both the compatible and accuracy profiles after the
-  CD/volume-header changes; the 50-title differential panel remains **50/50 frame
-  hashes** at frames 60/120/300 with **0 errors**.
-- The six framework-dependent bundles contain the CLI, desktop app, README, license,
-  notices, `whatsnew.md`, and release/legal docs, with no runtime, PDB, or XML files;
-  `SHA256SUMS.txt` verifies.
+- A 1.6.0-era CD-ROM v5 section loads in a dedicated regression test.
+- ISO/BIN/CUE/CHD conversion round-trips every data sector.
+- Native runtime smoke passes on macOS x64/arm64, Linux arm64, and Windows arm64.
+- Six bundles contain the CLI, desktop app, README, license, notices, `whatsnew.md`, and
+  release/legal docs, with no runtime, PDB, or XML files.
 
 ## Requirements
 
@@ -99,26 +79,23 @@ NVRAM persistence against locked or cloud-synced data folders.
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.6.0-win-x64.zip` |
-| Windows arm64 | `5do-1.6.0-win-arm64.zip` |
-| Linux x64 | `5do-1.6.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.6.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.6.0-osx-x64.tar.gz` |
-| macOS arm64 | `5do-1.6.0-osx-arm64.tar.gz` |
+| Windows x64 | `5do-1.7.0-win-x64.zip` |
+| Windows arm64 | `5do-1.7.0-win-arm64.zip` |
+| Linux x64 | `5do-1.7.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.7.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.7.0-osx-x64.dmg` |
+| macOS arm64 | `5do-1.7.0-osx-arm64.dmg` |
 
 Each bundle contains the framework-dependent single-file CLI and desktop app, `README.md`,
 `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) for
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.7.0) for
 `SHA256SUMS.txt`.
 
 ## Known limits
 
-- Playability follows the documented binary beyond-title rule (a distinct screen beyond
-  the title with input), not a full playthrough or a claim for every regional revision.
-- CD command cadence remains the residual differential on the 50-title panel; the
-  3,000-frame showcase still diverges on Road Rash.
-- Windows x64 remains the validated target. Linux x64 full-suite and CLI/frontend smoke
-  validation pass; GPU presentation under llvmpipe/SSH is preview/best-effort. macOS and
-  arm64 bundles are cross-published and architecture-validated.
-- VRR depends on the GPU, driver, monitor, and desktop; 5DO only avoids the blocking swap
-  interval.
+- Playability follows the documented binary beyond-title rule, not a full playthrough.
+- CD command cadence remains the residual differential on the 50-title panel.
+- Windows x64 remains the validated GPU target; Linux GPU presentation under
+  llvmpipe/SSH is preview/best-effort.
+- Physical macOS gamepad detection still needs a macOS host with a connected controller.
+- Signing and notarization require a Windows certificate and an Apple developer account.

@@ -547,7 +547,10 @@ format is inferred from `--out` or set with `--format iso|bin|cue|chd`. CUE outp
 writes a companion BIN and a single `MODE1/2048` track. The command reopens the
 output, computes both `GameId` hashes, and exits 1 on a mismatch. JSON fields:
 `ok`, `source`, `output`, `format`, `sectors`, `bytes`, `sourceHash`, `outputHash`.
-Audio-track images are rejected until a raw audio writer is added.
+Audio-track images are rejected until a raw audio writer is added. CHD encoding uses a
+unique temporary BIN, so a same-stem source (for example `game.bin` -> `game.chd`) is
+never overwritten. A CUE output that would overwrite the source BIN is rejected; choose
+a different output name.
 
 ### `disc dump`
 

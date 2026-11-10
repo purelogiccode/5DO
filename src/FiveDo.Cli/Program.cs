@@ -3075,6 +3075,20 @@ internal static class Program
                     nameof(args));
             }
 
+            if (format == DiscImageFormat.Cue)
+            {
+                string companionBin = Path.ChangeExtension(convertOutputPath, ".bin");
+                if (string.Equals(
+                        Path.GetFullPath(companionBin),
+                        Path.GetFullPath(convertSourcePath),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException(
+                        "A CUE conversion would overwrite the source image with its companion BIN; choose a different output name.",
+                        nameof(args));
+                }
+            }
+
             using IDiscSource convertSource = DiscImageFactory.Open(convertSourcePath);
             var sourceHash = GameId.Compute(convertSource);
             int sectors = DiscImageWriter.Write(convertSource, convertOutputPath, format);

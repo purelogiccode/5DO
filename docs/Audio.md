@@ -372,7 +372,8 @@ The opt-in **NativeAOT frontend** (`-p:FiveDoNativeAot=true`, win-x64, .NET 10.0
 ran Lemmings (USA) through the frontend's real `FiveDoMachine`/`CoreRunner`/
 `OpenAlAudioOutput` path with `--audio-soak 600`. The JSON reports `nativeAot: true`.
 This closes the previous frontend-AOT audio gap; the shipped release bundles remain
-trimmed IL.
+trimmed IL. `--region auto` (and the default when `--region` is omitted) detects PAL1
+from the loaded BIOS catalog instead of forcing NTSC.
 
 | Device | Frames | Elapsed | Samples pushed | Dropped | Underruns | Queued | Latency | OpenAL errors | DSP |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|

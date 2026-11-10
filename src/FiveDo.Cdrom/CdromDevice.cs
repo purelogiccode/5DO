@@ -478,9 +478,11 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     /// Version 2 adds the cycle-based data-sector clock and deadline. Version 3 adds the
     /// MODE SET sector size/block flags and the PLAY_AUDIO playback position. Version 4
     /// adds the CD-DA mix volume and mute flag. Version 5 adds the guest drive-speed mode
-    /// and the volume-header readable-disc limit.
+    /// and the volume-header readable-disc limit. Version 6 stores the full 2449-byte
+    /// transfer buffer so a saved subcode tail is preserved; versions 1-5 still read their
+    /// 2352-byte data buffer and clear the new tail.
     /// </remarks>
-    public ushort Version => 5;
+    public ushort Version => 6;
 
     /// <summary>Inserts a disc and initializes the drive for it.</summary>
     /// <param name="disc">Disc source. The device does not take ownership.</param>
@@ -938,7 +940,18 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         reader.ReadBytes(_status);
-        reader.ReadBytes(_data);
+        if (version >= 6)
+        {
+            reader.ReadBytes(_data);
+        }
+        else
+        {
+            // Versions 1-5 stored the historical 2352-byte sector buffer. Keep those
+            // states loadable and zero the subcode tail added in version 6.
+            reader.ReadBytes(_data.AsSpan(0, RawSectorSize));
+            _data.AsSpan(RawSectorSize).Clear();
+        }
+
         reader.ReadBytes(_command);
 
         if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 2)

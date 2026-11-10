@@ -1,8 +1,9 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.6.0 is the current release**; unified Windows/Linux/macOS x64/arm64
-bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x.
+**Release timing:** **v1.7.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
+published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -12,7 +13,9 @@ database work, memory capacity options, and eight PBUS ports; v1.3.0 adds
 latency controls, unsigned-disc support, and the exact NTSC field clock; v1.5.0 adds
 GPU HQx, the 24-bit VDL background, reference field-boundary timing, and CD parity.
 v1.6.0 completes the 378-title compatibility matrix, tightens CD poll/speed/session
-behavior, and hardens settings/NVRAM persistence.
+behavior, and hardens settings/NVRAM persistence. v1.7.0 adds CD subcode/Q, disc
+conversion, focus-loss pausing, void patterns, pointer input scripts, macOS HID gamepads,
+native macOS/arm64 runtime smoke, and DMG distribution for macOS.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -195,6 +198,37 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.7.0 platform and media-polish gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.7.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.7.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`, and
+      `docs/Installers.md`.
+- [x] Full suite **2,124/2,124** passes in Debug;
+      `dotnet format --verify-no-changes` is clean;
+      `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Verify CD subcode/Q, the 2449-byte wire size, CD-ROM state v6 with v5
+      compatibility, `disc convert`, focus-loss pausing, void patterns, VDLP pixel
+      formats, pointer input scripts, and the macOS HID mapper are covered by tests.
+- [x] Verify the extraction bug fixes: CHD conversion preserves a same-stem BIN and a CUE
+      output cannot overwrite the source BIN.
+- [ ] Build all six framework-dependent bundles and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older artifacts.
+      Local Windows/Linux bundles are built; the macOS DMGs are produced by the native
+      CI job.
+- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.7.0 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      (`FRONTEND SMOKE OK 1.7.0`); CI verifies the arm64/macOS apphost machine types and
+      publishes the macOS DMG.
+- [ ] Create and push tag `v1.7.0`; verify the release workflow publishes six versioned
+      bundles (macOS as DMG) and `SHA256SUMS.txt`.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.7.0 release page, What's New, release notes, and wiki page.
+
+---
+
 ## Cover-art hosting gate
 
 - [ ] Run `packaging/package-covers.ps1`; review `artifacts/covers/v1/report.json`.
@@ -290,15 +324,15 @@ been validated.**
 | Item | Recommended v1 scope | Notes |
 |---|---|---|
 | Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
-| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64/arm64 built and architecture-validated | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
-| Desktop arm64 | **Built and architecture-validated**; runtime validation post-1.0 | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
+| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64/arm64 native runtime smoke passed | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
+| Desktop arm64 | **Native runtime smoke passed** on macOS arm64, Linux arm64, and Windows arm64 | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
 | Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.tar.gz`, `5do-<version>-osx-arm64.tar.gz`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
+| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.6.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-08** | v1.6.0 bundles and checksums are attached to the GitHub release |
+| Version | **`v1.7.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-10** | v1.7.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 

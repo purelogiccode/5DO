@@ -2249,6 +2249,40 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void DiscConvert_RejectsACueOutputThatWouldOverwriteTheSourceBin()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "fivedo-cli-convert-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string sourcePath = Path.Combine(directory, "game.bin");
+            var sectors = new byte[4 * IsoImage.SectorBytes];
+            for (var i = 0; i < sectors.Length; i++)
+            {
+                sectors[i] = (byte)(i * 13);
+            }
+
+            File.WriteAllBytes(sourcePath, sectors);
+            byte[] original = File.ReadAllBytes(sourcePath);
+
+            CliResult result = Invoke(
+                "disc",
+                "convert",
+                sourcePath,
+                "--out",
+                Path.Combine(directory, "game.cue"));
+
+            Assert.NotEqual(0, result.Code);
+            Assert.Contains("overwrite", result.Error, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(original, File.ReadAllBytes(sourcePath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

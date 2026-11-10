@@ -175,6 +175,41 @@ public sealed class CdromMultiTrackTests
         Assert.Equal(0xe3, subQ[11]);
     }
 
+    [Fact]
+    public void Load_AcceptsVersionFiveCdromSectionWithTheHistoricalSectorBuffer()
+    {
+        var cd = new CdromDevice();
+        cd.InsertDisc(new TrackedMemoryDisc(dataSectors: 4, audioSectors: 2));
+        Send(cd, 0x09, 0x00, 0x82, 0x09, 0x30, 0x40);
+        Assert.Equal(2352, cd.ReadSectorSize);
+
+        var writer = new StateWriter();
+        cd.Save(writer);
+        byte[] current = writer.WrittenSpan.ToArray();
+
+        // Versions 1-5 wrote a 2352-byte sector buffer. Rebuild that layout by
+        // dropping the 97-byte subcode tail added in version 6.
+        const int headerLength = 28 + 256;
+        const int currentDataLength = 2449;
+        const int legacyDataLength = 2352;
+        var legacy = new byte[current.Length - (currentDataLength - legacyDataLength)];
+        current.AsSpan(0, headerLength).CopyTo(legacy);
+        current.AsSpan(headerLength, legacyDataLength)
+            .CopyTo(legacy.AsSpan(headerLength));
+        current.AsSpan(headerLength + currentDataLength)
+            .CopyTo(legacy.AsSpan(headerLength + legacyDataLength));
+
+        var state = new StateWriter();
+        state.WriteSection(new RawSection(StateSectionIds.Cdrom, version: 5, legacy));
+        var reader = new StateReader(state.WrittenMemory);
+
+        var loaded = new CdromDevice();
+        loaded.Load(reader.ReadSection());
+
+        Assert.Equal(2352, loaded.ReadSectorSize);
+        Assert.True(loaded.DiscPresent);
+    }
+
     private static byte[] DecodeSubcodeQ(ReadOnlySpan<byte> subcode)
     {
         var q = new byte[12];
@@ -311,6 +346,24 @@ public sealed class CdromMultiTrackTests
         internal byte[] AudioSector(int lba)
         {
             return _audio[lba];
+        }
+    }
+
+    private sealed class RawSection(uint id, ushort version, byte[] payload) : IStateSection
+    {
+        public uint Id => id;
+
+        public ushort Version => version;
+
+        public void Save(IStateWriter writer)
+        {
+            ArgumentNullException.ThrowIfNull(writer);
+            writer.WriteBytes(payload);
+        }
+
+        public void Load(IStateReader reader)
+        {
+            throw new NotSupportedException();
         }
     }
 }

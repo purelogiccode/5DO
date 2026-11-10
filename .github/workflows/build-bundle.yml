@@ -33,14 +33,12 @@ jobs:
           - os: ubuntu-latest
             rid: linux-arm64
             arch: arm64
-          # Cross-publish the macOS bundles on Linux. The macOS apphosts and
-          # native assets are resolved from NuGet; each bundle is validated as
-          # Mach-O instead of being executed. This avoids depending on the
-          # hosted macOS runner, which was cancelled before starting steps.
-          - os: ubuntu-latest
+          # Build the macOS bundles natively so package-bundle.ps1 can add the
+          # drag-to-Applications DMG that is published for each architecture.
+          - os: macos-15-intel
             rid: osx-x64
             arch: x86_64
-          - os: ubuntu-latest
+          - os: macos-latest
             rid: osx-arm64
             arch: arm64
 
@@ -206,9 +204,30 @@ jobs:
           cat artifacts/bundle-smoke/frontend-smoke.txt
           grep -q 'FRONTEND SMOKE OK' artifacts/bundle-smoke/frontend-smoke.txt
 
-      - name: Upload bundle
+      - name: Select release asset
+        id: release-asset
+        shell: pwsh
+        run: |
+          if ('${{ matrix.rid }}' -like 'osx-*') {
+            $asset = Get-ChildItem 'artifacts/bundles' -File -Filter '*.dmg' |
+              Where-Object { $_.Name -like "*${{ matrix.rid }}*" } |
+              Select-Object -First 1
+          }
+          else {
+            $asset = Get-Item -LiteralPath '${{ steps.bundle.outputs.archive }}'
+          }
+
+          if (-not $asset) {
+            throw "No release asset was produced for ${{ matrix.rid }}."
+          }
+
+          "path=$($asset.FullName)" >> $env:GITHUB_OUTPUT
+          "name=$($asset.Name)" >> $env:GITHUB_OUTPUT
+          Write-Host "Release asset: $($asset.Name)"
+
+      - name: Upload release bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: 5do-bundle-${{ matrix.rid }}
-          path: artifacts/bundles/${{ steps.bundle.outputs.archive-name }}
+          path: ${{ steps.release-asset.outputs.path }}
           if-no-files-found: error

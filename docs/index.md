@@ -16,11 +16,12 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.6 documented compatibility"
-    5DO is at the v1.6 documented-compatibility release stage. Windows x64 is the
+!!! important "v1.7 documented compatibility"
+    5DO is at the v1.7 documented-compatibility release stage. Windows x64 is the
     validated platform; Linux x64 full suite passed (GPU presentation is
-    preview/best-effort). No BIOS ROMs, game images, or extracted game assets are
-    distributed here; supply legally obtained files.
+    preview/best-effort), and macOS/arm64 pass the native runtime smoke. No BIOS ROMs,
+    game images, or extracted game assets are distributed here; supply legally obtained
+    files.
 
 ## Start here
 
@@ -74,14 +75,14 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.6.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.7.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-08, v1.6.0 release (GitHub Releases).**
+**2026-11-10, v1.7.0 release (GitHub Releases).**
 
-- **2,061 tests** are present in the current test assembly.
+- **2,124 tests** are present in the current test assembly.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
   60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
   samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field
@@ -104,12 +105,12 @@
 - Windows x64 is the validated GPU target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS x64/arm64, Linux arm64, and Windows
   arm64 pass the native CLI/frontend runtime smoke (2026-11-10).
-- v1.6.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0)
-  as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI, desktop app,
-  and SHA-256 checksums. The .NET 10 runtime is required on the host and is not bundled.
-  The release completes the compatibility matrix, tightens CD-ROM poll/speed/session
-  behavior, hardens settings/NVRAM persistence, and adds tooltip coverage. See
-  [What's new](WhatsNew.md).
+- v1.7.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.7.0)
+  as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
+  desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 10 runtime
+  is required on the host and is not bundled. The release adds CD subcode/Q data,
+  `disc convert`, focus-loss pausing, void patterns, pointer input scripts, macOS HID
+  gamepads, and native macOS/arm64 runtime smoke. See [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

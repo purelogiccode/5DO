@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.6.0 compatibility-completion release** (published on GitHub).
+The project is at the **v1.7.0 platform and media-polish release** (published on GitHub).
 The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
@@ -14,11 +14,12 @@ The compatibility plan is complete:
   causes. The comparison has **0 `Behind` and 0 `Regression` rows**.
 - 5DO is a strict superset of the **252-title peer union**, ahead of 4DO's **167** and
   Phoenix's **233** playable titles.
-- The six framework-dependent bundles and `SHA256SUMS.txt` are published. Windows x64 is
-  the validated desktop; Linux x64 build/test and smoke pass in CI, and macOS remains
+- The six framework-dependent bundles and `SHA256SUMS.txt` are published; macOS ships as
+  a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
+  macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
 
-## Post-1.6
+## Post-1.7
 
 **Playability depth (in progress):**
 

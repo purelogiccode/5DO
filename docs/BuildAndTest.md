@@ -457,8 +457,11 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.6.0-win-x64.zip`, `5do-1.6.0-win-arm64.zip`, or `5do-1.6.0-linux-arm64.tar.gz`; the version is read from
-`Directory.Build.props` unless `-Version` is supplied.
+`5do-1.7.0-win-x64.zip`, `5do-1.7.0-win-arm64.zip`, or `5do-1.7.0-linux-arm64.tar.gz`; the version is read from
+`Directory.Build.props` unless `-Version` is supplied. On macOS the same script
+additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
+the release workflow uploads the DMG, while the tarball remains the extraction/smoke
+intermediate.
 
 ---
 
@@ -471,7 +474,7 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `bundle` | Windows, Ubuntu | Builds the unified Windows/Linux/macOS x64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. The macOS x64 bundle is cross-published on Ubuntu and validated as Mach-O x86_64. Runs CLI/frontend smoke tests and uploads the bundle. |
+| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64/arm64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. macOS jobs build natively and upload the DMG; Linux/Windows jobs upload ZIP or tar.gz. Runs CLI/frontend smoke tests and validates apphost machine types. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:
@@ -480,7 +483,7 @@ Separate workflows add:
 |---|---|---|
 | `docs.yml` | Push/PR touching docs or the wiki, manual | Strict MkDocs build, GitHub Pages deployment from `master`, and curated wiki publishing. |
 | `platform-runtime.yml` | Push touching `src/`, `packaging/`, or the workflow; manual | Native CLI `selftest` and frontend `--smoke-test` on macOS x64/arm64, Linux arm64, and Windows arm64. |
-| `release.yml` | Tag push or manual | Builds the six x64/arm64 bundles, writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
+| `release.yml` | Tag push or manual | Builds the six x64/arm64 bundles (macOS as DMG), writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
 | `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
 | `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |
 | `scorecard.yml` | Push, weekly, manual | OpenSSF Scorecard analysis, SARIF upload, and published results. |
@@ -528,7 +531,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.6.0` |
+| `Version` | `1.7.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

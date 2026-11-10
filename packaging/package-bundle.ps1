@@ -26,6 +26,35 @@ New-Item -ItemType Directory -Path $outputPath -Force | Out-Null
 
 $staging = Join-Path ([System.IO.Path]::GetTempPath()) ("5do-bundle-" + [guid]::NewGuid().ToString('N'))
 
+function Set-ContentWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $LiteralPath,
+
+        [Parameter(Mandatory = $true)]
+        [object] $Value,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Encoding
+    )
+
+    for ($attempt = 0; ; $attempt++) {
+        try {
+            Set-Content -LiteralPath $LiteralPath -Value $Value -Encoding $Encoding
+            return
+        }
+        catch [System.IO.IOException] {
+            if ($attempt -ge 4) {
+                throw
+            }
+
+            # Cloud-sync clients and virus scanners briefly hold the checksum
+            # file open while the previous bundle is being written.
+            Start-Sleep -Milliseconds (200 * ($attempt + 1))
+        }
+    }
+}
+
 function Copy-PublishTree {
     param(
         [Parameter(Mandatory = $true)]
@@ -185,23 +214,71 @@ try {
             Remove-Item -LiteralPath $archive -Force
         }
 
-        & python (Join-Path $PSScriptRoot 'make-tar.py') $staging $archive
+        $python = Get-Command -Name 'python' -ErrorAction SilentlyContinue
+        if ($null -eq $python) {
+            $python = Get-Command -Name 'python3' -ErrorAction SilentlyContinue
+        }
+
+        if ($null -eq $python) {
+            throw 'Python 3 is required to create the tar.gz bundle.'
+        }
+
+        & $python.Source (Join-Path $PSScriptRoot 'make-tar.py') $staging $archive
         if ($LASTEXITCODE -ne 0) {
             throw "make-tar.py failed with exit code $LASTEXITCODE."
         }
     }
 
-    $checksumFile = Join-Path $outputPath 'SHA256SUMS.txt'
-    $archiveName = [System.IO.Path]::GetFileName($archive)
-    $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-    $lines = @()
-    if (Test-Path -LiteralPath $checksumFile) {
-        $lines = @(Get-Content -LiteralPath $checksumFile |
-            Where-Object { $_ -notmatch "\s$([regex]::Escape($archiveName))$" })
+    # macOS is distributed as a drag-to-Applications DMG. The tar.gz remains the
+    # deterministic intermediate used by the smoke-test extraction, while the
+    # release workflow uploads the DMG.
+    $extraArtifacts = @()
+    $onMacOS = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+        [System.Runtime.InteropServices.OSPlatform]::OSX)
+    if ($Rid -like 'osx-*' -and $onMacOS) {
+        $bash = Get-Command -Name 'bash' -ErrorAction SilentlyContinue
+        if ($null -eq $bash) {
+            throw 'bash is required to build the macOS DMG.'
+        }
+
+        $macPackage = Join-Path $repoRoot 'packaging/macos/build-macos-package.sh'
+        & $bash.Source $macPackage `
+            --bundle $staging --rid $Rid --version $Version --output $outputPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "build-macos-package.sh failed with exit code $LASTEXITCODE."
+        }
+
+        $dmg = Get-ChildItem -LiteralPath $outputPath -File -Filter "*$Rid.dmg" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+        if ($null -eq $dmg) {
+            throw "No macOS DMG matching *$Rid.dmg was produced in $outputPath."
+        }
+
+        $extraArtifacts += $dmg.FullName
+        Write-Output $dmg.FullName
     }
 
-    $lines += "$hash  $archiveName"
-    $lines | Sort-Object | Set-Content -LiteralPath $checksumFile -Encoding ascii
+    $checksumFile = Join-Path $outputPath 'SHA256SUMS.txt'
+    $artifacts = @($archive) + $extraArtifacts
+    $artifactNames = @($artifacts | ForEach-Object { [System.IO.Path]::GetFileName($_) })
+    $lines = @()
+    if (Test-Path -LiteralPath $checksumFile) {
+        $lines = @(Get-Content -LiteralPath $checksumFile | Where-Object {
+            $line = $_
+            -not ($artifactNames | Where-Object {
+                $line -match "\s$([regex]::Escape($_))$"
+            })
+        })
+    }
+
+    foreach ($artifact in $artifacts) {
+        $artifactName = [System.IO.Path]::GetFileName($artifact)
+        $hash = (Get-FileHash -LiteralPath $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
+        $lines += "$hash  $artifactName"
+    }
+
+    Set-ContentWithRetry -LiteralPath $checksumFile -Value ($lines | Sort-Object) -Encoding ascii
 
     Write-Output $archive
 }

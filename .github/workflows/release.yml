@@ -55,7 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          sha256sum 5do-*.zip 5do-*.tar.gz | tee SHA256SUMS.txt
+          sha256sum 5do-*.zip 5do-*.tar.gz 5do-*.dmg | tee SHA256SUMS.txt
 
       - name: Publish release
         shell: bash
@@ -88,7 +88,7 @@ jobs:
           # the release has one versioned bundle per system.
           for name in $(gh release view "$tag" --json assets --jq '.assets[].name'); do
             case "$name" in
-              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-win-arm64.zip|5do-linux-x64.tar.gz|5do-linux-arm64.tar.gz|5do-osx-x64.tar.gz|5do-osx-arm64.tar.gz)
+              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-win-arm64.zip|5do-linux-x64.tar.gz|5do-linux-arm64.tar.gz|5do-osx-x64.tar.gz|5do-osx-arm64.tar.gz|5do-osx-x64.pkg|5do-osx-arm64.pkg)
                 echo "Removing obsolete asset $name"
                 gh release delete-asset "$tag" "$name" -y
                 ;;
@@ -98,6 +98,7 @@ jobs:
           gh release upload "$tag" \
             dist/5do-*.zip \
             dist/5do-*.tar.gz \
+            dist/5do-*.dmg \
             dist/SHA256SUMS.txt \
             --clobber
 

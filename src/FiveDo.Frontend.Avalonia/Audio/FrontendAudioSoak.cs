@@ -26,6 +26,7 @@ namespace FiveDo.Frontend.Avalonia.Audio;
 /// <param name="SyncMilliseconds">Audio/video sync offset.</param>
 /// <param name="Region">Machine video region.</param>
 /// <param name="AllowUnsignedDiscs">Apply the in-memory media RSA bypass.</param>
+/// <param name="AutoRegion">Detect PAL from the loaded BIOS when <paramref name="Region"/> is a placeholder.</param>
 internal sealed record FrontendAudioSoakOptions(
     double Seconds,
     string OutputPath,
@@ -33,7 +34,8 @@ internal sealed record FrontendAudioSoakOptions(
     string? Device,
     int SyncMilliseconds,
     VideoRegion Region,
-    bool AllowUnsignedDiscs);
+    bool AllowUnsignedDiscs,
+    bool AutoRegion = false);
 
 /// <summary>
 /// Runs the desktop frontend's real emulation/audio path without initializing Avalonia,
@@ -96,8 +98,9 @@ internal static class FrontendAudioSoak
 
         VideoRegion region = VideoRegion.Ntsc;
         var regionText = Program.FindOptionValue(args, "--region");
-        if (regionText is not null
-            && !TryParseRegion(regionText, out region))
+        bool autoRegion = regionText is null
+            || string.Equals(regionText, "auto", StringComparison.OrdinalIgnoreCase);
+        if (!autoRegion && !TryParseRegion(regionText!, out region))
         {
             error = "--region must be auto, ntsc, pal1, or pal2.";
             return true;
@@ -113,7 +116,8 @@ internal static class FrontendAudioSoak
             Program.FindOptionValue(args, "--audio-device"),
             syncText is null ? 0 : int.Parse(syncText, CultureInfo.InvariantCulture),
             region,
-            Program.HasFlag(args, "--allow-unsigned-discs"));
+            Program.HasFlag(args, "--allow-unsigned-discs"),
+            autoRegion);
         return true;
     }
 
@@ -156,6 +160,16 @@ internal static class FrontendAudioSoak
             result.BiosMd5 = bios.Md5;
             result.BiosAnvil = bios.IsAnvil;
 
+            VideoRegion region = options.Region;
+            if (options.AutoRegion)
+            {
+                region = BiosCatalog.Default.TryGet(bios.SourceMd5, out BiosDescriptor descriptor)
+                    && descriptor.VideoStandard == BiosVideoStandard.Pal
+                    ? VideoRegion.Pal1
+                    : VideoRegion.Ntsc;
+                result.Region = region.ToString();
+            }
+
             using OpenAlAudioOutput? audio = OpenAlAudioOutput.TryCreate(
                 options.BufferMilliseconds,
                 options.Device,
@@ -173,7 +187,7 @@ internal static class FrontendAudioSoak
             var settings = new AppSettings();
             EmulatorTuning tuning = settings.CreateEmulatorTuning() with
             {
-                Region = options.Region,
+                Region = region,
             };
             var machine = new FiveDoMachine(tuning);
             machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
@@ -367,7 +381,7 @@ internal static class FrontendAudioSoak
         internal long Frames { get; set; }
         internal long TargetFrames { get; set; }
         internal int FieldRate { get; set; }
-        internal string Region { get; init; } = string.Empty;
+        internal string Region { get; set; } = string.Empty;
         internal int SourceWidth { get; set; }
         internal int SourceHeight { get; set; }
         internal uint FrameHash { get; set; }

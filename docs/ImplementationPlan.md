@@ -1,9 +1,9 @@
 # 5DO — Consolidated Implementation Plan
 
 **Snapshot:** 2026-11-10
-**Release:** v1.6.0
+**Release:** v1.7.0
 **Status:** the compatibility program is complete. This file is the single actionable plan;
-it tracks only **achievable post-1.6 work**.
+it tracks only **achievable post-1.7 work**.
 **Merged from:** the former active plan and
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md). The archive remains the raw
 evidence store, completed log, stable-ID index, and appendices.
@@ -44,7 +44,7 @@ loadability and duplicate coverage.
 | Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom) | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
-| Release | **v1.6.0** six framework-dependent bundles and `SHA256SUMS.txt`; all checksums verify | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) |
+| Release | **v1.7.0** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt`; all checksums verify | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.7.0) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
 | Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux GPU presentation remains preview/best-effort | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
@@ -148,14 +148,14 @@ pass the frontend `--smoke-test` (run 42770783778, 2026-11-10).
 
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
-| **UX-16** | L | **Installer/package scaffolding (partial)**: Windows Inno Setup installer + associations, Linux `.deb`/`.rpm` + desktop entry/MIME, macOS `.app`/`.dmg`/`.pkg`. Signing/notarization remains conditional. | The unsigned Windows installer built, installed, launched, and association-checked; Linux packages built and metadata/MIME-validated on 2026-11-10. macOS packaging needs a macOS host. | The unsigned artifacts install, launch, and associate `.iso`/`.cue`/`.chd` where built; a signed/notarized release remains in §4 until certificates/accounts exist. |
+| **UX-16** | L | **Installer/package scaffolding (partial)**: Windows Inno Setup installer + associations, Linux `.deb`/`.rpm` + desktop entry/MIME, macOS `.app`/`.dmg`/`.pkg`. Signing/notarization remains conditional. | The unsigned Windows installer built, installed, launched, and association-checked; Linux packages built and metadata/MIME-validated; macOS `.app`/`.dmg`/`.pkg` are built natively in CI on 2026-11-10. | The unsigned artifacts install, launch, and associate `.iso`/`.cue`/`.chd` where built; a signed/notarized release remains in §4 until certificates/accounts exist. |
 
 The packaging scaffolding is implemented and reproducible from `packaging/`. The Windows
-installer, Linux packages, desktop entry, and MIME/registry associations are unsigned by
-default. Signing and notarization require valid certificates/accounts; if those are
-unavailable, the unsigned installers and portable bundles remain the release artifacts and
-the signing item stays in §4 until the credentials exist. Evidence:
-[Installers.md](Installers.md).
+installer, Linux packages, desktop entry, MIME/registry associations, and the macOS
+`.app`/`.dmg`/`.pkg` are unsigned by default and built on their native CI runners.
+Signing and notarization require valid certificates/accounts; if those are unavailable,
+the unsigned installers and portable bundles remain the release artifacts and the signing
+item stays in §4 until the credentials exist. Evidence: [Installers.md](Installers.md).
 
 ### 3.5 P2 — Optional accuracy features
 

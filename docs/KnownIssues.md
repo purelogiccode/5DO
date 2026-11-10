@@ -1,9 +1,9 @@
 # Known Issues
 
-**Snapshot:** 2026-11-10, v1.6.0 plus the P0 quality pass, native platform runtime
-smoke, CD subcode, disc conversion, focus/void/pixel-format work. This list covers the
-supported local corpus and the current prototype state. It is not a compatibility
-guarantee.
+**Snapshot:** 2026-11-10, v1.7.0 plus the P0 quality pass, native platform runtime
+smoke, CD subcode, disc conversion, focus/void/pixel-format work, pointer input scripts,
+and macOS DMG distribution. This list covers the supported local corpus and the current
+prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi, and
@@ -288,9 +288,9 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - Installer/package scaffolding is implemented for Windows, Linux, and macOS, but
   signing and notarization are not complete. The Windows Inno Setup installer and Linux
   `.deb`/`.rpm` metadata were built and validated unsigned on 2026-11-10; the macOS
-  `.dmg`/`.pkg` script requires a macOS host. The opt-in win-x64 CLI AOT build is
-  validated, including live OpenAL; the frontend AOT audio soak is recorded in
-  [`Audio.md`](Audio.md) §9 (2026-11-10).
+  `.app`/`.dmg`/`.pkg` are built natively in CI, and the DMG is the published macOS
+  bundle. The opt-in win-x64 CLI AOT build is validated, including live OpenAL; the
+  frontend AOT audio soak is recorded in [`Audio.md`](Audio.md) §9 (2026-11-10).
 - The macOS gamepad backend is implemented on IOKit HID and its mapping layer is
   unit-tested, but no physical macOS controller has been detected in this environment.
   macOS may require Input Monitoring permission; without it the frontend falls back to

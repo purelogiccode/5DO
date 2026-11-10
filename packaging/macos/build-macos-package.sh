@@ -65,7 +65,7 @@ if [[ -z "$bundle_version" ]]; then
     bundle_version="1.0"
 fi
 
-if [[ ! -x "$bundle/FiveDo.Frontend.Avalonia" ]]; then
+if [[ ! -f "$bundle/FiveDo.Frontend.Avalonia" ]]; then
     echo "Bundle is missing FiveDo.Frontend.Avalonia: $bundle" >&2
     exit 1
 fi

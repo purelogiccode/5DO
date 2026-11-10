@@ -1,7 +1,60 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.6.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.7.0, a documented-compatibility
 release.
+
+## [1.7.0] - 2026-11-10
+
+### Added
+
+- **CD-ROM subcode/Q support.** The CD wire accepts Opera's 2449-byte maximum, READ_DATA
+  returns the 96-byte subcode block with the Q payload, and READ SUB-Q shares the same
+  control/track/index/MSF/CRC builder.
+- **`disc convert`.** Data-only ISO, BIN, CUE+BIN, and flat CHD conversion verifies the
+  output game ID.
+- **Focus-loss pausing.** Settings > Emulation can pause on deactivation and resume only
+  an automatic pause when focus returns; input is released on focus loss.
+- **Void-area patterns.** Solid, checkerboard, grid, and scanline patterns are selectable
+  and recorded in screenshot metadata.
+- **Pixel-format helpers.** The frame assembler emits packed 0RGB1555, RGB565, and
+  XRGB8888 frames.
+- **Pointer input scripts.** `@mouse`, `@lightgun`, `@arcadegun`, and `@trackball` tokens
+  support one-frame motion and persistent buttons.
+- **macOS IOKit HID gamepad source.** Generic Desktop joystick/gamepad/multi-axis devices
+  map through the existing eight-player profile; the mapper is unit-tested.
+- **Installer/package scaffolding.** Unsigned Windows Inno Setup, Linux `.deb`/`.rpm`,
+  and macOS `.app`/`.dmg`/`.pkg` scripts register disc-file associations.
+- **Native platform runtime smoke.** macOS x64/arm64, Linux arm64, and Windows arm64 run
+  the CLI `selftest` and frontend `--smoke-test` in CI.
+- **PAL validation.** Eight PAL-sensitive titles and a PAL2 presentation probe are
+  recorded in `docs/PalValidation.md`.
+
+### Changed
+
+- macOS release bundles are published as `5do-<version>-osx-<arch>.dmg` instead of
+  tarballs. `package-bundle.ps1` builds the DMG on macOS; the release workflow uploads it.
+- The CD-ROM save-state section is version 6. Version 1-5 states still load with the
+  historical 2352-byte data buffer and a zeroed subcode tail.
+- The frontend audio soak resolves `--region auto` from the loaded BIOS.
+
+### Fixed
+
+- CHD conversion uses a unique temporary BIN, so `game.bin` -> `game.chd` no longer
+  overwrites or deletes the source image.
+- A CUE conversion whose companion BIN would overwrite the source is rejected.
+- READ_DATA and READ SUB-Q no longer duplicate the Q builder or diverge on CRC/MSF values.
+
+### Validation
+
+- Full suite **2,124/2,124** passes in Debug; the 1.6.0-era CD-ROM v5 state regression test
+  passes.
+- `dotnet build`, `dotnet format --verify-no-changes`, and
+  `jb inspectcode --severity=WARNING` are clean.
+- ISO/BIN/CUE/CHD conversion round-trips every data sector.
+- Native runtime smoke passes on macOS x64/arm64, Linux arm64, and Windows arm64.
+- Six framework-dependent bundles are published with `README.md`, `LICENSE`,
+  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, the release/legal docs, no runtime, and no PDB
+  or XML files.
 
 ## [1.6.0] - 2026-11-08
 

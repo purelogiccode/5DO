@@ -721,7 +721,7 @@ public sealed class FiveDoMachine
 
             var supportedVersion = section.Version == 1
                 || (section.Id == StateSectionIds.Memory && section.Version <= 4)
-                || (section.Id == StateSectionIds.Cdrom && section.Version <= 5)
+                || (section.Id == StateSectionIds.Cdrom && section.Version <= 6)
                 || (section.Id == StateSectionIds.Quartz && section.Version <= 4)
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)

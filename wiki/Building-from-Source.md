@@ -56,8 +56,9 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
 
 CI builds `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`,
 `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`,
-`5do-<version>-osx-x64.tar.gz`, and `5do-<version>-osx-arm64.tar.gz` and publishes them
-to the GitHub release.
+`5do-<version>-osx-x64.dmg`, and `5do-<version>-osx-arm64.dmg` and publishes them to the
+GitHub release. The macOS jobs run natively and `package-bundle.ps1` builds the DMG (the
+tar.gz is only the extraction/smoke intermediate).
 
 ## Documentation
 
