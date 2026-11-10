@@ -2207,6 +2207,48 @@ public sealed class CliProcessTests
         }
     }
 
+    [Fact]
+    public void DiscConvert_RoundTripsIsoAndReportsJson()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "fivedo-cli-convert-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string sourcePath = Path.Combine(directory, "source.iso");
+            string outputPath = Path.Combine(directory, "output.chd");
+            var sectors = new byte[4 * IsoImage.SectorBytes];
+            for (var i = 0; i < sectors.Length; i++)
+            {
+                sectors[i] = (byte)(i * 11);
+            }
+
+            File.WriteAllBytes(sourcePath, sectors);
+
+            CliResult result = Invoke(
+                "disc",
+                "convert",
+                sourcePath,
+                "--out",
+                outputPath,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            using JsonDocument document = JsonDocument.Parse(result.Output);
+            JsonElement root = document.RootElement;
+            Assert.True(root.GetProperty("ok").GetBoolean());
+            Assert.Equal("chd", root.GetProperty("format").GetString());
+            Assert.Equal(4, root.GetProperty("sectors").GetInt32());
+            Assert.Equal(
+                root.GetProperty("sourceHash").GetString(),
+                root.GetProperty("outputHash").GetString());
+            Assert.True(File.Exists(outputPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static CliResult Invoke(params string[] args)
     {
         TextWriter previousOut = Console.Out;

@@ -122,7 +122,7 @@ ISO/BIN/CUE/flat CHD and verifies the game ID; Lemmings (USA) round-trips with
 `discHash 0be38b22987b40b5d48f70a167656049` and a 600-frame hash of `675291253`.
 The desktop adds opt-in focus-loss pausing with input release, selectable void
 patterns (solid/checker/grid/scanline), and 0RGB1555/RGB565/XRGB8888 frame conversion
-helpers. The suite is **2,118 tests**; build, format, and InspectCode are clean. See
+helpers. The suite is **2,119 tests**; build, format, and InspectCode are clean. See
 [`TestCorpus.md`](TestCorpus.md) 1.1br/1.1bs, [`Compatibility.md`](Compatibility.md)
 §10.3, and [`KnownIssues.md`](KnownIssues.md).
 

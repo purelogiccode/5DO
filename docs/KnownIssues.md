@@ -1,6 +1,7 @@
 # Known Issues
 
-**Snapshot:** 2026-11-09, v1.6.0 plus the P0 quality pass. This list covers the
+**Snapshot:** 2026-11-10, v1.6.0 plus the P0 quality pass, native platform runtime
+smoke, CD subcode, disc conversion, focus/void/pixel-format work. This list covers the
 supported local corpus and the current prototype state. It is not a compatibility
 guarantee.
 

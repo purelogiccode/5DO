@@ -3495,7 +3495,8 @@ limitation. SYS-01 moved to §4 of the implementation plan.
 BIN, CUE, or a flat 2048-unit CHD and verifies the `GameId` hash. Lemmings (USA)
 round-tripped CHD → ISO/BIN/CUE/CHD with `discHash
 0be38b22987b40b5d48f70a167656049` and a 600-frame `frameHash` of `675291253` on
-every output. Tests: `DiscImageWriterTests` (four containers). Evidence:
+every output. Tests: `DiscImageWriterTests` (four containers) and
+`CliProcessTests.DiscConvert_RoundTripsIsoAndReportsJson`. Evidence:
 `artifacts/sys22/`.
 
 **Focus pause (UX-25).** The desktop shell releases keyboard and PBUS input on every
@@ -3513,5 +3514,5 @@ the settings round-trip cover parsing and fallback.
 `AssembleXrgb8888` convert the same expanded palette pixels to packed 0RGB1555,
 RGB565, and opaque XRGB8888. `FrameAssemblerTests` checks each format against the
 CPU palette reference on a synthetic two-pixel line; the default BGRA path and frame
-hashes are unchanged. The full suite passes **2,118/2,118**; `dotnet format
+hashes are unchanged. The full suite passes **2,119/2,119**; `dotnet format
 --verify-no-changes` is clean.
