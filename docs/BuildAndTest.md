@@ -215,7 +215,7 @@ Options:
 | `--bios <path>` | none | Load a real BIOS instead of the synthetic program. |
 | `--disc <path>` | none | Insert a disc with `--bios`. |
 | `--state-in <path>` | none | Load a save state instead of booting. |
-| `--prefetch` | off | Enable the bounded disc prefetch cache. |
+| `--prefetch` | off | Enable the bounded disc prefetch cache for uncompressed images. |
 | `--high-res` | off | Enable the opt-in 640x480 mode. |
 | `--label <text>` | `synthetic` / `disc` / `state` | Report label. |
 | `--json` | off | Emit the JSON result. |
@@ -457,7 +457,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.7.0-win-x64.zip`, `5do-1.7.0-win-arm64.zip`, or `5do-1.7.0-linux-arm64.tar.gz`; the version is read from
+`5do-1.7.1-win-x64.zip`, `5do-1.7.1-win-arm64.zip`, or `5do-1.7.1-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied. On macOS the same script
 additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
 the release workflow uploads the DMG, while the tarball remains the extraction/smoke
@@ -531,15 +531,17 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.7.0` |
+| `Version` | `1.7.1` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |
 | `FiveDoOpenAlSoftVersion` | `1.23.1` |
 
 Central package versions live in `Directory.Packages.props`. The notable dependencies
-are Avalonia 12.1.4, CommunityToolkit.Mvvm, Silk.NET.OpenGL/OpenAL, CHDSharp 1.6.0,
-xUnit, and BenchmarkDotNet (present but the current benchmark harness is custom).
+are Avalonia 12.1.6 (diagnostics 12.1.4), CommunityToolkit.Mvvm,
+System.CommandLine 3.0.0, Silk.NET.OpenGL/OpenAL, CHDSharp 1.6.3,
+Microsoft.NET.Test.Sdk 18.11.1, xUnit, and BenchmarkDotNet (present but the current
+benchmark harness is custom).
 The 3DO Opera file-system reader used by `5do fs` is first-party
 (`FiveDo.Storage.OperaFileSystem`).
 

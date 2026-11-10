@@ -56,6 +56,7 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
         {
             IsBackground = true,
             Name = "3DO disc prefetch",
+            Priority = ThreadPriority.BelowNormal,
         };
         _worker.Start();
     }
@@ -353,6 +354,12 @@ public sealed class PrefetchingDiscSource : ITrackedDiscSource
                         continue;
                     }
                 }
+
+                // Yield the shared inner-reader lock to the emulation thread between
+                // read-ahead sectors. Without this pause the worker immediately
+                // reacquires the lock and a foreground CD read can queue behind the
+                // whole look-ahead burst, which shows up as multi-frame stutter.
+                Thread.Sleep(1);
 
                 if (TryFindTrack(lba) is { IsAudio: true } audioTrack)
                 {

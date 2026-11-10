@@ -271,9 +271,12 @@ CHDSharp decoding is pure managed code and can be CPU-heavy on Tier B. The core
 thread must not block on a multi-hundred-millisecond decompression during gameplay.
 
 - Keep emulated CD timing deterministic; never read wall-clock time inside the core.
-- `PrefetchingDiscSource` provides a bounded host-side worker/cache for CHD/ISO
-  reads. It is opt-in via `--prefetch`; the core consumes sectors at emulated time,
-  and a cache miss blocks briefly without changing emulated state.
+- `PrefetchingDiscSource` provides a bounded host-side worker/cache for uncompressed
+  image readers. CHD images use CHDSharp's own background hunk read-ahead directly:
+  wrapping the CHD reader in a second sector look-ahead let background reads hold the
+  inner-reader lock and stall foreground CD reads for several frames. The sector
+  worker runs below normal priority and pauses between read-ahead sectors so a
+  foreground read can take the lock.
 - CHD vs ISO streaming is benchmarked on x64; record Tier B p99 frame time next.
 - Keep the existing read-ahead configuration and validate it against real discs in
   [`TestCorpus.md`](TestCorpus.md).
@@ -528,7 +531,9 @@ matches the 4DO reference hashes; it is no longer in the presentation path.
 The opt-in prefetch cache (`--prefetch`) produced identical Lemmings state/frame
 hash in a 300-frame run. On the x64 development machine it increased short-run p99
 and allocations because the storage path is already fast; it is intended for slow
-CHD/Tier B storage and remains opt-in until measured there.
+Tier B storage and remains opt-in until measured there. CHD images bypass the cache
+because CHDSharp already performs hunk read-ahead; a 20-second desktop Road Rash run
+with that direct path reported 0 audio underruns and no skipped frames.
 
 Run it with:
 
@@ -856,8 +861,9 @@ about 67 ms because the CRC alone cost ~55 ms for 26 MB.
 4. `RewindBuffer` reuses its capture stream, state buffers, `StateWriter`, payload buffer,
    and compression scratch; trimmed keyframes return their arrays to a pool.
 5. The BIOS MD5 used in the state header is cached instead of hashing 1 MB every capture.
-6. The frontend opens discs through the host-side prefetch cache (PERF-04) so CHD
-   decompression does not run on the emulation thread.
+6. The frontend requests the host-side prefetch cache for uncompressed images. CHD
+   uses CHDSharp's own hunk read-ahead directly, so a second look-ahead cannot hold
+   the reader lock and stall the emulation thread.
 
 **Measured after (same 1,200-frame run).** Keyframe captures fell to **7.4-9.2 ms**
 (one 14.1 ms outlier) and the run allocated **16 MB** instead of 1.5 GB with no gen0/gen2

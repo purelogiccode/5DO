@@ -74,13 +74,13 @@ Linux x64 (WSL Ubuntu 22.04):
 macOS x64/arm64 (native CI, 2026-11-10):
 
 - `package-bundle.ps1` ran `build-macos-package.sh` from the staged bundle and produced
-  `5do-1.7.0-osx-x64.dmg` and `5do-1.7.0-osx-arm64.dmg` (plus `.pkg`) in CI run
+  `5do-1.7.1-osx-x64.dmg` and `5do-1.7.1-osx-arm64.dmg` (plus `.pkg`) in CI run
   <https://github.com/purelogiccode/5DO/actions/runs/42877150967>.
 - `build-bundle.yml` selected the DMG as the release asset for each macOS RID; the
   release workflow publishes the DMG instead of the internal tar.gz.
 - The app bundle declares `com.5do.disc-image` and a `CFBundleDocumentTypes` viewer entry.
   Signing/notarization are skipped when no Developer ID/keychain profile is supplied.
 - The six assets are published at
-  <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0> with `SHA256SUMS.txt`.
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.7.1> with `SHA256SUMS.txt`.
   Local copies are in `src/FiveDo.Frontend.Avalonia/bin/Release`; all six
-  `5do-1.7.0-*` SHA-256 entries verify.
+  `5do-1.7.1-*` SHA-256 entries verify.

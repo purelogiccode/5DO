@@ -1,8 +1,9 @@
 # Known Issues
 
-**Snapshot:** 2026-11-10, v1.7.0 plus the P0 quality pass, native platform runtime
+**Snapshot:** 2026-11-10, v1.7.1 plus the P0 quality pass, native platform runtime
 smoke, CD subcode, disc conversion, focus/void/pixel-format work, pointer input scripts,
-and macOS DMG distribution. This list covers the supported local corpus and the current
+and macOS DMG distribution. The 1.7.1 update removes the CHD startup prefetch stall and
+audio underruns. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,

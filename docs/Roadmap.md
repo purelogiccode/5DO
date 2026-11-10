@@ -6,8 +6,8 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.7.0 platform and media-polish release** (published on GitHub).
-The compatibility plan is complete:
+The project is at the **v1.7.1 desktop-startup and dependency release** (published on
+GitHub). The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
 - **375 are playable**; the other three are non-retail/add-on images with documented root

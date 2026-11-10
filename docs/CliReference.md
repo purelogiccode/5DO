@@ -173,7 +173,7 @@ the BIOS file.
 | `--swi-hle` | off | Handle Opera's 14 Portfolio OS fixed-point math SWIs (`0x50000`-`0x50012`) on the host. Opt-in performance mode; it skips the guest handler's cycles and register clobbers, so some titles change behavior. Recorded in save states and per-game profiles. |
 | `--swi-comments` | off | Collect a per-comment SWI histogram and include it as `swiComments` in `--json`. Use it to discover which math SWIs a title calls. Diagnostic only. |
 | `--cpu-backend interpreter\|jit` | `interpreter` | Guest ARM60 backend. `jit` compiles hot blocks and falls back safely when dynamic code or a supported block is unavailable. |
-| `--prefetch` | off | Enable the bounded disc read-ahead cache (32 sectors ahead, 128-sector capacity). |
+| `--prefetch` | off | Enable the bounded disc read-ahead cache for uncompressed images (32 sectors ahead, 128-sector capacity). CHD images use CHDSharp's built-in hunk read-ahead instead. |
 | `--playlist <m3u>` | none | Open the first entry of an M3U/M3U8 playlist. Cannot be combined with a positional disc. A positional `.m3u`/`.m3u8` is also detected. |
 | `--swap-at N` | none | With `--swap-disc`, replace the disc at emulated frame N without resetting the machine. |
 | `--swap-disc <path>` | none | Disc opened at `--swap-at`; the reported disc hash updates after the swap. |

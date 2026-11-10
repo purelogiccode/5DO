@@ -93,6 +93,23 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void PrefetchedChdUsesChdReadAheadInsteadOfTheSectorCache()
+    {
+        using var fixture = new DiscFixture(sectorCount: 16);
+        ChdEncoder.EncodeCd(fixture.CuePath, fixture.ChdPath);
+
+        using IDiscSource source = DiscImageFactory.Open(fixture.ChdPath, prefetch: true);
+
+        // CHDSharp already runs its own hunk read-ahead. Wrapping the reader in the
+        // sector prefetcher lets its background look-ahead hold the inner-reader lock
+        // and stall foreground CD reads, so the factory keeps the CHD reader direct.
+        Assert.IsType<FiveDo.Storage.Chd.ChdDiscImage>(source);
+        var sector = new byte[2048];
+        source.ReadSector(5, sector);
+        Assert.Equal(DiscFixture.Expected(5), sector);
+    }
+
+    [Fact]
     public void ChdImage_MatchesIsoAndBinSectorStream()
     {
         using var fixture = new DiscFixture(sectorCount: 48);

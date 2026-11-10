@@ -16,12 +16,12 @@
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
-        "requested": "[18.11.0, )",
-        "resolved": "18.11.0",
-        "contentHash": "xf/bR0LNkhK0SnadDRlZIQmC4sac5Wk0e1WAdiQjRN3MSo6gQ9M2c4c1XRNnVGjfOvckh704W5CJ19AL0/Xsdg==",
+        "requested": "[18.11.1, )",
+        "resolved": "18.11.1",
+        "contentHash": "WhRZZb+oLAB2neaTa773vfPl+eIyfaMtDSZBHFJtWccty0OZbPXimIzDv1/dux5/Sr2/GqKEzOT8U4295g1GJg==",
         "dependencies": {
-          "Microsoft.CodeCoverage": "18.11.0",
-          "Microsoft.TestPlatform.TestHost": "18.11.0"
+          "Microsoft.CodeCoverage": "18.11.1",
+          "Microsoft.TestPlatform.TestHost": "18.11.1"
         }
       },
       "Roslynator.Analyzers": {
@@ -59,27 +59,27 @@
       },
       "Avalonia.FreeDesktop": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "XqLCj3V2PJsIaNANnFwolEv9Ng8LT7XM//dG39wPv/oeVTijjLNbayWAkeQlpKxi6RtAkjfnXjK+xK/S1caQLA==",
+        "resolved": "12.1.6",
+        "contentHash": "sE7bo4++6/ReFFYhRVXPhaHIPSN/yXPOBBzGBddorWD9RzIXP0iA4mkzcrrSkpwQfcsJUgseCxAydWt0hhMyig==",
         "dependencies": {
-          "Avalonia": "12.1.5",
+          "Avalonia": "12.1.6",
           "Tmds.DBus.Protocol": "0.94.1"
         }
       },
       "Avalonia.FreeDesktop.AtSpi": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "MTqCBRv1+nkUHPUeMtbh4/dA3AaCEA6LpIT+ZtCnWO4QSxEQFIdlyMZa/d4y6qBBIcxw2DhdY3+JzdhCn6DpUg==",
+        "resolved": "12.1.6",
+        "contentHash": "K37YcbSy+dDmLIjuWU7X5Y3oGPxIsG2H7aWNQnwzlF1mWfbNm5B0inAXpShwCc3m8eVxqyA0gCSoXnhbWEucMw==",
         "dependencies": {
-          "Avalonia": "12.1.5"
+          "Avalonia": "12.1.6"
         }
       },
       "Avalonia.HarfBuzz": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "3kspGPaRVrCzgMi4Rv4N33VNbQNN4wcY4NoCufYxKF/kvYqPbrAnGD2Mjm6Kmc3IA3QrLbj5UJpg8WDTAd4cPw==",
+        "resolved": "12.1.6",
+        "contentHash": "Y+0vG5+ObryzJl/fs1Vc25E7raOvW+inDkLU7QDxmdXgsxUq3wVx5S/k35vYn2fB9gWtFdGwSrEfLdOQev39Ag==",
         "dependencies": {
-          "Avalonia": "12.1.5",
+          "Avalonia": "12.1.6",
           "HarfBuzzSharp": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.Linux": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.WebAssembly": "8.3.1.3"
@@ -87,23 +87,23 @@
       },
       "Avalonia.Native": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "LsC92ialAyccwXiqSjSHVlYGbASfB8XHbGT0XB3zqERF7PM7M3KjSnMgGc1HkzvwtGX+GgTYap6PV8N9H6un8Q==",
+        "resolved": "12.1.6",
+        "contentHash": "c9+4tsRB8K2bKd9wvhb9jY1vD1ItV1SVYpN6valUtOg/Pu6/AlqRKzLo8zyv8mwcqFZzgtp+WunareH//6+VUQ==",
         "dependencies": {
-          "Avalonia": "12.1.5"
+          "Avalonia": "12.1.6"
         }
       },
       "Avalonia.Remote.Protocol": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "yNSke7MNKxJrgcTOQJk70QhPU568dxwRMeQCSmq9N7IGbpPS4zpbr4o6e8rLF/8UfASBQN/yuTgqUfa2nwf6Iw=="
+        "resolved": "12.1.6",
+        "contentHash": "55fcjPpzkzPaSSMczUjpKHKWcuJo6dJHHkLXgT8nMP80ijYASzdPdf86173R7CqPitw8E8nJ229Jqpu/EyUVow=="
       },
       "Avalonia.Skia": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "irfPBtb4UoAT0qfRviYsALBwo0JwXnziRNOTQLzzAQt3eoNPyKFLBsgyj5hE4+6vgunQ7hltEHlvTHPkCoreIg==",
+        "resolved": "12.1.6",
+        "contentHash": "6Ampu5kpbuhx/tk2aw9DF664q+fOjMjpsF6N76/lulCt/g+Tkoz4rr8dk9lsmHvOI9KQ/dmERO9MrJ5/mVDwlQ==",
         "dependencies": {
-          "Avalonia": "12.1.5",
+          "Avalonia": "12.1.6",
           "HarfBuzzSharp": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.Linux": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.WebAssembly": "8.3.1.3",
@@ -114,22 +114,22 @@
       },
       "Avalonia.Win32": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "QHfRLCyvVzj74AMCohS5a08Jz5f7VAeRgZ0SJsDTSfqxRzdbw9DXpKsncu21YmEvRWxMPkwyoB9cx9dvS1Bwmg==",
+        "resolved": "12.1.6",
+        "contentHash": "AZjU48WnzqNoi79bf8wHA7mxfgEi3MEv1vyn7N7HQpaegCnwh7TJ5jwrEbcwNqjP2JviXl/1H7CQ6tPbrgNw3A==",
         "dependencies": {
-          "Avalonia": "12.1.5",
+          "Avalonia": "12.1.6",
           "Avalonia.Angle.Windows.Natives": "2.1.27548.20260419"
         }
       },
       "Avalonia.X11": {
         "type": "Transitive",
-        "resolved": "12.1.5",
-        "contentHash": "5EK2QrM9I3Lm3Aq/ZSpJjg1ZzBXl7YE9PxaB/mLxF9ysZz8qgFaJ5Zj+A9NdtAszupA+81Z3B9EmZP++2Xs4Ug==",
+        "resolved": "12.1.6",
+        "contentHash": "sZbD5MAVBbeXqNZ8uBLg6p38uen+nNTWUZPJLPA5NSKbNrBT9Yg9lbqk24btEGsuLs4Uqqj3+C5Pa5oD0d2iVg==",
         "dependencies": {
-          "Avalonia": "12.1.5",
-          "Avalonia.FreeDesktop": "12.1.5",
-          "Avalonia.FreeDesktop.AtSpi": "12.1.5",
-          "Avalonia.Skia": "12.1.5"
+          "Avalonia": "12.1.6",
+          "Avalonia.FreeDesktop": "12.1.6",
+          "Avalonia.FreeDesktop.AtSpi": "12.1.6",
+          "Avalonia.Skia": "12.1.6"
         }
       },
       "HarfBuzzSharp": {
@@ -168,8 +168,8 @@
       },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
-        "resolved": "18.11.0",
-        "contentHash": "MhN9wpvL1Es4hfIYslrsVgIsUdDFxuOBTbAl9mGIMvFo8PP5CLf4DrGdNrfwWSyn0lqi6sssm+I/qkkLL3MU+g=="
+        "resolved": "18.11.1",
+        "contentHash": "E3VdeksrrkN0fp/Fjsfr3yraNGHbgxRx3k2pjVIohYiZcCcrXQ/Dz6YX7KcZpx8NCf4G8yqnGA5OnMalds/qjg=="
       },
       "Microsoft.DotNet.PlatformAbstractions": {
         "type": "Transitive",
@@ -191,15 +191,15 @@
       },
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
-        "resolved": "18.11.0",
-        "contentHash": "BXBHYnwSOljKute8UYCMXOLAdB7awxEMppPSpqOF1ZxLD/W/OH+vTBgFaXA7q0aditJTVXSMVenel+wOkEIyNg=="
+        "resolved": "18.11.1",
+        "contentHash": "CWP0wn6kt1LYKTPIlQZbklsZVZDurjszhX5+ijQaxFTJ4p6SNygniudtTcwIxPU1mDTHba7H3AwQ1AC40AA6bw=="
       },
       "Microsoft.TestPlatform.TestHost": {
         "type": "Transitive",
-        "resolved": "18.11.0",
-        "contentHash": "AKjwKpyRBwoQFQmpcchtoYlfJEBlaY/40uxBRi+qXP4NR7xT8t+XTJtOyEyumfvfJcH5pASs75LwNdXYRr4XNA==",
+        "resolved": "18.11.1",
+        "contentHash": "dVQMb8GArL+vWgTbYhOgsCA1gKI1l52jfdw9pvQiaet5IbzwioQDCzbGDVt9QeeHCrMnheW2FA+Sm92mxGr+3w==",
         "dependencies": {
-          "Microsoft.TestPlatform.ObjectModel": "18.11.0"
+          "Microsoft.TestPlatform.ObjectModel": "18.11.1"
         }
       },
       "SharpGen.Runtime": {
@@ -307,7 +307,7 @@
       "fivedo.audio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
           "Serilog": "[4.4.0, )",
           "Silk.NET.OpenAL": "[2.23.0, )",
           "Silk.NET.OpenAL.Soft.Native": "[1.23.1, )"
@@ -316,29 +316,29 @@
       "fivedo.cdrom": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.cheats": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Input": "[1.6.0, )",
-          "FiveDo.Machine": "[1.6.0, )"
+          "FiveDo.Input": "[1.7.1, )",
+          "FiveDo.Machine": "[1.7.1, )"
         }
       },
       "fivedo.cli": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Host": "[1.6.0, )",
-          "FiveDo.Tas": "[1.6.0, )",
+          "FiveDo.Host": "[1.7.1, )",
+          "FiveDo.Tas": "[1.7.1, )",
           "Serilog": "[4.4.0, )",
-          "System.CommandLine": "[2.0.14, )"
+          "System.CommandLine": "[3.0.0, )"
         }
       },
       "fivedo.clio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.core": {
@@ -347,14 +347,14 @@
       "fivedo.cpu": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.diagnostics": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Cpu": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Cpu": "[1.7.1, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
@@ -363,126 +363,126 @@
       "fivedo.diffharness": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Audio": "[1.6.0, )",
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Input": "[1.6.0, )",
-          "FiveDo.Storage": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )"
+          "FiveDo.Audio": "[1.7.1, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Input": "[1.7.1, )",
+          "FiveDo.Storage": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )"
         }
       },
       "fivedo.dsp": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.frontend.avalonia": {
         "type": "Project",
         "dependencies": {
-          "Avalonia": "[12.1.5, )",
-          "Avalonia.Desktop": "[12.1.5, )",
-          "Avalonia.Fonts.Inter": "[12.1.5, )",
-          "Avalonia.Themes.Fluent": "[12.1.5, )",
+          "Avalonia": "[12.1.6, )",
+          "Avalonia.Desktop": "[12.1.6, )",
+          "Avalonia.Fonts.Inter": "[12.1.6, )",
+          "Avalonia.Themes.Fluent": "[12.1.6, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "FiveDo.Host": "[1.6.0, )",
-          "FiveDo.Tas": "[1.6.0, )",
-          "FiveDo.Video.Direct3D": "[1.6.0, )",
-          "FiveDo.Video.OpenGL": "[1.6.0, )",
-          "FiveDo.Video.Vulkan": "[1.6.0, )",
+          "FiveDo.Host": "[1.7.1, )",
+          "FiveDo.Tas": "[1.7.1, )",
+          "FiveDo.Video.Direct3D": "[1.7.1, )",
+          "FiveDo.Video.OpenGL": "[1.7.1, )",
+          "FiveDo.Video.Vulkan": "[1.7.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.fuzz": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Cdrom": "[1.6.0, )",
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Cpu": "[1.6.0, )",
-          "FiveDo.Machine": "[1.6.0, )",
-          "FiveDo.Memory": "[1.6.0, )",
-          "FiveDo.Storage": "[1.6.0, )"
+          "FiveDo.Cdrom": "[1.7.1, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Cpu": "[1.7.1, )",
+          "FiveDo.Machine": "[1.7.1, )",
+          "FiveDo.Memory": "[1.7.1, )",
+          "FiveDo.Storage": "[1.7.1, )"
         }
       },
       "fivedo.host": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Audio": "[1.6.0, )",
-          "FiveDo.Cheats": "[1.6.0, )",
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Diagnostics": "[1.6.0, )",
-          "FiveDo.Input": "[1.6.0, )",
-          "FiveDo.Machine": "[1.6.0, )",
-          "FiveDo.Storage": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )",
+          "FiveDo.Audio": "[1.7.1, )",
+          "FiveDo.Cheats": "[1.7.1, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Diagnostics": "[1.7.1, )",
+          "FiveDo.Input": "[1.7.1, )",
+          "FiveDo.Machine": "[1.7.1, )",
+          "FiveDo.Storage": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.machine": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Cdrom": "[1.6.0, )",
-          "FiveDo.Clio": "[1.6.0, )",
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Cpu": "[1.6.0, )",
-          "FiveDo.Diagnostics": "[1.6.0, )",
-          "FiveDo.Dsp": "[1.6.0, )",
-          "FiveDo.Madam": "[1.6.0, )",
-          "FiveDo.Memory": "[1.6.0, )",
-          "FiveDo.Sport": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )",
-          "FiveDo.Xbus": "[1.6.0, )"
+          "FiveDo.Cdrom": "[1.7.1, )",
+          "FiveDo.Clio": "[1.7.1, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Cpu": "[1.7.1, )",
+          "FiveDo.Diagnostics": "[1.7.1, )",
+          "FiveDo.Dsp": "[1.7.1, )",
+          "FiveDo.Madam": "[1.7.1, )",
+          "FiveDo.Memory": "[1.7.1, )",
+          "FiveDo.Sport": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )",
+          "FiveDo.Xbus": "[1.7.1, )"
         }
       },
       "fivedo.madam": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.memory": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.sport": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
           "CHDSharp": "[1.6.3, )",
-          "FiveDo.Core": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.tas": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Input": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Input": "[1.7.1, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "fivedo.video.direct3d": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )",
           "Serilog": "[4.4.0, )",
           "Vortice.D3DCompiler": "[3.8.3, )",
           "Vortice.DXGI": "[3.8.3, )",
@@ -492,16 +492,16 @@
       "fivedo.video.opengl": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )",
           "Silk.NET.OpenGL": "[2.23.0, )"
         }
       },
       "fivedo.video.vulkan": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )",
-          "FiveDo.Video": "[1.6.0, )",
+          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Video": "[1.7.1, )",
           "Silk.NET.Vulkan": "[2.23.0, )",
           "Silk.NET.Vulkan.Extensions.KHR": "[2.23.0, )"
         }
@@ -509,50 +509,50 @@
       "fivedo.xbus": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.6.0, )"
+          "FiveDo.Core": "[1.7.1, )"
         }
       },
       "Avalonia": {
         "type": "CentralTransitive",
-        "requested": "[12.1.5, )",
-        "resolved": "12.1.5",
-        "contentHash": "Vw+gNvv4RXK5hLeVI9PfalhxPai6hrQjIElfoCDQK1fXTpk+vRyfhuhprrh+EIeuJtoYCy+AsSrqR1wgU28zeQ==",
+        "requested": "[12.1.6, )",
+        "resolved": "12.1.6",
+        "contentHash": "juogZu7ASS2KMtSqOMa8nGJ5I1Ile/3PG3JR+tD73liDr30qgilEsqNVQw3KIXJvuFc9m3Mf9NzGWc3sQvnlXA==",
         "dependencies": {
           "Avalonia.BuildServices": "11.3.2",
-          "Avalonia.Remote.Protocol": "12.1.5",
+          "Avalonia.Remote.Protocol": "12.1.6",
           "MicroCom.Runtime": "0.11.6"
         }
       },
       "Avalonia.Desktop": {
         "type": "CentralTransitive",
-        "requested": "[12.1.5, )",
-        "resolved": "12.1.5",
-        "contentHash": "l1jo9qKJjJ68gcuUwHgNgpsHV6STcvqfYTFvFPprOf949gmE506X/d7Mox/y36tU2BSWBqLGZ1M3mh8Ggl2g/Q==",
+        "requested": "[12.1.6, )",
+        "resolved": "12.1.6",
+        "contentHash": "X3RzMxlfl6IB/CA+X2JO+CrJHUdFIjzZiIbLyy0Xy52NYvvrb1nCVlv9TOTo5JpBL832CvPBp7BAgR9UrLlPpA==",
         "dependencies": {
-          "Avalonia": "12.1.5",
-          "Avalonia.HarfBuzz": "12.1.5",
-          "Avalonia.Native": "12.1.5",
-          "Avalonia.Skia": "12.1.5",
-          "Avalonia.Win32": "12.1.5",
-          "Avalonia.X11": "12.1.5"
+          "Avalonia": "12.1.6",
+          "Avalonia.HarfBuzz": "12.1.6",
+          "Avalonia.Native": "12.1.6",
+          "Avalonia.Skia": "12.1.6",
+          "Avalonia.Win32": "12.1.6",
+          "Avalonia.X11": "12.1.6"
         }
       },
       "Avalonia.Fonts.Inter": {
         "type": "CentralTransitive",
-        "requested": "[12.1.5, )",
-        "resolved": "12.1.5",
-        "contentHash": "SeFNLktbuxrHxUzPjYubzWB1O9HVCNo3IezZZ9SgkFBAcKcSYrY2KcD8lfP7QWMGxPUvqdLyn0TmioR9d3nZUg==",
+        "requested": "[12.1.6, )",
+        "resolved": "12.1.6",
+        "contentHash": "sb0jH+oKHCWGo5PHuYtsK3cJ2dcsiE7PQEJJ94ZrFewxwwyeUn0+EsvnzKPEfL2c4cvRXInL0O741yUf3aHX2Q==",
         "dependencies": {
-          "Avalonia": "12.1.5"
+          "Avalonia": "12.1.6"
         }
       },
       "Avalonia.Themes.Fluent": {
         "type": "CentralTransitive",
-        "requested": "[12.1.5, )",
-        "resolved": "12.1.5",
-        "contentHash": "FGjtJEpeVIbth+u4r507c9nbm1NQWLTvT3RC4e/yqDceRC4crAl37zVUloElA6rexDz69y0WvDfMLGX+t12yBQ==",
+        "requested": "[12.1.6, )",
+        "resolved": "12.1.6",
+        "contentHash": "CafSFU8q6I2ij7VRWy3D5qw3ObrDEOXRqIvFqVuEh7vqk1EC9ob94KYRmbHLZRsyj3Ob2xsF/tgcF5YF2uiKzQ==",
         "dependencies": {
-          "Avalonia": "12.1.5"
+          "Avalonia": "12.1.6"
         }
       },
       "CHDSharp": {
@@ -669,9 +669,9 @@
       },
       "System.CommandLine": {
         "type": "CentralTransitive",
-        "requested": "[2.0.14, )",
-        "resolved": "2.0.14",
-        "contentHash": "15fyVO4aG6poR6IKmhM74zf7PUzaU6FZAGm2d3SQSO9yIyGAeo44e6t9qeKjjaqyMEqYdqcb2G1B0gpLoDU2cA=="
+        "requested": "[3.0.0, )",
+        "resolved": "3.0.0",
+        "contentHash": "swNpSTl0iYJeBuvYYfaY+VxzZ5YC8wklwkqDCNOq2aTQqJzjauJfh/O3Zw93nwxspWrxvZTjT45f8VPR0ParEA=="
       },
       "Vortice.D3DCompiler": {
         "type": "CentralTransitive",

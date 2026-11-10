@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-10, v1.7.0: the native platform runtime smoke, CD subcode, disc
+**Snapshot:** 2026-11-10, v1.7.1: the CHD startup-stutter fix and dependency refresh; the native platform runtime smoke, CD subcode, disc
 conversion, focus/void/pixel-format work, the two Tier C gameplay-depth increments, and
 the 1.6.0 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
@@ -76,6 +76,17 @@ x64/arm64, Linux arm64, and Windows arm64. Release run
 at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published checksums
 verify. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
+
+**1.7.1 release update (2026-11-10):** **v1.7.1** removes the desktop startup stutter
+and audio underruns caused by the host disc prefetcher wrapping CHDSharp's own
+read-ahead. CHD images now use the CHDSharp reader directly, and the remaining sector
+prefetcher runs below normal priority and yields between read-ahead sectors. The
+release also updates Avalonia to 12.1.6, System.CommandLine to 3.0.0, and
+Microsoft.NET.Test.Sdk to 18.11.1. A 20-second desktop Road Rash run reports **0 audio
+underruns** and no skipped frames. The suite is **2,125 tests**; build, format, and
+InspectCode are clean. Fresh Windows/Linux/macOS x64/arm64 bundles are built from the
+`v1.7.1` tag. See [`WhatsNew.md`](WhatsNew.md) and
+[`ReleaseNotes-1.7.1.md`](ReleaseNotes-1.7.1.md).
 
 **Tier C gameplay-depth update (2026-11-09):** the first Tier C increment re-ran the
 25 titles still graded `Playable` after Tier B with title-specific start and gameplay
@@ -313,7 +324,8 @@ emulation thread. Keyframe capture on Lemmings fell from **139.3 ms** to **7.4-9
 gen0/gen2 collections, and the frame loop measured p50 **1.34 ms** / p99 **6.85 ms** /
 max **14.76 ms** with the mailbox and rewind active. The memory save-state section
 (version 4) now stores only the live RAM/VRAM range, cutting a stock-layout uncompressed
-state from ~26 MB to ~10 MB, and the frontend opens discs through the prefetch cache.
+state from ~26 MB to ~10 MB, and the frontend requests the host-side prefetch cache
+for uncompressed images (CHD uses CHDSharp's own hunk read-ahead).
 See [`Performance.md`](Performance.md) 8.5. The suite is **1,866 tests**.
 
 **CPU and high-res increment (2026-11-06):** the third PERF-08 pass gives compiled blocks a

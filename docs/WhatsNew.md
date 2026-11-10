@@ -1,70 +1,46 @@
-# What's new in 5DO 1.7.0
+# What's new in 5DO 1.7.1
 
 **Released:** 2026-11-10
 
-5DO 1.7.0 is the **platform and media-polish update**. It adds CD subcode/Q data and
-`disc convert`, makes the desktop shell focus-aware with selectable void patterns,
-extends input scripts with pointer devices, closes the native runtime smoke matrix on
-macOS and arm64, and ships macOS as a drag-to-Applications **DMG**.
+5DO 1.7.1 is a **desktop playback and dependency update**. It removes the startup
+stutter and audio underruns caused by the host disc prefetcher shadowing CHDSharp's own
+read-ahead, and refreshes the Avalonia, CLI, and test dependencies.
 
 ## Highlights
 
-### CD-ROM parity and disc tools
+### Smooth desktop startup
 
-- **Opera-sized CD transfers.** `MODE SET` accepts the 2449-byte maximum: a 2352-byte
-  audio/data sector plus the 96-byte subcode block (and optional error byte).
-- **READ_DATA subcode/Q.** Q is packed into bit 6 of each subcode byte (MSB first) with
-  control/ADR, track, index, absolute MSF, relative MSF, and the inverted CRC-16/CCITT.
-  `READ SUB-Q` keeps its ten-byte payload.
-- **CD-ROM state section v6.** New states preserve the full transfer buffer; version 1-5
-  states still load by reading the historical 2352-byte buffer.
-- **`disc convert`.** Data-only ISO/BIN/CUE+BIN/flat CHD conversion verifies the 3DO game
-  ID after reopening the output.
+- **CHD images use CHDSharp's read-ahead directly.** The host-sector prefetcher used to
+  wrap CHD readers as well, creating a second look-ahead that could hold the reader lock
+  while the emulation thread waited. During a game's first seconds of disc loading this
+  produced multi-frame rendering stalls and audible underruns. CHD now bypasses the
+  extra cache; uncompressed images keep it.
+- **Prefetch runs below emulation.** The remaining sector worker runs at below-normal
+  priority and pauses between read-ahead sectors, so a foreground disc read can take the
+  lock immediately.
 
-### Desktop and input
+### Dependencies
 
-- **Focus-loss pause.** An opt-in Settings > Emulation option pauses when the window is
-  deactivated and resumes only an automatic pause when focus returns. Manual
-  pause/start/stop clears the automatic state.
-- **Void-area patterns.** Solid, checkerboard, grid, and scanline patterns join the
-  configurable void color, and screenshots record the selected pattern in their sidecar.
-- **Pixel formats.** The frame assembler emits packed 0RGB1555, RGB565, and XRGB8888.
-- **Pointer input scripts.** `@mouse`, `@lightgun`, `@arcadegun`, and `@trackball`
-  tokens add one-frame motion and persistent buttons to the scripted PBUS source.
-- **macOS gamepad input.** A native IOKit HID source maps joystick/gamepad/multi-axis
-  controllers through the eight-player profile; the pure mapper is unit-tested.
-
-### Packaging and platforms
-
-- **macOS DMG.** The macOS bundles are published as `.dmg` files, built natively in CI.
-- **Installer scaffolding.** Unsigned Windows, Linux `.deb`/`.rpm`, and macOS
-  `.app`/`.dmg`/`.pkg` scripts register `.iso`, `.cue`, `.chd`, and `.bin`.
-  Signing/notarization remains conditional on certificates/accounts.
-- **Native runtime smoke.** macOS x64/arm64, Linux arm64, and Windows arm64 pass the CLI
-  `selftest` and frontend `--smoke-test`.
-- **PAL validation.** Eight PAL-sensitive titles were captured with the PAL BIOS, plus a
-  PAL2 384x288/50 Hz probe.
+- Avalonia **12.1.6** for the desktop shell.
+- System.CommandLine **3.0.0** for the CLI.
+- Microsoft.NET.Test.Sdk **18.11.1** for the test assembly.
 
 ## Fixed
 
-- CHD conversion no longer overwrites or deletes a same-stem source BIN; the encoder uses
-  a unique temporary input.
-- A CUE conversion that would overwrite the source BIN is rejected.
-- The frontend audio soak resolves `--region auto` from the loaded BIOS instead of always
-  using NTSC.
-- READ_DATA and READ SUB-Q now share one Q-subchannel builder, keeping control, track,
-  index, MSF, and CRC consistent.
+- The first seconds of a CHD-based game no longer stutter while the prefetcher is
+  reading ahead.
+- Audio underruns caused by those disc-read stalls are gone in the validated desktop
+  runs.
 
 ## Validation
 
-- Full suite **2,124/2,124** passes in Debug.
+- Full suite **2,125/2,125** passes in Debug.
 - `dotnet build` reports **0 warnings and 0 errors**; `dotnet format
   --verify-no-changes` and `jb inspectcode --severity=WARNING` are clean.
-- A 1.6.0-era CD-ROM v5 section loads in a dedicated regression test.
-- ISO/BIN/CUE/CHD conversion round-trips every data sector.
-- Native runtime smoke passes on macOS x64/arm64, Linux arm64, and Windows arm64.
-- Six bundles contain the CLI, desktop app, README, license, notices, `whatsnew.md`, and
-  release/legal docs, with no runtime, PDB, or XML files.
+- A 20-second desktop Road Rash run reports **0 audio underruns** and no skipped frames.
+- Lemmings and Space Ace desktop runs are clean in repeated 20-second checks.
+- Six framework-dependent bundles contain the CLI, desktop app, README, license,
+  notices, `whatsnew.md`, and release/legal docs, with no runtime, PDB, or XML files.
 
 ## Requirements
 
@@ -79,16 +55,16 @@ macOS and arm64, and ships macOS as a drag-to-Applications **DMG**.
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.7.0-win-x64.zip` |
-| Windows arm64 | `5do-1.7.0-win-arm64.zip` |
-| Linux x64 | `5do-1.7.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.7.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.7.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.7.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.7.1-win-x64.zip` |
+| Windows arm64 | `5do-1.7.1-win-arm64.zip` |
+| Linux x64 | `5do-1.7.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.7.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.7.1-osx-x64.dmg` |
+| macOS arm64 | `5do-1.7.1-osx-arm64.dmg` |
 
 Each bundle contains the framework-dependent single-file CLI and desktop app, `README.md`,
 `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.7.0) for
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.7.1) for
 `SHA256SUMS.txt`.
 
 ## Known limits

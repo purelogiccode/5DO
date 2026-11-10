@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.7.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.7.1 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -15,7 +15,9 @@ GPU HQx, the 24-bit VDL background, reference field-boundary timing, and CD pari
 v1.6.0 completes the 378-title compatibility matrix, tightens CD poll/speed/session
 behavior, and hardens settings/NVRAM persistence. v1.7.0 adds CD subcode/Q, disc
 conversion, focus-loss pausing, void patterns, pointer input scripts, macOS HID gamepads,
-native macOS/arm64 runtime smoke, and DMG distribution for macOS.
+native macOS/arm64 runtime smoke, and DMG distribution for macOS. v1.7.1 removes the CHD
+startup prefetch stall and audio underruns and refreshes the desktop/CLI/test
+dependencies.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -241,6 +243,32 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.7.1 desktop-startup and dependency gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.7.1`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.7.1.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, and `docs/Installation.md`.
+- [x] Include the dependency updates: Avalonia 12.1.6, System.CommandLine 3.0.0, and
+      Microsoft.NET.Test.Sdk 18.11.1.
+- [x] Route CHD readers directly to CHDSharp read-ahead and keep the sector prefetcher
+      below normal priority with a yield between sectors.
+- [x] Full suite **2,125/2,125** passes in Debug; `dotnet format --verify-no-changes`
+      is clean; `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Verify desktop Road Rash, Lemmings, and Space Ace runs report no sustained audio
+      underruns and no skipped frames after startup.
+- [x] Build all six framework-dependent bundles from the `v1.7.1` tag and keep local
+      copies in `src/FiveDo.Frontend.Avalonia/bin/Release` without deleting older
+      artifacts.
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.7.1 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [x] Create and push tag `v1.7.1`; the release workflow publishes six versioned bundles
+      and `SHA256SUMS.txt`.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.7.1 release.
+
+---
+
 ## Cover-art hosting gate
 
 - [ ] Run `packaging/package-covers.ps1`; review `artifacts/covers/v1/report.json`.
@@ -343,8 +371,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.7.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-10** | v1.7.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Version | **`v1.7.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, v1.7.0, and rc.1 are historical |
+| Release timing | **Prepared 2026-11-10** | v1.7.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 

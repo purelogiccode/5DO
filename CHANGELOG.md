@@ -1,7 +1,29 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.7.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.7.1, a documented-compatibility
 release.
+
+## [1.7.1] - 2026-11-10
+
+### Changed
+
+- Updated Avalonia to 12.1.6, System.CommandLine to 3.0.0, and
+  Microsoft.NET.Test.Sdk to 18.11.1 in the frontend, CLI, and test builds.
+
+### Fixed
+
+- **Desktop startup stutter and audio underruns.** CHD images no longer go through the
+  host-sector prefetcher, which wrapped CHDSharp's own read-ahead and let a background
+  read hold the disc-reader lock while the emulation thread waited. The remaining
+  prefetch worker runs below normal priority and yields between sectors.
+  A 20-second desktop Road Rash run reports 0 audio underruns and no skipped frames.
+
+### Validation
+
+- Full suite **2,125/2,125** passes in Debug.
+- `dotnet build`, `dotnet format --verify-no-changes`, and
+  `jb inspectcode --severity=WARNING` are clean.
+- Fresh Windows/Linux/macOS x64/arm64 bundles are built from this commit.
 
 ## [1.7.0] - 2026-11-10
 

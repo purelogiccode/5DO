@@ -13,7 +13,10 @@ public static class DiscImageFactory
     /// <summary>Opens a disc image by path and detected container format.</summary>
     /// <param name="path">Path to an ISO, BIN, CUE, or CHD image.</param>
     /// <param name="chdParentPath">Optional parent CHD path for a differential CHD.</param>
-    /// <param name="prefetch">Whether to add a host-side read-ahead cache.</param>
+    /// <param name="prefetch">
+    /// Whether to add a host-side read-ahead cache for uncompressed image readers.
+    /// CHD sources use CHDSharp's own hunk read-ahead directly.
+    /// </param>
     /// <param name="prefetchAhead">Sectors to read ahead when prefetching is enabled.</param>
     /// <param name="prefetchCapacity">Maximum cached sectors when prefetching is enabled.</param>
     /// <param name="chdReadAheadHunks">
@@ -46,6 +49,15 @@ public static class DiscImageFactory
         };
 
         if (!prefetch)
+        {
+            return source;
+        }
+
+        // CHDSharp already decompresses upcoming hunks on its own read-ahead thread.
+        // Wrapping it in the sector prefetcher adds a second look-ahead that holds the
+        // inner-reader lock, and foreground CD reads can then queue behind it for
+        // several frames. Keep the sector cache for images whose reader is just a file.
+        if (source is ChdDiscImage)
         {
             return source;
         }
