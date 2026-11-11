@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Cpu</RootNamespace>
     <AssemblyName>FiveDo.Cpu</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Memory</RootNamespace>
     <AssemblyName>FiveDo.Memory</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

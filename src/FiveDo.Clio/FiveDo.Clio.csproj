@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Clio</RootNamespace>
     <AssemblyName>FiveDo.Clio</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

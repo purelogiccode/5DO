@@ -4,6 +4,7 @@
     <RootNamespace>FiveDo.Tests</RootNamespace>
     <AssemblyName>FiveDo.Tests</AssemblyName>
     <IsTestProject>true</IsTestProject>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

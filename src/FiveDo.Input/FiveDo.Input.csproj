@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Input</RootNamespace>
     <AssemblyName>FiveDo.Input</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

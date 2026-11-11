@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Cdrom</RootNamespace>
     <AssemblyName>FiveDo.Cdrom</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

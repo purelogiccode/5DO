@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Xbus</RootNamespace>
     <AssemblyName>FiveDo.Xbus</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

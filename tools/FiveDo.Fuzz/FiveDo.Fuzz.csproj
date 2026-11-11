@@ -5,6 +5,7 @@
     <RootNamespace>FiveDo.Fuzz</RootNamespace>
     <AssemblyName>FiveDo.Fuzz</AssemblyName>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

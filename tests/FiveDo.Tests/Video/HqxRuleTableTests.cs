@@ -116,7 +116,7 @@ public sealed class HqxRuleTableTests
         Assert.Equal(1 << shift, weightSum);
     }
 
-    private static uint EvaluateRule(uint rule, Span<uint> window)
+    private static uint EvaluateRule(uint rule, ReadOnlySpan<uint> window)
     {
         var w0 = (int)(rule & 15);
         var i0 = (int)((rule >> 4) & 15);
@@ -138,7 +138,7 @@ public sealed class HqxRuleTableTests
         return 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
     }
 
-    private static int ComputePattern(Span<uint> window)
+    private static int ComputePattern(ReadOnlySpan<uint> window)
     {
         var (centerY, centerU, centerV) = ToYuv(window[5]);
         var pattern = 0;

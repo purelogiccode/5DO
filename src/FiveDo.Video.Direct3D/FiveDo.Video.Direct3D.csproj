@@ -5,6 +5,7 @@
     <AssemblyName>FiveDo.Video.Direct3D</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);MA0048</NoWarn>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

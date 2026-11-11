@@ -4,6 +4,7 @@
     <RootNamespace>FiveDo.Audio</RootNamespace>
     <AssemblyName>FiveDo.Audio</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

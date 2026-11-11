@@ -77,7 +77,7 @@ internal static class DiffManifestLoader
         var defaults = manifest.Defaults ?? new DiffDefaults();
         var compare = defaults.Compare ?? new DiffCompareOptions();
         var roots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach ((var key, var value) in manifest.Roots ?? [])
+        foreach ((var key, var value) in manifest.Roots ?? [with(global::System.StringComparer.Ordinal)])
         {
             roots[key] = value;
         }

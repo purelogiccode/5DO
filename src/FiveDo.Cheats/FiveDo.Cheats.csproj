@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Cheats</RootNamespace>
     <AssemblyName>FiveDo.Cheats</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

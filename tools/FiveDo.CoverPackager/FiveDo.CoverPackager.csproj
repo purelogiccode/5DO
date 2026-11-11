@@ -5,6 +5,7 @@
     <RootNamespace>FiveDo.CoverPackager</RootNamespace>
     <AssemblyName>FiveDo.CoverPackager</AssemblyName>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

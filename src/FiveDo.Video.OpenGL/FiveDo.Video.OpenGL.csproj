@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Video.OpenGL</RootNamespace>
     <AssemblyName>FiveDo.Video.OpenGL</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

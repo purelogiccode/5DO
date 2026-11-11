@@ -6,6 +6,7 @@
     <AssemblyName>FiveDo.DiffHarness</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

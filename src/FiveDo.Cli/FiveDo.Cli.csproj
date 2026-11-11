@@ -14,6 +14,7 @@
          runtime is copied; keep the warnings visible without failing the build. -->
     <IlcTreatWarningsAsErrors Condition="'$(FiveDoNativeAot)' == 'true'">false</IlcTreatWarningsAsErrors>
     <ApplicationIcon>icon2.ico</ApplicationIcon>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Sport</RootNamespace>
     <AssemblyName>FiveDo.Sport</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

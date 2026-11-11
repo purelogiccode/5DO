@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Dsp</RootNamespace>
     <AssemblyName>FiveDo.Dsp</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ShaderCompilerGlobalOption_class_name>VulkanShaders</ShaderCompilerGlobalOption_class_name>
     <NoWarn>$(NoWarn);MA0048</NoWarn>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

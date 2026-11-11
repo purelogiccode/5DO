@@ -21,6 +21,7 @@
          visible without failing the opt-in build. Audio under single-file AOT is
          not yet validated. -->
     <IlcTreatWarningsAsErrors Condition="'$(FiveDoNativeAot)' == 'true'">false</IlcTreatWarningsAsErrors>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">

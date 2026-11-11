@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Tas</RootNamespace>
     <AssemblyName>FiveDo.Tas</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

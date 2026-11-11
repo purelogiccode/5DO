@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>FiveDo.Benchmarks</RootNamespace>
     <AssemblyName>FiveDo.Benchmarks</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

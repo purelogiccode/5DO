@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>FiveDo.Video</RootNamespace>
     <AssemblyName>FiveDo.Video</AssemblyName>
+    <LangVersion>15</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
