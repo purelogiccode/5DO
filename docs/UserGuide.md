@@ -386,9 +386,9 @@ averages them into a flicker-free 240-line frame. The mode is presentation-only 
 stored in per-game profiles; the CLI defaults to `bob` so diagnostic frame hashes stay
 reference-compatible and accepts `--deinterlace auto|bob|weave|blend`.
 
-Aspect, custom aspect ratio, integer scaling, vsync preference (applied through
-WGL/GLX/EGL where the platform exposes a swap-interval extension), CRT bloom, FSR
-sharpness, fullscreen
+Aspect presets (4:3, 5:4, 16:9, 16:10, and 21:9), custom aspect ratio, integer scaling,
+vsync preference (applied through WGL/GLX/EGL where the platform exposes a swap-interval
+extension), CRT bloom, FSR sharpness, fullscreen
 (F11/Escape; the cursor is hidden while fullscreen), and the FPS/status overlay are in
 **Settings > Video**. **Frame skip** controls presentation catch-up: **Auto** is the
 default and only drops presentation frames when the host misses its deadline; fixed

@@ -19,8 +19,9 @@ PC adjustment (`+64`) on the first instruction and reports `anvilKind = 30`.
 **ARM60** - The 3DO's 32-bit ARM CPU core, emulated by the `Arm60` interpreter at
 ~12.5 MHz. Not the same as the host .NET JIT.
 
-**Aspect mode** - `Integer`, `FourThree`, `Stretch`, or `Custom`; controls the
-presented rectangle (`ViewportCalculator`).
+**Aspect mode** - `Integer`, `FourThree`, `FiveFour`, `SixteenNine`, `SixteenTen`,
+`TwentyOneNine`, `Stretch`, or `Custom`; controls the presented rectangle
+(`ViewportCalculator`).
 
 **Audio tap** - `FIVEDO_AUDIO_TAP=<prefix>` records the exact PCM queued to OpenAL
 (`<prefix>.wav`) plus per-buffer timing (`<prefix>.csv`).

@@ -222,6 +222,18 @@ public partial class SettingsWindow : Window
         new(OutputResolution.Uhd2160, "4K UHD 3840 x 2160"),
     ];
 
+    private static readonly AspectOption[] _aspectOptions =
+    [
+        new(AspectMode.Integer, "Integer"),
+        new(AspectMode.FourThree, "4:3"),
+        new(AspectMode.FiveFour, "5:4"),
+        new(AspectMode.SixteenNine, "16:9"),
+        new(AspectMode.SixteenTen, "16:10"),
+        new(AspectMode.TwentyOneNine, "21:9"),
+        new(AspectMode.Stretch, "Stretch"),
+        new(AspectMode.Custom, "Custom"),
+    ];
+
     private readonly string? _gameId;
     private readonly AppSettings _settings;
     private readonly List<string> _libraryFolders = [];
@@ -264,8 +276,9 @@ public partial class SettingsWindow : Window
         FilterOverrideCombo.SelectedItem = settings.GetFilterOverride(gameId) is { } gameFilter
             ? gameFilter
             : "Automatic";
-        AspectCombo.ItemsSource = Enum.GetValues<AspectMode>();
-        AspectCombo.SelectedItem = settings.Aspect;
+        AspectCombo.ItemsSource = _aspectOptions;
+        AspectCombo.SelectedItem = _aspectOptions.FirstOrDefault(option => option.Value == settings.Aspect)
+            ?? _aspectOptions.First(option => option.Value == AspectMode.FourThree);
         CustomAspectBox.Text = settings.CustomAspect.ToString("0.###", CultureInfo.InvariantCulture);
         IntegerCheck.IsChecked = settings.IntegerScale;
         VsyncCheck.IsChecked = settings.Vsync;
@@ -1123,7 +1136,7 @@ public partial class SettingsWindow : Window
         settings.Deinterlace = DeinterlaceCombo.SelectedItem is DeinterlaceOption deinterlace
             ? deinterlace.Value
             : DeinterlaceMode.Auto;
-        settings.Aspect = AspectCombo.SelectedItem is AspectMode aspect ? aspect : AspectMode.FourThree;
+        settings.Aspect = AspectCombo.SelectedItem is AspectOption aspect ? aspect.Value : AspectMode.FourThree;
         if (!double.TryParse(
                 CustomAspectBox.Text?.Trim(),
                 NumberStyles.Float,
@@ -2171,6 +2184,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record ResolutionOption(OutputResolution Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record AspectOption(AspectMode Value, string Label)
     {
         public override string ToString()
         {

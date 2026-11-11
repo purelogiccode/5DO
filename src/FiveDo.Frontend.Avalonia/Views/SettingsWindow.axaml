@@ -41,10 +41,10 @@
                         <ComboBox x:Name="FilterCombo" Grid.Row="7" Grid.Column="1" Margin="0,0,0,8"
                                   ToolTip.Tip="Nearest, sharp-bilinear, CRT, xBR, HQx, or AMD FSR 1.0." />
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="Aspect" VerticalAlignment="Center"
-                                   ToolTip.Tip="Choose how the 4:3 source is fitted to the output." />
+                                   ToolTip.Tip="Choose how the source is fitted to the output, from 4:3 through 21:9, stretch, or a custom ratio." />
                         <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
                             <ComboBox x:Name="AspectCombo" Grid.Column="0"
-                                      ToolTip.Tip="Integer, 4:3, stretch, or custom." />
+                                      ToolTip.Tip="Integer, 4:3, 5:4, 16:9, 16:10, 21:9, stretch, or custom." />
                             <TextBox x:Name="CustomAspectBox" Grid.Column="1" Width="72" Margin="6,0,0,0"
                                      ToolTip.Tip="Custom width/height ratio, for example 1.333 or 1.6." />
                         </Grid>

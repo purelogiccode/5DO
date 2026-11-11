@@ -112,7 +112,7 @@ every serialized property in `AppSettings`.
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `Deinterlace` | enum string | `"Auto"` | 480i/240p field handling: `Auto` (detect and weave complementary fields), `Bob` (present every field, reference-compatible hashes), `Weave` (always combine two fields into 480/576 lines), or `Blend` (average two fields). Presentation-only. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
-| `Aspect` | enum string | `"FourThree"` | Aspect policy. |
+| `Aspect` | enum string | `"FourThree"` | Aspect policy: `Integer`, `FourThree`, `FiveFour`, `SixteenNine`, `SixteenTen`, `TwentyOneNine`, `Stretch`, or `Custom`. |
 | `CustomAspect` | double | `1.3333` | Width/height ratio used when `Aspect` is `Custom`. |
 | `Vsync` | bool | `true` | Request platform vsync (where supported). |
 | `Vrr` | bool | `false` | Disable the blocking swap interval and follow the compositor so a VRR/adaptive-sync display can drive cadence. Actual VRR activation depends on the GPU/driver/monitor/desktop. |
@@ -195,7 +195,9 @@ present one of every 2/3/4/5 emulated frames. In every mode the ARM CPU, CEL eng
 DSP, timers, and CD-ROM still execute all frames, so game speed, input, audio, and save
 states are identical.
 
-`Aspect` (string): `Integer`, `FourThree`, `Stretch`, `Custom`.
+`Aspect` (string): `Integer`, `FourThree`, `FiveFour`, `SixteenNine`,
+`SixteenTen`, `TwentyOneNine`, `Stretch`, `Custom`. The fixed ratios are presentation
+presets; they letterbox or pillarbox the source without changing emulated resolution.
 
 `Renderer` (string): `OpenGl`, `Vulkan`, `Software`.
 

@@ -12,6 +12,18 @@ public enum AspectMode
     /// <summary>4:3 aspect with letterboxing.</summary>
     FourThree,
 
+    /// <summary>5:4 aspect with letterboxing.</summary>
+    FiveFour,
+
+    /// <summary>16:9 aspect with letterboxing.</summary>
+    SixteenNine,
+
+    /// <summary>16:10 aspect with letterboxing.</summary>
+    SixteenTen,
+
+    /// <summary>21:9 aspect with letterboxing.</summary>
+    TwentyOneNine,
+
     /// <summary>Stretch to the output rectangle.</summary>
     Stretch,
 

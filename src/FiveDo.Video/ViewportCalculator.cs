@@ -50,6 +50,10 @@ public static class ViewportCalculator
         var targetAspect = settings.Aspect switch
         {
             AspectMode.FourThree => 4.0 / 3.0,
+            AspectMode.FiveFour => 5.0 / 4.0,
+            AspectMode.SixteenNine => 16.0 / 9.0,
+            AspectMode.SixteenTen => 16.0 / 10.0,
+            AspectMode.TwentyOneNine => 21.0 / 9.0,
             AspectMode.Custom => settings.CustomAspect,
             _ => (double)sourceWidth / logicalHeight,
         };

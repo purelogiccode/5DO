@@ -109,7 +109,7 @@ dotnet run --project src/FiveDo.Cli -- trace game.chd --bios panafz1.bin `
 | xBR/HQx slow at 4K | Use SharpBilinear/Accurate or lower output resolution. xBR and HQx run GPU passes over the GPU-expanded frame; HQx 3x/4x allocate the largest intermediate targets. |
 | FSR looks soft/sharp | Adjust Settings > Video > FSR sharpness. 1.0 is maximum sharpening; 0 is soft. |
 | CRT too dark/glowy | Adjust Bloom; scanline strength is a renderer default (0.25) not exposed in Settings. |
-| Wrong aspect/stretch | Settings > Video > Aspect/Integer scaling. `Stretch` fills the window; `FourThree`/`Integer` letterbox. |
+| Wrong aspect/stretch | Settings > Video > Aspect/Integer scaling. `Stretch` fills the window; `Integer` and the 4:3, 5:4, 16:9, 16:10, and 21:9 presets letterbox or pillarbox. |
 | High-res mode shows a 640x480 game stretched | Hi-Res is opt-in; it is for 640x480 titles. Disable it for 320x240 games. |
 | Linux/macOS GL launch fails | Desktop GL launch validation is incomplete for those platforms in this release; try `software` or a different driver/context. |
 

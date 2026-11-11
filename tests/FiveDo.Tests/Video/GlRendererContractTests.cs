@@ -130,6 +130,36 @@ public sealed class GlRendererContractTests
         Assert.Equal(1080, rect.Height);
     }
 
+    [Theory]
+    [InlineData(AspectMode.FourThree, 240, 0, 1440, 1080)]
+    [InlineData(AspectMode.FiveFour, 285, 0, 1350, 1080)]
+    [InlineData(AspectMode.SixteenNine, 0, 0, 1920, 1080)]
+    [InlineData(AspectMode.SixteenTen, 96, 0, 1728, 1080)]
+    [InlineData(AspectMode.TwentyOneNine, 0, 128, 1920, 823)]
+    public void Viewport_PresetAspectsFitAndCenter(
+        AspectMode aspect,
+        int expectedX,
+        int expectedY,
+        int expectedWidth,
+        int expectedHeight)
+    {
+        var settings = new RendererSettings { Aspect = aspect, IntegerScale = false };
+
+        Assert.Equal(
+            new ViewportRect(expectedX, expectedY, expectedWidth, expectedHeight),
+            ViewportCalculator.Compute(320, 240, 1920, 1080, settings));
+    }
+
+    [Fact]
+    public void Viewport_WidePresetsIgnoreIntegerScale()
+    {
+        var settings = new RendererSettings { Aspect = AspectMode.SixteenNine, IntegerScale = true };
+
+        Assert.Equal(
+            new ViewportRect(0, 0, 1920, 1080),
+            ViewportCalculator.Compute(320, 240, 1920, 1080, settings));
+    }
+
     [Fact]
     public void RendererSettings_RejectsInvalidValues()
     {

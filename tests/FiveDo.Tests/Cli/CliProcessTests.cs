@@ -2009,6 +2009,30 @@ public sealed class CliProcessTests
         }
     }
 
+    [Theory]
+    [InlineData("FourThree")]
+    [InlineData("FiveFour")]
+    [InlineData("SixteenNine")]
+    [InlineData("SixteenTen")]
+    [InlineData("TwentyOneNine")]
+    public void SettingsValidate_AcceptsPresetAspectModes(string aspect)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-settings-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, $$"""{"Aspect":"{{aspect}}"}""");
+
+            CliResult result = Invoke("settings", "validate", path, "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"valid\": true", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [Fact]
     public void Run_SwapsDiscsAtTheRequestedFrame()
     {

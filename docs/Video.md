@@ -304,13 +304,19 @@ optional Vulkan backend measures present 0.604/1.303 ms and GPU 0.404/0.415 ms
 
 - `Stretch`: full output rectangle.
 - `FourThree`: target aspect 4:3.
+- `FiveFour`: target aspect 5:4.
+- `SixteenNine`: target aspect 16:9.
+- `SixteenTen`: target aspect 16:10.
+- `TwentyOneNine`: target aspect 21:9.
 - `Custom`: `RendererSettings.CustomAspect` (default 4:3; the Settings UI exposes the
-  enum but not a custom-ratio editor in this release).
+  enum and a custom-ratio editor).
 - `Integer`: target aspect = source aspect, then integer scale with letterboxing.
 
 `IntegerScale` also forces integer scaling when `Aspect == FourThree`. The scale is
 `floor(min(maxWidth/sourceWidth, maxHeight/sourceHeight))`, at least 1. The rectangle is
-centered in the output.
+centered in the output. The wider preset ratios are not integer-scaled by this option;
+they fit the requested target aspect directly so 16:9 and 21:9 content fills the
+intended rectangle.
 
 The renderer clears to black before drawing, so letterbox/pillarbox bars are black.
 

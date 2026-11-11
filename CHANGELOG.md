@@ -3,6 +3,14 @@
 All notable changes are recorded here. The project is at v1.7.1, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Added
+
+- **Aspect-ratio presets.** Settings > Video > Aspect now offers 4:3, 5:4, 16:9,
+  16:10, and 21:9 targets alongside `Integer`, `Stretch`, and `Custom`. The presets
+  letterbox or pillarbox the source and do not change emulated resolution.
+
 ## [1.7.1] - 2026-11-10
 
 ### Changed

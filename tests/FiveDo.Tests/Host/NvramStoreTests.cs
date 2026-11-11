@@ -523,6 +523,25 @@ public sealed class NvramStoreTests
     }
 
     [Theory]
+    [InlineData(AspectMode.FourThree)]
+    [InlineData(AspectMode.FiveFour)]
+    [InlineData(AspectMode.SixteenNine)]
+    [InlineData(AspectMode.SixteenTen)]
+    [InlineData(AspectMode.TwentyOneNine)]
+    public void AppSettings_RoundtripsPresetAspectModes(AspectMode aspect)
+    {
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        var settings = new AppSettings { Aspect = aspect };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal(aspect, loaded.Aspect);
+        Assert.Equal(aspect, loaded.ToRendererSettings().Aspect);
+    }
+
+    [Theory]
     [InlineData(true, VideoRendererKind.OpenGl)]
     [InlineData(false, VideoRendererKind.Software)]
     public void AppSettings_MigratesLegacyPreferOpenGl(bool preferOpenGl, VideoRendererKind expected)
