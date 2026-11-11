@@ -44,6 +44,15 @@ dotnet_diagnostic.MA0051.severity = none
 
 dotnet_diagnostic.MA0048.severity = none
 
+
+dotnet_diagnostic.MA0196.severity = none
+
+
+dotnet_diagnostic.CA1822.severity = none
+
+
+dotnet_diagnostic.CA1001.severity = none
+
 [*.{xml,csproj,props,targets,axaml,xaml,json,yml,yaml,md}]
 indent_size = 2
 
