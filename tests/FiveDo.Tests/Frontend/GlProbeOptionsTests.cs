@@ -61,6 +61,8 @@ public sealed class GlProbeOptionsTests
     [InlineData("nearest", VideoFilter.Nearest)]
     [InlineData("sharp", VideoFilter.SharpBilinear)]
     [InlineData("crt", VideoFilter.Crt)]
+    [InlineData("bicubic", VideoFilter.Bicubic)]
+    [InlineData("catmull-rom", VideoFilter.Bicubic)]
     [InlineData("xbr", VideoFilter.Xbr)]
     [InlineData("fsr", VideoFilter.Fsr)]
     [InlineData("fsr1", VideoFilter.Fsr)]
@@ -68,6 +70,8 @@ public sealed class GlProbeOptionsTests
     [InlineData("hq2x", VideoFilter.Hqx)]
     [InlineData("hq3x", VideoFilter.Hqx3x)]
     [InlineData("hq4x", VideoFilter.Hqx4x)]
+    [InlineData("mmpx", VideoFilter.Mmpx)]
+    [InlineData("mmpx2x", VideoFilter.Mmpx)]
     public void TryParse_AcceptsFilterAliases(string text, VideoFilter expected)
     {
         Assert.True(GlProbeOptions.TryParse(

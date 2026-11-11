@@ -15,12 +15,57 @@ layout(push_constant) uniform PushConstants
     float sharpness;
 } pc;
 
+float pickWeight(vec4 weights, int index)
+{
+    if (index == 0) { return weights.x; }
+    if (index == 1) { return weights.y; }
+    if (index == 2) { return weights.z; }
+    return weights.w;
+}
+
 void main()
 {
     vec2 uv = (gl_FragCoord.xy - pc.rect.xy) / pc.rect.zw;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
     {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
+
+    if (pc.filterMode == 3)
+    {
+        vec2 coord = (uv * vec2(pc.sourceSize)) - vec2(0.5);
+        vec2 base = floor(coord);
+        vec2 fraction = coord - base;
+        float f2x = fraction.x * fraction.x;
+        float f3x = f2x * fraction.x;
+        float f2y = fraction.y * fraction.y;
+        float f3y = f2y * fraction.y;
+        vec4 wx = vec4(
+            (-0.5 * f3x) + f2x - (0.5 * fraction.x),
+            (1.5 * f3x) - (2.5 * f2x) + 1.0,
+            (-1.5 * f3x) + (2.0 * f2x) + (0.5 * fraction.x),
+            (0.5 * f3x) - (0.5 * f2x));
+        vec4 wy = vec4(
+            (-0.5 * f3y) + f2y - (0.5 * fraction.y),
+            (1.5 * f3y) - (2.5 * f2y) + 1.0,
+            (-1.5 * f3y) + (2.0 * f2y) + (0.5 * fraction.y),
+            (0.5 * f3y) - (0.5 * f2y));
+        vec3 sum = vec3(0.0);
+        for (int y = -1; y <= 2; y++)
+        {
+            for (int x = -1; x <= 2; x++)
+            {
+                ivec2 tap = clamp(
+                    ivec2(base) + ivec2(x, y),
+                    ivec2(0),
+                    pc.sourceSize - 1);
+                sum += texelFetch(uExpanded, tap, 0).rgb
+                    * pickWeight(wx, x + 1) * pickWeight(wy, y + 1);
+            }
+        }
+
+        fragColor = vec4(clamp(sum, 0.0, 1.0), 1.0);
         return;
     }
 

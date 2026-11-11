@@ -243,6 +243,55 @@ public sealed class Direct3D11RendererTests
         Assert.Equal(0, different);
     }
 
+    [Fact]
+    public void Mmpx_MatchesCpuExpansion()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("FIVEDO_D3D_TESTS"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        using var renderer = new Direct3D11Renderer();
+        renderer.Settings = new RendererSettings
+        {
+            Filter = VideoFilter.Mmpx,
+            Aspect = AspectMode.Stretch,
+            IntegerScale = false,
+            Vsync = false,
+        };
+
+        renderer.Initialize(640, 480);
+        VdlFrame frame = CreateFrame(320, 240, 0);
+        renderer.Present(frame);
+        Assert.False(renderer.FilterFallback);
+
+        var gpu = new byte[640 * 480 * 4];
+        renderer.ReadPixels(gpu, out var readWidth, out var readHeight);
+        Assert.Equal(640, readWidth);
+        Assert.Equal(480, readHeight);
+
+        var source = new FrameBuffer(320, 240);
+        FrameAssembler.Assemble(frame, source, 320, 240);
+        var expected = new FrameBuffer(640, 480);
+        new MmpxFilter().Expand(source, expected);
+
+        var different = 0;
+        for (var i = 0; i < expected.PixelSpan.Length; i += 4)
+        {
+            if (gpu[i] != expected.PixelSpan[i]
+                || gpu[i + 1] != expected.PixelSpan[i + 1]
+                || gpu[i + 2] != expected.PixelSpan[i + 2])
+            {
+                different++;
+            }
+        }
+
+        Assert.Equal(0, different);
+    }
+
     private static VdlFrame CreateSplitFrame()
     {
         var frame = new VdlFrame

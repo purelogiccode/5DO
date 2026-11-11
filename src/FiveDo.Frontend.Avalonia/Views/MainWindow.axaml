@@ -767,7 +767,7 @@
                            Text="Ready." TextTrimming="CharacterEllipsis"
                            ToolTip.Tip="Current status message." />
                 <TextBlock x:Name="RendererText" Grid.Column="2" Classes="status" Margin="12,0"
-                           ToolTip.Tip="Active graphics renderer and version." />
+                           ToolTip.Tip="Active graphics renderer, API version, and video filter." />
                 <TextBlock x:Name="FpsText" Grid.Column="3" Classes="statusStrong"
                            MinWidth="60" TextAlignment="Right"
                            ToolTip.Tip="Measured emulated frame rate and, when configured above 60 Hz, the measured display rate." />

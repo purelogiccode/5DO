@@ -42,6 +42,10 @@ The 3DO payload is at offset 16 for Mode 1 and 24 for Mode 2 Form 1.
 **Bitmap (VDLP)** - A display-list mode that copies indexed pixels from a VRAM bitmap
 into a `VdlLine`.
 
+**Bicubic** - A Catmull-Rom 4x4 sampling filter (`VideoFilter.Bicubic`). It runs as a
+single GPU scale pass (and in the CPU fallback) and is intended for 3D and full-motion
+content.
+
 **Bloom** - A CRT filter glow around bright pixels; 3x3 native-resolution kernel,
 controlled by `RendererSettings.Bloom`/`BloomThreshold`.
 
@@ -206,6 +210,10 @@ reference for new compatibility work.
 matrix engine, PLUT, PBUS, and DMA. Emulated by `Madam`.
 
 **Mailbox** - The latest-frame handoff from the core thread to the renderer.
+
+**MMPX** - Morgan McGuire and Mara Gagiu's style-preserving 2x pixel-art magnification
+filter. It runs as an opt-in GPU pass before sharp-bilinear finishing, with
+`MmpxFilter` as the CPU reference oracle.
 
 **MEI** - The CD drive command set (see CD-ROM).
 

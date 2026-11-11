@@ -419,11 +419,10 @@ This is the largest and riskiest port. Split it into classes but keep the origin
     independently; using one index for `.rgb` makes real content grayscale. This bug
     was fixed on 2026-10-25 and is covered by shader-source and real-content checks.
   - the CPU and GPU outputs must hash identically in "Accurate" mode.
-- **xBR** is an optional 4x edge-directed pass. It uses a CPU-expanded
-  native-resolution `FrameAssembler` output uploaded as an RGBA texture rather than
-  the FBO-attached palette texture, because the latter sampled black in the xBR
-  program on the development driver. This is presentation-only and does not affect
-  emulated state; the other filters keep GPU palette expansion.
+- **xBR** is an optional 4x edge-directed pass. It samples the GPU-expanded
+  native-resolution palette texture directly and writes a 4x target before the
+  sharp-bilinear finish. This is presentation-only and does not affect emulated state;
+  the other filters keep the same two-stage palette/scale structure.
 - **HQx 2x/3x/4x** are GPU rule-table passes in the accelerated presenters, with
   `HqxFilter` kept as the CPU reference oracle. The rules are derived from the 4DO
   hq2x/hq3x/hq4x sources (LGPL-2.1+); see `THIRD-PARTY-NOTICES.md`. All three match
@@ -662,7 +661,7 @@ M1 implements the section primitive used by all later chips:
 - The OpenGL presenter lives entirely in the host layer. `FiveDo.Video` owns the backend-neutral `IVideoRenderer` contract, settings, aspect/integer viewport math, the frame uploader, and `GpuPalette` (the CPU reference for the shader). `FiveDo.Video.OpenGL` owns Silk.NET GL/GLES resources and the GLSL 330 / GLSL ES 300 shader variants. The target design and current gaps are in [`Performance.md`](Performance.md).
 - `VdlFrameUploader` packs R16UI indexed pixels, an RGB8 32xheight CLUT, and an RGBA32UI per-line background/out-control texture. Buffers are reused. The shader uses `texelFetch` with nearest sampling for the accurate path.
 - `GpuPalette` exists so the palette algorithm can be tested without a GL context: tests compare it against `FrameAssembler` for a 320x240 synthetic VDL frame including background, fixed-CLUT bit 15, and per-line CLUT cases. The shader mirrors this logic.
-- `OpenGlRenderer` creates the programs, VAO/VBO, textures, and a native-resolution palette FBO, draws a fullscreen triangle strip into the supplied framebuffer, and implements `ReadPixels` with an RGBA-to-BGRA swap. `VideoSurface` calls `GL.GetApi(gl.GetProcAddress)` from Avalonia's `OpenGlControlBase` and renders a latest-frame mailbox snapshot. The two-stage palette/scale pipeline, `TexStorage2D`/`TexSubImage2D`, cached uniforms, and physical-pixel sizing are implemented. **Remaining deviations:** the GLES/ANGLE/Pi path is not validated on hardware, and the HQx 2x/3x/4x filters run on the CPU rather than the GPU.
+- `OpenGlRenderer` creates the programs, VAO/VBO, textures, and a native-resolution palette FBO, draws a fullscreen triangle strip into the supplied framebuffer, and implements `ReadPixels` with an RGBA-to-BGRA swap. `VideoSurface` calls `GL.GetApi(gl.GetProcAddress)` from Avalonia's `OpenGlControlBase` and renders a latest-frame mailbox snapshot. The two-stage palette/scale pipeline, `TexStorage2D`/`TexSubImage2D`, cached uniforms, and physical-pixel sizing are implemented. **Remaining deviations:** the GLES/ANGLE/Pi path is not validated on hardware.
 - The Windows frontend now prefers WGL with ANGLE/software fallbacks. `OpenGlRenderer` detects an OpenGL ES context from the version string and selects GLSL ES 300 shader sources with the required precision qualifiers; desktop contexts keep GLSL 330. Real-hardware ANGLE and Raspberry Pi 4/5 validation remains.
 - Context loss is handled by re-running `Initialize`. The UI does not yet automatically fall back to `CpuVideoRenderer` when the context or integer textures are unavailable; that is a frontend decision for M9.2/M9R.7.
 - The desktop shell runs the machine on `FiveDo.Host.CoreRunner`'s dedicated 60 Hz thread. UI actions (reset, save/load, disc change, screenshot) pause the loop via `CoreRunner.Invoke`; the UI consumes the latest-frame mailbox and updates status/FPS at 4 Hz. Screenshots use the CPU frame dumper, and keyboard input is mapped through the default `InputProfile`.

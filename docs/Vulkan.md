@@ -3,8 +3,8 @@
 **Status:** implemented as an optional offscreen presenter, a validation probe, a
 native Win32 swapchain probe, and an embedded Win32 child surface for the desktop
 shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release
-gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x in
-addition to accurate, nearest, sharp-bilinear, and CRT.
+gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and
+MMPX 2x in addition to accurate, nearest, sharp-bilinear, bicubic, and CRT.
 
 ## What it is
 
@@ -57,10 +57,12 @@ surface cannot be created. The headless probe remains the primary validation too
 | `Accurate` | Nearest sampling, integer scaling; pixel-identical to `FrameAssembler` at 1:1. |
 | `Nearest` | Nearest sampling with arbitrary scale/letterbox. |
 | `SharpBilinear` | The same integer-prescale/sub-texel clamp as the OpenGL shader. |
+| `Bicubic` | Catmull-Rom 4x4 sampling at output resolution, with clamped texel taps. |
 | `Crt` | Barrel distortion, scanlines, aperture mask, vignette, and 3x3 bloom. |
 | `Xbr` | Hyllian's xBR-lv2 4x GPU pass over the GPU-expanded native frame, finished with sharp-bilinear. |
 | `Fsr` | FSR 1.0 EASU at viewport resolution followed by the RCAS sharpening pass. |
-| `Hqx`, `Hqx3x`, `Hqx4x` | CPU `FrameAssembler` expansion plus `HqxFilter`, uploaded as a native-resolution source and finished with sharp-bilinear. CPU-bound and opt-in. |
+| `Hqx`, `Hqx3x`, `Hqx4x` | GPU rule-table pass over the GPU-expanded palette texture, finished with sharp-bilinear. The 256x32 `R32G32_UInt` rule table is uploaded once; opt-in. |
+| `Mmpx` | GPU MMPX 2x rule pass over the GPU-expanded palette texture, finished with sharp-bilinear. Opt-in. |
 
 ## Commands
 
@@ -118,8 +120,8 @@ output JSON), `--vk-probe-size`/`--vk-window-probe-size` (default 1920x1080),
 `--vk-probe-frames`/`--vk-window-probe-frames` (60),
 `--vk-probe-warmup`/`--vk-window-probe-warmup` (10),
 `--vk-probe-filter`/`--vk-window-probe-filter` (`accurate`, `nearest`,
-`sharp-bilinear`/`sharp`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`, plus the
-OpenGL aliases), `--vk-probe-capture`/`--vk-window-probe-capture <png>`, and
+`sharp-bilinear`/`sharp`, `bicubic`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`,
+`mmpx`, plus the OpenGL aliases), `--vk-probe-capture`/`--vk-window-probe-capture <png>`, and
 `--vk-probe-timeout`/`--vk-window-probe-timeout` (30 seconds). The window probe
 requests FIFO (vsync) presentation; the headless probe is uncapped.
 
@@ -180,9 +182,9 @@ These are development-machine numbers, not a hardware guarantee.
 
 - `Silk.NET.Vulkan` 2.23.0 provides the Vulkan bindings.
 - `XenoAtom.ShaderCompiler.Build` 1.2.2 compiles `Frame.vert`, `Palette.frag`,
-  `Scale.frag`, `Xbr.frag`, `FsrEasu.frag`, and `FsrRcas.frag` to SPIR-V at build time
-  and embeds the byte arrays in the assembly. No shader compiler or Vulkan SDK is
-  required at runtime.
+  `Scale.frag`, `Xbr.frag`, `Hqx.frag`, `Mmpx.frag`, `FsrEasu.frag`, and `FsrRcas.frag`
+  to SPIR-V at build time and embeds the byte arrays in the assembly. No shader compiler
+  or Vulkan SDK is required at runtime.
 - The Vulkan loader (`vulkan-1.dll` on Windows, `libvulkan.so.1` on Linux, the MoltenVK
   loader on macOS) is provided by the operating system/driver; the project does not
   bundle it.
@@ -191,17 +193,18 @@ These are development-machine numbers, not a hardware guarantee.
 
 ## Tests
 
-- `VulkanShaderTests` checks that all seven generated shader modules (frame, palette,
-  scale, HQx, xBR, FSR EASU, FSR RCAS) are SPIR-V and that `RendererApi.Vulkan` is
+- `VulkanShaderTests` checks that all eight generated shader modules (frame, palette,
+  scale, HQx, MMPX, xBR, FSR EASU, FSR RCAS) are SPIR-V and that `RendererApi.Vulkan` is
   reported correctly.
 - `VulkanRendererTests` (`FIVEDO_VULKAN_TESTS=1`) renders 320x240 and 640x480 frames and
   compares them with `FrameAssembler`, including background, fixed-CLUT, and per-line
-  CLUT paths. It also renders a top-red/bottom-blue split frame through xBR, FSR, and
-  HQx at 320x240 and 640x480, asserts that all three preserve top-down orientation,
-  checks that HQx does not report a fallback, and compares HQx 2x/3x/4x and the
-  multi-frame synthetic probe frame with the CPU `HqxFilter` expansion.
+  CLUT paths. It also renders a top-red/bottom-blue split frame through xBR, FSR,
+  HQx, and MMPX at 320x240 and 640x480, asserts that all four preserve top-down
+  orientation, checks that HQx and MMPX do not report a fallback, and compares
+  HQx 2x/3x/4x, MMPX, and the multi-frame synthetic probe frame with the CPU
+  `HqxFilter`/`MmpxFilter` expansions.
 - `VulkanProbeIntegrationTests` (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend probe
-  for 320x240 parity, a 4K sharp-bilinear pass, and 640x480 xBR/FSR/HQx passes with
+  for 320x240 parity, a 4K sharp-bilinear pass, and 640x480 xBR/FSR/HQx/MMPX passes with
   `filterFallback: false`.
 - `VkProbeOptionsTests` covers headless/window defaults, size/frames/filter/capture
   parsing, shared option aliases, and invalid values.
@@ -230,9 +233,9 @@ The SPIR-V and option-parsing tests run everywhere.
   screenshots use a one-shot copy. The embedded Win32 surface does not read back at all.
   The offscreen fallback still needs the readback every frame and remains slower than
   the direct OpenGL presenter.
-- xBR, FSR 1.0, and HQx 2x/3x/4x are GPU passes. HQx uses the shared 256x32
-  `R32G32Uint` rule table and is no longer CPU-bound; it remains opt-in because it
-  adds an intermediate `source * scale` target.
+- xBR, FSR 1.0, HQx 2x/3x/4x, and MMPX are GPU passes. HQx uses the shared 256x32
+  `R32G32Uint` rule table and is no longer CPU-bound; MMPX uses a direct rule pass.
+  They remain opt-in because they add an intermediate `source * scale` target.
 - The offscreen path has no vsync control. The window probe requests FIFO and reports
   the selected present mode; it does not yet expose mailbox/immediate as user settings.
 - Vulkan 1.1+ features (storage buffers in fragment shaders, timeline semaphores) are not

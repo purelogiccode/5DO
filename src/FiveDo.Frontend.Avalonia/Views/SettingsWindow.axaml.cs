@@ -42,13 +42,13 @@ public partial class SettingsWindow : Window
             [
                 new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
                 new(VideoRendererKind.Direct3D11, "DirectX 11 (Windows)"),
-                new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
+                new(VideoRendererKind.Vulkan, "Vulkan"),
                 new(VideoRendererKind.Software, "Software (CPU)"),
             ]
             :
             [
                 new(VideoRendererKind.OpenGl, "OpenGL (recommended)"),
-                new(VideoRendererKind.Vulkan, "Vulkan (offscreen)"),
+                new(VideoRendererKind.Vulkan, "Vulkan"),
                 new(VideoRendererKind.Software, "Software (CPU)"),
             ];
     }

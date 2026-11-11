@@ -109,6 +109,7 @@ public partial class MainWindow : Window, IDisposable
     private string _nvramDirectory;
     private CpuVideoRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
+    private string _rendererLabel = string.Empty;
     private volatile bool _vulkanPresenter;
     private volatile bool _direct3DPresenter;
     private bool _openGlDisabled;
@@ -1431,6 +1432,8 @@ public partial class MainWindow : Window, IDisposable
             {
                 _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
             }
+
+            UpdateRendererText();
 
             // Per-game latency and audio profiles take effect when the disc opens,
             // not only after the settings dialog is accepted.
@@ -4266,6 +4269,7 @@ public partial class MainWindow : Window, IDisposable
         InputDisplayMenuItem.IsChecked = _settings.ShowInputDisplay;
         ApplyOsdSettings();
         ApplyVideoPresentationSettings();
+        UpdateRendererText();
 
         ApplyAudioSettings();
         ApplyRendererSelection();
@@ -4975,6 +4979,51 @@ public partial class MainWindow : Window, IDisposable
         return $"{new string('█', filled)}{new string('░', 10 - filled)} {_meterPeak:F2}";
     }
 
+    private void SetRendererLabel(string label)
+    {
+        _rendererLabel = label;
+        UpdateRendererText();
+    }
+
+    private void UpdateRendererText()
+    {
+        if (_rendererLabel.Length == 0)
+        {
+            return;
+        }
+
+        var filter = _settings.ResolveFilter(_gameId);
+        var filterText = _cpuVideo is null
+            ? FormatVideoFilter(filter)
+            : filter switch
+            {
+                VideoFilter.Accurate or VideoFilter.Nearest => "Nearest (CPU)",
+                VideoFilter.Bicubic => "Bicubic (CPU)",
+                VideoFilter.Mmpx => "MMPX (CPU)",
+                _ => "Bilinear (CPU)",
+            };
+        RendererText.Text = $"{_rendererLabel} · {filterText}";
+    }
+
+    private static string FormatVideoFilter(VideoFilter filter)
+    {
+        return filter switch
+        {
+            VideoFilter.Accurate => "Accurate",
+            VideoFilter.Nearest => "Nearest",
+            VideoFilter.SharpBilinear => "SharpBilinear",
+            VideoFilter.Bicubic => "Bicubic",
+            VideoFilter.Crt => "CRT",
+            VideoFilter.Xbr => "xBR",
+            VideoFilter.Hqx => "HQx 2x",
+            VideoFilter.Hqx3x => "HQx 3x",
+            VideoFilter.Hqx4x => "HQx 4x",
+            VideoFilter.Mmpx => "MMPX",
+            VideoFilter.Fsr => "FSR 1.0",
+            _ => filter.ToString(),
+        };
+    }
+
     private void OnOpenGlReady(object? sender, OpenGlReadyEventArgs e)
     {
         if (_rendererKind != VideoRendererKind.OpenGl || _vulkanPresenter || _direct3DPresenter || _openGlDisabled)
@@ -4984,7 +5033,7 @@ public partial class MainWindow : Window, IDisposable
 
         var capabilities = e.Capabilities;
         StopCpuFallback();
-        RendererText.Text = $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}";
+        SetRendererLabel($"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion}");
         StatusText.Text =
             $"{capabilities.Name} {capabilities.MajorVersion}.{capabilities.MinorVersion} renderer ready.";
         _logger.ForCategory(LogCategory.Video).Information(
@@ -5066,7 +5115,7 @@ public partial class MainWindow : Window, IDisposable
         _openGlDisabled = false;
         Video.IsVisible = true;
         ReattachOpenGlSurface();
-        RendererText.Text = "OpenGL";
+        SetRendererLabel("OpenGL");
         StatusText.Text = $"Direct3D 11 unavailable ({exception.Message}); trying OpenGL.";
     }
 
@@ -5122,7 +5171,7 @@ public partial class MainWindow : Window, IDisposable
                 ReattachOpenGlSurface();
             }
 
-            RendererText.Text = "OpenGL";
+            SetRendererLabel("OpenGL");
             StatusText.Text = "OpenGL renderer enabled.";
             _logger.ForCategory(LogCategory.Video).Information("OpenGL renderer enabled by settings.");
             return;
@@ -5194,7 +5243,7 @@ public partial class MainWindow : Window, IDisposable
                 VulkanVideo.IsVisible = false;
                 Direct3DVideo.IsVisible = true;
                 Direct3DVideo.SetPresentationVisible(EmulationView.IsVisible);
-                RendererText.Text = "Direct3D 11";
+                SetRendererLabel("Direct3D 11");
                 StatusText.Text = "Direct3D 11 renderer active.";
                 if (Direct3DVideo.DeviceName is { } deviceName)
                 {
@@ -5221,7 +5270,7 @@ public partial class MainWindow : Window, IDisposable
                 _openGlDisabled = false;
                 Video.IsVisible = true;
                 ReattachOpenGlSurface();
-                RendererText.Text = "OpenGL";
+                SetRendererLabel("OpenGL");
                 StatusText.Text = $"Direct3D 11 unavailable ({direct3DException.Message}); trying OpenGL.";
                 return;
             }
@@ -5247,7 +5296,7 @@ public partial class MainWindow : Window, IDisposable
                 VulkanVideo.IsVisible = true;
                 Direct3DVideo.IsVisible = false;
                 VulkanVideo.SetPresentationVisible(EmulationView.IsVisible);
-                RendererText.Text = "Vulkan";
+                SetRendererLabel("Vulkan");
                 StatusText.Text = "Vulkan renderer active.";
                 if (VulkanVideo.DeviceName is { } deviceName)
                 {
@@ -5296,7 +5345,7 @@ public partial class MainWindow : Window, IDisposable
         var softwareSelected = _rendererKind == VideoRendererKind.Software;
         var vulkanSelected = _rendererKind == VideoRendererKind.Vulkan;
         var direct3DSelected = _rendererKind == VideoRendererKind.Direct3D11;
-        RendererText.Text = softwareSelected ? "Software (CPU)" : "CPU fallback";
+        SetRendererLabel(softwareSelected ? "Software (CPU)" : "CPU fallback");
         StatusText.Text = softwareSelected
             ? "Software renderer active (CPU)."
             : direct3DSelected

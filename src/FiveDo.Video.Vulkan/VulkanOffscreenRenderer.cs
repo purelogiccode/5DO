@@ -58,6 +58,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private Pipeline _palettePipeline;
     private Pipeline _scalePipeline;
     private Pipeline _hqxPipeline;
+    private Pipeline _mmpxPipeline;
     private Pipeline _xbrPipeline;
     private Pipeline _fsrEasuPipeline;
     private Pipeline _fsrRcasPipeline;
@@ -71,6 +72,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private DescriptorSet _fsrRcasSet;
     private DescriptorSet _hqxScaleSet;
     private DescriptorSet _hqxSet;
+    private DescriptorSet _mmpxScaleSet;
+    private DescriptorSet _mmpxSet;
 
     private Image _pixelImage;
     private DeviceMemory _pixelMemory;
@@ -107,6 +110,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private Framebuffer _hqxFramebuffer;
     private int _hqxWidth;
     private int _hqxHeight;
+    private Image _mmpxImage;
+    private DeviceMemory _mmpxMemory;
+    private ImageView _mmpxView;
+    private Framebuffer _mmpxFramebuffer;
+    private int _mmpxWidth;
+    private int _mmpxHeight;
     private Image _hqxRulesImage;
     private DeviceMemory _hqxRulesMemory;
     private ImageView _hqxRulesView;
@@ -846,12 +855,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         poolSizes[0] = new DescriptorPoolSize
         {
             Type = DescriptorType.CombinedImageSampler,
-            DescriptorCount = 16,
+            DescriptorCount = 24,
         };
         DescriptorPoolCreateInfo poolCreate = new()
         {
             SType = StructureType.DescriptorPoolCreateInfo,
-            MaxSets = 8,
+            MaxSets = 12,
             PoolSizeCount = 1,
             PPoolSizes = poolSizes,
         };
@@ -872,6 +881,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _palettePipeline = CreatePipeline(_palettePipelineLayout, VulkanShaders.Palette_frag);
         _scalePipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Scale_frag);
         _hqxPipeline = CreatePipeline(_hqxPipelineLayout, VulkanShaders.Hqx_frag);
+        _mmpxPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Mmpx_frag);
         _xbrPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Xbr_frag);
         _fsrEasuPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrEasu_frag);
         _fsrRcasPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrRcas_frag);
@@ -1258,6 +1268,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         UpdateScaleDescriptor(_expandedView);
         UpdateImageDescriptor(_xbrSet, _expandedView, _nearestSampler);
         UpdateImageDescriptor(_fsrEasuSet, _expandedView, _nearestSampler);
+        UpdateImageDescriptor(_mmpxSet, _expandedView, _nearestSampler);
         UpdateHqxDescriptor();
     }
 
@@ -1467,6 +1478,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _fsrRcasSet = AllocateDescriptorSet(_scaleLayout);
         _hqxScaleSet = AllocateDescriptorSet(_scaleLayout);
         _hqxSet = AllocateDescriptorSet(_hqxLayout);
+        _mmpxScaleSet = AllocateDescriptorSet(_scaleLayout);
+        _mmpxSet = AllocateDescriptorSet(_scaleLayout);
 
         DescriptorImageInfo* paletteImages = stackalloc DescriptorImageInfo[3];
         paletteImages[0] = new DescriptorImageInfo { ImageView = _pixelView, ImageLayout = ImageLayout.General, Sampler = _nearestSampler };
@@ -1490,6 +1503,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         UpdateScaleDescriptor(_expandedView);
         UpdateImageDescriptor(_xbrSet, _expandedView, _nearestSampler);
         UpdateImageDescriptor(_fsrEasuSet, _expandedView, _nearestSampler);
+        UpdateImageDescriptor(_mmpxSet, _expandedView, _nearestSampler);
         UpdateHqxDescriptor();
     }
 
@@ -1899,6 +1913,20 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
             _filterFallback = true;
         }
+        else if (filter == VideoFilter.Mmpx)
+        {
+            var mmpxWidth = _sourceWidth * MmpxFilter.Scale;
+            var mmpxHeight = _sourceHeight * MmpxFilter.Scale;
+            if (mmpxWidth <= _capabilities.MaxTextureSize && mmpxHeight <= _capabilities.MaxTextureSize)
+            {
+                EnsureMmpxTarget(mmpxWidth, mmpxHeight);
+                RecordMmpxPass(mmpxWidth, mmpxHeight);
+                RecordScalePass(mmpxWidth, mmpxHeight, 1, filter, _mmpxScaleSet);
+                return;
+            }
+
+            _filterFallback = true;
+        }
 
         RecordScalePass(_sourceWidth, _sourceHeight, FilterValue(filter), filter, _scaleSet);
     }
@@ -1972,6 +2000,81 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _vk.CmdEndRenderPass(_commandBuffer);
         Transition(
             _hqxImage,
+            AccessFlags.ColorAttachmentWriteBit,
+            AccessFlags.ShaderReadBit,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            PipelineStageFlags.FragmentShaderBit);
+    }
+
+    private void RecordMmpxPass(int width, int height)
+    {
+        Transition(
+            _mmpxImage,
+            AccessFlags.ShaderReadBit | AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+            AccessFlags.ColorAttachmentWriteBit,
+            PipelineStageFlags.AllCommandsBit,
+            PipelineStageFlags.ColorAttachmentOutputBit);
+        ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
+        RenderPassBeginInfo begin = new()
+        {
+            SType = StructureType.RenderPassBeginInfo,
+            RenderPass = _renderPass,
+            Framebuffer = _mmpxFramebuffer,
+            RenderArea = new Rect2D
+            {
+                Offset = new Offset2D { X = 0, Y = 0 },
+                Extent = new Extent2D { Width = (uint)width, Height = (uint)height },
+            },
+            ClearValueCount = 1,
+            PClearValues = &clear,
+        };
+        _vk!.CmdBeginRenderPass(_commandBuffer, &begin, SubpassContents.Inline);
+        Viewport viewport = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = width,
+            Height = height,
+            MinDepth = 0f,
+            MaxDepth = 1f,
+        };
+        Rect2D scissor = new()
+        {
+            Offset = new Offset2D { X = 0, Y = 0 },
+            Extent = new Extent2D { Width = (uint)width, Height = (uint)height },
+        };
+        _vk.CmdSetViewport(_commandBuffer, 0, 1, &viewport);
+        _vk.CmdSetScissor(_commandBuffer, 0, 1, &scissor);
+        _vk.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _mmpxPipeline);
+        DescriptorSet mmpxSet = _mmpxSet;
+        _vk.CmdBindDescriptorSets(
+            _commandBuffer,
+            PipelineBindPoint.Graphics,
+            _scalePipelineLayout,
+            0,
+            1,
+            &mmpxSet,
+            0,
+            null);
+        PushConstants constants = new()
+        {
+            Rect = new System.Numerics.Vector4(0f, 0f, width, height),
+            OutputSize = new System.Numerics.Vector2(width, height),
+            SourceWidth = _sourceWidth,
+            SourceHeight = _sourceHeight,
+            Filter = MmpxFilter.Scale,
+        };
+        _vk.CmdPushConstants(
+            _commandBuffer,
+            _scalePipelineLayout,
+            ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit,
+            0,
+            (uint)sizeof(PushConstants),
+            &constants);
+        _vk.CmdDraw(_commandBuffer, 3, 1, 0, 0);
+        _vk.CmdEndRenderPass(_commandBuffer);
+        Transition(
+            _mmpxImage,
             AccessFlags.ColorAttachmentWriteBit,
             AccessFlags.ShaderReadBit,
             PipelineStageFlags.ColorAttachmentOutputBit,
@@ -2535,6 +2638,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
         DestroyXbrTarget();
         DestroyHqxTarget();
+        DestroyMmpxTarget();
 
         if (_expandedFramebuffer.Handle != 0)
         {
@@ -2700,6 +2804,49 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _hqxView = default;
         _hqxWidth = 0;
         _hqxHeight = 0;
+    }
+
+    private void EnsureMmpxTarget(int width, int height)
+    {
+        if (_mmpxFramebuffer.Handle != 0 && _mmpxWidth == width && _mmpxHeight == height)
+        {
+            return;
+        }
+
+        DestroyMmpxTarget();
+        CreateImage(
+            (uint)width,
+            (uint)height,
+            _outputFormat,
+            ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.SampledBit,
+            out _mmpxImage,
+            out _mmpxMemory,
+            out _mmpxView);
+        _mmpxFramebuffer = CreateFramebuffer(_mmpxView, (uint)width, (uint)height);
+        _mmpxWidth = width;
+        _mmpxHeight = height;
+        UpdateImageDescriptor(_mmpxScaleSet, _mmpxView, _linearSampler);
+    }
+
+    private void DestroyMmpxTarget()
+    {
+        if (_vk is null)
+        {
+            return;
+        }
+
+        if (_mmpxFramebuffer.Handle != 0)
+        {
+            _vk.DestroyFramebuffer(_device, _mmpxFramebuffer, null);
+            _mmpxFramebuffer = default;
+        }
+
+        DestroyImage(_mmpxImage, _mmpxMemory, _mmpxView);
+        _mmpxImage = default;
+        _mmpxMemory = default;
+        _mmpxView = default;
+        _mmpxWidth = 0;
+        _mmpxHeight = 0;
     }
 
     private void DestroyImage(Image image, DeviceMemory memory, ImageView view)

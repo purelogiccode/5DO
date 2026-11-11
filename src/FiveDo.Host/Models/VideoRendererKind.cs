@@ -6,7 +6,7 @@ public enum VideoRendererKind
     /// <summary>Use the OpenGL presenter (WGL/ANGLE where available).</summary>
     OpenGl,
 
-    /// <summary>Use the optional offscreen Vulkan presenter with CPU readback.</summary>
+    /// <summary>Use the optional Vulkan presenter.</summary>
     Vulkan,
 
     /// <summary>Use the software CPU presenter.</summary>

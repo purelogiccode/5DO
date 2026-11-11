@@ -105,7 +105,7 @@ still being validated across the library.
 
 5DO renders CELs natively at 320×240 (and an opt-in 640×480 high-resolution mode). 4K
 is **output upscaling**, not internal 4K CEL rendering. The OpenGL/Vulkan presenters
-can output 4K with nearest, sharp-bilinear, CRT, xBR, FSR, and HQx filters.
+can output 4K with nearest, sharp-bilinear, bicubic, CRT, xBR, FSR, HQx, and MMPX filters.
 
 ### Is there netplay or achievements?
 
@@ -167,8 +167,8 @@ sharp-bilinear measures GPU p99 0.089 ms / present p99 0.208 ms on an RTX 4070. 
 ### Do I need a discrete GPU?
 
 No. OpenGL 3.3 or GLES 3.0/3.1 is used when available, with a CPU fallback. CRT, xBR,
-FSR, and HQx filters are opt-in; xBR, FSR, and HQx are GPU passes, but larger
-intermediate targets and weak integrated GPUs can still cost more.
+FSR, HQx, MMPX, and bicubic filters are opt-in; xBR, FSR, HQx, and MMPX are GPU passes,
+but larger intermediate targets and weak integrated GPUs can still cost more.
 
 ### Does 5DO collect telemetry?
 

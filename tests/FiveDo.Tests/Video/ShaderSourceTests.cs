@@ -38,6 +38,24 @@ public sealed class ShaderSourceTests
     }
 
     [Theory]
+    [InlineData(false, "#version 330 core")]
+    [InlineData(true, "#version 300 es")]
+    public void MmpxShader_UsesTheContextVersionAndRules(bool es, string header)
+    {
+        var source = Shaders.FragmentMmpx(es);
+
+        Assert.StartsWith(header, source, StringComparison.Ordinal);
+        Assert.Contains("uniform sampler2D uExpanded", source, StringComparison.Ordinal);
+        Assert.Contains("uniform ivec2 uSource", source, StringComparison.Ordinal);
+        Assert.Contains("fetchColor", source, StringComparison.Ordinal);
+        Assert.Contains("allEq4", source, StringComparison.Ordinal);
+        Assert.Contains("noneEq2", source, StringComparison.Ordinal);
+        Assert.Contains("subpixel", source, StringComparison.Ordinal);
+        Assert.Equal(Count(source, '{'), Count(source, '}'));
+        Assert.Equal(Count(source, '('), Count(source, ')'));
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void XbrShader_HasBalancedBracesAndParentheses(bool es)
@@ -55,6 +73,8 @@ public sealed class ShaderSourceTests
 
         Assert.Contains("uFilter == 1", source, StringComparison.Ordinal);
         Assert.Contains("uFilter == 2", source, StringComparison.Ordinal);
+        Assert.Contains("uFilter == 3", source, StringComparison.Ordinal);
+        Assert.Contains("pickWeight", source, StringComparison.Ordinal);
         Assert.Contains("uScanline", source, StringComparison.Ordinal);
         Assert.Contains("uBloom", source, StringComparison.Ordinal);
         Assert.Contains("uBloomThreshold", source, StringComparison.Ordinal);

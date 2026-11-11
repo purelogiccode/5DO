@@ -362,6 +362,8 @@ Available filters:
 - **Accurate**: nearest-neighbor, pixel-perfect; the reference for the CPU assembler.
 - **Nearest**: nearest-neighbor with arbitrary scale/letterboxing.
 - **SharpBilinear**: the default enhanced mode.
+- **Bicubic**: Catmull-Rom 4x4 sampling for smooth 3D and full-motion content. It is
+  opt-in and costs 16 texture taps per output pixel.
 - **CRT**: scanlines, aperture mask, curvature, vignette, and a configurable bloom
   glow (Settings -> Video -> CRT bloom).
 - **Xbr**: Hyllian's xBR-lv2 edge-directed 4x pass, followed by a sharp-bilinear finish.
@@ -369,6 +371,8 @@ Available filters:
 - **Hqx / Hqx3x / Hqx4x**: HQx 2x/3x/4x pixel-art smoothing as a GPU rule-table pass over the
   frame, followed by a sharp-bilinear finish. They are opt-in and add a
   `source * scale` GPU target; 3x/4x have larger targets but are no longer CPU-bound.
+- **Mmpx**: MMPX 2x style-preserving pixel-art magnification, followed by a
+  sharp-bilinear finish. It is opt-in and adds a 2x GPU target.
 - **FSR**: AMD FidelityFX Super Resolution 1.0 (EASU upscale + RCAS sharpening) at the
   output resolution. It is opt-in and has a **FSR sharpness** slider in
   Settings > Video (0 = soft, 1 = maximum). It costs two GPU passes and is not
@@ -721,7 +725,7 @@ for example, `0 A` then applies on the first frame after the state loads. `run
   BIOS or emulator-version mismatch but still loads when possible. A different disc is
   recorded in the header but not rejected, so verify the slot metadata. See
   [`SaveStates.md`](SaveStates.md).
-- **xBR/HQx/FSR is slow**: use SharpBilinear or Accurate at 4K, or lower the output
+- **xBR/HQx/MMPX/FSR is slow**: use SharpBilinear or Accurate at 4K, or lower the output
   resolution. HQx is a GPU pass now; FSR and the larger HQx targets are the most
   expensive opt-in modes on weak GPUs.
 

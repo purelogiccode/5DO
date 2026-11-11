@@ -43,6 +43,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
     private ID3D11PixelShader? _paletteShader;
     private ID3D11PixelShader? _scaleShader;
     private ID3D11PixelShader? _hqxShader;
+    private ID3D11PixelShader? _mmpxShader;
     private ID3D11PixelShader? _xbrShader;
     private ID3D11PixelShader? _fsrEasuShader;
     private ID3D11PixelShader? _fsrRcasShader;
@@ -64,6 +65,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
     private ColorTarget? _xbr;
     private ColorTarget? _fsr;
     private ColorTarget? _hqx;
+    private ColorTarget? _mmpx;
     private ID3D11Texture2D? _hqxRulesTexture;
     private ID3D11ShaderResourceView? _hqxRulesView;
     private ID3D11Texture2D? _readback;
@@ -322,6 +324,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _paletteShader = _device.CreatePixelShader(Compile("Palette.frag", "PSMain", "ps_5_0").ToArray());
         _scaleShader = _device.CreatePixelShader(Compile("Scale.frag", "PSMain", "ps_5_0").ToArray());
         _hqxShader = _device.CreatePixelShader(Compile("Hqx.frag", "PSMain", "ps_5_0").ToArray());
+        _mmpxShader = _device.CreatePixelShader(Compile("Mmpx.frag", "PSMain", "ps_5_0").ToArray());
         _xbrShader = _device.CreatePixelShader(Compile("Xbr.frag", "PSMain", "ps_5_0").ToArray());
         _fsrEasuShader = _device.CreatePixelShader(Compile("FsrEasu.frag", "PSMain", "ps_5_0").ToArray());
         _fsrRcasShader = _device.CreatePixelShader(Compile("FsrRcas.frag", "PSMain", "ps_5_0").ToArray());
@@ -369,6 +372,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             "Palette.frag" => Direct3D11Shaders.Palette,
             "Scale.frag" => Direct3D11Shaders.Scale,
             "Hqx.frag" => Direct3D11Shaders.Hqx,
+            "Mmpx.frag" => Direct3D11Shaders.Mmpx,
             "Xbr.frag" => Direct3D11Shaders.Xbr,
             "FsrEasu.frag" => Direct3D11Shaders.FsrEasu,
             "FsrRcas.frag" => Direct3D11Shaders.FsrRcas,
@@ -472,6 +476,9 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
     private bool IsHqxFilter
         => _settings.Filter is VideoFilter.Hqx or VideoFilter.Hqx3x or VideoFilter.Hqx4x;
 
+    private bool IsMmpxFilter
+        => _settings.Filter == VideoFilter.Mmpx;
+
     private void EnsureHqxTarget(int width, int height)
     {
         if (_hqx is not null && _hqx.Width == width && _hqx.Height == height)
@@ -481,6 +488,17 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
 
         DestroyHqxTarget();
         _hqx = CreateColorTarget(width, height);
+    }
+
+    private void EnsureMmpxTarget(int width, int height)
+    {
+        if (_mmpx is not null && _mmpx.Width == width && _mmpx.Height == height)
+        {
+            return;
+        }
+
+        DestroyMmpxTarget();
+        _mmpx = CreateColorTarget(width, height);
     }
 
     private void RenderFrame()
@@ -572,6 +590,20 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
 
             _filterFallback = true;
         }
+        else if (IsMmpxFilter)
+        {
+            var mmpxWidth = _sourceWidth * MmpxFilter.Scale;
+            var mmpxHeight = _sourceHeight * MmpxFilter.Scale;
+            if (mmpxWidth <= MaxTextureSize && mmpxHeight <= MaxTextureSize)
+            {
+                EnsureMmpxTarget(mmpxWidth, mmpxHeight);
+                RecordMmpxPass(mmpxWidth, mmpxHeight);
+                RecordScalePass(mmpxWidth, mmpxHeight, filterMode: 1, _mmpx!.View);
+                return;
+            }
+
+            _filterFallback = true;
+        }
 
         RecordScalePass(
             _sourceWidth,
@@ -593,6 +625,21 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _context.ClearRenderTargetView(_hqx.RenderTargetView, new Color4(0f, 0f, 0f));
         _context.PSSetShaderResource(0, _expanded!.View);
         _context.PSSetShaderResource(1, _hqxRulesView!);
+        _context.Draw(3, 0);
+    }
+
+    private void RecordMmpxPass(int width, int height)
+    {
+        SetPipeline(_mmpxShader!, width, height);
+        UpdateConstants(
+            new Vector4(0f, 0f, width, height),
+            new Vector2(width, height),
+            _sourceWidth,
+            _sourceHeight,
+            filterMode: MmpxFilter.Scale);
+        _context!.OMSetRenderTargets(_mmpx!.RenderTargetView);
+        _context.ClearRenderTargetView(_mmpx.RenderTargetView, new Color4(0f, 0f, 0f));
+        _context.PSSetShaderResource(0, _expanded!.View);
         _context.Draw(3, 0);
     }
 
@@ -718,6 +765,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         {
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
             VideoFilter.Crt => 2,
+            VideoFilter.Bicubic => 3,
             _ => 1,
         };
     }
@@ -866,6 +914,12 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _hqx = null;
     }
 
+    private void DestroyMmpxTarget()
+    {
+        _mmpx?.Dispose();
+        _mmpx = null;
+    }
+
     private void DestroyOutputTarget()
     {
         _readback?.Dispose();
@@ -879,6 +933,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         DestroySwapchainResources();
         DestroySourceTextures();
         DestroyHqxTarget();
+        DestroyMmpxTarget();
         DestroyOutputTarget();
         _xbr?.Dispose();
         _xbr = null;
@@ -906,6 +961,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _scaleShader = null;
         _hqxShader?.Dispose();
         _hqxShader = null;
+        _mmpxShader?.Dispose();
+        _mmpxShader = null;
         _xbrShader?.Dispose();
         _xbrShader = null;
         _fsrEasuShader?.Dispose();

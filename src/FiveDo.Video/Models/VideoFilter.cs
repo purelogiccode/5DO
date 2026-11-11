@@ -14,6 +14,9 @@ public enum VideoFilter
     /// <summary>Sharp-bilinear; the default enhanced desktop mode.</summary>
     SharpBilinear,
 
+    /// <summary>Catmull-Rom bicubic 4x4 sampling (opt-in).</summary>
+    Bicubic,
+
     /// <summary>CRT scanlines and aperture mask.</summary>
     Crt,
 
@@ -28,6 +31,9 @@ public enum VideoFilter
 
     /// <summary>HQx 4x pixel-art smoothing followed by sharp-bilinear scaling (opt-in).</summary>
     Hqx4x,
+
+    /// <summary>MMPX 2x style-preserving pixel-art magnification followed by sharp-bilinear scaling (opt-in).</summary>
+    Mmpx,
 
     /// <summary>AMD FSR 1.0 EASU upscale plus RCAS sharpening (opt-in spatial post-process).</summary>
     Fsr,

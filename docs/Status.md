@@ -715,8 +715,9 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   640x480 rendering; the internal high-resolution research is M14. The mode is off by default
   because 320x240 titles must not be upscaled, and the desktop shell exposes it as a
   Hi-Res checkbox that restarts the machine. An opt-in xBR-lv2 4x filter, HQx
-  2x/3x/4x filters, and CRT bloom are available in Settings; xBR and HQx are GPU
-  passes over the GPU-expanded native source with sharp-bilinear finishing, and CRT
+  2x/3x/4x filters, MMPX 2x, bicubic sampling, and CRT bloom are available in Settings; xBR and HQx are GPU
+  passes over the GPU-expanded native source with sharp-bilinear finishing, MMPX runs a
+  2x GPU rule pass, and CRT
   bloom adds a 3x3 native-resolution glow in the CRT filter. The CPU HQx reference
   hashes remain the oracle, and the GPU HQx rule table matches them in the opt-in
   parity tests.

@@ -52,7 +52,8 @@ test harness designed for reproducible compatibility evidence.
   recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, and a
   diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
-  sharp-bilinear, CRT, xBR-lv2, FSR 1.0, and GPU rule-table HQx 2x/3x/4x filters, plus
+  sharp-bilinear, bicubic, CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
+  MMPX 2x filters, plus
   480i/240p field handling (auto detection, bob, weave, and blend). Optional Vulkan 1.0
   and Direct3D 11 backends mirror the pipeline for desktop and headless probes.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
@@ -159,8 +160,8 @@ or `5do-1.7.1-osx-arm64.dmg`.
 
 - OpenGL 3.3 desktop and OpenGL ES 3.0/3.1 paths, including ANGLE on Windows.
 - Accurate pixel-for-pixel mode matching the CPU frame assembler.
-- Nearest, sharp-bilinear, CRT (scanlines, aperture mask, curvature, vignette, bloom),
-  xBR-lv2 4x, FSR 1.0 (EASU + RCAS), and HQx 2x/3x/4x.
+- Nearest, sharp-bilinear, bicubic, CRT (scanlines, aperture mask, curvature, vignette, bloom),
+  xBR-lv2 4x, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and MMPX 2x.
 - Integer scaling, custom aspect ratios, fullscreen, vsync, and 4K output.
 - Optional Vulkan 1.0 backend with build-time SPIR-V shaders and a native Win32
   swapchain path.

@@ -12,8 +12,10 @@ namespace FiveDo.Video;
 /// </remarks>
 public sealed class CpuVideoRenderer : ICpuFrameRenderer
 {
+    private readonly MmpxFilter _mmpx = new();
     private FrameBuffer _frame = new(1, 1);
     private FrameBuffer? _sourceFrame;
+    private FrameBuffer? _mmpxFrame;
     private RendererSettings _settings = new();
 
     /// <inheritdoc />
@@ -44,6 +46,7 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         _frame = new FrameBuffer(width, height);
         _sourceFrame = null;
+        _mmpxFrame = null;
     }
 
     /// <inheritdoc />
@@ -76,9 +79,26 @@ public sealed class CpuVideoRenderer : ICpuFrameRenderer
             || _sourceFrame.Height != sourceHeight)
         {
             _sourceFrame = new FrameBuffer(sourceWidth, sourceHeight);
+            _mmpxFrame = null;
         }
 
         FrameAssembler.Assemble(frame, _sourceFrame, sourceWidth, sourceHeight);
+        if (_settings.Filter == VideoFilter.Mmpx)
+        {
+            var mmpxWidth = sourceWidth * MmpxFilter.Scale;
+            var mmpxHeight = sourceHeight * MmpxFilter.Scale;
+            if (_mmpxFrame is null
+                || _mmpxFrame.Width != mmpxWidth
+                || _mmpxFrame.Height != mmpxHeight)
+            {
+                _mmpxFrame = new FrameBuffer(mmpxWidth, mmpxHeight);
+            }
+
+            _mmpx.Expand(_sourceFrame, _mmpxFrame);
+            FrameScaler.Scale(_mmpxFrame, _frame, _settings, frame.PixelAspect);
+            return;
+        }
+
         FrameScaler.Scale(_sourceFrame, _frame, _settings, frame.PixelAspect);
     }
 

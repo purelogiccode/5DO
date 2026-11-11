@@ -51,7 +51,7 @@ Evidence: Lemmings' 640x480 title matches the reference because the game itself 
 
 The 3DO's default output is 320x240. On a 1080p or 4K display, the presenter expands
 each source pixel by 6x or 12x. Nearest/integer scaling preserves the pixel grid;
-sharp-bilinear, CRT, xBR, HQx, and FSR reduce the blockiness but cannot recover detail
+sharp-bilinear, bicubic, CRT, xBR, HQx, MMPX, and FSR reduce the blockiness but cannot recover detail
 that was never rendered.
 
 The quality gap has three separate causes:

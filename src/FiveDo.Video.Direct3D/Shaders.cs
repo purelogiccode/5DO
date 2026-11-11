@@ -107,12 +107,58 @@ internal static class Direct3D11Shaders
         Texture2D<float4> Expanded : register(t0);
         SamplerState LinearSampler : register(s0);
 
+        float PickWeight(float4 weights, int index)
+        {
+            if (index == 0) { return weights.x; }
+            if (index == 1) { return weights.y; }
+            if (index == 2) { return weights.z; }
+            return weights.w;
+        }
+
         float4 PSMain(PSInput input) : SV_TARGET
         {
             float2 uv = (input.position.xy - Rect.xy) / Rect.zw;
             if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
             {
                 return float4(0.0, 0.0, 0.0, 1.0);
+            }
+
+            if (FilterMode == 3)
+            {
+                float2 coord = (uv * (float2)SourceSize) - 0.5;
+                float2 base = floor(coord);
+                float2 fraction = coord - base;
+                float f2x = fraction.x * fraction.x;
+                float f3x = f2x * fraction.x;
+                float f2y = fraction.y * fraction.y;
+                float f3y = f2y * fraction.y;
+                float4 wx = float4(
+                    (-0.5 * f3x) + f2x - (0.5 * fraction.x),
+                    (1.5 * f3x) - (2.5 * f2x) + 1.0,
+                    (-1.5 * f3x) + (2.0 * f2x) + (0.5 * fraction.x),
+                    (0.5 * f3x) - (0.5 * f2x));
+                float4 wy = float4(
+                    (-0.5 * f3y) + f2y - (0.5 * fraction.y),
+                    (1.5 * f3y) - (2.5 * f2y) + 1.0,
+                    (-1.5 * f3y) + (2.0 * f2y) + (0.5 * fraction.y),
+                    (0.5 * f3y) - (0.5 * f2y));
+                float3 sum = float3(0.0, 0.0, 0.0);
+                [unroll]
+                for (int y = -1; y <= 2; y++)
+                {
+                    [unroll]
+                    for (int x = -1; x <= 2; x++)
+                    {
+                        int2 tap = clamp(
+                            (int2)base + int2(x, y),
+                            int2(0, 0),
+                            SourceSize - 1);
+                        float weight = PickWeight(wx, x + 1) * PickWeight(wy, y + 1);
+                        sum += Expanded.Load(int3(tap, 0)).rgb * weight;
+                    }
+                }
+
+                return float4(saturate(sum), 1.0);
             }
 
             if (FilterMode == 0)
@@ -309,6 +355,249 @@ internal static class Direct3D11Shaders
                 + PickColor(c0, c1, c2, c3, c4, c5, c6, c7, c8, (int)index2) * weight2;
             uint3 rgb = sum >> shift;
             return float4((float3)rgb / 255.0, 1.0);
+        }
+        """;
+
+    internal const string Mmpx = Common + """
+
+        // MMPX, Copyright 2020 Morgan McGuire and Mara Gagiu, MIT license.
+        // See THIRD-PARTY-NOTICES.md.
+
+        Texture2D<float4> Expanded : register(t0);
+
+        uint3 FetchColor(int2 p)
+        {
+            float3 color = Expanded.Load(
+                int3(clamp(p, int2(0, 0), SourceSize - 1), 0)).rgb;
+            return (uint3)round(color * 255.0);
+        }
+
+        bool AllEq2(uint3 b, uint3 a0, uint3 a1)
+        {
+            return all(b == a0) && all(b == a1);
+        }
+
+        bool AllEq3(uint3 b, uint3 a0, uint3 a1, uint3 a2)
+        {
+            return all(b == a0) && all(b == a1) && all(b == a2);
+        }
+
+        bool AllEq4(uint3 b, uint3 a0, uint3 a1, uint3 a2, uint3 a3)
+        {
+            return all(b == a0) && all(b == a1) && all(b == a2) && all(b == a3);
+        }
+
+        bool AnyEq3(uint3 b, uint3 a0, uint3 a1, uint3 a2)
+        {
+            return any(b == a0) || any(b == a1) || any(b == a2);
+        }
+
+        bool NoneEq2(uint3 b, uint3 a0, uint3 a1)
+        {
+            return !any(b == a0) && !any(b == a1);
+        }
+
+        bool NoneEq4(uint3 b, uint3 a0, uint3 a1, uint3 a2, uint3 a3)
+        {
+            return !any(b == a0) && !any(b == a1) && !any(b == a2) && !any(b == a3);
+        }
+
+        float Luma(uint3 c)
+        {
+            // Opaque VDL frames: the reference luma term is zero.
+            return 0.0;
+        }
+
+        float4 PSMain(PSInput input) : SV_TARGET
+        {
+            int2 outCoord = int2(input.position.xy);
+            int2 sourceCoord = outCoord / 2;
+            int subpixel = ((outCoord.y % 2) * 2) + (outCoord.x % 2);
+
+            uint3 a = FetchColor(sourceCoord + int2(-1, -1));
+            uint3 b = FetchColor(sourceCoord + int2(0, -1));
+            uint3 c = FetchColor(sourceCoord + int2(1, -1));
+            uint3 d = FetchColor(sourceCoord + int2(-1, 0));
+            uint3 e = FetchColor(sourceCoord);
+            uint3 f = FetchColor(sourceCoord + int2(1, 0));
+            uint3 g = FetchColor(sourceCoord + int2(-1, 1));
+            uint3 h = FetchColor(sourceCoord + int2(0, 1));
+            uint3 i = FetchColor(sourceCoord + int2(1, 1));
+            uint3 p = FetchColor(sourceCoord + int2(0, -2));
+            uint3 s = FetchColor(sourceCoord + int2(0, 2));
+            uint3 q = FetchColor(sourceCoord + int2(-2, 0));
+            uint3 r = FetchColor(sourceCoord + int2(2, 0));
+
+            uint3 j = e;
+            uint3 k = e;
+            uint3 l = e;
+            uint3 m = e;
+
+            if (any(a != e) || any(b != e) || any(c != e) || any(d != e)
+                || any(f != e) || any(g != e) || any(h != e) || any(i != e))
+            {
+                float bl = Luma(b);
+                float dl = Luma(d);
+                float el = Luma(e);
+                float fl = Luma(f);
+                float hl = Luma(h);
+
+                // 1:1 slope rules.
+                if (all(d == b) && any(d != h) && any(d != f)
+                    && (el >= dl || all(e == a))
+                    && AnyEq3(e, a, c, g)
+                    && (el < dl || any(a != d) || any(e != p) || any(e != q)))
+                {
+                    j = d;
+                }
+
+                if (all(b == f) && any(b != d) && any(b != h)
+                    && (el >= bl || all(e == c))
+                    && AnyEq3(e, a, c, i)
+                    && (el < bl || any(c != b) || any(e != p) || any(e != r)))
+                {
+                    k = b;
+                }
+
+                if (all(h == d) && any(h != f) && any(h != b)
+                    && (el >= hl || all(e == g))
+                    && AnyEq3(e, a, g, i)
+                    && (el < hl || any(g != h) || any(e != s) || any(e != q)))
+                {
+                    l = h;
+                }
+
+                if (all(f == h) && any(f != b) && any(f != d)
+                    && (el >= fl || all(e == i))
+                    && AnyEq3(e, c, g, i)
+                    && (el < fl || any(i != h) || any(e != r) || any(e != s)))
+                {
+                    m = f;
+                }
+
+                // Intersection rules.
+                if (any(e != f) && AllEq4(e, c, i, d, q) && AllEq2(f, b, h)
+                    && any(f != FetchColor(sourceCoord + int2(3, 0))))
+                {
+                    k = f;
+                    m = f;
+                }
+
+                if (any(e != d) && AllEq4(e, a, g, f, r) && AllEq2(d, b, h)
+                    && any(d != FetchColor(sourceCoord + int2(-3, 0))))
+                {
+                    j = d;
+                    l = d;
+                }
+
+                if (any(e != h) && AllEq4(e, g, i, b, p) && AllEq2(h, d, f)
+                    && any(h != FetchColor(sourceCoord + int2(0, 3))))
+                {
+                    l = h;
+                    m = h;
+                }
+
+                if (any(e != b) && AllEq4(e, a, c, h, s) && AllEq2(b, d, f)
+                    && any(b != FetchColor(sourceCoord + int2(0, -3))))
+                {
+                    j = b;
+                    k = b;
+                }
+
+                if (bl < el && AllEq4(e, g, h, i, s) && NoneEq4(e, a, d, c, f))
+                {
+                    j = b;
+                    k = b;
+                }
+
+                if (hl < el && AllEq4(e, a, b, c, p) && NoneEq4(e, d, g, i, f))
+                {
+                    l = h;
+                    m = h;
+                }
+
+                if (fl < el && AllEq4(e, a, d, g, q) && NoneEq4(e, b, c, i, h))
+                {
+                    k = f;
+                    m = f;
+                }
+
+                if (dl < el && AllEq4(e, c, f, i, r) && NoneEq4(e, b, a, g, h))
+                {
+                    j = d;
+                    l = d;
+                }
+
+                // 2:1 slope rules.
+                if (any(h != b))
+                {
+                    if (any(h != a) && any(h != e) && any(h != c))
+                    {
+                        if (AllEq3(h, g, f, r)
+                            && NoneEq2(h, d, FetchColor(sourceCoord + int2(2, -1))))
+                        {
+                            l = m;
+                        }
+
+                        if (AllEq3(h, i, d, q)
+                            && NoneEq2(h, f, FetchColor(sourceCoord + int2(-2, -1))))
+                        {
+                            m = l;
+                        }
+                    }
+
+                    if (any(b != i) && any(b != g) && any(b != e))
+                    {
+                        if (AllEq3(b, a, f, r)
+                            && NoneEq2(b, d, FetchColor(sourceCoord + int2(2, 1))))
+                        {
+                            j = k;
+                        }
+
+                        if (AllEq3(b, c, d, q)
+                            && NoneEq2(b, f, FetchColor(sourceCoord + int2(-2, 1))))
+                        {
+                            k = j;
+                        }
+                    }
+                }
+
+                if (any(f != d))
+                {
+                    if (any(d != i) && any(d != e) && any(d != c))
+                    {
+                        if (AllEq3(d, a, h, s)
+                            && NoneEq2(d, b, FetchColor(sourceCoord + int2(1, 2))))
+                        {
+                            j = l;
+                        }
+
+                        if (AllEq3(d, g, b, p)
+                            && NoneEq2(d, h, FetchColor(sourceCoord + int2(1, -2))))
+                        {
+                            l = j;
+                        }
+                    }
+
+                    if (any(f != e) && any(f != a) && any(f != g))
+                    {
+                        if (AllEq3(f, c, h, s)
+                            && NoneEq2(f, b, FetchColor(sourceCoord + int2(-1, 2))))
+                        {
+                            k = m;
+                        }
+
+                        if (AllEq3(f, i, b, p)
+                            && NoneEq2(f, h, FetchColor(sourceCoord + int2(-1, -2))))
+                        {
+                            m = k;
+                        }
+                    }
+                }
+            }
+
+            uint3 result = subpixel == 0 ? j : (subpixel == 1 ? k : (subpixel == 2 ? l : m));
+            return float4((float3)result / 255.0, 1.0);
         }
         """;
 
@@ -653,6 +942,7 @@ internal static class Direct3D11Shaders
         ("Palette.frag", "ps_5_0", Palette),
         ("Scale.frag", "ps_5_0", Scale),
         ("Hqx.frag", "ps_5_0", Hqx),
+        ("Mmpx.frag", "ps_5_0", Mmpx),
         ("Xbr.frag", "ps_5_0", Xbr),
         ("FsrEasu.frag", "ps_5_0", FsrEasu),
         ("FsrRcas.frag", "ps_5_0", FsrRcas),

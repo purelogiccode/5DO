@@ -209,12 +209,21 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   to the CPU expansion. The shaders use explicit `trunc` for both the YUV and
   `fetchColor` conversions because NVIDIA's GLSL compiler rounded `int(float)` and
   ANGLE's GLES float-to-uint conversion rounded `k + 0.5` in the first version.
+- MMPX 2x is a GPU rule pass over the palette texture, followed by sharp-bilinear
+  finishing, in OpenGL, Direct3D 11, and Vulkan. `MmpxFilter` is the CPU reference and
+  the opt-in parity tests compare the full expansion. The rules preserve the original
+  palette and single-pixel features; the CPU fallback also runs MMPX before scaling.
+- Bicubic is a 16-tap Catmull-Rom scale pass with clamped edges. It is implemented in
+  OpenGL, Direct3D 11, Vulkan, and the CPU `FrameScaler`; no intermediate target is
+  allocated.
 - CRT bloom is implemented as a 3x3 native-resolution glow in the CRT filter.
 - FSR 1.0 is opt-in (EASU + RCAS, two GPU passes). It has a sharpness setting and
   MIT attribution. The 4K WGL probe measures present 0.132 ms mean / 1.191 ms p99 and
   GPU 0.441/0.483 ms; the optional Vulkan backend measures 0.604/1.303 ms present and
   0.404/0.415 ms GPU. The Vulkan figures exclude the optional per-frame readback; the
-  desktop `--gl-backend vulkan` path still renders offscreen and copies the frame back.
+  desktop `--gl-backend vulkan` path presents through a native Win32 child surface
+  without a CPU readback, while the offscreen/readback path remains for probes,
+  screenshots, and non-Windows fallback.
 - The xBR path now samples the GPU-expanded palette texture directly; it no longer
   uploads a CPU `FrameAssembler` copy. WGL and ANGLE 4K xBR probes pass, and the
   320x240 xBR capture is within one mean channel level of the accurate frame.

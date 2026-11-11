@@ -185,8 +185,8 @@ The legacy `PreferOpenGl` boolean is still read when loading older files; `false
 
 ### Enum values
 
-`Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Crt`, `Xbr`, `Hqx`,
-`Hqx3x`, `Hqx4x`, `Fsr`.
+`Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Bicubic`, `Crt`, `Xbr`,
+`Hqx`, `Hqx3x`, `Hqx4x`, `Mmpx`, `Fsr`.
 
 `FrameSkip` (string): `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`,
 `OneInFive`. `Auto` skips a presentation frame only after three presented frames exceed

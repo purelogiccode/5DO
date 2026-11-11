@@ -53,6 +53,14 @@ internal static class Shaders
     }
 
     /// <summary>
+    /// MMPX 2x style-preserving pixel-art expansion pass.
+    /// </summary>
+    internal static string FragmentMmpx(bool es)
+    {
+        return Header(es) + FragmentMmpxBody;
+    }
+
+    /// <summary>
     /// FSR 1.0 EASU pass: edge-adaptive spatial upsampling of the native-resolution frame
     /// into the viewport-sized target.
     /// </summary>
@@ -154,6 +162,14 @@ internal static class Shaders
         uniform float uBloomThreshold;
         out vec4 fragColor;
 
+        float pickWeight(vec4 weights, int index)
+        {
+            if (index == 0) { return weights.x; }
+            if (index == 1) { return weights.y; }
+            if (index == 2) { return weights.z; }
+            return weights.w;
+        }
+
         void main()
         {
             vec2 uv = (gl_FragCoord.xy - uRect.xy) / uRect.zw;
@@ -161,6 +177,46 @@ internal static class Shaders
             // bottom of GL texture space. Flip the sampled V coordinate here so the
             // window shows the frame top-up instead of mirrored vertically.
             uv.y = 1.0 - uv.y;
+            if (uFilter == 3)
+            {
+                // Catmull-Rom bicubic: four taps per axis with a = -0.5. The source
+                // is sampled with texelFetch so the weights are independent of the
+                // hardware sampler and the output is identical on GL and GLES.
+                vec2 coord = (uv * vec2(uSource)) - vec2(0.5);
+                vec2 base = floor(coord);
+                vec2 fraction = coord - base;
+                float f2x = fraction.x * fraction.x;
+                float f3x = f2x * fraction.x;
+                float f2y = fraction.y * fraction.y;
+                float f3y = f2y * fraction.y;
+                float wx0 = (-0.5 * f3x) + f2x - (0.5 * fraction.x);
+                float wx1 = (1.5 * f3x) - (2.5 * f2x) + 1.0;
+                float wx2 = (-1.5 * f3x) + (2.0 * f2x) + (0.5 * fraction.x);
+                float wx3 = (0.5 * f3x) - (0.5 * f2x);
+                float wy0 = (-0.5 * f3y) + f2y - (0.5 * fraction.y);
+                float wy1 = (1.5 * f3y) - (2.5 * f2y) + 1.0;
+                float wy2 = (-1.5 * f3y) + (2.0 * f2y) + (0.5 * fraction.y);
+                float wy3 = (0.5 * f3y) - (0.5 * f2y);
+                vec4 wx = vec4(wx0, wx1, wx2, wx3);
+                vec4 wy = vec4(wy0, wy1, wy2, wy3);
+                vec3 sum = vec3(0.0);
+                for (int y = -1; y <= 2; y++)
+                {
+                    for (int x = -1; x <= 2; x++)
+                    {
+                        ivec2 tap = clamp(
+                            ivec2(base) + ivec2(x, y),
+                            ivec2(0),
+                            uSource - 1);
+                        float weight = pickWeight(wx, x + 1) * pickWeight(wy, y + 1);
+                        sum += texelFetch(uExpanded, tap, 0).rgb * weight;
+                    }
+                }
+
+                fragColor = vec4(clamp(sum, 0.0, 1.0), 1.0);
+                return;
+            }
+
             if (uFilter == 1)
             {
                 // Themaister/rsn8887 sharp-bilinear: prescale by the integer
@@ -506,6 +562,261 @@ internal static class Shaders
                 + pickColor(c0, c1, c2, c3, c4, c5, c6, c7, c8, int(index2)) * weight2;
             uvec3 rgb = sum >> shift;
             fragColor = vec4(vec3(rgb) / 255.0, 1.0);
+        }
+        """;
+
+    /// <summary>
+    /// MMPX 2x style-preserving pixel-art magnification. Each fragment selects one of
+    /// the four destination pixels computed from the source 3x3 neighbourhood and the
+    /// two-pixel diamond points. The rules match the CPU <c>MmpxFilter</c>.
+    /// </summary>
+    /// <remarks>
+    /// MMPX, Copyright 2020 Morgan McGuire and Mara Gagiu, MIT license. See
+    /// THIRD-PARTY-NOTICES.md. VDL frames are opaque, so the reference luma term is
+    /// zero and the luma comparisons reduce to the equality rules.
+    /// </remarks>
+    private const string FragmentMmpxBody = """
+        uniform sampler2D uExpanded;  // native-resolution RGB texture
+        uniform ivec2 uSource;        // native source width, height
+        out vec4 fragColor;
+
+        uvec3 fetchColor(ivec2 p)
+        {
+            vec3 color = texelFetch(uExpanded, clamp(p, ivec2(0), uSource - 1), 0).rgb;
+            return uvec3(trunc((color * 255.0) + 0.5));
+        }
+
+        bool allEq2(uvec3 b, uvec3 a0, uvec3 a1)
+        {
+            return all(equal(b, a0)) && all(equal(b, a1));
+        }
+
+        bool allEq3(uvec3 b, uvec3 a0, uvec3 a1, uvec3 a2)
+        {
+            return all(equal(b, a0)) && all(equal(b, a1)) && all(equal(b, a2));
+        }
+
+        bool allEq4(uvec3 b, uvec3 a0, uvec3 a1, uvec3 a2, uvec3 a3)
+        {
+            return all(equal(b, a0)) && all(equal(b, a1)) && all(equal(b, a2)) && all(equal(b, a3));
+        }
+
+        bool anyEq3(uvec3 b, uvec3 a0, uvec3 a1, uvec3 a2)
+        {
+            return any(equal(b, a0)) || any(equal(b, a1)) || any(equal(b, a2));
+        }
+
+        bool noneEq2(uvec3 b, uvec3 a0, uvec3 a1)
+        {
+            return !any(equal(b, a0)) && !any(equal(b, a1));
+        }
+
+        bool noneEq4(uvec3 b, uvec3 a0, uvec3 a1, uvec3 a2, uvec3 a3)
+        {
+            return !any(equal(b, a0)) && !any(equal(b, a1)) && !any(equal(b, a2)) && !any(equal(b, a3));
+        }
+
+        bool neColor(uvec3 a, uvec3 b)
+        {
+            return any(notEqual(a, b));
+        }
+
+        float luma(uvec3 c)
+        {
+            // Opaque VDL frames: the reference term (r+g+b+1)*(1-alpha) is zero.
+            return 0.0;
+        }
+
+        void main()
+        {
+            ivec2 outCoord = ivec2(gl_FragCoord.xy);
+            ivec2 sourceCoord = outCoord / 2;
+            int subpixel = ((outCoord.y % 2) * 2) + (outCoord.x % 2);
+
+            uvec3 a = fetchColor(sourceCoord + ivec2(-1, -1));
+            uvec3 b = fetchColor(sourceCoord + ivec2( 0, -1));
+            uvec3 c = fetchColor(sourceCoord + ivec2( 1, -1));
+            uvec3 d = fetchColor(sourceCoord + ivec2(-1,  0));
+            uvec3 e = fetchColor(sourceCoord);
+            uvec3 f = fetchColor(sourceCoord + ivec2( 1,  0));
+            uvec3 g = fetchColor(sourceCoord + ivec2(-1,  1));
+            uvec3 h = fetchColor(sourceCoord + ivec2( 0,  1));
+            uvec3 i = fetchColor(sourceCoord + ivec2( 1,  1));
+            uvec3 p = fetchColor(sourceCoord + ivec2( 0, -2));
+            uvec3 s = fetchColor(sourceCoord + ivec2( 0,  2));
+            uvec3 q = fetchColor(sourceCoord + ivec2(-2,  0));
+            uvec3 r = fetchColor(sourceCoord + ivec2( 2,  0));
+
+            uvec3 j = e;
+            uvec3 k = e;
+            uvec3 l = e;
+            uvec3 m = e;
+
+            if (any(notEqual(a, e)) || any(notEqual(b, e)) || any(notEqual(c, e)) || any(notEqual(d, e))
+                || any(notEqual(f, e)) || any(notEqual(g, e)) || any(notEqual(h, e)) || any(notEqual(i, e)))
+            {
+                float bl = luma(b);
+                float dl = luma(d);
+                float el = luma(e);
+                float fl = luma(f);
+                float hl = luma(h);
+
+                // 1:1 slope rules.
+                if (all(equal(d, b)) && any(notEqual(d, h)) && any(notEqual(d, f))
+                    && (el >= dl || all(equal(e, a)))
+                    && anyEq3(e, a, c, g)
+                    && (el < dl || any(notEqual(a, d)) || any(notEqual(e, p)) || any(notEqual(e, q))))
+                {
+                    j = d;
+                }
+
+                if (all(equal(b, f)) && any(notEqual(b, d)) && any(notEqual(b, h))
+                    && (el >= bl || all(equal(e, c)))
+                    && anyEq3(e, a, c, i)
+                    && (el < bl || any(notEqual(c, b)) || any(notEqual(e, p)) || any(notEqual(e, r))))
+                {
+                    k = b;
+                }
+
+                if (all(equal(h, d)) && any(notEqual(h, f)) && any(notEqual(h, b))
+                    && (el >= hl || all(equal(e, g)))
+                    && anyEq3(e, a, g, i)
+                    && (el < hl || any(notEqual(g, h)) || any(notEqual(e, s)) || any(notEqual(e, q))))
+                {
+                    l = h;
+                }
+
+                if (all(equal(f, h)) && any(notEqual(f, b)) && any(notEqual(f, d))
+                    && (el >= fl || all(equal(e, i)))
+                    && anyEq3(e, c, g, i)
+                    && (el < fl || any(notEqual(i, h)) || any(notEqual(e, r)) || any(notEqual(e, s))))
+                {
+                    m = f;
+                }
+
+                // Intersection rules.
+                if (any(notEqual(e, f)) && allEq4(e, c, i, d, q) && allEq2(f, b, h)
+                    && neColor(f, fetchColor(sourceCoord + ivec2(3, 0))))
+                {
+                    k = f;
+                    m = f;
+                }
+
+                if (any(notEqual(e, d)) && allEq4(e, a, g, f, r) && allEq2(d, b, h)
+                    && neColor(d, fetchColor(sourceCoord + ivec2(-3, 0))))
+                {
+                    j = d;
+                    l = d;
+                }
+
+                if (any(notEqual(e, h)) && allEq4(e, g, i, b, p) && allEq2(h, d, f)
+                    && neColor(h, fetchColor(sourceCoord + ivec2(0, 3))))
+                {
+                    l = h;
+                    m = h;
+                }
+
+                if (any(notEqual(e, b)) && allEq4(e, a, c, h, s) && allEq2(b, d, f)
+                    && neColor(b, fetchColor(sourceCoord + ivec2(0, -3))))
+                {
+                    j = b;
+                    k = b;
+                }
+
+                if (bl < el && allEq4(e, g, h, i, s) && noneEq4(e, a, d, c, f))
+                {
+                    j = b;
+                    k = b;
+                }
+
+                if (hl < el && allEq4(e, a, b, c, p) && noneEq4(e, d, g, i, f))
+                {
+                    l = h;
+                    m = h;
+                }
+
+                if (fl < el && allEq4(e, a, d, g, q) && noneEq4(e, b, c, i, h))
+                {
+                    k = f;
+                    m = f;
+                }
+
+                if (dl < el && allEq4(e, c, f, i, r) && noneEq4(e, b, a, g, h))
+                {
+                    j = d;
+                    l = d;
+                }
+
+                // 2:1 slope rules.
+                if (any(notEqual(h, b)))
+                {
+                    if (any(notEqual(h, a)) && any(notEqual(h, e)) && any(notEqual(h, c)))
+                    {
+                        if (allEq3(h, g, f, r)
+                            && noneEq2(h, d, fetchColor(sourceCoord + ivec2(2, -1))))
+                        {
+                            l = m;
+                        }
+
+                        if (allEq3(h, i, d, q)
+                            && noneEq2(h, f, fetchColor(sourceCoord + ivec2(-2, -1))))
+                        {
+                            m = l;
+                        }
+                    }
+
+                    if (any(notEqual(b, i)) && any(notEqual(b, g)) && any(notEqual(b, e)))
+                    {
+                        if (allEq3(b, a, f, r)
+                            && noneEq2(b, d, fetchColor(sourceCoord + ivec2(2, 1))))
+                        {
+                            j = k;
+                        }
+
+                        if (allEq3(b, c, d, q)
+                            && noneEq2(b, f, fetchColor(sourceCoord + ivec2(-2, 1))))
+                        {
+                            k = j;
+                        }
+                    }
+                }
+
+                if (any(notEqual(f, d)))
+                {
+                    if (any(notEqual(d, i)) && any(notEqual(d, e)) && any(notEqual(d, c)))
+                    {
+                        if (allEq3(d, a, h, s)
+                            && noneEq2(d, b, fetchColor(sourceCoord + ivec2(1, 2))))
+                        {
+                            j = l;
+                        }
+
+                        if (allEq3(d, g, b, p)
+                            && noneEq2(d, h, fetchColor(sourceCoord + ivec2(1, -2))))
+                        {
+                            l = j;
+                        }
+                    }
+
+                    if (any(notEqual(f, e)) && any(notEqual(f, a)) && any(notEqual(f, g)))
+                    {
+                        if (allEq3(f, c, h, s)
+                            && noneEq2(f, b, fetchColor(sourceCoord + ivec2(-1, 2))))
+                        {
+                            k = m;
+                        }
+
+                        if (allEq3(f, i, b, p)
+                            && noneEq2(f, h, fetchColor(sourceCoord + ivec2(-1, -2))))
+                        {
+                            m = k;
+                        }
+                    }
+                }
+            }
+
+            uvec3 result = subpixel == 0 ? j : (subpixel == 1 ? k : (subpixel == 2 ? l : m));
+            fragColor = vec4(vec3(result) / 255.0, 1.0);
         }
         """;
 

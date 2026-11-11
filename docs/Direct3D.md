@@ -46,11 +46,13 @@ All filters in the shared `VideoFilter` enum are supported:
 - `Accurate`/`Nearest`: integer `Load` sampling, pixel-identical to the CPU oracle when
   the output is 1:1.
 - `SharpBilinear`: the same edge-aware sharp-bilinear sampling as OpenGL/Vulkan.
+- `Bicubic`: Catmull-Rom 4x4 sampling at output resolution.
 - `Crt`: scanlines, aperture mask, barrel warp, and optional bloom.
 - `Xbr`: GPU 4x xBR-lv2 pass, then sharp-bilinear.
 - `Fsr`: FSR 1.0 EASU into a viewport-sized target, then RCAS into the output.
 - `Hqx`/`Hqx3x`/`Hqx4x`: GPU rule-table pass over the palette texture, then
   sharp-bilinear. The 256x32 `R32G32_UInt` rule table is uploaded once at startup.
+- `Mmpx`: GPU MMPX 2x rule pass over the palette texture, then sharp-bilinear.
 
 If a GPU filter cannot allocate its intermediate target, the renderer reports
 `FilterFallback` and falls back to sharp-bilinear.
@@ -89,7 +91,7 @@ On the development machine (Windows 11, Ryzen 9 7900, RTX 4070):
 | Window probe 640x480 | `offscreen: false`, `vsyncBackend: "fifo"`, `vsyncActive: true` |
 | Filters | Accurate, sharp-bilinear, CRT, xBR, FSR, HQx 2x/3x/4x render without fallback |
 | 4K HQx 2x/3x/4x | present 0.183/0.150/0.140 ms, GPU 0.086/0.108/0.138 ms, 0 managed allocations/frame |
-| Shaders | All seven HLSL modules compile for `vs_5_0`/`ps_5_0` |
+| Shaders | All eight HLSL modules compile for `vs_5_0`/`ps_5_0` |
 
 The test evidence is reproducible with `FIVEDO_D3D_TESTS=1`; the shader compile test is
 not opt-in on Windows.
@@ -99,7 +101,7 @@ not opt-in on Windows.
 | Test | Coverage |
 |---|---|
 | `Direct3D11ShaderTests` | Every HLSL module compiles for shader model 5.0. |
-| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation, HQx 2x/3x/4x CPU-expansion parity, and the multi-frame synthetic probe frame. |
+| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx/MMPX orientation, HQx 2x/3x/4x and MMPX CPU-expansion parity, and the multi-frame synthetic probe frame. |
 | `D3dProbeIntegrationTests` (opt-in `FIVEDO_D3D_TESTS=1`) | Runs the built probe and checks the parity report. |
 | `D3dProbeOptionsTests` | Probe option defaults, aliases, validation, and shared option names. |
 

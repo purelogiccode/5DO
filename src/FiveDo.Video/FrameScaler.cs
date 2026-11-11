@@ -51,7 +51,11 @@ internal static class FrameScaler
             return;
         }
 
-        if (settings.Filter is VideoFilter.Accurate or VideoFilter.Nearest)
+        if (settings.Filter == VideoFilter.Bicubic)
+        {
+            ScaleBicubic(source, destination, rect);
+        }
+        else if (settings.Filter is VideoFilter.Accurate or VideoFilter.Nearest)
         {
             ScaleNearest(source, destination, rect);
         }
@@ -59,6 +63,68 @@ internal static class FrameScaler
         {
             ScaleBilinear(source, destination, rect);
         }
+    }
+
+    private static void ScaleBicubic(FrameBuffer source, FrameBuffer destination, ViewportRect rect)
+    {
+        ReadOnlySpan<byte> sourcePixels = source.PixelSpan;
+        Span<byte> destinationPixels = destination.PixelSpan;
+        Span<float> wy = stackalloc float[4];
+        Span<float> wx = stackalloc float[4];
+        for (var y = 0; y < rect.Height; y++)
+        {
+            var sourceY = (((y + 0.5) * source.Height) / rect.Height) - 0.5;
+            var baseY = (int)Math.Floor(sourceY);
+            var fy = sourceY - baseY;
+            CubicWeights((float)fy, wy);
+            var destinationRow = (rect.Y + y) * destination.Stride;
+            for (var x = 0; x < rect.Width; x++)
+            {
+                var sourceX = (((x + 0.5) * source.Width) / rect.Width) - 0.5;
+                var baseX = (int)Math.Floor(sourceX);
+                var fx = sourceX - baseX;
+                CubicWeights((float)fx, wx);
+
+                var red = 0f;
+                var green = 0f;
+                var blue = 0f;
+                for (var tapY = 0; tapY < 4; tapY++)
+                {
+                    var sampleY = Math.Clamp(baseY + tapY - 1, 0, source.Height - 1);
+                    var row = sampleY * source.Stride;
+                    var weightY = wy[tapY];
+                    for (var tapX = 0; tapX < 4; tapX++)
+                    {
+                        var sampleX = Math.Clamp(baseX + tapX - 1, 0, source.Width - 1);
+                        var offset = row + (sampleX * 4);
+                        var weight = weightY * wx[tapX];
+                        blue += sourcePixels[offset] * weight;
+                        green += sourcePixels[offset + 1] * weight;
+                        red += sourcePixels[offset + 2] * weight;
+                    }
+                }
+
+                var destinationOffset = destinationRow + ((rect.X + x) * 4);
+                destinationPixels[destinationOffset] = ToByte(blue);
+                destinationPixels[destinationOffset + 1] = ToByte(green);
+                destinationPixels[destinationOffset + 2] = ToByte(red);
+                destinationPixels[destinationOffset + 3] = 0xff;
+            }
+        }
+    }
+
+    private static void CubicWeights(float fraction, Span<float> weights)
+    {
+        // Catmull-Rom (a = -0.5) weights for source taps -1, 0, 1, 2.
+        weights[0] = (((-0.5f * fraction) + 1f) * fraction - 0.5f) * fraction;
+        weights[1] = (((1.5f * fraction) - 2.5f) * fraction * fraction) + 1f;
+        weights[2] = (((-1.5f * fraction) + 2f) * fraction + 0.5f) * fraction;
+        weights[3] = (((0.5f * fraction) - 0.5f) * fraction) * fraction;
+    }
+
+    private static byte ToByte(float value)
+    {
+        return (byte)Math.Clamp((int)MathF.Round(value), 0, 255);
     }
 
     private static void ScaleNearest(FrameBuffer source, FrameBuffer destination, ViewportRect rect)

@@ -228,7 +228,7 @@ workflow.
 |---|---|---|
 | 320x240 NTSC | Yes | |
 | **OpenGL/GLES renderer** | **Required desktop path** | |
-| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx | Native Vulkan surface/swapchain, vsync |
+| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX | Native Vulkan surface/swapchain, vsync |
 | GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
 | Nearest / integer scaling | Yes | |

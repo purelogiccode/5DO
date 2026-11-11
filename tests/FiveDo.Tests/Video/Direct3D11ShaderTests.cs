@@ -15,7 +15,7 @@ public sealed class Direct3D11ShaderTests
 
         string[] names = Direct3D11Renderer.CompileAllShaders();
         Assert.Equal(
-            ["Frame.vert", "Palette.frag", "Scale.frag", "Hqx.frag", "Xbr.frag", "FsrEasu.frag", "FsrRcas.frag"],
+            ["Frame.vert", "Palette.frag", "Scale.frag", "Hqx.frag", "Mmpx.frag", "Xbr.frag", "FsrEasu.frag", "FsrRcas.frag"],
             names);
     }
 }

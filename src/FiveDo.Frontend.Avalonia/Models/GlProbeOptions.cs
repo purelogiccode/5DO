@@ -229,6 +229,10 @@ internal sealed record GlProbeOptions(
             case "CRT":
                 filter = VideoFilter.Crt;
                 return true;
+            case "BICUBIC":
+            case "CATMULLROM":
+                filter = VideoFilter.Bicubic;
+                return true;
             case "XBR":
             case "XBRLV2":
                 filter = VideoFilter.Xbr;
@@ -250,6 +254,10 @@ internal sealed record GlProbeOptions(
             case "HQX4X":
             case "HQ4X":
                 filter = VideoFilter.Hqx4x;
+                return true;
+            case "MMPX":
+            case "MMPX2X":
+                filter = VideoFilter.Mmpx;
                 return true;
             default:
                 filter = VideoFilter.SharpBilinear;

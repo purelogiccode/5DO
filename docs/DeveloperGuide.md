@@ -104,9 +104,9 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS window, ROM select, diag port | `Clio`, `DiagPort` | Core |
 | `FiveDo.Dsp` | DSP instruction decode/execute, ALU, multiplier, NMem/IMem, semaphore, sample output | `Dsp`, `DspInstruction` | Core |
 | `FiveDo.Sport` | VRAM fill/copy, high-res plane mirroring | `Sport` | Core |
-| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, CPU oracle, mailbox, viewport, CPU fallback, shared HQx rule table and CPU reference filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `CpuVideoRenderer`, `RendererSettings`, `IVideoRenderer`, `HqxFilter`, `HqxRuleTable` | Core |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, CPU oracle, mailbox, viewport, CPU fallback, shared HQx rule table, CPU reference filter, and MMPX CPU reference filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `CpuVideoRenderer`, `RendererSettings`, `IVideoRenderer`, `HqxFilter`, `HqxRuleTable`, `MmpxFilter` | Core |
 | `FiveDo.Video.OpenGL` | Desktop GL/GLES presenter, two-stage palette/scale, filters, shaders, swap interval | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
-| `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale/HQx/xBR/FSR shaders, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
+| `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale/HQx/MMPX/xBR/FSR shaders, accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device slots, poll/status/data FIFOs | `Xbus` | Core |
 | `FiveDo.Cdrom` | MEI CD-ROM command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | ISO/BIN/CUE/CHD readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase`, `GameDatabaseScanner`, `GameDatabaseNameParser` | Core, CHDSharp |
@@ -465,7 +465,7 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
 | Save state | `IStateReader`/`IStateWriter`, `IStateSection` | native `.tdos` sections |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
 | XBUS device | `IXbusDevice` | CD-ROM; future peripherals |
-| Renderer/filter | `IVideoRenderer`, shader variants | nearest, sharp-bilinear, CRT, xBR, HQx, FSR |
+| Renderer/filter | `IVideoRenderer`, shader variants | nearest, sharp-bilinear, bicubic, CRT, xBR, HQx, MMPX, FSR |
 | Logging | `Serilog.ILogger`, `ILogEventSink` | file, stderr, in-memory viewer, bug-report API |
 | Benchmark policy | `BenchmarkGate`, `BenchmarkComparison` | CI gate, same-machine baseline |
 

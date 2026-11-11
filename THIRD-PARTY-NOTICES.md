@@ -37,8 +37,18 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   native-resolution palette output and uniform layout; the copyright and permission
   notice is preserved in the shader comments.
 
-### FidelityFX Super Resolution 1.0 (AMD)
+### MMPX (Morgan McGuire, Mara Gagiu)
 
+- Source algorithm: Morgan McGuire and Mara Gagiu, "MMPX Style-Preserving
+  Pixel Art Magnification" (Journal of Computer Graphics Techniques, 2021).
+- License: MIT.
+- Use: the opt-in `VideoFilter.Mmpx` 2x pass in
+  `FiveDo.Video.OpenGL/Shaders.cs`, `FiveDo.Video.Vulkan/Mmpx.frag`,
+  `FiveDo.Video.Direct3D/Shaders.cs`, and the CPU reference
+  `FiveDo.Video/MmpxFilter.cs`. The copyright and MIT permission notice is
+  preserved in the shader and filter comments.
+
+### FidelityFX Super Resolution 1.0 (AMD)
 - Source algorithm: Advanced Micro Devices, Inc., FidelityFX FSR 1.0 (`ffx_fsr1.h`,
   v1.20210629).
 - License: MIT.
@@ -85,11 +95,11 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 - Authors: Maxim Stepin (maxst@hiend3d.com), Cameron Zemek (grom@zeminvaders.net).
 - License: GNU Lesser General Public License 2.1 or later.
 - Use: the opt-in `VideoFilter.Hqx`/`Hqx3x`/`Hqx4x` filters in
-  `FiveDo.Video.OpenGL/HqxFilter.cs` and the generated pattern switches in
-  `HqxPatterns.cs`, `HqxPatterns3.cs`, and `HqxPatterns4.cs`. The interpolation
-  helpers and table structure are ported; the original copyright and license notice
-  is preserved in the source header. The filters are opt-in and can be removed from
-  a distribution that cannot comply with the LGPL.
+  `FiveDo.Video/HqxFilter.cs` and the generated `FiveDo.Video/HqxRules.cs`
+  table. The interpolation helpers and table structure are ported; the
+  original copyright and license notice is preserved in the source header.
+  The filters are opt-in and can be removed from a distribution that cannot
+  comply with the LGPL.
 
 ## Planned runtime and build dependencies
 

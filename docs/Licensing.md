@@ -83,6 +83,8 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
   not distributed at runtime)
 - xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and
   `THIRD-PARTY-NOTICES.md`)
+- MMPX 2x filter by Morgan McGuire and Mara Gagiu (MIT; attribution preserved in the
+  shader, `MmpxFilter.cs`, and `THIRD-PARTY-NOTICES.md`)
 - HQx 2x/3x/4x filters by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution
   preserved in `HqxFilter.cs` and `THIRD-PARTY-NOTICES.md`)
 - OS XInput / Linux evdev / macOS IOKit HID gamepad APIs (no bundled third-party runtime)

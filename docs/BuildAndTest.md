@@ -160,8 +160,8 @@ The suite is one xUnit project with subsystem folders:
 | `FIVEDO_BIOS=<path>` | Enables real-BIOS machine/boot validation tests. |
 | `FIVEDO_FRAME_DUMP=<dir>` | Writes boot-frame PNGs when a real BIOS is used. |
 | `FIVEDO_GPU_TESTS=1` | Runs the real WGL + ANGLE probe integration test, including an HQx probe. Requires a desktop GL/ANGLE context and a built frontend. |
-| `FIVEDO_VULKAN_TESTS=1` | Runs the in-process Vulkan parity/source-size, xBR/FSR/HQx orientation, and HQx CPU-expansion parity tests plus the Vulkan probe integration test. Requires a Vulkan device and a built frontend. |
-| `FIVEDO_D3D_TESTS=1` | Runs the opt-in Direct3D 11 parity/source-size, letterbox, xBR/FSR/HQx orientation, and HQx CPU-expansion parity tests. Requires Windows and a Direct3D 11 device. |
+| `FIVEDO_VULKAN_TESTS=1` | Runs the in-process Vulkan parity/source-size, xBR/FSR/HQx/MMPX orientation, HQx CPU-expansion, and MMPX CPU-expansion parity tests plus the Vulkan probe integration test. Requires a Vulkan device and a built frontend. |
+| `FIVEDO_D3D_TESTS=1` | Runs the opt-in Direct3D 11 parity/source-size, letterbox, xBR/FSR/HQx/MMPX orientation, HQx CPU-expansion, and MMPX CPU-expansion parity tests. Requires Windows and a Direct3D 11 device. |
 | `FIVEDO_UPDATE_CHECK=0` | Disables the CLI/frontend startup GitHub release check (also set automatically in CI/tests). |
 | `FIVEDO_AUDIO_TESTS=1` | Opens a real OpenAL device and plays a short tone. On headless machines set `ALSOFT_DRIVERS=null` to use OpenAL's null backend. |
 | `FIVEDO_AUDIO_TAP=<prefix>` | Not a test switch; enables the live PCM/timing tap for manual audio diagnosis. |
@@ -304,7 +304,7 @@ Options:
 | `--gl-probe-size WxH` | 3840x2160 | Physical output size, 16x16..16384x16384. |
 | `--gl-probe-frames N` | 120 | Measured frames, 1..100000. |
 | `--gl-probe-warmup N` | 30 | Unmeasured warm-up frames, 0..10000. |
-| `--gl-probe-filter <name>` | `sharp-bilinear` | `accurate`, `nearest`, `sharp-bilinear`, `crt`, `xbr`, `hqx`, `hqx3x`, `hqx4x`, `fsr` (aliases accepted). |
+| `--gl-probe-filter <name>` | `sharp-bilinear` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`, `fsr` (aliases accepted). |
 | `--gl-probe-vsync` | off | Request vsync. |
 | `--gl-probe-offscreen` | off | Render to an offscreen FBO at the requested size. |
 | `--gl-probe-capture <path>` | none | Write a PNG of the presented frame. |
@@ -333,12 +333,12 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | `--vk-probe-size WxH` | 1920x1080 | Output size, 16x16..16384x16384. |
 | `--vk-probe-frames N` | 60 | Measured frames, 1..100000. |
 | `--vk-probe-warmup N` | 10 | Unmeasured warm-up frames, 0..10000. |
-| `--vk-probe-filter <name>` | `accurate` | `accurate`, `nearest`, `sharp-bilinear`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`; HQx uses the GPU rule table. |
+| `--vk-probe-filter <name>` | `accurate` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`; HQx uses the GPU rule table. |
 | `--vk-probe-capture <path>` | none | Write a PNG of the rendered frame. |
 | `--vk-probe-timeout N` | 30 | Overall timeout in seconds, 1..600. |
 
 Set `FIVEDO_VULKAN_TESTS=1` to run the opt-in in-process parity/source-size,
-xBR/FSR/HQx orientation, and HQx CPU-expansion parity tests plus the probe integration
+xBR/FSR/HQx/MMPX orientation, HQx CPU-expansion, and MMPX CPU-expansion parity tests plus the probe integration
 test. See [`Vulkan.md`](Vulkan.md)
 for the measured results and limitations.
 
@@ -366,7 +366,7 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | `--d3d-window-probe <path>` | - | Native Win32 flip-model swapchain probe; accepts the matching `--d3d-window-probe-*` options. |
 
 Set `FIVEDO_D3D_TESTS=1` to run the opt-in parity, size-change, letterbox,
-xBR/FSR/HQx orientation, and HQx CPU-expansion parity tests. The HLSL compile test runs
+xBR/FSR/HQx/MMPX orientation, HQx CPU-expansion, and MMPX CPU-expansion parity tests. The HLSL compile test runs
 on Windows without an opt-in
 flag. See [`Direct3D.md`](Direct3D.md) for measured results and limitations.
 

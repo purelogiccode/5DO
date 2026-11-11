@@ -4,7 +4,7 @@
 path now has a dedicated audio-paced core thread (60 Hz fallback), a two-stage palette/scale presenter,
 immutable texture storage with per-frame `TexSubImage2D`, cached uniform locations,
 full sharp-bilinear and CRT scanline/aperture/curvature/vignette filters, opt-in
-xBR/HQx/FSR filters, an opt-in bounded disc
+xBR/HQx/MMPX/FSR filters, bicubic sampling, an opt-in bounded disc
 prefetch cache, a platform swap-interval path, and a real benchmark harness with
 p50/p95/p99 and per-stage allocations. CPU-side frame cost is ~1.25-1.6 ms, leaving
 ~15 ms of headroom at 60 Hz; the synthetic steady state is allocation-free. The GPU
@@ -40,7 +40,7 @@ The v1 target is **3840x2160 output at 60 Hz** while emulating the 3DO at its na
 - **4K internal rendering is not a v1 goal.** It would require GPU CEL compositing or
   a fundamentally different renderer and is tracked only as an experiment.
 
-The default 4K path must use nearest or sharp-bilinear. CRT and xBR/HQx are opt-in;
+The default 4K path must use nearest or sharp-bilinear. CRT and xBR/HQx/MMPX are opt-in;
 they may require a faster GPU and must show a performance warning at 4K.
 
 ### Hardware tiers
@@ -95,13 +95,16 @@ Stage 1: palette expansion at native resolution
         │
         ▼
 Stage 2: scaling/filter at output resolution
-  - nearest / sharp-bilinear / CRT / xBR / HQx / FSR
+  - nearest / sharp-bilinear / bicubic / CRT / xBR / HQx / MMPX / FSR
   - samples the expanded RGB texture into the 4K framebuffer
   - ~8.3M pixels/frame at 4K
   - xBR adds a 4x offscreen pass (1280x960 for 320x240 sources) over the
     GPU-expanded native frame, then finishes with sharp-bilinear. It is opt-in;
     benchmark it at 4K before enabling by default.
   - HQx 2x/3x/4x adds a GPU rule-table pass and a larger intermediate texture.
+  - MMPX adds a 2x GPU rule pass and a 2x intermediate texture.
+  - Bicubic adds 16 texture taps in the scale pass; it does not allocate an
+    intermediate target.
   - FSR 1.0 adds two GPU passes: EASU to the viewport, then RCAS to the output.
         │
         ▼

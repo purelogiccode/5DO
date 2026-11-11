@@ -17,7 +17,7 @@ Planned contents:
   - palette expansion equivalent to `frame.cpp: Get_Frame_Bitmap`
   - fixed grayscale CLUT path
   - background color path
-  - nearest / sharp-bilinear / CRT / xBR-family filters
+  - nearest / sharp-bilinear / bicubic / CRT / xBR-family / HQx / MMPX / FSR filters
   - integer scaling and aspect-ratio handling
 - `RendererSettings` - filter, scale, aspect, vsync, screenshot options.
 - `GlContextAdapter` - thin adapter over Avalonia's `OpenGlControlBase` / Silk.NET.OpenGL.

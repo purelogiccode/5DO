@@ -42,6 +42,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _scaleProgram;
     private uint _xbrProgram;
     private uint _hqxProgram;
+    private uint _mmpxProgram;
     private uint _fsrEasuProgram;
     private uint _fsrRcasProgram;
     private uint _vao;
@@ -60,6 +61,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _hqxTexture;
     private uint _hqxFbo;
     private uint _hqxRuleTexture;
+    private uint _mmpxTexture;
+    private uint _mmpxFbo;
     private uint _gpuQuery;
     private bool _queryInFlight;
     private bool _supportsGpuTiming;
@@ -70,6 +73,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _xbrHeight;
     private int _hqxWidth;
     private int _hqxHeight;
+    private int _mmpxWidth;
+    private int _mmpxHeight;
     private int _outputWidth;
     private int _outputHeight;
     private int _sourceWidth;
@@ -94,6 +99,9 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _uHqxScale;
     private int _uHqxRect;
     private int _uHqxOutput;
+    private int _uMmpxSource;
+    private int _uMmpxRect;
+    private int _uMmpxOutput;
     private int _uFsrEasuSource;
     private int _uFsrEasuOutput;
     private int _uFsrEasuRect;
@@ -198,6 +206,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _scaleProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentScale(_isOpenGlEs));
         _xbrProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentXbr(_isOpenGlEs));
         _hqxProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentHqx(_isOpenGlEs));
+        _mmpxProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentMmpx(_isOpenGlEs));
         _fsrEasuProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrEasu(_isOpenGlEs));
         _fsrRcasProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrRcas(_isOpenGlEs));
         _vao = gl.GenVertexArray();
@@ -270,6 +279,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _uHqxScale = gl.GetUniformLocation(_hqxProgram, "uScale");
         _uHqxRect = gl.GetUniformLocation(_hqxProgram, "uRect");
         _uHqxOutput = gl.GetUniformLocation(_hqxProgram, "uOutput");
+
+        gl.UseProgram(_mmpxProgram);
+        gl.Uniform1(gl.GetUniformLocation(_mmpxProgram, "uExpanded"), 0);
+        _uMmpxSource = gl.GetUniformLocation(_mmpxProgram, "uSource");
+        _uMmpxRect = gl.GetUniformLocation(_mmpxProgram, "uRect");
+        _uMmpxOutput = gl.GetUniformLocation(_mmpxProgram, "uOutput");
 
         gl.UseProgram(_fsrEasuProgram);
         _uFsrEasuTexture = gl.GetUniformLocation(_fsrEasuProgram, "uExpanded");
@@ -401,6 +416,9 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         var useHqx = (_settings.Filter is VideoFilter.Hqx or VideoFilter.Hqx3x or VideoFilter.Hqx4x)
             && width * hqxScale <= _capabilities.MaxTextureSize
             && height * hqxScale <= _capabilities.MaxTextureSize;
+        var useMmpx = _settings.Filter == VideoFilter.Mmpx
+            && width * MmpxFilter.Scale <= _capabilities.MaxTextureSize
+            && height * MmpxFilter.Scale <= _capabilities.MaxTextureSize;
         var filterSource = _paletteTexture;
         var filterSourceWidth = width;
         var filterSourceHeight = height;
@@ -496,6 +514,29 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
                 filterSource = _hqxTexture;
                 filterSourceWidth = hqxWidth;
                 filterSourceHeight = hqxHeight;
+                scaleFilter = 1;
+            }
+            else if (useMmpx)
+            {
+                var mmpxWidth = width * MmpxFilter.Scale;
+                var mmpxHeight = height * MmpxFilter.Scale;
+                EnsureMmpxTarget(gl, mmpxWidth, mmpxHeight);
+                gl.BindFramebuffer(FramebufferTarget.Framebuffer, _mmpxFbo);
+                gl.Viewport(0, 0, (uint)mmpxWidth, (uint)mmpxHeight);
+                gl.UseProgram(_mmpxProgram);
+                gl.Uniform2(_uMmpxSource, width, height);
+                gl.Uniform4(_uMmpxRect, 0f, 0f, (float)mmpxWidth, (float)mmpxHeight);
+                gl.Uniform2(_uMmpxOutput, (float)mmpxWidth, (float)mmpxHeight);
+                gl.ActiveTexture(TextureUnit.Texture0);
+                gl.BindTexture(TextureTarget.Texture2D, _paletteTexture);
+                gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+                gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+                gl.BindVertexArray(_vao);
+                gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+
+                filterSource = _mmpxTexture;
+                filterSourceWidth = mmpxWidth;
+                filterSourceHeight = mmpxHeight;
                 scaleFilter = 1;
             }
 
@@ -779,6 +820,50 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _hqxHeight = height;
     }
 
+    private void EnsureMmpxTarget(GL gl, int width, int height)
+    {
+        if (_mmpxFbo != 0 && _mmpxWidth == width && _mmpxHeight == height)
+        {
+            return;
+        }
+
+        if (_mmpxFbo != 0)
+        {
+            gl.DeleteFramebuffer(_mmpxFbo);
+            _mmpxFbo = 0;
+        }
+
+        if (_mmpxTexture != 0)
+        {
+            gl.DeleteTexture(_mmpxTexture);
+        }
+
+        _mmpxTexture = gl.GenTexture();
+        gl.BindTexture(TextureTarget.Texture2D, _mmpxTexture);
+        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+
+        _mmpxFbo = gl.GenFramebuffer();
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, _mmpxFbo);
+        gl.FramebufferTexture2D(
+            FramebufferTarget.Framebuffer,
+            FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D,
+            _mmpxTexture,
+            0);
+        GLEnum status = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            throw new InvalidOperationException($"MMPX framebuffer is incomplete: {status}.");
+        }
+
+        _mmpxWidth = width;
+        _mmpxHeight = height;
+    }
+
     private void AllocateUploadTextures(GL gl)
     {
         gl.ActiveTexture(TextureUnit.Texture0);
@@ -882,6 +967,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         {
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
             VideoFilter.Crt => 2,
+            VideoFilter.Bicubic => 3,
             _ => 1,
         };
     }
@@ -901,7 +987,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
     private void DisposeResources()
     {
-        if (_paletteProgram == 0 && _scaleProgram == 0 && _hqxProgram == 0 && _vao == 0)
+        if (_paletteProgram == 0 && _scaleProgram == 0 && _hqxProgram == 0 && _mmpxProgram == 0 && _vao == 0)
         {
             return;
         }
@@ -929,6 +1015,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         {
             gl.DeleteProgram(_hqxProgram);
             _hqxProgram = 0;
+        }
+
+        if (_mmpxProgram != 0)
+        {
+            gl.DeleteProgram(_mmpxProgram);
+            _mmpxProgram = 0;
         }
 
         if (_fsrEasuProgram != 0)
@@ -1007,6 +1099,18 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         {
             gl.DeleteTexture(_hqxTexture);
             _hqxTexture = 0;
+        }
+
+        if (_mmpxFbo != 0)
+        {
+            gl.DeleteFramebuffer(_mmpxFbo);
+            _mmpxFbo = 0;
+        }
+
+        if (_mmpxTexture != 0)
+        {
+            gl.DeleteTexture(_mmpxTexture);
+            _mmpxTexture = 0;
         }
 
         if (_hqxRuleTexture != 0)

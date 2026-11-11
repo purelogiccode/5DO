@@ -17,9 +17,9 @@
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Graphics API" VerticalAlignment="Center"
                                    ToolTip.Tip="Choose the presentation backend." />
                         <ComboBox x:Name="RendererCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"
-                                  ToolTip.Tip="OpenGL is the fastest path. DirectX 11 is optional on Windows. Vulkan renders offscreen with CPU readback. Software uses the CPU renderer." />
+                                  ToolTip.Tip="OpenGL is the fastest path. DirectX 11 is optional on Windows. Vulkan is optional. Software uses the CPU renderer." />
                         <TextBlock Grid.Row="2" Grid.Column="1"
-                                   Text="OpenGL is recommended. DirectX 11 is available on Windows. Vulkan is optional and presents through a CPU readback. Software is the compatibility fallback."
+                                   Text="OpenGL is recommended. DirectX 11 is available on Windows. Vulkan is optional. Software is the compatibility fallback."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                    ToolTip.Tip="Renderer notes. Changing the backend recreates the current presenter without restarting emulation." />
 
@@ -39,7 +39,7 @@
                         <TextBlock Grid.Row="7" Grid.Column="0" Text="Filter" VerticalAlignment="Center"
                                    ToolTip.Tip="Choose the output filter applied by the presenter." />
                         <ComboBox x:Name="FilterCombo" Grid.Row="7" Grid.Column="1" Margin="0,0,0,8"
-                                  ToolTip.Tip="Nearest, sharp-bilinear, CRT, xBR, HQx, or AMD FSR 1.0." />
+                                  ToolTip.Tip="Nearest, sharp-bilinear, bicubic, CRT, xBR, HQx, MMPX, or AMD FSR 1.0." />
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="Aspect" VerticalAlignment="Center"
                                    ToolTip.Tip="Choose how the source is fitted to the output, from 4:3 through 21:9, stretch, or a custom ratio." />
                         <Grid Grid.Row="8" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,0,8">

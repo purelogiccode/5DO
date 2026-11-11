@@ -349,7 +349,7 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
   - fixed CLUT flag (`xOUTCONTROLL & 0x02000000`) and pixel bit 15
   - multiple lines with different CLUTs
 - **Upload correctness:** raw `R16UI` texture contents match `VdlLine.Pixels`; palette texture matches per-line CLUT; line-param texture matches background/out-control.
-- **Filter tests:** screenshot hashes at fixed output sizes for nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, and FSR modes. Filters are allowed to differ from the CPU path; Accurate mode is not. Shader-source tests cover the GLSL 330/ES 300 variants, CRT uniforms, and FSR EASU/RCAS bodies.
+- **Filter tests:** screenshot hashes at fixed output sizes for nearest, sharp-bilinear, bicubic, CRT, xBR, HQx 2x/3x/4x, MMPX, and FSR modes. Filters are allowed to differ from the CPU path; Accurate mode is not. Shader-source tests cover the GLSL 330/ES 300 variants, CRT uniforms, FSR EASU/RCAS bodies, the bicubic branch, and the MMPX rules.
 - **Geometry:** aspect ratio, integer scaling, letterbox, fullscreen, window resize.
 - **Context lifecycle:** initialize, resize, context loss/recreate, dispose, fallback to CPU.
 - **Shader compilation:** all shader programs compile/link; log source hash and GL version.
@@ -376,8 +376,8 @@ For each instruction, assert registers, flags, memory, and cycles. Where possibl
   performs the 320x240 CPU/GPU parity check. `VulkanProbeIntegrationTests`
   (`FIVEDO_VULKAN_TESTS=1`) runs the built frontend for parity, a 4K pass, and
   640x480 xBR/FSR passes with `filterFallback: false`.
-- **Filters:** xBR, FSR, and HQx 2x/3x/4x are GPU passes; HQx uses the shared rule table
-  and are CPU-bound. All three preserve top-down orientation and report
+- **Filters:** xBR, FSR, HQx 2x/3x/4x, and MMPX are GPU passes; HQx uses the shared
+  rule table. All four preserve top-down orientation and report
   `filterFallback: false` in the Vulkan backend.
 - **Headless CI:** SPIR-V and option tests run everywhere; device tests skip cleanly
   without a Vulkan loader/device.

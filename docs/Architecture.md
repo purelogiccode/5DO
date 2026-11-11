@@ -78,9 +78,9 @@
 | `FiveDo.Clio` | CLIO registers, timers, FIFOs, DMA, interrupts, DSP interface, XBUS register window, ROM select, diagnostic port | `Clio`, `DiagPort` | Core |
 | `FiveDo.Dsp` | 3DO audio DSP: instruction decode/precompute, ALU, multiplier, barrel shifter, NMem/IMem, semaphore, sample output | `Dsp`, `DspInstruction`, `DspTraceEntry` | Core |
 | `FiveDo.Sport` | SPORT VRAM fill/copy engine, high-res plane mirroring | `Sport` | Core |
-| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox, shared HQx rule table and CPU reference filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer`, `HqxFilter`, `HqxRuleTable` | Core |
+| `FiveDo.Video` | VDLP display-list parser, line/frame assembly, palette expansion reference path, frame extraction, scaler contracts, CPU fallback presenter, mailbox, shared HQx rule table and CPU reference filter, MMPX CPU reference filter | `Vdlp`, `FrameAssembler`, `GpuPalette`, `VdlFrameUploader`, `VdlFrameMailbox`, `ViewportCalculator`, `IVideoRenderer`, `VideoFilter`, `RendererSettings`, `CpuVideoRenderer`, `HqxFilter`, `HqxRuleTable`, `MmpxFilter` | Core |
 | `FiveDo.Video.OpenGL` | **Required desktop renderer**: desktop GL 3.3 and GLES 3.0/3.1 context integration, two-stage native-resolution palette expansion + output upscaling, persistent texture upload, scaling/filter pipeline (including FSR/xBR/HQx), vsync presentation, screenshots | `OpenGlRenderer`, `OpenGlCapabilities`, `SwapInterval`, `Shaders`, `GlContextAdapter`, `OffscreenRenderTarget` | Core, Video, Silk.NET.OpenGL |
-| `FiveDo.Video.Vulkan` | **Optional Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/HQx/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/CRT/xBR/FSR/HQx filters, timestamp queries, host readback, and a Win32 swapchain surface for the desktop child window | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
+| `FiveDo.Video.Vulkan` | **Optional Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/HQx/MMPX/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX filters, timestamp queries, host readback, and a Win32 swapchain surface for the desktop child window | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus` | Core |
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
 | `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `BiosCatalog`, `BiosLibrary`, `BiosProfile`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameDatabaseScanner`, `GameId` | Core, CHDSharp |
@@ -623,7 +623,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 | Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, IOKit HID, scripted replay |
 | Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
 | Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
-| Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, CRT, xBR, HQx 2x/3x/4x, FSR |
+| Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, bicubic, CRT, xBR, HQx 2x/3x/4x, MMPX, FSR |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
 | Diagnostics | `Serilog.ILogger`, `CpuTracer`, `FrameDumper` | rolling file, in-memory viewer, bug-report API, CLI `trace` |
 

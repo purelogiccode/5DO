@@ -18,9 +18,9 @@ Source map:
 | Viewport/aspect | `src/FiveDo.Video/ViewportCalculator.cs` |
 | CPU fallback | `src/FiveDo.Video/CpuVideoRenderer.cs` |
 | GPU presenter | `src/FiveDo.Video.OpenGL/OpenGlRenderer.cs`, `Shaders.cs` |
-| Optional Vulkan presenter | `src/FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`, `Frame.vert`, `Palette.frag`, `Scale.frag`, `Xbr.frag`, `FsrEasu.frag`, `FsrRcas.frag` |
+| Optional Vulkan presenter | `src/FiveDo.Video.Vulkan/VulkanOffscreenRenderer.cs`, `Frame.vert`, `Palette.frag`, `Scale.frag`, `Xbr.frag`, `Hqx.frag`, `Mmpx.frag`, `FsrEasu.frag`, `FsrRcas.frag` |
 | Optional Direct3D 11 presenter | `src/FiveDo.Video.Direct3D/Direct3D11Renderer.cs`, `Shaders.cs` |
-| Filters | `src/FiveDo.Video/HqxFilter.cs`, `HqxRules.cs`, xBR/FSR shader bodies (OpenGL, Vulkan, and Direct3D 11) |
+| Filters | `src/FiveDo.Video/HqxFilter.cs`, `MmpxFilter.cs`, `HqxRules.cs`, xBR/MMPX/FSR shader bodies (OpenGL, Vulkan, and Direct3D 11) |
 | Capabilities/vsync | `OpenGlCapabilities.cs`, `SwapInterval.cs` |
 | Avalonia surface | `src/FiveDo.Frontend.Avalonia/Controls/VideoSurface.cs` |
 | GPU probes | `src/FiveDo.Frontend.Avalonia/GlProbeWindow.cs`, `GlProbeOptions.cs`, `VkProbeRunner.cs`, `VkProbeOptions.cs` |
@@ -212,11 +212,13 @@ them; the core never waits for the GPU.
 | `Accurate` | Nearest sampling, integer scaling; 1:1 at 320x240. | Accuracy oracle; matches CPU `FrameAssembler` pixel-for-pixel. |
 | `Nearest` | Nearest sampling with arbitrary scale/letterbox. | Cheapest; can shimmer at non-integer scales. |
 | `SharpBilinear` | Integer prescale then hardware bilinear sub-texel blend. | Default enhanced mode; crisp at integer scales, cheap. |
+| `Bicubic` | Catmull-Rom 4x4 sampling at output resolution. | Opt-in; 16 taps per output pixel; smooth 3D/FMV. |
 | `Crt` | Barrel distortion, scanlines, 3-pixel aperture mask, vignette, 3x3 bloom. | Opt-in; more GPU work. |
 | `Xbr` | GPU palette expansion, xBR-lv2 4x edge-directed pass, sharp-bilinear finish. | Opt-in; 1280x960 intermediate for 320x240; 4K WGL present 0.28/1.47 ms. |
 | `Hqx` | GPU palette expansion, HQx 2x rule-table pass, sharp-bilinear finish. | Opt-in; 4K WGL present 0.23/0.32 ms, GPU 0.11 ms. |
 | `Hqx3x` | HQx 3x rule-table pass, same finish. | Opt-in; 4K WGL present 0.32/0.53 ms, GPU 0.13 ms. |
 | `Hqx4x` | HQx 4x rule-table pass, same finish. | Opt-in; 4K WGL present 0.25/0.45 ms, GPU 0.16 ms. |
+| `Mmpx` | GPU palette expansion, MMPX 2x rule pass, sharp-bilinear finish. | Opt-in; 640x480 intermediate for 320x240; MIT attribution. |
 | `Fsr` | FSR 1.0 EASU upscale to viewport, then RCAS sharpen to output. | Opt-in; two GPU passes; 4K WGL present 0.13/1.19 ms; sharpness slider. |
 
 ### Accurate / Nearest
@@ -231,6 +233,17 @@ The shader prescales by the integer output/source factor and clamps the sub-texe
 fraction to the integer-scale region before the hardware bilinear sample. This keeps
 integer scales crisp and avoids the blur of a plain bilinear stretch. It is the default
 `SharpBilinear` filter.
+
+### Bicubic
+
+`Bicubic` samples a 4x4 source neighbourhood with Catmull-Rom weights (`a = -0.5`) and
+writes the weighted sum at output resolution. It is a single-pass filter: no intermediate
+target and no palette re-expansion. The 16 taps are `texelFetch` reads clamped to the
+source edges; the same taps and Catmull-Rom weights are used on desktop GL, GLES,
+Vulkan, and Direct3D 11.
+It is a good match for 3DO's 3D and full-motion content, where sharp-bilinear can look
+brittle at fractional scales; the CPU fallback implements the same weights in
+`FrameScaler.ScaleBicubic`.
 
 ### CRT
 
@@ -273,6 +286,18 @@ evaluates the same integer blend. The table is uploaded once as an `RG32UI`
 (OpenGL) / `R32G32_UInt` (Direct3D/Vulkan) texture. The opt-in D3D/Vulkan tests
 compare all three scales against `HqxFilter.Expand` and match with 0 differing
 pixels; the CPU reference hashes are the ground truth.
+
+### MMPX
+
+`Mmpx` is Morgan McGuire and Mara Gagiu's style-preserving 2x pixel-art filter. The
+palette shader expands the native frame, an MMPX fragment pass writes a 2x target, and
+the sharp-bilinear scale pass finishes into the output rectangle. The rules compare the
+3x3 neighbourhood and the two-pixel diamond points, so curves, diagonals, sharp corners,
+and single-pixel features survive without introducing new palette colours. The CPU
+`MmpxFilter` is the reference oracle for the GPU passes and the opt-in parity tests,
+and the CPU fallback also runs it before scaling into a fixed output size. The
+implementation is MIT-licensed; see `THIRD-PARTY-NOTICES.md`. VDL frames are opaque,
+so the reference luma term is zero and the luma comparisons reduce to the equality rules.
 
 ### FSR 1.0
 
@@ -334,7 +359,7 @@ frame into a fixed output buffer.
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
 | GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, other desktop GLES contexts | Same two-stage pipeline. |
-| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional offscreen backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
+| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
 | Direct3D 11 | Direct3D 11 / HLSL SM 5.0 | Windows 10/11 with feature level 11_0 | Optional Windows backend and probe; embedded Win32 child swapchain; OpenGL remains the default. |
 | CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan/Direct3D context; accuracy oracle. |
 
@@ -395,11 +420,12 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --vk-probe-filter sharp-bilinear
 ```
 
-Supported filters are `accurate`, `nearest`, `sharp-bilinear`, `crt`, `xbr`, `fsr`,
-and `hqx`/`hqx3x`/`hqx4x`. xBR runs as a 4x GPU pass over the GPU-expanded native
-frame and finishes with sharp-bilinear; FSR runs EASU into a viewport-sized target,
+Supported filters are `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`,
+`fsr`, `hqx`/`hqx3x`/`hqx4x`, and `mmpx`. xBR runs as a 4x GPU pass over the GPU-expanded
+native frame and finishes with sharp-bilinear; FSR runs EASU into a viewport-sized target,
 then RCAS into the output. HQx 2x/3x/4x run as GPU rule-table passes over the
-palette texture and finish with sharp-bilinear. The desktop Vulkan path hosts a
+palette texture and finish with sharp-bilinear; MMPX runs a 2x GPU rule pass and finishes
+the same way. The desktop Vulkan path hosts a
 native Win32 child window inside the Avalonia
 window, so it presents through a swapchain without CPU readback. It is still optional
 and does not replace the WGL/ANGLE presenter; non-Windows platforms fall back to the
@@ -536,8 +562,9 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 ```
 
 Options are listed in [`BuildAndTest.md`](BuildAndTest.md) section 5. `--gl-probe-filter`
-accepts `accurate`, `nearest`, `sharp-bilinear`/`sharp`, `crt`, `xbr`/`xbrlv2`,
-`fsr`/`fsr1`/`fsr10`, `hqx`/`hqx2x`/`hq2x`, `hqx3x`/`hq3x`, `hqx4x`/`hq4x`.
+accepts `accurate`, `nearest`, `sharp-bilinear`/`sharp`, `bicubic`/`catmull-rom`, `crt`,
+`xbr`/`xbrlv2`, `fsr`/`fsr1`/`fsr10`, `hqx`/`hqx2x`/`hq2x`, `hqx3x`/`hq3x`,
+`hqx4x`/`hq4x`, and `mmpx`/`mmpx2x`.
 
 ### Report fields
 
@@ -628,17 +655,19 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | `OffscreenRenderTargetTests` | Offscreen probe target creation. |
 | `ShaderSourceTests` | GLSL 330/ES 300 sources, uniforms, FSR/CRT strings. |
 | `HqxFilterTests` | 2x/3x/4x reference hashes, uniform image, allocation. |
+| `MmpxFilterTests` | 2x expansion, uniform image, single-pixel feature preservation, validation. |
+| `FrameScalerTests` | Bicubic uniform/interpolation behavior. |
 | `HqxRuleTableTests` | Rule encoding, weights, conditions, and table-vs-CPU expansion parity. |
 | `OpenGlCapabilitiesTests` | Version parsing, API, integer textures, vsync. |
 | `SwapIntervalTests` | WGL/GLX/EGL selection and return conventions. |
 | `GlRendererContractTests` | Renderer contract, settings validation. |
 | `GpuProbeIntegrationTests` (opt-in `FIVEDO_GPU_TESTS=1`) | Real WGL/ANGLE 320x240 parity, a 4K pass, and an HQx probe. |
-| `VulkanShaderTests` | All seven generated SPIR-V modules and the `RendererApi.Vulkan` capability contract. |
-| `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, source/output size changes, xBR/FSR/HQx split-frame orientation, and HQx 2x/3x/4x CPU-expansion parity. |
+| `VulkanShaderTests` | All eight generated SPIR-V modules and the `RendererApi.Vulkan` capability contract. |
+| `VulkanRendererTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | CPU parity, fixed/background CLUTs, source/output size changes, xBR/FSR/HQx/MMPX split-frame orientation, HQx 2x/3x/4x CPU-expansion parity, and MMPX CPU-expansion parity. |
 | `VulkanProbeIntegrationTests` (opt-in `FIVEDO_VULKAN_TESTS=1`) | Real Vulkan 320x240 parity, a 4K probe pass, and 640x480 xBR/FSR/HQx passes. |
 | `VkProbeOptionsTests` | Vulkan probe option parsing and defaults. |
-| `Direct3D11ShaderTests` | All seven HLSL modules compile for shader model 5.0. |
-| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx orientation, and HQx 2x/3x/4x CPU-expansion parity. |
+| `Direct3D11ShaderTests` | All eight HLSL modules compile for shader model 5.0. |
+| `Direct3D11RendererTests` (opt-in `FIVEDO_D3D_TESTS=1`) | CPU parity, source/output size changes, letterboxing, xBR/FSR/HQx/MMPX orientation, HQx 2x/3x/4x CPU-expansion parity, and MMPX CPU-expansion parity. |
 | `D3dProbeIntegrationTests` (opt-in `FIVEDO_D3D_TESTS=1`) | Real probe parity report. |
 | `D3dProbeOptionsTests` | Direct3D probe option parsing and defaults. |
 
