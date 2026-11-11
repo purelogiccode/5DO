@@ -10,9 +10,9 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[3.0.322, )",
-        "resolved": "3.0.322",
-        "contentHash": "aaynUqEHHeD0v1/RDW/Rq3d/gRkF8bRKJcvblhvuvyTAB+hGuzgFl4pBD9g6jGu+VqMWPinEGqu4hzG12TtnqQ=="
+        "requested": "[3.0.324, )",
+        "resolved": "3.0.324",
+        "contentHash": "aWoLvUTC9b2H/KgVmu9bzzvd87kPx19Ow3UMznTqun146Ql7pUqCtgQox1iItWNEUlpIqZeKy7I7v9OHOBRjmw=="
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
@@ -189,6 +189,11 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14"
         }
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "gK2aq4XvChj5kvozpPHrkfKkr7zc5Z4xoTrJb4GPZzDEPMlCk0TX632bwY3LsWcX2UVcVRQBBGzsBGC2lq6YhA=="
+      },
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
         "resolved": "18.11.1",
@@ -331,6 +336,7 @@
         "dependencies": {
           "FiveDo.Host": "[1.7.1, )",
           "FiveDo.Tas": "[1.7.1, )",
+          "Microsoft.NET.ILLink.Tasks": "[11.0.0, )",
           "Serilog": "[4.4.0, )",
           "System.CommandLine": "[3.0.0, )"
         }
@@ -389,6 +395,7 @@
           "FiveDo.Video.Direct3D": "[1.7.1, )",
           "FiveDo.Video.OpenGL": "[1.7.1, )",
           "FiveDo.Video.Vulkan": "[1.7.1, )",
+          "Microsoft.NET.ILLink.Tasks": "[11.0.0, )",
           "Serilog": "[4.4.0, )"
         }
       },

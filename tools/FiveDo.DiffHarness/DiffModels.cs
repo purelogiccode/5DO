@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace FiveDo.DiffHarness;
@@ -15,7 +16,7 @@ internal sealed class DiffManifest
     public DiffDefaults? Defaults { get; init; } = new();
 
     /// <summary>Gets named roots used by <c>${name}</c> substitutions in paths.</summary>
-    public Dictionary<string, string>? Roots { get; init; } = [with(global::System.StringComparer.Ordinal)];
+    public Dictionary<string, string>? Roots { get; init; } = new(StringComparer.Ordinal);
 
     /// <summary>Gets the titles to run.</summary>
     public DiffTitle[]? Titles { get; init; } = [];

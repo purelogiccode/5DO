@@ -11,9 +11,10 @@
     <PackageVersion Include="Avalonia.Diagnostics" Version="12.1.4" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <!-- Host services -->
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.322" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.324" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="11.0.0" />
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
