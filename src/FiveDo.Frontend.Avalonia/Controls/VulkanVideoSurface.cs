@@ -184,7 +184,18 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         _started = true;
         _startPending = false;
         _renderedSequence = -1;
-        UpdateChildBounds();
+        try
+        {
+            UpdateChildBounds();
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Let the caller fall back instead of leaving a half-started surface behind.
+            Serilog.Log.Debug(exception, "Vulkan surface resize failed during startup.");
+            Stop();
+            throw;
+        }
+
         ShowWindow(_childHandle, _presentationVisible ? SwShow : SwHide);
         Started?.Invoke(this, EventArgs.Empty);
         return true;
@@ -224,7 +235,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
 
         if (visible && _started)
         {
-            UpdateChildBounds();
+            TryUpdateChildBounds();
             RequestPresent();
         }
     }
@@ -271,7 +282,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         }
         else if (_started)
         {
-            UpdateChildBounds();
+            TryUpdateChildBounds();
         }
     }
 
@@ -310,7 +321,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
 
         if (_started)
         {
-            UpdateChildBounds();
+            TryUpdateChildBounds();
         }
     }
 
@@ -355,6 +366,23 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             Serilog.Log.Debug(exception, "Vulkan frame presentation failed.");
+            Stop();
+            Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
+        }
+    }
+
+    private void TryUpdateChildBounds()
+    {
+        try
+        {
+            UpdateChildBounds();
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Resizing recreates Vulkan images. A lost or removed device fails there, and
+            // the exception must not escape into Avalonia's layout pass. Stop the surface
+            // and let the host fall back to another presenter.
+            Serilog.Log.Debug(exception, "Vulkan surface resize failed.");
             Stop();
             Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
         }
