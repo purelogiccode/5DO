@@ -88,7 +88,15 @@ ILLink.Tasks 11.0.0. The
 release also fixes the invalid `global.json` pin, restores the reference MMPX luma
 tie-breaks (including a triangle-tip regression test), and matches OpenGL's MMPX
 finishing sampler to Direct3D 11/Vulkan. The suite is **2,158 tests**; build, format,
-and InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md) and
+and InspectCode are clean. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/42958451196> passed every required
+job; platform runtime run
+<https://github.com/purelogiccode/5DO/actions/runs/42958451118> passed macOS
+x64/arm64, Linux arm64, and Windows arm64. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/42959751665> published six
+framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt` at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.8.0>; all six checksums verify.
+See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.8.0.md`](ReleaseNotes-1.8.0.md).
 
 **1.7.1 release update (2026-11-10):** **v1.7.1** removes the desktop startup stutter

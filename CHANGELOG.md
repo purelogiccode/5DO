@@ -49,9 +49,14 @@ release.
 - Full suite **2,158/2,158** passes in Debug with .NET SDK 11.0.100.
 - `dotnet build`, `dotnet format --verify-no-changes`, and
   `jb inspectcode --severity=WARNING` are clean.
-- Six framework-dependent bundles are published with `README.md`, `LICENSE`,
-  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, the release/legal docs, no runtime, and no
-  PDB or XML files.
+- CI run <https://github.com/purelogiccode/5DO/actions/runs/42958451196> passed every
+  required job; platform runtime run
+  <https://github.com/purelogiccode/5DO/actions/runs/42958451118> passed macOS
+  x64/arm64, Linux arm64, and Windows arm64.
+- Six framework-dependent bundles are published at
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.8.0> with `README.md`,
+  `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, the release/legal docs, no
+  runtime, and no PDB or XML files. All six `SHA256SUMS.txt` entries verify.
 
 ## [1.7.1] - 2026-11-10
 

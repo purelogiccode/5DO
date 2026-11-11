@@ -293,16 +293,28 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Local win-x64 framework-dependent bundle verified: CLI `--version`/`selftest`,
       frontend `FRONTEND SMOKE OK 1.8.0`, `whatsnew.md`/release notes present, and no
       runtime, PDB, or XML files.
-- [ ] Build all six framework-dependent bundles from the `v1.8.0` tag and keep local
+- [x] Build all six framework-dependent bundles from the `v1.8.0` tag and keep local
       copies in `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the 1.8.0 release notes, and the legal notices, and contains no
       `runtime/`, `*.pdb`, or `*.xml` files.
-- [ ] Create and push tag `v1.8.0`; the release workflow publishes six versioned bundles
-      and `SHA256SUMS.txt`. Record the release and CI run URLs here.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+- [x] Create and push tag `v1.8.0`; the release workflow published six versioned bundles
+      and `SHA256SUMS.txt` at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.8.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/42959751665> passed all six
+      bundle jobs and the publish job; all six checksums verify and the assets are kept
+      in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/42958451196> passed
+      every required job: build/test on Windows/Linux/macOS, trimmed CLI/frontend,
+      both NativeAOT apphosts, the six bundle jobs, and the aggregate gate. Platform
+      runtime run
+      <https://github.com/purelogiccode/5DO/actions/runs/42958451118> passed macOS
+      x64/arm64, Linux arm64, and Windows arm64.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
       1.8.0 release, including `WhatsNew.html`, `ReleaseNotes-1.8.0.html`, and
-      `wiki/Release-1.8.0`.
+      `wiki/Release-1.8.0`. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/42957782832> passed build,
+      Pages deploy, and wiki publish.
 
 ---
 
