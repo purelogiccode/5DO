@@ -1,7 +1,7 @@
 {
   "version": 2,
   "dependencies": {
-    "net10.0": {
+    "net11.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
         "requested": "[3.0.324, )",
@@ -24,14 +24,6 @@
         "resolved": "9.0.9",
         "contentHash": "fNGvKct2De8ghm0Bpfq0iWthtzIWabgOTi+gJhNOPhNJIowXNEUE2eZNW/zNCzrHVA3PXg2yZ+3cWZndC2IqYA=="
       },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "SwcbEBtkECq3D2oywvHkm46fyrX9Dd2JPWphDnHUc2+cUWR1Mdo41atAjh/9iZjgQxuvbKfZKXqostT/LZfefA==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14"
-        }
-      },
       "Silk.NET.Core": {
         "type": "Transitive",
         "resolved": "2.23.0",
@@ -49,7 +41,7 @@
       "fivedo.audio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Core": "[1.8.0, )",
           "Serilog": "[4.4.0, )",
           "Silk.NET.OpenAL": "[2.23.0, )",
           "Silk.NET.OpenAL.Soft.Native": "[1.23.1, )"
@@ -61,21 +53,21 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
           "CHDSharp": "[1.6.3, )",
-          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Core": "[1.8.0, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "CHDSharp": {
@@ -84,15 +76,8 @@
         "resolved": "1.6.3",
         "contentHash": "kNUP5vjkPW3WflLErLvgKgZz8uY5nm/d6JzFm6+dRspNvyUbujnHZRygoGdIVSnQ0hmx0W7sygH/7tq/5hqSGQ==",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "System.IO.Hashing": "10.0.14"
         }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "CentralTransitive",
-        "requested": "[10.0.13, )",
-        "resolved": "10.0.14",
-        "contentHash": "QtpQzuSZVyTPCuHW058yCs9Nj0394uUkNyFHS813nOmK9UgUdBdaprJ5PPsBgsQIpxADTsTkbaMMonykem6qdw=="
       },
       "Serilog": {
         "type": "CentralTransitive",

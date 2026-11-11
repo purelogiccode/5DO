@@ -1,7 +1,7 @@
 {
   "version": 2,
   "dependencies": {
-    "net10.0": {
+    "net11.0": {
       "BenchmarkDotNet": {
         "type": "Direct",
         "requested": "[0.15.8, )",
@@ -95,8 +95,7 @@
         "resolved": "3.1.21",
         "contentHash": "/OrJFKaojSR6TkUKtwh8/qA9XWNtxLrXMqvEb89dBSKCWjaGVTbKMYodIUgF5deCEtmd6GXuRerciXGl5bhZ7Q==",
         "dependencies": {
-          "Microsoft.Diagnostics.NETCore.Client": "0.2.510501",
-          "System.Reflection.TypeExtensions": "4.7.0"
+          "Microsoft.Diagnostics.NETCore.Client": "0.2.510501"
         }
       },
       "Microsoft.DotNet.PlatformAbstractions": {
@@ -109,33 +108,8 @@
         "resolved": "6.0.0",
         "contentHash": "eIbyj40QDg1NDz0HBW0S5f3wrLVnKWnDJ/JtZ+yJDFnDj90VoPuoPmFkeaXrtu+0cKm5GRAwoDf+dBWXK0TUdg==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "6.0.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0",
-          "Microsoft.Extensions.Logging.Abstractions": "6.0.0",
-          "Microsoft.Extensions.Options": "6.0.0"
+          "Microsoft.Extensions.DependencyInjection": "6.0.0"
         }
-      },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "SwcbEBtkECq3D2oywvHkm46fyrX9Dd2JPWphDnHUc2+cUWR1Mdo41atAjh/9iZjgQxuvbKfZKXqostT/LZfefA==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14"
-        }
-      },
-      "Microsoft.Extensions.Options": {
-        "type": "Transitive",
-        "resolved": "6.0.0",
-        "contentHash": "dzXN0+V1AyjOe2xcJ86Qbo233KHuLEY0njf/P2Kw8SfJU+d45HNS2ctJdnEnrWbM9Ye2eFgaC5Mj9otRMU6IsQ==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0",
-          "Microsoft.Extensions.Primitives": "6.0.0"
-        }
-      },
-      "Microsoft.Extensions.Primitives": {
-        "type": "Transitive",
-        "resolved": "6.0.0",
-        "contentHash": "9+PnzmQFfEFNR9J2aDTfJGGupShHjOuGw4VUv+JB044biSHrnmCIMD+mJHmb2H7YryrfBEXDurxQ47gJZdCKNQ=="
       },
       "Perfolizer": {
         "type": "Transitive",
@@ -168,21 +142,16 @@
           "System.CodeDom": "9.0.5"
         }
       },
-      "System.Reflection.TypeExtensions": {
-        "type": "Transitive",
-        "resolved": "4.7.0",
-        "contentHash": "VybpaOQQhqE6siHppMktjfGBw1GCwvCqiufqmP8F1nj7fTUNtW35LOEt3UZTEsECfo+ELAl/9o9nJx3U91i7vA=="
-      },
       "fivedo.cdrom": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.clio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.core": {
@@ -191,14 +160,14 @@
       "fivedo.cpu": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.diagnostics": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )",
-          "FiveDo.Cpu": "[1.7.1, )",
+          "FiveDo.Core": "[1.8.0, )",
+          "FiveDo.Cpu": "[1.8.0, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
@@ -207,61 +176,61 @@
       "fivedo.dsp": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.machine": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Cdrom": "[1.7.1, )",
-          "FiveDo.Clio": "[1.7.1, )",
-          "FiveDo.Core": "[1.7.1, )",
-          "FiveDo.Cpu": "[1.7.1, )",
-          "FiveDo.Diagnostics": "[1.7.1, )",
-          "FiveDo.Dsp": "[1.7.1, )",
-          "FiveDo.Madam": "[1.7.1, )",
-          "FiveDo.Memory": "[1.7.1, )",
-          "FiveDo.Sport": "[1.7.1, )",
-          "FiveDo.Video": "[1.7.1, )",
-          "FiveDo.Xbus": "[1.7.1, )"
+          "FiveDo.Cdrom": "[1.8.0, )",
+          "FiveDo.Clio": "[1.8.0, )",
+          "FiveDo.Core": "[1.8.0, )",
+          "FiveDo.Cpu": "[1.8.0, )",
+          "FiveDo.Diagnostics": "[1.8.0, )",
+          "FiveDo.Dsp": "[1.8.0, )",
+          "FiveDo.Madam": "[1.8.0, )",
+          "FiveDo.Memory": "[1.8.0, )",
+          "FiveDo.Sport": "[1.8.0, )",
+          "FiveDo.Video": "[1.8.0, )",
+          "FiveDo.Xbus": "[1.8.0, )"
         }
       },
       "fivedo.madam": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.memory": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.sport": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
           "CHDSharp": "[1.6.3, )",
-          "FiveDo.Core": "[1.7.1, )",
+          "FiveDo.Core": "[1.8.0, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "fivedo.xbus": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       },
       "CHDSharp": {
@@ -270,24 +239,14 @@
         "resolved": "1.6.3",
         "contentHash": "kNUP5vjkPW3WflLErLvgKgZz8uY5nm/d6JzFm6+dRspNvyUbujnHZRygoGdIVSnQ0hmx0W7sygH/7tq/5hqSGQ==",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "System.IO.Hashing": "10.0.14"
         }
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "CentralTransitive",
-        "requested": "[10.0.13, )",
+        "requested": "[11.0.0, )",
         "resolved": "6.0.0",
-        "contentHash": "k6PWQMuoBDGGHOQTtyois2u4AwyVcIwL2LaSLlTZQm2CYcJ1pxbt6jfAnpWmzENA/wfrYRI/X9DTLoUkE4AsLw==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
-        }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "CentralTransitive",
-        "requested": "[10.0.13, )",
-        "resolved": "10.0.14",
-        "contentHash": "QtpQzuSZVyTPCuHW058yCs9Nj0394uUkNyFHS813nOmK9UgUdBdaprJ5PPsBgsQIpxADTsTkbaMMonykem6qdw=="
+        "contentHash": "k6PWQMuoBDGGHOQTtyois2u4AwyVcIwL2LaSLlTZQm2CYcJ1pxbt6jfAnpWmzENA/wfrYRI/X9DTLoUkE4AsLw=="
       },
       "Serilog": {
         "type": "CentralTransitive",

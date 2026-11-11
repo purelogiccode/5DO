@@ -70,7 +70,7 @@ def reproduction_for(row: dict) -> str:
         return row["reproduction"]
     disc = row.get("path") or row.get("file") or ""
     bios = row.get("bios") or ""
-    command = f'dotnet src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll run "{disc}"'
+    command = f'dotnet src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll run "{disc}"'
     command += f' --bios "{bios}"' if bios else " --bios-auto bios"
     command += f' --frames {row.get("frameCount") or 12000} --audio null --json'
     script = row.get("inputScript") or ""

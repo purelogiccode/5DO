@@ -46,7 +46,7 @@ pwsh -File tools/release-soak.ps1 -GamesRoot 'D:\Samples\3DO' -Frames 300 -Outpu
 param(
     [string] $GamesRoot = $env:FIVEDO_GAMES,
     [string] $Bios = (Join-Path $PSScriptRoot '..\bios\panafz1.bin'),
-    [string] $CliPath = (Join-Path $PSScriptRoot '..\src\FiveDo.Cli\bin\Release\net10.0\FiveDo.Cli.dll'),
+    [string] $CliPath = (Join-Path $PSScriptRoot '..\src\FiveDo.Cli\bin\Release\net11.0\FiveDo.Cli.dll'),
     [string] $StateDir = (Join-Path $PSScriptRoot '..\artifacts\compat-new'),
     [string] $OutputDir = (Join-Path $PSScriptRoot '..\artifacts\release-soak'),
     [int] $Frames = 36000,

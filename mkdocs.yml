@@ -1,5 +1,5 @@
 site_name: 5DO
-site_description: A modern, source-available C#/.NET 10 emulator for the 3DO Interactive Multiplayer.
+site_description: A modern, source-available C# 15/.NET 11 emulator for the 3DO Interactive Multiplayer.
 site_url: https://purelogiccode.github.io/5DO/
 repo_url: https://github.com/purelogiccode/5DO
 repo_name: purelogiccode/5DO
@@ -163,6 +163,7 @@ nav:
       - Implementation plan archive: ImplementationPlanArchive.md
       - Compatibility sweep: CompatibilitySweep.md
       - High-resolution CEL research: HighResolutionCelResearch.md
+      - Release notes 1.8.0: ReleaseNotes-1.8.0.md
       - Release notes 1.7.1: ReleaseNotes-1.7.1.md
       - Release notes 1.7.0: ReleaseNotes-1.7.0.md
       - Release notes 1.6.0: ReleaseNotes-1.6.0.md

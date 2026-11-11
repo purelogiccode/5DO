@@ -161,7 +161,7 @@ N=2 mode is not a regression risk on this sample and improves parity where the A
 instruction stream reaches the frame boundary first. Command:
 
 ```powershell
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run artifacts/diff/sample40-iso.json --out artifacts/diff/sample40-arm60 `
   --arm-timing arm60 --no-images --resume
 ```

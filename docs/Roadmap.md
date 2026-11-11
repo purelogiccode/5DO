@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.7.1 desktop-startup and dependency release** (published on
+The project is at the **v1.8.0 presentation and toolchain release** (published on
 GitHub). The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
@@ -18,8 +18,10 @@ GitHub). The compatibility plan is complete:
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
+- v1.8.0 adds MMPX 2x and Catmull-Rom bicubic filtering to every presenter, wider aspect
+  presets, and the .NET 11 / C# 15 toolchain.
 
-## Post-1.7
+## Post-1.8
 
 **Playability depth (in progress):**
 

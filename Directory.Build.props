@@ -25,8 +25,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>15</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -38,7 +38,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <Product>5DO</Product>
     <Company>5DO contributors</Company>
-    <Version>1.7.1</Version>
+    <Version>1.8.0</Version>
     <InvariantGlobalization>true</InvariantGlobalization>
     <FiveDoOpenAlSoftVersion>1.23.1</FiveDoOpenAlSoftVersion>
     <FiveDoOpenAlNativeRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</FiveDoOpenAlNativeRid>

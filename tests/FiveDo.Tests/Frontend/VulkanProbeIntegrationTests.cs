@@ -300,7 +300,7 @@ public sealed class VulkanProbeIntegrationTests
                 "FiveDo.Frontend.Avalonia",
                 "bin",
                 configuration,
-                "net10.0",
+                "net11.0",
                 "FiveDo.Frontend.Avalonia.dll");
             if (File.Exists(path))
             {

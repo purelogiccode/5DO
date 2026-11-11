@@ -83,15 +83,15 @@ dotnet build src/FiveDo.Cli -c Release
 dotnet build tools/FiveDo.DiffHarness -c Release
 
 # Validate a manifest without touching any discs.
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   validate benchmarks/diff/smoke.json --strict
 
 # Run the smoke title (300 frames, one checkpoint).
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/smoke.json --out artifacts/diff/smoke
 
 # Run the five-title showcase (3000 frames each).
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase
 
 # Build the optional debug reference core (deterministic seed + PC/CPSR/CD exports).
@@ -102,29 +102,29 @@ cmake -S artifacts/diff/opera-build -B artifacts/diff/opera-build-current -G Nin
 cmake --build artifacts/diff/opera-build-current
 
 # The five-title TEST-07 panel: fixed seed, PC/CPSR/CD comparison.
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
   --no-images --seed 1488 --compare-cd --core artifacts/diff/opera-build-current/OperaCore.dll
 
 # CORE-02/CORE-07 timer and read trace (both engines).
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/samples5.json --out artifacts/diff/timer-trace `
   --no-images --timer-trace --title lemmings --force `
   --compare-pc --compare-cd --core artifacts/diff/opera-build-current/OperaCore.dll
 
 # Strict mode with a debug core that exposes PC/CD state.
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase-debug `
   --core artifacts/diff/opera-build-current/OperaCore.dll --compare-pc --compare-cd
 
 # Generate a full-collection manifest after changing the disc roots.
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   manifest --root "J:\Panasonic 3DO" `
   --root "G:\MAME\MAME Software List CHDs\3do" `
   --out benchmarks/diff/full.json --frames 3000 --checkpoint 3000
 
 # Generate the deterministic 50-title TEST-07 panel from the full manifest.
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   panel --from benchmarks/diff/full.json --out benchmarks/diff/panel50.json `
   --count 50 --core artifacts/diff/opera-build-current/OperaCore.dll `
   --work artifacts/diff/work-panel50 --name "5DO 50-title accuracy panel"

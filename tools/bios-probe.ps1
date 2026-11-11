@@ -85,10 +85,10 @@ function Get-CliCommand {
         return @{ File = $Explicit; Prefix = @() }
     }
 
-    $exe = Join-Path $repoRoot 'src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.exe'
+    $exe = Join-Path $repoRoot 'src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.exe'
     if (Test-Path -LiteralPath $exe) { return @{ File = $exe; Prefix = @() } }
 
-    $dll = Join-Path $repoRoot 'src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll'
+    $dll = Join-Path $repoRoot 'src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll'
     if (Test-Path -LiteralPath $dll) { return @{ File = 'dotnet'; Prefix = @($dll) } }
 
     throw 'CLI not found. Build it first with: dotnet build src/FiveDo.Cli -c Release, or pass -Build.'

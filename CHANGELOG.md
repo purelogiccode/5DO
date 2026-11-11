@@ -1,15 +1,57 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.7.1, a documented-compatibility
+All notable changes are recorded here. The project is at v1.8.0, a documented-compatibility
 release.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-11
+
 ### Added
 
+- **MMPX 2x pixel-art filter.** The style-preserving McGuire/Gagiu filter runs as a GPU
+  rule pass in OpenGL/GLES, Direct3D 11, and Vulkan, finishes with sharp-bilinear
+  scaling, and is available in the CPU fallback. `MmpxFilter` is the reference oracle
+  and the opt-in GPU parity tests compare the full 2x expansion.
+- **Bicubic filter.** Catmull-Rom 4x4 sampling with clamped edges runs as a single GPU
+  scale pass in OpenGL/GLES, Direct3D 11, and Vulkan, and in the CPU `FrameScaler`.
+  It does not allocate an intermediate target.
 - **Aspect-ratio presets.** Settings > Video > Aspect now offers 4:3, 5:4, 16:9,
   16:10, and 21:9 targets alongside `Integer`, `Stretch`, and `Custom`. The presets
   letterbox or pillarbox the source and do not change emulated resolution.
+- **Filter names in probes.** `--gl-probe-filter`, `--vk-probe-filter`, and
+  `--d3d-probe-filter` accept `bicubic`/`catmull-rom` and `mmpx`/`mmpx2x`.
+
+### Changed
+
+- **.NET 11 and C# 15.** The SDK is pinned to `11.0.100`, all projects target
+  `net11.0`, and the CLI/frontend explicitly use C# 15. Microsoft.Extensions
+  DependencyInjection moves to 11.0.0.
+- Updated Meziantou.Analyzer to 3.0.324. The .NET 11 SDK supplies the implicit
+  `Microsoft.NET.ILLink.Tasks` 11.0.0 reference, and the obsolete .NET 10 ILCompiler
+  pin is removed.
+- The status bar now shows the active renderer and resolved video filter together.
+
+### Fixed
+
+- **Invalid SDK pin.** `global.json` used `11.0.0`, which is not a valid SDK feature
+  band; the pin is now `11.0.100` with `rollForward: latestFeature`.
+- **MMPX luma tie-breaks.** The CPU and all three shader implementations used a zero
+  luma term for opaque frames, disabling the reference triangle-tip and luminance
+  tie-break rules. They now use the reference `r + g + b + 1` term for opaque VDL
+  frames, and a regression test covers the triangle-tip rule.
+- **OpenGL MMPX finishing.** The MMPX intermediate was sampled with nearest filtering
+  while sharp-bilinear finishing expected linear filtering; OpenGL now matches the
+  Direct3D 11 and Vulkan paths.
+
+### Validation
+
+- Full suite **2,158/2,158** passes in Debug with .NET SDK 11.0.100.
+- `dotnet build`, `dotnet format --verify-no-changes`, and
+  `jb inspectcode --severity=WARNING` are clean.
+- Six framework-dependent bundles are published with `README.md`, `LICENSE`,
+  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, the release/legal docs, no runtime, and no
+  PDB or XML files.
 
 ## [1.7.1] - 2026-11-10
 

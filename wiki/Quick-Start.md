@@ -2,11 +2,11 @@
 
 ## From the release bundle
 
-1. Install the **.NET 10 Runtime** from
-   <https://dotnet.microsoft.com/download/dotnet/10.0>. It is not included in the
+1. Install the **.NET 11 Runtime** from
+   <https://dotnet.microsoft.com/download/dotnet/11.0>. It is not included in the
    bundle.
 2. Download the bundle for your system from
-   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.6.0) and
+   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0) and
    extract it.
 3. Start the desktop app:
 
@@ -26,7 +26,7 @@
 
 ## From source
 
-1. Install the .NET 10 SDK.
+1. Install the .NET 11 SDK.
 2. Clone and build:
 
    ```powershell

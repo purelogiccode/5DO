@@ -572,8 +572,9 @@ internal static class Shaders
     /// </summary>
     /// <remarks>
     /// MMPX, Copyright 2020 Morgan McGuire and Mara Gagiu, MIT license. See
-    /// THIRD-PARTY-NOTICES.md. VDL frames are opaque, so the reference luma term is
-    /// zero and the luma comparisons reduce to the equality rules.
+    /// THIRD-PARTY-NOTICES.md. VDL frames are opaque (alpha 255), so the reference
+    /// luma term reduces to r + g + b + 1 and the luminance tie-break and
+    /// triangle-tip rules stay active.
     /// </remarks>
     private const string FragmentMmpxBody = """
         uniform sampler2D uExpanded;  // native-resolution RGB texture
@@ -621,10 +622,11 @@ internal static class Shaders
             return any(notEqual(a, b));
         }
 
-        float luma(uvec3 c)
+        int luma(uvec3 c)
         {
-            // Opaque VDL frames: the reference term (r+g+b+1)*(1-alpha) is zero.
-            return 0.0;
+            // VDL frames are opaque (alpha 255), so the reference luma term
+            // (r + g + b + 1) * (256 - alpha) is r + g + b + 1.
+            return int(c.r + c.g + c.b) + 1;
         }
 
         void main()
@@ -655,11 +657,11 @@ internal static class Shaders
             if (any(notEqual(a, e)) || any(notEqual(b, e)) || any(notEqual(c, e)) || any(notEqual(d, e))
                 || any(notEqual(f, e)) || any(notEqual(g, e)) || any(notEqual(h, e)) || any(notEqual(i, e)))
             {
-                float bl = luma(b);
-                float dl = luma(d);
-                float el = luma(e);
-                float fl = luma(f);
-                float hl = luma(h);
+                int bl = luma(b);
+                int dl = luma(d);
+                int el = luma(e);
+                int fl = luma(f);
+                int hl = luma(h);
 
                 // 1:1 slope rules.
                 if (all(equal(d, b)) && any(notEqual(d, h)) && any(notEqual(d, f))

@@ -2,9 +2,9 @@
 
 ## The app says it cannot find the .NET runtime
 
-The release bundles are **framework-dependent** and require the **.NET 10 Runtime**
+The release bundles are **framework-dependent** and require the **.NET 11 Runtime**
 installed on your machine. The runtime is not included in the bundle. Install it from
-<https://dotnet.microsoft.com/download/dotnet/10.0> and start the app again.
+<https://dotnet.microsoft.com/download/dotnet/11.0> and start the app again.
 
 If you installed .NET in a non-standard location on Linux/macOS, set `DOTNET_ROOT` to
 that directory before running 5DO. On Linux/macOS, also make the apphosts executable:

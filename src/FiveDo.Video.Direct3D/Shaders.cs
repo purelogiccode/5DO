@@ -402,10 +402,11 @@ internal static class Direct3D11Shaders
             return !any(b == a0) && !any(b == a1) && !any(b == a2) && !any(b == a3);
         }
 
-        float Luma(uint3 c)
+        int Luma(uint3 c)
         {
-            // Opaque VDL frames: the reference luma term is zero.
-            return 0.0;
+            // VDL frames are opaque (alpha 255), so the reference luma term
+            // (r + g + b + 1) * (256 - alpha) is r + g + b + 1.
+            return (int)(c.r + c.g + c.b) + 1;
         }
 
         float4 PSMain(PSInput input) : SV_TARGET
@@ -436,11 +437,11 @@ internal static class Direct3D11Shaders
             if (any(a != e) || any(b != e) || any(c != e) || any(d != e)
                 || any(f != e) || any(g != e) || any(h != e) || any(i != e))
             {
-                float bl = Luma(b);
-                float dl = Luma(d);
-                float el = Luma(e);
-                float fl = Luma(f);
-                float hl = Luma(h);
+                int bl = Luma(b);
+                int dl = Luma(d);
+                int el = Luma(e);
+                int fl = Luma(f);
+                int hl = Luma(h);
 
                 // 1:1 slope rules.
                 if (all(d == b) && any(d != h) && any(d != f)

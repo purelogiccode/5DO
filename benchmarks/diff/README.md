@@ -74,15 +74,15 @@ Run:
 dotnet build src/FiveDo.Cli -c Release
 dotnet build tools/FiveDo.DiffHarness -c Release
 
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/smoke.json --out artifacts/diff/smoke
 
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/showcase.json --out artifacts/diff/showcase
 
 # TEST-07 panel: fixed seed, PC/CPSR/CD/audio comparison.
 # Build the debug core first (see docs/DifferentialHarness.md section 2).
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/samples5.json --out artifacts/diff/test07-samples5 `
   --no-images --seed 1488 --compare-cd `
   --core artifacts/diff/opera-build-current/OperaCore.dll
@@ -94,7 +94,7 @@ The reference core is paced at its 16.16 NTSC field rate (59.939987 Hz), so
 After an intentional hash change, refresh the checked-in nightly baseline:
 
 ```powershell
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   baseline --current artifacts/diff/nightly/report.json `
   --write benchmarks/diff/baseline/showcase-report.json
 ``` `--force` is required after
@@ -103,11 +103,11 @@ a CORE-08 profile A/B, use fresh output directories so cached captures from the
 other profile are not reused:
 
 ```powershell
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/full.json --out artifacts/diff/full-compatible `
   --profile compatible --no-images --cleanup-iso --resume
 
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/full.json --out artifacts/diff/full-accuracy `
   --profile accuracy --no-images --cleanup-iso --resume
 ```
@@ -126,7 +126,7 @@ fresh output directories and `--force` when adding or removing either trace.
 Regenerate the full manifest after changing the collection:
 
 ```powershell
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe manifest `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe manifest `
   --root "J:\Panasonic 3DO" `
   --root "G:\MAME\MAME Software List CHDs\3do" `
   --out benchmarks/diff/full.json --frames 3000 --checkpoint 3000

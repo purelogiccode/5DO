@@ -16,10 +16,10 @@ namespace FiveDo.Video;
 /// rules in their fragment shaders.
 /// </para>
 /// <para>
-/// VDL frames are opaque, so the reference luma term
-/// <c>(r + g + b + 1) * (256 - alpha)</c> is zero for every pixel. The luma comparisons
-/// therefore reduce to the equality rules, exactly as in the reference implementation
-/// for opaque content.
+/// VDL frames are opaque (alpha 255), so the reference luma term
+/// <c>(r + g + b + 1) * (256 - alpha)</c> reduces to <c>r + g + b + 1</c>. The luma
+/// comparisons keep the reference tie-break and triangle-tip rules active instead of
+/// collapsing them to zero.
 /// </para>
 /// </remarks>
 public sealed class MmpxFilter
@@ -274,13 +274,13 @@ public sealed class MmpxFilter
 
     private static int Luma(uint color)
     {
-        // Reference formula for 8-bit unassociated alpha. VDL frames are opaque,
-        // so this is zero for every pixel in practice.
+        // Reference formula for 8-bit unassociated alpha. VDL frames are opaque
+        // (alpha 255), so this is r + g + b + 1 for every pixel in practice.
         var alpha = (int)(color >> 24);
         var r = (int)((color >> 16) & 0xFF);
         var g = (int)((color >> 8) & 0xFF);
         var b = (int)(color & 0xFF);
-        return ((r + g + b + 1) * (256 - alpha)) >> 8;
+        return (r + g + b + 1) * (256 - alpha);
     }
 
     private static bool AllEq2(uint b, uint a0, uint a1)

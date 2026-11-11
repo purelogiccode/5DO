@@ -37,7 +37,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll"
+DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll"
 DEFAULT_COMPARISON = "docs/data/compatibility-comparison.json"
 DEFAULT_SCRIPT = "benchmarks/diff/scripts/tierb-10min.txt"
 DEFAULT_OUT = "artifacts/beyond-title"
@@ -637,7 +637,7 @@ def process(
     bios_name = input_payload.get("biosName") or (Path(bios_path).name if bios_path else "")
     reproduction = [
         "dotnet",
-        "src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll",
+        "src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll",
         "run",
         f'"{disc}"',
     ]

@@ -33,7 +33,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: 10.0.301
+          dotnet-version: 11.0.100
 
       - name: Preflight
         id: preflight
@@ -60,7 +60,7 @@ jobs:
 
       - name: Validate manifest
         if: steps.preflight.outputs.skip != 'true'
-        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe validate benchmarks/diff/showcase.json --strict
+        run: tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe validate benchmarks/diff/showcase.json --strict
 
       - name: Run differential
         if: steps.preflight.outputs.skip != 'true'
@@ -69,7 +69,7 @@ jobs:
         continue-on-error: true
         # Always capture fresh results: a self-hosted workspace can keep an old
         # artifacts/diff/nightly tree, and --resume would silently reuse it.
-        run: tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe run benchmarks/diff/showcase.json --out artifacts/diff/nightly --force
+        run: tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe run benchmarks/diff/showcase.json --out artifacts/diff/nightly --force
 
       - name: Compare against baseline
         if: steps.preflight.outputs.skip != 'true'
@@ -93,7 +93,7 @@ jobs:
             exit 0
           }
 
-          $exe = 'tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe'
+          $exe = 'tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe'
           & $exe baseline --baseline $baseline --current artifacts/diff/nightly/report.json
           if ($LASTEXITCODE -ne 0) {
             Write-Host '::error::A 5DO field changed against the checked-in baseline. Review report.html and update benchmarks/diff/baseline/showcase-report.json if the change is intentional.'

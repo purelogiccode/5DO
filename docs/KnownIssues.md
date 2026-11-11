@@ -1,9 +1,11 @@
 # Known Issues
 
-**Snapshot:** 2026-11-10, v1.7.1 plus the P0 quality pass, native platform runtime
-smoke, CD subcode, disc conversion, focus/void/pixel-format work, pointer input scripts,
-and macOS DMG distribution. The 1.7.1 update removes the CHD startup prefetch stall and
-audio underruns. This list covers the supported local corpus and the current
+**Snapshot:** 2026-11-11, v1.8.0: MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/
+16:10/21:9 aspect presets, and the .NET 11 / C# 15 toolchain, plus the P0 quality pass,
+native platform runtime smoke, CD subcode, disc conversion, focus/void/pixel-format
+work, pointer input scripts, and macOS DMG distribution. The 1.8.0 update also restores
+the reference MMPX luma tie-breaks and matches OpenGL's MMPX finishing sampler to
+Direct3D 11/Vulkan. This list covers the supported local corpus and the current
 prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
@@ -290,7 +292,7 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   2026-11-10). The smoke hides the GL surface, so GPU presentation is not covered.
 - macOS physical gamepad detection and Linux/macOS GPU presentation remain unvalidated.
 - **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
-  publish as single-file apphosts (`PublishTrimmed=false`); the .NET 10 runtime must be
+  publish as single-file apphosts (`PublishTrimmed=false`); the .NET 11 runtime must be
   installed on the host and is **not** bundled. PDB and XML documentation files are
   removed from the bundles. Trimming remains available for developer and NativeAOT
   experiments. See

@@ -105,7 +105,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 
 | Dependency | Purpose | License (verify before release) |
 |---|---|---|
-| .NET 10 / runtime | Platform; **required on the host, not bundled** in release artifacts | MIT |
+| .NET 11 / runtime | Platform; **required on the host, not bundled** in release artifacts | MIT |
 | Avalonia UI | Desktop frontend | MIT |
 | Avalonia.Desktop / Themes.Fluent / Fonts.Inter | Desktop frontend | MIT |
 | CommunityToolkit.Mvvm | ViewModels | MIT |

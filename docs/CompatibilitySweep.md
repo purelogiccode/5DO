@@ -544,7 +544,7 @@ over SSH; machine-specific credentials are in the gitignored `AGENTS.local.md`.
 
 Suggested procedure:
 
-1. Start the VM and confirm the guest has the .NET 10 SDK (or publish a
+1. Start the VM and confirm the guest has the .NET 11 SDK (or publish a
    `linux-x64` build on the host and copy it into the guest).
 2. Copy the repository or a published CLI/frontend folder into the guest.
 3. Run `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`.

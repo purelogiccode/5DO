@@ -130,8 +130,8 @@ internal static class HarnessCommon
 
         foreach (var candidate in new[]
         {
-            Path.Combine(repoRoot, "src", "FiveDo.Cli", "bin", "Release", "net10.0", "FiveDo.Cli.exe"),
-            Path.Combine(repoRoot, "src", "FiveDo.Cli", "bin", "Release", "net10.0", "FiveDo.Cli.dll"),
+            Path.Combine(repoRoot, "src", "FiveDo.Cli", "bin", "Release", "net11.0", "FiveDo.Cli.exe"),
+            Path.Combine(repoRoot, "src", "FiveDo.Cli", "bin", "Release", "net11.0", "FiveDo.Cli.dll"),
         })
         {
             if (!File.Exists(candidate))

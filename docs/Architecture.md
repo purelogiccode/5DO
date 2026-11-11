@@ -9,7 +9,7 @@
 ## 1. Design goals
 
 1. **One console subsystem per project.** The CPU, memory, MADAM, CLIO, DSP, SPORT, VDLP, XBUS, CD-ROM, storage, audio, and input each live in their own assembly.
-2. **The core is platform-neutral.** `FiveDo.*` core projects target `net10.0`, use no UI toolkit, no file I/O, no wall clock, and no native interop.
+2. **The core is platform-neutral.** `FiveDo.*` core projects target `net11.0`, use no UI toolkit, no file I/O, no wall clock, and no native interop.
 3. **The host owns the outside world.** BIOS files, disc images, NVRAM files, audio devices, gamepads, windows, and settings live in `FiveDo.Host` and the frontends.
 4. **The frontend is replaceable.** The CLI and Avalonia app both consume `FiveDo.Host`; neither is referenced by the core.
 5. **The port is traceable.** Every ported C++ unit has a named C# counterpart and a comment pointing back to the FreeDOCore file/function.

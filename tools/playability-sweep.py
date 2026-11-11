@@ -22,7 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll"
+DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll"
 DEFAULT_OUT = "artifacts/tierb"
 
 

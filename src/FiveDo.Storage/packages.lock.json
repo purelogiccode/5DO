@@ -1,14 +1,13 @@
 {
   "version": 2,
   "dependencies": {
-    "net10.0": {
+    "net11.0": {
       "CHDSharp": {
         "type": "Direct",
         "requested": "[1.6.3, )",
         "resolved": "1.6.3",
         "contentHash": "kNUP5vjkPW3WflLErLvgKgZz8uY5nm/d6JzFm6+dRspNvyUbujnHZRygoGdIVSnQ0hmx0W7sygH/7tq/5hqSGQ==",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.14",
           "System.IO.Hashing": "10.0.14"
         }
       },
@@ -17,6 +16,12 @@
         "requested": "[3.0.324, )",
         "resolved": "3.0.324",
         "contentHash": "aWoLvUTC9b2H/KgVmu9bzzvd87kPx19Ow3UMznTqun146Ql7pUqCtgQox1iItWNEUlpIqZeKy7I7v9OHOBRjmw=="
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "gK2aq4XvChj5kvozpPHrkfKkr7zc5Z4xoTrJb4GPZzDEPMlCk0TX632bwY3LsWcX2UVcVRQBBGzsBGC2lq6YhA=="
       },
       "Roslynator.Analyzers": {
         "type": "Direct",
@@ -30,14 +35,6 @@
         "resolved": "4.4.0",
         "contentHash": "ZC6Le3rr4TVJJjS4KsQAesxeF1EhW9qcZmmG7eP5Y2G3+gTGkJEUXkq4+tZNPtyp05I0wWOxnIjwtxFweJsObw=="
       },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "SwcbEBtkECq3D2oywvHkm46fyrX9Dd2JPWphDnHUc2+cUWR1Mdo41atAjh/9iZjgQxuvbKfZKXqostT/LZfefA==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14"
-        }
-      },
       "System.IO.Hashing": {
         "type": "Transitive",
         "resolved": "10.0.14",
@@ -45,13 +42,8 @@
       },
       "fivedo.core": {
         "type": "Project"
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "CentralTransitive",
-        "requested": "[10.0.13, )",
-        "resolved": "10.0.14",
-        "contentHash": "QtpQzuSZVyTPCuHW058yCs9Nj0394uUkNyFHS813nOmK9UgUdBdaprJ5PPsBgsQIpxADTsTkbaMMonykem6qdw=="
       }
-    }
+    },
+    "net11.0/win-x64": {}
   }
 }

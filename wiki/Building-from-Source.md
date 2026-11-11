@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET SDK **10.0.301** (pinned by `global.json`)
+- .NET SDK **11.0.100** (pinned by `global.json`; projects target `net11.0` with C# 15)
 - Git
 - Optional: PowerShell 7 for packaging/soak scripts
 - Optional: Python 3.12+ for the documentation site
@@ -22,7 +22,7 @@ dotnet format 5DO.sln --verify-no-changes
 
 The release layout is one bundle per system and architecture (Windows, Linux, and macOS
 on x64 and arm64), containing both apps. The bundles are framework-dependent: users
-must install the .NET 10 Runtime. Publish the two apphosts as framework-dependent single
+must install the .NET 11 Runtime. Publish the two apphosts as framework-dependent single
 files:
 
 ```powershell

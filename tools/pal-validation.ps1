@@ -2,7 +2,7 @@ param(
     [string[]] $Roots = @($env:FIVEDO_GAMES, 'J:\Panasonic 3DO'),
     [string] $BiosFolder = 'bios',
     [string] $OutputDirectory = 'artifacts/pal-validation',
-    [string] $Cli = 'src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll',
+    [string] $Cli = 'src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll',
     [switch] $NoBuild
 )
 

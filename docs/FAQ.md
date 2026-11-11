@@ -4,7 +4,7 @@
 
 ### What is 5DO?
 
-5DO is a source-available C#/.NET 10 emulator for the Panasonic 3DO Interactive
+5DO is a source-available C# 15/.NET 11 emulator for the Panasonic 3DO Interactive
 Multiplayer. It includes an Avalonia desktop app, a headless CLI, a deterministic
 save-state and TAS format, and a test/differential harness.
 
@@ -59,11 +59,11 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Yes - **v1.7.1** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.7.1). There is one
+Yes - **v1.8.0** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0). There is one
 bundle per system and architecture (Windows x64/arm64, Linux x64/arm64, macOS
 x64/arm64). Windows/Linux bundles are ZIP/tar.gz; macOS is a DMG. Each bundle contains
-both the desktop app and the CLI. Install the **.NET 10 Runtime** first; the bundles do
+both the desktop app and the CLI. Install the **.NET 11 Runtime** first; the bundles do
 not include it. You can also build from source.
 
 ## Compatibility
@@ -153,7 +153,7 @@ and the `cheat` CLI. See [Cheats](Cheats.md).
 ### Does 5DO run on Linux and macOS?
 
 Builds are published for Windows, Linux, and macOS on x64 as framework-dependent
-bundles; users install the .NET 10 runtime. **Windows x64 is the validated target.**
+bundles; users install the .NET 11 runtime. **Windows x64 is the validated target.**
 Linux and macOS runtime validation is ongoing; please report issues with a diagnostics
 bundle.
 

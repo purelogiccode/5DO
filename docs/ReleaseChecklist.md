@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.7.1 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.8.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -17,7 +17,8 @@ behavior, and hardens settings/NVRAM persistence. v1.7.0 adds CD subcode/Q, disc
 conversion, focus-loss pausing, void patterns, pointer input scripts, macOS HID gamepads,
 native macOS/arm64 runtime smoke, and DMG distribution for macOS. v1.7.1 removes the CHD
 startup prefetch stall and audio underruns and refreshes the desktop/CLI/test
-dependencies.
+dependencies. v1.8.0 adds MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9
+aspect presets, and the .NET 11 / C# 15 toolchain.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -275,6 +276,34 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       Pages deploy, and wiki publish; `WhatsNew.html`, `ReleaseNotes-1.7.1.html`, and
       `wiki/Release-1.7.1` return HTTP 200.
 
+## 1.8.0 filters and toolchain gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.8.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.8.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`,
+      `docs/ImplementationPlan.md`, `docs/KnownIssues.md`, `docs/Roadmap.md`, and the wiki.
+- [x] Move the SDK pin to `11.0.100`, target `net11.0`, use C# 15, and update all
+      workflows, tools, and build paths from `net10.0` to `net11.0`.
+- [x] Add MMPX 2x and Catmull-Rom bicubic filtering in OpenGL/GLES, Direct3D 11, Vulkan,
+      and the CPU fallback; add 5:4/16:9/16:10/21:9 aspect presets.
+- [x] Fix the invalid `global.json` version, the MMPX luma tie-break/triangle-tip rules,
+      and the OpenGL MMPX finishing sampler.
+- [x] Full suite **2,158/2,158** passes in Debug; `dotnet format --verify-no-changes`
+      is clean; `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Local win-x64 framework-dependent bundle verified: CLI `--version`/`selftest`,
+      frontend `FRONTEND SMOKE OK 1.8.0`, `whatsnew.md`/release notes present, and no
+      runtime, PDB, or XML files.
+- [ ] Build all six framework-dependent bundles from the `v1.8.0` tag and keep local
+      copies in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.8.0 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [ ] Create and push tag `v1.8.0`; the release workflow publishes six versioned bundles
+      and `SHA256SUMS.txt`. Record the release and CI run URLs here.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.8.0 release, including `WhatsNew.html`, `ReleaseNotes-1.8.0.html`, and
+      `wiki/Release-1.8.0`.
+
 ---
 
 ## Cover-art hosting gate
@@ -377,10 +406,10 @@ been validated.**
 | Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced |
 | Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 10 runtime is a host prerequisite and is not bundled |
+| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.7.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, v1.7.0, and rc.1 are historical |
-| Release timing | **Prepared 2026-11-10** | v1.7.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Version | **`v1.8.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, v1.7.0, and v1.7.1 are historical |
+| Release timing | **Prepared 2026-11-11** | v1.8.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 
@@ -591,7 +620,7 @@ source-only tag or GitHub release is not a complete release.
 
 - [x] Publish the CLI and desktop app as framework-dependent single-file apphosts
       (`PublishSingleFile=true`, `PublishTrimmed=false`).
-- [x] Do **not** copy the .NET runtime into the bundle. Users must install the .NET 10
+- [x] Do **not** copy the .NET runtime into the bundle. Users must install the .NET 11
       runtime on their machine; `PACKAGE.txt` and the README record the requirement.
 - [x] Build one bundle per system with `packaging/package-bundle.ps1`:
       `5do-<version>-win-x64.zip`, `5do-<version>-linux-x64.tar.gz`,
@@ -605,7 +634,7 @@ source-only tag or GitHub release is not a complete release.
 - [x] Keep the native OpenAL Soft/Skia/ANGLE libraries beside the apphosts so the
       LGPL replacement rights remain practical.
 - [x] `PACKAGE.txt` records component `bundle`, RID, version, commit, UTC build time,
-      the .NET 10 runtime requirement, launch commands, and the no-BIOS/no-disc notice.
+      the .NET 11 runtime requirement, launch commands, and the no-BIOS/no-disc notice.
 - [x] No runtime folder, PDBs, XML docs, or copyrighted content in release bundles.
 - [x] Extract each bundle to a clean folder and run the CLI/frontend smoke test.
 - [x] SHA-256 checksums generated for every bundle.
@@ -621,7 +650,7 @@ A self-contained single-file publish embeds a complete .NET runtime in **each**
 executable (roughly 70 MB per app before compression) and duplicates it. The release
 therefore uses **framework-dependent single-file apphosts**: each app is one executable,
 the .NET runtime is not embedded, and the bundle contains no runtime folder. Users must
-install the .NET 10 runtime on their machine.
+install the .NET 11 runtime on their machine.
 
 This is the required distribution model for v1.0.0: no .NET runtime in the binaries or
 inside the bundle.

@@ -8,7 +8,7 @@ emulation feature.
 
 **PERF-02/BAK-08 is complete.** The release bundles remain **framework-dependent and untrimmed**. Both apps publish as
 single-file apphosts (`PublishSingleFile=true`, `PublishTrimmed=false`) and require the
-.NET 10 runtime on the host. No runtime is embedded or copied into the bundle. This keeps
+.NET 11 runtime on the host. No runtime is embedded or copied into the bundle. This keeps
 the CLI and desktop app as single executables and avoids the per-app trimming divergence
 that would make a merged bundle unsafe.
 
@@ -275,7 +275,7 @@ hashes, PCs, cycle counts, disc IDs, and fix modes match. These keys postdate th
 exact DSP audio clock but predate the 2026-10-30 headless PBUS fix; see
 [`TestCorpus.md`](TestCorpus.md) 1.1 for the current keys.
 
-`-m:1` avoids a .NET SDK 10.0.301 `GenerateDepsFile` race seen when several
+`-m:1` avoids a .NET SDK 11.0.100 `GenerateDepsFile` race seen when several
 project references generate dependency files in parallel during a trimmed
 publish. The CI publish steps use the same switch.
 

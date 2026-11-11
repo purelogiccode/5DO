@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI status"></a>
   <a href="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml"><img src="https://github.com/purelogiccode/5DO/actions/workflows/build-bundle.yml/badge.svg?branch=master" alt="Bundle build"></a>
-  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <img src="https://img.shields.io/badge/.NET-11.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 11">
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
-  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.7.1-orange" alt="Version 1.7.1"></a>
+  <a href="../CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.8.0-orange" alt="Version 1.8.0"></a>
 </p>
 
 # Desktop packaging
@@ -20,18 +20,18 @@ per component. Each bundle contains both the desktop app and the headless CLI:
 | macOS x64 | `5do-<version>-osx-x64.dmg` |
 | macOS arm64 | `5do-<version>-osx-arm64.dmg` |
 
-For example, version `1.7.1` produces `5do-1.7.1-win-arm64.zip` or
-`5do-1.7.1-osx-arm64.dmg`. The version is read from `Directory.Build.props` by default;
+For example, version `1.8.0` produces `5do-1.8.0-win-arm64.zip` or
+`5do-1.8.0-osx-arm64.dmg`. The version is read from `Directory.Build.props` by default;
 pass `-Version` to `package-bundle.ps1` to override it. On macOS the script also builds a
 `.pkg`; the internal `.tar.gz` remains the CI extraction/smoke intermediate.
 
 ## Requirements
 
-The bundles are **framework-dependent**. The .NET 10 runtime must be installed on the
+The bundles are **framework-dependent**. The .NET 11 runtime must be installed on the
 user's machine; no .NET runtime is embedded in the executables or copied into the
 bundle.
 
-- Download: <https://dotnet.microsoft.com/download/dotnet/10.0>
+- Download: <https://dotnet.microsoft.com/download/dotnet/11.0>
 - The apphosts print the standard ".NET runtime not found" message when the runtime is
   missing.
 
@@ -189,7 +189,7 @@ the portable tarball.
 
 `.github/workflows/build-bundle.yml` builds the Windows and Linux bundles on their
 native runners and cross-publishes the macOS x64 bundle on Ubuntu; the macOS bundle is
-validated as Mach-O x86_64 rather than executed. The runners install .NET 10, which also
+validated as Mach-O x86_64 rather than executed. The runners install .NET 11, which also
 proves the framework-dependent apphosts work. `.github/workflows/release.yml` publishes
 the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
 documentation site and the wiki.

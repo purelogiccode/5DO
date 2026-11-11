@@ -41,7 +41,7 @@ GitHub release without the built artifacts is not a complete release.
   internal `5do-osx-*.tar.gz` is only the CI extraction/smoke intermediate.
 - Each bundle contains the framework-dependent single-file CLI and desktop apphosts,
   `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the
-  release/legal docs. **No .NET runtime is bundled**; users must install the .NET 10
+  release/legal docs. **No .NET runtime is bundled**; users must install the .NET 11
   runtime on their machine.
 - Build with `packaging/package-bundle.ps1`. `build-bundle.yml` validates the bundles
   in CI and `release.yml` publishes them with `SHA256SUMS.txt`.

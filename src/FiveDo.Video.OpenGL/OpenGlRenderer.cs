@@ -560,7 +560,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
             gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, filterSource);
-            var linearFilter = useXbr || useHqx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
+            var linearFilter = useXbr || useHqx || useMmpx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
             var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);

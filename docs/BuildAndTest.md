@@ -11,7 +11,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 
 | Requirement | Version / notes |
 |---|---|
-| .NET SDK | **10.0.301** (pinned by `global.json` with `rollForward: disable`). |
+| .NET SDK | **11.0.100** (pinned by `global.json` with `rollForward: latestFeature`). |
 | OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. All six x64/arm64 bundles are built and architecture-validated; macOS x64/arm64, Linux arm64, and Windows arm64 pass native CLI/frontend runtime smoke (2026-11-10). |
 | GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
@@ -34,7 +34,7 @@ dotnet --list-sdks
 
 ```text
 5DO.sln
-Directory.Build.props        # net10.0, nullable, warnings-as-errors, version, analyzers
+Directory.Build.props        # net11.0, nullable, warnings-as-errors, version, analyzers
 Directory.Build.targets      # OpenAL Soft native copy for Windows builds
 Directory.Packages.props     # central package versions
 global.json                  # SDK pin/roll-forward
@@ -85,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **1,815 tests** (verified 2026-11-06) and completes in a few seconds
+The current suite is **2,158 tests** (verified 2026-11-11) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -270,9 +270,9 @@ absent.
 
 ```powershell
 dotnet build tools/FiveDo.DiffHarness -c Release
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   validate benchmarks/diff/smoke.json --strict
-tools/FiveDo.DiffHarness/bin/Release/net10.0/FiveDo.DiffHarness.exe `
+tools/FiveDo.DiffHarness/bin/Release/net11.0/FiveDo.DiffHarness.exe `
   run benchmarks/diff/smoke.json --out artifacts/diff/smoke
 ```
 
@@ -390,7 +390,7 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c R
 
 Release bundles are produced for `win-x64`, `win-arm64`, `linux-x64`,
 `linux-arm64`, `osx-x64`, and `osx-arm64`. They contain no .NET runtime; users must
-install the .NET 10 runtime on their machine.
+install the .NET 11 runtime on their machine.
 
 Both executables are single-file framework-dependent apphosts. The frontend also ships
 native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as `OpenAL32.dll` on Windows
@@ -457,7 +457,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.7.1-win-x64.zip`, `5do-1.7.1-win-arm64.zip`, or `5do-1.7.1-linux-arm64.tar.gz`; the version is read from
+`5do-1.8.0-win-x64.zip`, `5do-1.8.0-win-arm64.zip`, or `5do-1.8.0-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied. On macOS the same script
 additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
 the release workflow uploads the DMG, while the tarball remains the extraction/smoke
@@ -474,7 +474,7 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64/arm64 bundles with framework-dependent single-file apphosts; the .NET 10 runtime is required on the host and not bundled. macOS jobs build natively and upload the DMG; Linux/Windows jobs upload ZIP or tar.gz. Runs CLI/frontend smoke tests and validates apphost machine types. |
+| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64/arm64 bundles with framework-dependent single-file apphosts; the .NET 11 runtime is required on the host and not bundled. macOS jobs build natively and upload the DMG; Linux/Windows jobs upload ZIP or tar.gz. Runs CLI/frontend smoke tests and validates apphost machine types. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:
@@ -502,7 +502,7 @@ credentials are in the gitignored `AGENTS.local.md`.
 
 Suggested flow:
 
-1. Start the VM (`Start-VM -Name LinuxMint`) and confirm the guest has the .NET 10 SDK,
+1. Start the VM (`Start-VM -Name LinuxMint`) and confirm the guest has the .NET 11 SDK,
    or publish `linux-x64` on the host and copy the publish folder into the guest.
 2. Copy the repository or the published CLI/frontend into the guest.
 3. Run `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`.
@@ -525,13 +525,13 @@ Key properties in `Directory.Build.props`:
 
 | Property | Value |
 |---|---|
-| `TargetFramework` | `net10.0` |
-| `LangVersion` | `latest` |
+| `TargetFramework` | `net11.0` |
+| `LangVersion` | `latest` (C# 15 with the .NET 11 SDK; CLI/frontend set `15`) |
 | `Nullable` | `enable` |
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.7.1` |
+| `Version` | `1.8.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |
@@ -551,8 +551,8 @@ The 3DO Opera file-system reader used by `5do fs` is first-party
 
 | Symptom | Cause / fix |
 |---|---|
-| `dotnet` not found or wrong SDK | Install .NET 10 SDK 10.0.301; `global.json` pins that version with `rollForward: disable`. |
-| `NETSDK1045` | The installed SDK is older than .NET 10. |
+| `dotnet` not found or wrong SDK | Install .NET 11 SDK 11.0.100; `global.json` pins that version with `rollForward: latestFeature`. |
+| `NETSDK1045` | The installed SDK is older than .NET 11. |
 | Restore fails behind a proxy | Configure NuGet proxy/credentials; CI uses the standard NuGet feed. |
 | `OpenAL32.dll` missing at runtime | Rebuild so `Directory.Build.targets` copies OpenAL Soft; or copy the package's `soft_oal.dll` as `OpenAL32.dll` beside the executable. |
 | GPU tests fail on a headless runner | They are opt-in; do not set `FIVEDO_GPU_TESTS` without a desktop GL/ANGLE context. |

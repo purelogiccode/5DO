@@ -8,11 +8,11 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <img src="https://img.shields.io/badge/.NET-11.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 11">
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.7.1-orange" alt="Version 1.7.1"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.8.0-orange" alt="Version 1.8.0"></a>
 </p>
 
 <p align="center">
@@ -22,16 +22,17 @@
 <h1 align="center">5DO</h1>
 
 <p align="center">
-  A modern, source-available <strong>C# / .NET 10</strong> emulator for the
+  A modern, source-available <strong>C# 15 / .NET 11</strong> emulator for the
   <strong>3DO Interactive Multiplayer</strong>.
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.7.1**, a documented-compatibility release. Windows x64 is the validated
-> GPU target; Linux x64 full suite passed (GPU presentation is preview/best-effort), and
-> macOS x64/arm64, Linux arm64, and Windows arm64 pass the native CLI/frontend runtime
-> smoke (2026-11-10). No BIOS ROMs, game images, or extracted game
-> assets are included. You must supply legally obtained files.
+> 5DO is at **v1.8.0**, a documented-compatibility release with bicubic and MMPX 2x
+> filters, wider aspect presets, and a .NET 11 / C# 15 toolchain. Windows x64 is the
+> validated GPU target; Linux x64 full suite passed (GPU presentation is
+> preview/best-effort), and macOS x64/arm64, Linux arm64, and Windows arm64 pass the
+> native CLI/frontend runtime smoke (2026-11-10). No BIOS ROMs, game images, or extracted
+> game assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -61,7 +62,7 @@ test harness designed for reproducible compatibility evidence.
   harnesses. Startup and `5do update` check the public GitHub release feed.
 - **One bundle per system and architecture.** Windows, Linux, and macOS bundles for x64
   and arm64 contain both the framework-dependent single-file CLI and desktop app, plus
-  the docs/notices. macOS ships as a drag-to-Applications `.dmg`. The .NET 10 runtime is
+  the docs/notices. macOS ships as a drag-to-Applications `.dmg`. The .NET 11 runtime is
   a prerequisite and is **not** bundled. Optional NativeAOT CLI builds remain available
   for developers. Unsigned Windows/Linux installers and macOS `.dmg`/`.pkg` scaffolding
   register `.iso`/`.cue`/`.chd` file associations; signing/notarization stays conditional
@@ -71,10 +72,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.7.1` release (GitHub Releases) |
+| Version | `1.8.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,125 tests** in the current test assembly |
+| Automated tests | **2,158 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -95,20 +96,20 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.7.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-win-x64.zip) |
-| Windows arm64 | [`5do-1.7.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-win-arm64.zip) |
-| Linux x64 | [`5do-1.7.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.7.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.7.1-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.7.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.7.1/5do-1.7.1-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.8.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.8.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.8.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.8.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.8.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.8.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-osx-arm64.dmg) |
 
-The apps are single-file executables. **Install the .NET 10 Runtime first** from
-<https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.7.1)
+The apps are single-file executables. **Install the .NET 11 Runtime first** from
+<https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.7.1-win-arm64.zip`
-or `5do-1.7.1-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.8.0-win-arm64.zip`
+or `5do-1.8.0-osx-arm64.dmg`.
 
 ## Features
 
@@ -181,7 +182,7 @@ or `5do-1.7.1-osx-arm64.dmg`.
 
 ### Requirements
 
-- **.NET SDK 10.0.301** (pinned by `global.json`).
+- **.NET SDK 11.0.100** (pinned by `global.json`).
 - A legally obtained 3DO BIOS ROM (1 MB; an optional second ROM for BIOS2/Kanji).
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
@@ -189,8 +190,8 @@ or `5do-1.7.1-osx-arm64.dmg`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.7.1 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
-> macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 10
+> v1.8.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.
 > BIOS and game files are never distributed by this repository.
@@ -425,5 +426,5 @@ with or endorsed by Panasonic, The 3DO Company, or any rights holder.
 ---
 
 <p align="center">
-  <sub>Made with C# and .NET 10. Bring your own BIOS and discs.</sub>
+  <sub>Made with C# and .NET 11. Bring your own BIOS and discs.</sub>
 </p>

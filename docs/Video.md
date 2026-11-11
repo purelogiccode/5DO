@@ -296,8 +296,10 @@ the sharp-bilinear scale pass finishes into the output rectangle. The rules comp
 and single-pixel features survive without introducing new palette colours. The CPU
 `MmpxFilter` is the reference oracle for the GPU passes and the opt-in parity tests,
 and the CPU fallback also runs it before scaling into a fixed output size. The
-implementation is MIT-licensed; see `THIRD-PARTY-NOTICES.md`. VDL frames are opaque,
-so the reference luma term is zero and the luma comparisons reduce to the equality rules.
+implementation is MIT-licensed; see `THIRD-PARTY-NOTICES.md`. VDL frames are opaque
+(alpha 255), so the reference luma term reduces to `r + g + b + 1`; the luminance
+tie-break and triangle-tip rules stay active, and a regression test covers the
+triangle-tip case.
 
 ### FSR 1.0
 

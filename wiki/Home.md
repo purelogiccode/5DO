@@ -1,11 +1,11 @@
 # 5DO Wiki
 
-**5DO** is a modern, source-available **C#/.NET 10** emulator for the **3DO
+**5DO** is a modern, source-available **C# 15/.NET 11** emulator for the **3DO
 Interactive Multiplayer**. It combines a deterministic managed emulation core with an
 Avalonia desktop app, a headless CLI, and a reproducible test harness.
 
-> **v1.7.1 is released.** Download the Windows, Linux, or macOS bundle from
-> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.7.1).
+> **v1.8.0 is released.** Download the Windows, Linux, or macOS bundle from
+> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0).
 > No BIOS ROMs or game images are included. Supply legally obtained files.
 
 ## Download
@@ -15,15 +15,15 @@ desktop app and the CLI:
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.7.1-win-x64.zip` |
-| Windows arm64 | `5do-1.7.1-win-arm64.zip` |
-| Linux x64 | `5do-1.7.1-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.7.1-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.7.1-osx-x64.dmg` |
-| macOS arm64 | `5do-1.7.1-osx-arm64.dmg` |
+| Windows x64 | `5do-1.8.0-win-x64.zip` |
+| Windows arm64 | `5do-1.8.0-win-arm64.zip` |
+| Linux x64 | `5do-1.8.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.8.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.8.0-osx-x64.dmg` |
+| macOS arm64 | `5do-1.8.0-osx-arm64.dmg` |
 
-The apps are framework-dependent single-file executables. Install the **.NET 10
-Runtime** first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bundles do
+The apps are framework-dependent single-file executables. Install the **.NET 11
+Runtime** first from <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do
 **not** include the runtime.
 
 ## Start here
@@ -36,7 +36,7 @@ Runtime** first from <https://dotnet.microsoft.com/download/dotnet/10.0>; the bu
 - [[Building-from-Source]] - build, test, and publish commands.
 - [[Contributing]] - issues, pull requests, and evidence.
 - [[Legal]] - license, donationware, and trademark rules.
-- [[Release-1.7.1]] - what changed in the current release.
+- [[Release-1.8.0]] - what changed in the current release.
 
 ## Full documentation
 
@@ -55,12 +55,12 @@ Useful direct links:
 
 ## Project status
 
-- **v1.7.1** documented-compatibility release, published on GitHub; macOS ships as a DMG.
+- **v1.8.0** documented-compatibility release, published on GitHub; macOS ships as a DMG.
 - 414 unique titles across 1,371 library images; the 378-title game test set has 375
   playable titles under the binary beyond-title rule, with 0 `Behind`/`Regression` rows.
 - The earlier 594-disc sweep has 593 loadable/rendered, 1 known no-video case, and 0
   not-loadable rows.
-- 2,125 tests in the current test assembly.
+- 2,158 tests in the current test assembly.
 - Windows x64 validated; Linux x64 full suite and CLI/frontend smoke passed (GPU
   presentation preview/best-effort); macOS x64/arm64, Linux arm64, and Windows arm64
   pass the native CLI/frontend runtime smoke.

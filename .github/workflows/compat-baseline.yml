@@ -17,7 +17,7 @@ jobs:
   beyond-title:
     name: Beyond-title gate
     # Requires a Windows self-hosted runner with the 3DO collection at J:\Panasonic 3DO,
-    # the BIOS folder, and the .NET 10 SDK.
+    # the BIOS folder, and the .NET 11 SDK.
     runs-on: [self-hosted, windows, 3do]
     timeout-minutes: 240
     steps:

@@ -54,6 +54,38 @@ public sealed class MmpxFilterTests
     }
 
     [Fact]
+    public void Expand_AppliesTheTriangleTipTieBreak()
+    {
+        // A white vertical stripe under a black run. The reference luma term makes
+        // the black foreground darker, so the triangle-tip rule copies B into J/K
+        // instead of leaving the centre 2x2 block uniformly white.
+        var source = new FrameBuffer(5, 5);
+        Fill(source, 0xFF, 0xFF, 0xFF);
+        for (var x = 1; x <= 3; x++)
+        {
+            SetPixel(source, x, 1, 0, 0, 0);
+        }
+
+        SetPixel(source, 1, 2, 0, 0, 0);
+        SetPixel(source, 3, 2, 0, 0, 0);
+
+        var destination = new FrameBuffer(10, 10);
+        new MmpxFilter().Expand(source, destination);
+
+        for (var y = 4; y < 6; y++)
+        {
+            for (var x = 4; x < 6; x++)
+            {
+                var offset = (y * destination.Stride) + (x * 4);
+                var expected = y < 5 ? 0 : 0xFF;
+                Assert.Equal(expected, destination.PixelSpan[offset]);
+                Assert.Equal(expected, destination.PixelSpan[offset + 1]);
+                Assert.Equal(expected, destination.PixelSpan[offset + 2]);
+            }
+        }
+    }
+
+    [Fact]
     public void Expand_RejectsAWrongDestinationSize()
     {
         var source = new FrameBuffer(4, 4);

@@ -1,6 +1,8 @@
 # Project Status and Next Steps
 
-**Snapshot:** 2026-11-10, v1.7.1: the CHD startup-stutter fix and dependency refresh; the native platform runtime smoke, CD subcode, disc
+**Snapshot:** 2026-11-11, v1.8.0: MMPX 2x and bicubic filters, wider aspect presets,
+and the .NET 11 / C# 15 toolchain; the CHD startup-stutter fix and dependency refresh;
+the native platform runtime smoke, CD subcode, disc
 conversion, focus/void/pixel-format work, the two Tier C gameplay-depth increments, and
 the 1.6.0 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly
@@ -76,6 +78,18 @@ x64/arm64, Linux arm64, and Windows arm64. Release run
 at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published checksums
 verify. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
+
+**1.8.0 release update (2026-11-11):** **v1.8.0** adds MMPX 2x and Catmull-Rom
+bicubic filtering to OpenGL/GLES, Direct3D 11, Vulkan, and the CPU fallback, with opt-in
+GPU parity coverage against `MmpxFilter` and `FrameScaler`. Settings > Video > Aspect
+adds 5:4, 16:9, 16:10, and 21:9 presets. The repository moves to .NET SDK **11.0.100**,
+`net11.0`, and **C# 15**, with DependencyInjection 11.0.0 and the SDK's implicit
+ILLink.Tasks 11.0.0. The
+release also fixes the invalid `global.json` pin, restores the reference MMPX luma
+tie-breaks (including a triangle-tip regression test), and matches OpenGL's MMPX
+finishing sampler to Direct3D 11/Vulkan. The suite is **2,158 tests**; build, format,
+and InspectCode are clean. See [`WhatsNew.md`](WhatsNew.md) and
+[`ReleaseNotes-1.8.0.md`](ReleaseNotes-1.8.0.md).
 
 **1.7.1 release update (2026-11-10):** **v1.7.1** removes the desktop startup stutter
 and audio underruns caused by the host disc prefetcher wrapping CHDSharp's own
@@ -857,7 +871,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
 - **Packaging:** CI builds/tests/formats and publishes one bundle per system
   (`5do-win-x64.zip`, `5do-linux-x64.tar.gz`, `5do-osx-x64.dmg`). Each bundle
   contains the CLI and desktop app as framework-dependent single-file apphosts, the
-  README/license/notices/whatsnew, and a generated `PACKAGE.txt`. The .NET 10 runtime
+  README/license/notices/whatsnew, and a generated `PACKAGE.txt`. The .NET 11 runtime
   is required on the host and is **not** bundled; PDB and XML documentation files are
   removed. Native OpenAL Soft/Skia/ANGLE libraries stay beside the apphosts for LGPL
   replacement. The CLI also has an opt-in NativeAOT win-x64 publish

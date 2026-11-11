@@ -27,7 +27,7 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Symptom | Cause / action |
 |---|---|
 | Nothing happens / console closes | Launch from a terminal to see the error: `dotnet run --project src/FiveDo.Frontend.Avalonia`. |
-| `You must install .NET` | The published bundle is framework-dependent; install the .NET 10 runtime from <https://dotnet.microsoft.com/download/dotnet/10.0>. |
+| `You must install .NET` | The published bundle is framework-dependent; install the .NET 11 runtime from <https://dotnet.microsoft.com/download/dotnet/11.0>. |
 | `--gl-backend does not recognize ...` | Use `auto`, `wgl`, `angle`, or `software`. |
 | Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults and is backed up. A read-only or cloud-synced data folder no longer crashes the shell; it logs the failure and continues. A bad custom path can still fail. |
 | Settings changes are not saved | The data folder is read-only, held by a sync client, or the file is locked. Check the log for "could not be written", make the folder available offline, clear the read-only attribute, or point `FIVEDO_DATA_DIR` at a local folder. |
@@ -251,7 +251,7 @@ See [`SaveStates.md`](SaveStates.md).
 
 | Symptom | Cause / action |
 |---|---|
-| `NETSDK1045` | Install .NET 10 SDK 10.0.301 (the version pinned by `global.json`). |
+| `NETSDK1045` | Install .NET 11 SDK 11.0.100 (the version pinned by `global.json`). |
 | Restore fails | Check NuGet connectivity/proxy; run `dotnet restore 5DO.sln`. |
 | Warnings are errors | The build uses `TreatWarningsAsErrors`; fix the warning or suppress with justification. |
 | GPU test fails headless | `FIVEDO_GPU_TESTS` is opt-in; do not set it without a desktop GL/ANGLE context. |

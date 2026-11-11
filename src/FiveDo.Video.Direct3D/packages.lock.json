@@ -1,12 +1,18 @@
 {
   "version": 2,
   "dependencies": {
-    "net10.0": {
+    "net11.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
         "requested": "[3.0.324, )",
         "resolved": "3.0.324",
         "contentHash": "aWoLvUTC9b2H/KgVmu9bzzvd87kPx19Ow3UMznTqun146Ql7pUqCtgQox1iItWNEUlpIqZeKy7I7v9OHOBRjmw=="
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "gK2aq4XvChj5kvozpPHrkfKkr7zc5Z4xoTrJb4GPZzDEPMlCk0TX632bwY3LsWcX2UVcVRQBBGzsBGC2lq6YhA=="
       },
       "Roslynator.Analyzers": {
         "type": "Direct",
@@ -84,9 +90,10 @@
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.7.1, )"
+          "FiveDo.Core": "[1.8.0, )"
         }
       }
-    }
+    },
+    "net11.0/win-x64": {}
   }
 }

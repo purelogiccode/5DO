@@ -28,7 +28,7 @@ The reproducible runner is [`tools/pal-validation.ps1`](https://github.com/purel
 
 ```powershell
 pwsh -NoProfile -File tools/pal-validation.ps1 `
-  -Cli src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll `
+  -Cli src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll `
   -OutputDirectory artifacts/pal-validation
 ```
 

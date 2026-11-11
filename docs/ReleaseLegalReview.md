@@ -47,7 +47,7 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
-      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 10 runtime, and
+      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 11 runtime, and
       the bundled OpenAL Soft 1.23.1 runtime.
 - [x] The OpenAL Soft native runtime is included in the Windows, Linux, and macOS x64
       bundles through `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as
@@ -58,7 +58,7 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
       LGPL-2.0 text. Both files are copied into every bundle by
       `packaging/package-bundle.ps1`. The native library stays outside the single-file
       apphosts, so users can replace it.
-- [x] The .NET 10 runtime is a **host prerequisite** and is not redistributed in the
+- [x] The .NET 11 runtime is a **host prerequisite** and is not redistributed in the
       bundles. Users install it from Microsoft; the .NET runtime is MIT licensed and is
       listed in `THIRD-PARTY-NOTICES.md`.
 - [x] The desktop About dialog reports the version, renderer state, and the
@@ -116,7 +116,7 @@ Owner/legal review is signed off (2026-11-02). Keep the following practices:
   commercial rights,
 - keep full FreeDO/4DO/Opera attribution in the README, About box, and release notes,
 - ship the unified bundles only, with no installers or store listings,
-- document that the .NET 10 runtime is a host prerequisite and do **not** bundle it,
+- document that the .NET 11 runtime is a host prerequisite and do **not** bundle it,
 - keep the OpenAL Soft notice and license text in every bundle,
 - do not describe the build as an officially licensed 3DO product.
 

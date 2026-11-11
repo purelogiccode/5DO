@@ -25,7 +25,7 @@ from pathlib import Path
 
 DEFAULT_ROOTS = (r"J:\Panasonic 3DO", r"G:\MAME\MAME Software List CHDs\3do")
 DEFAULT_OUT = "artifacts/corpus/inventory.json"
-DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net10.0/FiveDo.Cli.dll"
+DEFAULT_CLI = "src/FiveDo.Cli/bin/Release/net11.0/FiveDo.Cli.dll"
 DISC_EXTENSIONS = (".chd", ".iso", ".cue")
 
 CSV_FIELDS = (

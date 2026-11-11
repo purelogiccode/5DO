@@ -177,7 +177,7 @@ license position; it adds another upstream project to the attribution list.
 The release bundles contain only first-party compiled output, documentation, and
 license/notice files. Nothing from `References/` (FreeDO, 4DO, Opera/libopera,
 SimpleGui/OperaCore, or Docs3) is copied into a bundle. Opera remains a behavioral
-reference; it is not a shipped dependency. The .NET 10 runtime is a host prerequisite
+reference; it is not a shipped dependency. The .NET 11 runtime is a host prerequisite
 and is **not** bundled.
 
 The bundle layout does not change the reference hierarchy or the licensing position:

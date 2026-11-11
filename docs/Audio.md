@@ -368,7 +368,7 @@ hardware limitation rather than a code result. See [`TestCorpus.md`](TestCorpus.
 
 ### Frontend NativeAOT soak (PLAT-07, 2026-11-10)
 
-The opt-in **NativeAOT frontend** (`-p:FiveDoNativeAot=true`, win-x64, .NET 10.0.14)
+The opt-in **NativeAOT frontend** (`-p:FiveDoNativeAot=true`, win-x64, .NET 11.0.0)
 ran Lemmings (USA) through the frontend's real `FiveDoMachine`/`CoreRunner`/
 `OpenAlAudioOutput` path with `--audio-soak 600`. The JSON reports `nativeAot: true`.
 This closes the previous frontend-AOT audio gap; the shipped release bundles remain
