@@ -4,9 +4,9 @@
     "net11.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[3.0.324, )",
-        "resolved": "3.0.324",
-        "contentHash": "aWoLvUTC9b2H/KgVmu9bzzvd87kPx19Ow3UMznTqun146Ql7pUqCtgQox1iItWNEUlpIqZeKy7I7v9OHOBRjmw=="
+        "requested": "[3.0.339, )",
+        "resolved": "3.0.339",
+        "contentHash": "oB0KVTYO0CkqscgCp2Fce6Q4G9gIVvVy39ULQLU2eOJfTNWS63Lk7VZbgerx6XMdUxPC4bprv87r8f7EZfp6gQ=="
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
@@ -53,8 +53,8 @@
       },
       "System.IO.Hashing": {
         "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "lVqovhCt3HlZe7ONG5ydaj6BYwYI004gldVfMMkJl/lR5ueeCtWNpW4nejOX75sPmzm8vXCxB69GqwHaYCnyUQ=="
+        "resolved": "11.0.0",
+        "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
       },
       "fivedo.audio": {
         "type": "Project",
@@ -166,7 +166,7 @@
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
-          "CHDSharp": "[1.6.3, )",
+          "CHDSharp": "[1.7.0, )",
           "FiveDo.Core": "[1.8.0, )",
           "Serilog": "[4.4.0, )"
         }
@@ -192,11 +192,11 @@
       },
       "CHDSharp": {
         "type": "CentralTransitive",
-        "requested": "[1.6.3, )",
-        "resolved": "1.6.3",
-        "contentHash": "kNUP5vjkPW3WflLErLvgKgZz8uY5nm/d6JzFm6+dRspNvyUbujnHZRygoGdIVSnQ0hmx0W7sygH/7tq/5hqSGQ==",
+        "requested": "[1.7.0, )",
+        "resolved": "1.7.0",
+        "contentHash": "irm+rOgHSKTnpvo1A5hDwQeUH3/dP9jgT0MIvzqgUHc02kNJfcgFXb/hoVgZBo14TWrz/XEvDWWhryGViURKZw==",
         "dependencies": {
-          "System.IO.Hashing": "10.0.14"
+          "System.IO.Hashing": "11.0.0"
         }
       },
       "Serilog.Sinks.Console": {
