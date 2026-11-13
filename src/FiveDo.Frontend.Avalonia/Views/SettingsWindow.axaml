@@ -134,6 +134,8 @@
                             <TextBox x:Name="OverscanBottomBox" Width="52"
                                      ToolTip.Tip="Bottom crop in native pixels (0-32)." />
                             <TextBlock Text="px" VerticalAlignment="Center" Opacity="0.7" />
+                            <CheckBox x:Name="AutoCropCheck" Content="Auto-crop borders" Margin="12,0,0,0"
+                                      ToolTip.Tip="Detect blank borders and crop them with a one-second hysteresis. A manual crop above or a per-game crop overrides it." />
                         </StackPanel>
                         <TextBlock Grid.Row="29" Grid.Column="0" Text="Void border"
                                    VerticalAlignment="Center" Margin="0,8,0,0"

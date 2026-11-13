@@ -90,7 +90,7 @@ public static class GameLibraryScanner
                     pending.Add(file);
                 }
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
             {
                 Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
             }
@@ -162,7 +162,7 @@ public static class GameLibraryScanner
                     progress?.Report(count);
                 }
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
             {
                 Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
             }

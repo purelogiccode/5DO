@@ -295,6 +295,7 @@ public partial class SettingsWindow : Window
         OverscanTopBox.Text = overscan.Top.ToString(CultureInfo.InvariantCulture);
         OverscanRightBox.Text = overscan.Right.ToString(CultureInfo.InvariantCulture);
         OverscanBottomBox.Text = overscan.Bottom.ToString(CultureInfo.InvariantCulture);
+        AutoCropCheck.IsChecked = settings.AutoCrop;
         VideoBorderBox.Text = settings.VideoBorderPixels.ToString(CultureInfo.InvariantCulture);
         VoidAreaColorBox.Text = settings.ResolveVoidAreaColor();
         VoidPatternCombo.SelectedItem = settings.ResolveVoidAreaPattern();
@@ -1168,6 +1169,7 @@ public partial class SettingsWindow : Window
             ParseCrop(OverscanTopBox, "Top overscan"),
             ParseCrop(OverscanRightBox, "Right overscan"),
             ParseCrop(OverscanBottomBox, "Bottom overscan")));
+        settings.AutoCrop = AutoCropCheck.IsChecked == true;
         settings.VideoBorderPixels = ParseBorder(VideoBorderBox);
         var voidColor = VoidAreaColorBox.Text?.Trim();
         if (!AppSettings.IsValidColor(voidColor))

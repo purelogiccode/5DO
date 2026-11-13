@@ -85,10 +85,10 @@ public sealed class DiscHealthRecord
             if (info.Exists)
             {
                 length = info.Length;
-                ticks = info.LastWriteTimeUtc.Ticks;
+                ticks = FileStamp.GetLastWriteTimeUtcTicks(info);
             }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
         {
             // A missing or unreadable file still gets a record so the library can show why.
         }
@@ -109,7 +109,7 @@ public sealed class DiscHealthRecord
     public bool Matches(FileInfo info)
     {
         ArgumentNullException.ThrowIfNull(info);
-        return info.Length == Length && info.LastWriteTimeUtc.Ticks == LastWriteTimeUtcTicks;
+        return FileStamp.Matches(info, Length, LastWriteTimeUtcTicks);
     }
 }
 
@@ -205,7 +205,7 @@ public sealed class DiscHealthCache
             var info = new FileInfo(path);
             return info.Exists && record.Matches(info) ? record : null;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
         {
             return null;
         }

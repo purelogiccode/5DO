@@ -1,6 +1,6 @@
 # 5DO — Consolidated Implementation Plan
 
-**Snapshot:** 2026-11-11
+**Snapshot:** 2026-11-13
 **Release:** v1.8.0
 **Status:** the compatibility program is complete. This file is the single actionable plan;
 it tracks only **achievable post-1.8 work**.
@@ -59,7 +59,8 @@ The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL
 REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **PLAT-01**,
 **PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-09**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
-**SYS-06/07/08/12/17/18/22**, **UX-25**, **UX-26**, **VID-04/12/16/17** items.
+**SYS-06/07/08/12/17/18/22**, **UX-25**, **UX-26**, **UX-31**, **UX-32**,
+**VID-04/12/16/17/18** items.
 
 `ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
 §4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
@@ -180,9 +181,9 @@ the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode
 | **UX-28** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. |
 | **UX-29** | L | **TAS Lua scripting and input timeline**: script input/movies and edit an input timeline in the shell. | The deterministic movie container, editor, and PBUS packet format already exist. | A Lua-authored movie replays deterministically; the timeline edits and round-trips a movie. |
 | **UX-30** | M | **4DO `.4dosav` import/export (best-effort)**: map the native state to/from 4DO’s format. | The native state sections are versioned and documented; the mapping is additive and optional. | A known 4DO state imports with warnings where fields are unsupported; export round-trips in 5DO. |
-| **UX-31** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. |
-| **UX-32** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. |
-| **VID-18** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. |
+| **UX-31 — Done** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. Evidence: `ControllerPadPreview` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bu. |
+| **UX-32 — Done** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. Evidence: `DisplaySleepPolicy` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
+| **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
 | **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 `UX-30` is explicitly best-effort; native 4DO state compatibility is **not** a goal.
@@ -193,12 +194,15 @@ The agreed implementation order is below. These are references to the canonical 
 do not add a second entry for the same work. The order is a product priority, not a release
 gate, and each item is still one change with its own tests and evidence.
 
-1. **UX-31** — controller-preview graphic with highlighted buttons.
-2. **UX-09** — localization.
-3. **SYS-21** — physical CD-ROM drive support.
-4. **VID-18** — automatic blank-border crop.
-5. **SYS-23** — Windows DirectInput/generic HID gamepad backend.
-6. **UX-32** — screen-saver/display-sleep inhibit.
+1. **UX-09** — localization.
+2. **SYS-21** — physical CD-ROM drive support.
+3. **SYS-23** — Windows DirectInput/generic HID gamepad backend.
+
+**UX-31, VID-18, and UX-32 are done (2026-11-13).** Input Bindings draws a live 3DO
+pad (mapped/selected/pressed states), Settings > Video > Overscan has a 4DO-compatible
+auto-crop with a one-second hysteresis, and a running game keeps the Windows display
+awake. `ControllerPreviewTests`, `AutoCropTests`, and `DisplaySleepPolicyTests` cover
+the logic; see [TestCorpus.md](TestCorpus.md) 1.1bu and 1.1bv.
 
 ---
 ## 4. Blocked, residual, or not achievable (do not add checkboxes)
@@ -250,9 +254,9 @@ documented limitation, not that it is unachievable.
 5. **P2 accuracy:** `ACC-03` is **done**; `SYS-01` moved to §4 after the BIOS CD player
    listed the TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until
    their revisit conditions are met.
-6. **P3 product:** `SYS-22`, `UX-25`, `VID-16`, and `VID-17` are **done**. The remaining
-   product items do not block a release. The requested 4DO parity order is
-   `UX-31` → `UX-09` → `SYS-21` → `VID-18` → `SYS-23` → `UX-32` (see §3.7).
+6. **P3 product:** `SYS-22`, `UX-25`, `UX-31`, `VID-16`, `VID-17`, `VID-18`, and
+   `UX-32` are **done**. The remaining product items do not block a release. The
+   requested 4DO parity order is `UX-09` → `SYS-21` → `SYS-23` (see §3.7).
 
 **Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
 P1 platform smoke is failing.

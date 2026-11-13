@@ -295,6 +295,14 @@ public sealed class AppSettings
     /// <summary>Gets or sets the bottom-edge crop in native pixels (0-32).</summary>
     public int OverscanBottom { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether blank borders are cropped automatically.</summary>
+    /// <remarks>
+    /// Auto-crop is presentation-only and limited to 25% per edge, matching 4DO. A manual
+    /// crop (global or per-game) overrides it. The accepted crop uses a one-second
+    /// hysteresis so a scene change does not resize the image immediately.
+    /// </remarks>
+    public bool AutoCrop { get; set; }
+
     /// <summary>Gets or sets the gray/void border drawn around the presented image (0-64 pixels).</summary>
     /// <remarks>
     /// The border is presentation-only. It is drawn outside the filtered image and does not
@@ -334,6 +342,25 @@ public sealed class AppSettings
     {
         var crop = new CropInsets(OverscanLeft, OverscanTop, OverscanRight, OverscanBottom);
         return crop.IsEmpty ? CropInsets.Uniform(OverscanPixels) : crop.Clamp();
+    }
+
+    /// <summary>Resolves the manual presentation crop that overrides auto-crop.</summary>
+    /// <param name="gameId">4DO game ID, case-insensitive.</param>
+    /// <param name="crop">The effective manual crop.</param>
+    /// <returns>
+    /// <see langword="true"/> when a manual crop is configured. A per-game profile wins
+    /// even when it stores an all-zero crop, so a game can opt out of auto-crop.
+    /// </returns>
+    public bool TryResolveManualCrop(string? gameId, out CropInsets crop)
+    {
+        if (GetGameProfile(gameId)?.Overscan is { } perGame)
+        {
+            crop = perGame.Clamp();
+            return true;
+        }
+
+        crop = ResolveOverscan();
+        return !crop.IsEmpty;
     }
 
     /// <summary>Stores a per-edge crop and clears the legacy uniform value.</summary>

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using FiveDo.Input;
 
 namespace FiveDo.Frontend.Avalonia.Views;
@@ -31,9 +32,14 @@ public partial class InputBindingsWindow : Window
     ];
 
     private readonly InputProfile _profile;
+    private readonly Func<GamepadState>? _gamepadState;
     private KeyboardBindingEditor _editor;
+    private DispatcherTimer? _gamepadTimer;
     private int _playerIndex;
     private ControllerButton? _pendingButton;
+    private ControllerButton _selectedButton;
+    private ControllerButton _keyboardPressed;
+    private ControllerButton _gamepadPressed;
     private readonly bool _initializing;
     private bool _refreshingGamepad;
 
@@ -46,16 +52,53 @@ public partial class InputBindingsWindow : Window
     /// <summary>Creates the dialog for an input profile. The profile is copied.</summary>
     /// <param name="profile">Profile to edit.</param>
     public InputBindingsWindow(InputProfile profile)
+        : this(profile, null)
+    {
+    }
+
+    /// <summary>
+    /// Creates the dialog for an input profile with a live gamepad sample provider for the
+    /// controller preview. The provider is sampled on the UI thread; it must not poll a
+    /// backend that the emulation thread is also polling.
+    /// </summary>
+    /// <param name="profile">Profile to edit. The profile is copied.</param>
+    /// <param name="gamepadState">
+    /// Optional callback returning the latest raw sample from the first connected
+    /// controller, or <see langword="null"/> to disable live gamepad highlighting.
+    /// </param>
+    public InputBindingsWindow(InputProfile profile, Func<GamepadState>? gamepadState)
     {
         ArgumentNullException.ThrowIfNull(profile);
         _initializing = true;
         InitializeComponent();
         _profile = profile.Clone();
+        _gamepadState = gamepadState;
         _editor = new KeyboardBindingEditor(_profile.Players[0]);
         PlayerCombo.ItemsSource = Enumerable.Range(1, _profile.Players.Length).ToArray();
         PlayerCombo.SelectedIndex = 0;
         _initializing = false;
         RefreshRows();
+
+        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyUpEvent, OnPreviewKeyUp, RoutingStrategies.Tunnel);
+        Deactivated += (_, _) =>
+        {
+            _keyboardPressed = ControllerButton.None;
+            UpdatePreview();
+        };
+
+        if (gamepadState is not null)
+        {
+            _gamepadTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+            _gamepadTimer.Tick += (_, _) => PollGamepadPreview();
+            _gamepadTimer.Start();
+        }
+
+        Closed += (_, _) =>
+        {
+            _gamepadTimer?.Stop();
+            _gamepadTimer = null;
+        };
     }
 
     /// <inheritdoc />
@@ -86,9 +129,60 @@ public partial class InputBindingsWindow : Window
         var key = e.Key.ToString();
         _editor.Rebind(button, key);
         _pendingButton = null;
+        _selectedButton = button;
         StatusText.Text = $"Bound player {_playerIndex + 1} {button} to {key}.";
         RefreshRows();
         e.Handled = true;
+    }
+
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_pendingButton is not null)
+        {
+            return;
+        }
+
+        ControllerButton button = ControllerPreview.FindKeyboardButton(
+            _profile.Players[_playerIndex],
+            e.Key.ToString());
+        if (button == ControllerButton.None)
+        {
+            return;
+        }
+
+        _keyboardPressed |= button;
+        UpdatePreview();
+    }
+
+    private void OnPreviewKeyUp(object? sender, KeyEventArgs e)
+    {
+        ControllerButton button = ControllerPreview.FindKeyboardButton(
+            _profile.Players[_playerIndex],
+            e.Key.ToString());
+        if (button == ControllerButton.None)
+        {
+            return;
+        }
+
+        _keyboardPressed &= ~button;
+        UpdatePreview();
+    }
+
+    private void PollGamepadPreview()
+    {
+        if (_gamepadState is null)
+        {
+            return;
+        }
+
+        ControllerState state = GamepadMapper.Map(_profile.Players[_playerIndex], _gamepadState());
+        if (state.Buttons == _gamepadPressed)
+        {
+            return;
+        }
+
+        _gamepadPressed = state.Buttons;
+        UpdatePreview();
     }
 
     private void OnPlayerChanged(object? sender, SelectionChangedEventArgs e)
@@ -102,6 +196,9 @@ public partial class InputBindingsWindow : Window
         _playerIndex = PlayerCombo.SelectedIndex;
         _editor = new KeyboardBindingEditor(_profile.Players[_playerIndex]);
         _pendingButton = null;
+        _selectedButton = ControllerButton.None;
+        _keyboardPressed = ControllerButton.None;
+        _gamepadPressed = ControllerButton.None;
         StatusText.Text = $"Editing player {_playerIndex + 1}.";
         RefreshRows();
     }
@@ -150,10 +247,13 @@ public partial class InputBindingsWindow : Window
             Grid.SetColumn(rebind, 2);
             row.Children.Add(rebind);
 
+            row.PointerEntered += (_, _) => SelectPreview(button);
+            key.GotFocus += (_, _) => SelectPreview(button);
             RowsPanel.Children.Add(row);
         }
 
         RefreshGamepadRows();
+        UpdatePreview();
     }
 
     private void RefreshGamepadRows()
@@ -190,8 +290,10 @@ public partial class InputBindingsWindow : Window
                 };
                 ToolTip.SetTip(combo, $"Choose the 3DO button mapped to {name}.");
                 combo.SelectionChanged += OnGamepadBindingChanged;
+                combo.GotFocus += (_, _) => SelectPreview(CurrentGamepadButton(name));
                 Grid.SetColumn(combo, 1);
                 row.Children.Add(combo);
+                row.PointerEntered += (_, _) => SelectPreview(CurrentGamepadButton(name));
                 GamepadRowsPanel.Children.Add(row);
             }
         }
@@ -213,12 +315,80 @@ public partial class InputBindingsWindow : Window
         {
             profile.Gamepad[name] = button;
             StatusText.Text = $"Bound player {_playerIndex + 1} {name} to {button}.";
+            SelectPreview(button);
         }
         else
         {
             profile.Gamepad.Remove(name);
             StatusText.Text = $"Unbound player {_playerIndex + 1} {name}.";
+            SelectPreview(ControllerButton.None);
         }
+    }
+
+    private ControllerButton CurrentGamepadButton(string name)
+    {
+        return _profile.Players[_playerIndex].Gamepad.TryGetValue(name, out ControllerButton button)
+            ? button
+            : ControllerButton.None;
+    }
+
+    private void SelectPreview(ControllerButton button)
+    {
+        _selectedButton = button;
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        PlayerProfile profile = _profile.Players[_playerIndex];
+        PadPreview.MappedButtons = ControllerPreview.GetMappedButtons(profile);
+        PadPreview.SelectedButton = _selectedButton;
+        PadPreview.PressedButtons = _keyboardPressed | _gamepadPressed;
+        UpdatePreviewText(profile);
+    }
+
+    private void UpdatePreviewText(PlayerProfile profile)
+    {
+        ControllerButton pressed = _keyboardPressed | _gamepadPressed;
+        if (_selectedButton == ControllerButton.None)
+        {
+            PreviewText.Text = pressed == ControllerButton.None
+                ? "Point at a binding row or press a mapped key to light the pad."
+                : $"Pressed: {FormatButtons(pressed)}.";
+            return;
+        }
+
+        var parts = new List<string>(2);
+        string? key = ControllerPreview.FindKeyboardKey(profile, _selectedButton);
+        if (key is not null)
+        {
+            parts.Add($"key {key}");
+        }
+
+        IReadOnlyList<string> gamepad = ControllerPreview.FindGamepadNames(profile, _selectedButton);
+        if (gamepad.Count > 0)
+        {
+            parts.Add("gamepad " + string.Join(" / ", gamepad));
+        }
+
+        var binding = parts.Count == 0 ? "unbound" : string.Join(", ", parts);
+        PreviewText.Text = (_selectedButton & pressed) != ControllerButton.None
+            ? $"{_selectedButton} pressed ({binding})."
+            : $"{_selectedButton} — {binding}.";
+    }
+
+    private static string FormatButtons(ControllerButton buttons)
+    {
+        var names = new List<string>();
+        foreach (ControllerButton button in KeyboardBindingEditor.ControllerButtons)
+        {
+            if ((buttons & button) != ControllerButton.None)
+            {
+                names.Add(button.ToString());
+            }
+        }
+
+        return names.Count == 0 ? "none" : string.Join(", ", names);
     }
 
     private void OnRebind(object? sender, RoutedEventArgs e)
@@ -229,6 +399,8 @@ public partial class InputBindingsWindow : Window
         }
 
         _pendingButton = button;
+        _keyboardPressed = ControllerButton.None;
+        _selectedButton = button;
         StatusText.Text = $"Press a key for player {_playerIndex + 1} {button} (Escape cancels).";
         RefreshRows();
         Focus();
@@ -243,6 +415,8 @@ public partial class InputBindingsWindow : Window
             defaults.Gamepad,
             StringComparer.OrdinalIgnoreCase);
         _pendingButton = null;
+        _keyboardPressed = ControllerButton.None;
+        _gamepadPressed = ControllerButton.None;
         StatusText.Text = $"Restored the default keyboard and gamepad bindings for player {_playerIndex + 1}.";
         RefreshRows();
     }

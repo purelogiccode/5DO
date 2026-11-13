@@ -103,6 +103,7 @@ dotnet run --project src/FiveDo.Cli -- trace game.chd --bios panafz1.bin `
 | Symptom | Cause / action |
 |---|---|
 | "OpenGL unavailable" / CPU fallback | Update the GPU driver; check Logs for the exact init error. The CPU fallback still runs. |
+| `Unable to configure OpenGL FBO` | The driver could not allocate the composition framebuffer. After repeated failures 5DO detaches the GL surface and uses the CPU presenter; update the driver or select Direct3D 11/software in Settings. |
 | Black window but audio runs | Try `--gl-backend software`; if the CPU frame is visible, the GL path is at fault. Run the GPU probe parity capture. |
 | Black screenshots | Fixed in the 2026-10-28 pass (float uniform casts). Update; if it persists, use `--gl-backend software` and compare. |
 | Flicker/tearing | Try `Vsync` in Settings; the Avalonia compositor may pace independently. Use `--gl-probe-vsync` to check the platform result. |
@@ -181,6 +182,7 @@ See [`Audio.md`](Audio.md) for metric definitions and the tap workflow.
 | Duplicate entries | A CUE and its BIN may both be scanned; use the CUE or remove the duplicate. |
 | Wrong title | Check `info <disc> --json`; the database is keyed by the two-sector MD5. |
 | Library slow | Large folders/CHDs are scanned on a background task; narrow the folders or use list mode. |
+| `Not a valid Win32 FileTime` | A removable or network volume reported a timestamp outside the `DateTime` range. Fixed in Unreleased: the disc stays listed and is cached with an unknown stamp. |
 
 ---
 

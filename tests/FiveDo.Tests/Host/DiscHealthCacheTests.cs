@@ -72,6 +72,29 @@ public sealed class DiscHealthCacheTests
     }
 
     [Fact]
+    public void Find_ToleratesAnInvalidFileTimestamp()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var folder = new TempFolder();
+        var disc = Path.Combine(folder.Path, "game.iso");
+        File.WriteAllBytes(disc, new byte[2048]);
+        Assert.True(TestFileTimes.TrySetInvalidLastWriteTime(disc));
+
+        var info = new FileInfo(disc);
+        DiscHealthRecord record = DiscHealthRecord.Create(disc, info, DiscHealthStatus.NoDat);
+        Assert.Equal(FileStamp.UnknownTicks, record.LastWriteTimeUtcTicks);
+
+        var cache = new DiscHealthCache();
+        cache.Set(record);
+
+        Assert.Same(record, cache.Find(disc));
+    }
+
+    [Fact]
     public void Apply_PopulatesBadgeFields()
     {
         using var folder = new TempFolder();

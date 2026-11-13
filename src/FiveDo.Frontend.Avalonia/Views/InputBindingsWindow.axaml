@@ -1,52 +1,72 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="using:FiveDo.Frontend.Avalonia.Controls"
         x:Class="FiveDo.Frontend.Avalonia.Views.InputBindingsWindow"
         Title="Input Bindings"
-        Width="560" Height="620"
+        Width="840" Height="640"
         WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="12">
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*">
-            <TextBlock Grid.Column="0" Text="Player" VerticalAlignment="Center" Margin="0,0,6,0"
-                       ToolTip.Tip="Choose which player's bindings to edit." />
-            <ComboBox x:Name="PlayerCombo" Grid.Column="1" Width="120" SelectionChanged="OnPlayerChanged"
-                      ToolTip.Tip="Players 1-6. Each player has an independent keyboard and gamepad profile." />
-            <TextBlock Grid.Column="2" Margin="12,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center"
-                       Text="Keyboard: select Rebind, then press the new key. Gamepad: choose a 3DO button for each physical control."
-                       ToolTip.Tip="Keyboard rows capture the next key. Gamepad rows map a physical control to a 3DO button." />
-        </Grid>
+    <Grid ColumnDefinitions="*,236" Margin="12">
+        <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,12,0">
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*">
+                <TextBlock Grid.Column="0" Text="Player" VerticalAlignment="Center" Margin="0,0,6,0"
+                           ToolTip.Tip="Choose which player's bindings to edit." />
+                <ComboBox x:Name="PlayerCombo" Grid.Column="1" Width="120" SelectionChanged="OnPlayerChanged"
+                          ToolTip.Tip="Players 1-6. Each player has an independent keyboard and gamepad profile." />
+                <TextBlock Grid.Column="2" Margin="12,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center"
+                           Text="Keyboard: select Rebind, then press the new key. Gamepad: choose a 3DO button for each physical control."
+                           ToolTip.Tip="Keyboard rows capture the next key. Gamepad rows map a physical control to a 3DO button." />
+            </Grid>
 
-        <TabControl Grid.Row="1" Margin="0,8"
-                    ToolTip.Tip="Keyboard and gamepad binding pages.">
-            <TabItem Header="Keyboard" ToolTip.Tip="Rebind each 3DO button to a keyboard key.">
-                <ScrollViewer>
-                    <StackPanel x:Name="RowsPanel" Spacing="4" Margin="4" />
-                </ScrollViewer>
-            </TabItem>
-            <TabItem Header="Gamepad" ToolTip.Tip="Map physical gamepad controls to 3DO buttons.">
-                <Grid RowDefinitions="Auto,*" Margin="4">
-                    <TextBlock Grid.Row="0" TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,6"
-                               Text="Left-stick directions fall back to the D-pad when no stick binding is set; analog triggers fall back to the matching shoulder."
-                               ToolTip.Tip="Unmapped stick directions and triggers use sensible fallbacks." />
-                    <ScrollViewer Grid.Row="1">
-                        <StackPanel x:Name="GamepadRowsPanel" Spacing="4" />
+            <TabControl Grid.Row="1" Margin="0,8"
+                        ToolTip.Tip="Keyboard and gamepad binding pages.">
+                <TabItem Header="Keyboard" ToolTip.Tip="Rebind each 3DO button to a keyboard key.">
+                    <ScrollViewer>
+                        <StackPanel x:Name="RowsPanel" Spacing="4" Margin="4" />
                     </ScrollViewer>
-                </Grid>
-            </TabItem>
-        </TabControl>
+                </TabItem>
+                <TabItem Header="Gamepad" ToolTip.Tip="Map physical gamepad controls to 3DO buttons.">
+                    <Grid RowDefinitions="Auto,*" Margin="4">
+                        <TextBlock Grid.Row="0" TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,6"
+                                   Text="Left-stick directions fall back to the D-pad when no stick binding is set; analog triggers fall back to the matching shoulder."
+                                   ToolTip.Tip="Unmapped stick directions and triggers use sensible fallbacks." />
+                        <ScrollViewer Grid.Row="1">
+                            <StackPanel x:Name="GamepadRowsPanel" Spacing="4" />
+                        </ScrollViewer>
+                    </Grid>
+                </TabItem>
+            </TabControl>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-            <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center"
-                       TextWrapping="Wrap" Foreground="#FFB060"
-                       ToolTip.Tip="Binding status and any key or gamepad conflicts." />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                <Button Content="Reset Defaults" Click="OnReset"
-                        ToolTip.Tip="Restore the default keyboard and gamepad bindings for this player." />
-                <Button Content="OK" Click="OnOk" IsDefault="True"
-                        ToolTip.Tip="Save these bindings and close the dialog." />
-                <Button Content="Cancel" Click="OnCancel" IsCancel="True"
-                        ToolTip.Tip="Discard changes and close the dialog." />
-            </StackPanel>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                <TextBlock x:Name="StatusText" Grid.Column="0" VerticalAlignment="Center"
+                           TextWrapping="Wrap" Foreground="#FFB060"
+                           ToolTip.Tip="Binding status and any key or gamepad conflicts." />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <Button Content="Reset Defaults" Click="OnReset"
+                            ToolTip.Tip="Restore the default keyboard and gamepad bindings for this player." />
+                    <Button Content="OK" Click="OnOk" IsDefault="True"
+                            ToolTip.Tip="Save these bindings and close the dialog." />
+                    <Button Content="Cancel" Click="OnCancel" IsCancel="True"
+                            ToolTip.Tip="Discard changes and close the dialog." />
+                </StackPanel>
+            </Grid>
         </Grid>
+
+        <Border Grid.Column="1" BorderBrush="#33708090" BorderThickness="1" CornerRadius="6"
+                Padding="10" VerticalAlignment="Top"
+                ToolTip.Tip="Live 3DO pad preview. Blue buttons are mapped, amber is the selected row, and green is pressed.">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Controller preview" FontWeight="SemiBold"
+                           ToolTip.Tip="Highlights the 3DO button for the selected binding row and the controls currently held." />
+                <ctrl:ControllerPadPreview x:Name="PadPreview" Height="112" IsHitTestVisible="False"
+                                           ToolTip.Tip="Mapped buttons are outlined in blue; the selected row is amber; a held key or gamepad control turns its button green." />
+                <TextBlock x:Name="PreviewText" TextWrapping="Wrap" MinHeight="54" Opacity="0.85"
+                           Text="Point at a binding row or press a mapped key to light the pad."
+                           ToolTip.Tip="Shows the selected button and the keyboard and gamepad controls mapped to it." />
+                <TextBlock Text="Blue: mapped   Amber: selected   Green: pressed"
+                           TextWrapping="Wrap" FontSize="11" Opacity="0.65"
+                           ToolTip.Tip="Preview color legend." />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

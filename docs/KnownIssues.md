@@ -255,6 +255,12 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   zero-allocation after warm-up.
 - Linux/macOS OpenGL GPU presentation is not fully validated; the native runtime smoke
   hides the GL surface and validates startup/XAML/settings instead.
+- Display-sleep inhibition is implemented for Windows. Linux and macOS compositors may
+  still blank or dim the display during play; those platforms remain best-effort.
+- Auto-crop follows 4DO's detector: it can remove up to 25% per edge, treats the top five
+  bits of each color as the content test, and waits one second before cropping more. A
+  manual or per-game crop disables it. It changes presentation and native screenshots
+  only; frame hashes, audio, input, and save states are untouched.
 - The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) hosts a native
   Win32 child window inside the Avalonia window on Windows, so the desktop path has no
   CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn

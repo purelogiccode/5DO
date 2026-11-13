@@ -138,6 +138,18 @@ internal sealed class GlProbeWindow : Window, IDisposable
         Finish(false, e.Exception.Message);
     }
 
+    /// <summary>
+    /// Fails the probe when Avalonia's compositor reports that the OpenGL control could
+    /// not allocate its framebuffer. That failure occurs outside
+    /// <see cref="VideoSurface.OpenGlFailed"/>.
+    /// </summary>
+    /// <param name="exception">Compositor failure.</param>
+    internal void FailOpenGl(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        Finish(false, exception.Message);
+    }
+
     private void StartProbe()
     {
         if (_finished)

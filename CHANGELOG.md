@@ -5,6 +5,38 @@ release.
 
 ## [Unreleased]
 
+### Added
+
+- **Controller preview (UX-31).** Input Bindings draws a 3DO pad using Avalonia
+  primitives. Buttons with a keyboard or gamepad binding are outlined, the hovered or
+  focused binding row is highlighted, and a held key or gamepad control lights its
+  mapped button. The layout follows the 4DO JohnnyInput controller picture, so no image
+  assets are bundled. `ControllerPreviewTests` cover button-bit precedence, key and
+  gamepad lookup, the input mapper, and the edited-profile round-trip.
+- **Automatic blank-border crop (VID-18).** Settings > Video > Overscan now has an
+  **Auto-crop borders** option. It ports 4DO's 25% border detector and one-second
+  hysteresis, applies to the presented frame and native screenshots, and is overridden
+  by any manual or per-game crop. `AutoCropTests` cover detection, the threshold, PAL
+  dimensions, the hysteresis window, and the manual override.
+- **Display-sleep inhibition (UX-32).** A running, unpaused game keeps the Windows
+  display and system awake through `SetThreadExecutionState`; pause, stop, fault, and
+  exit release the request. `DisplaySleepPolicyTests` cover the transitions, duplicate
+  states, unsupported platforms, and acquire failures. Linux/macOS remain best-effort
+  because their compositors can still blank the display.
+
+### Fixed
+
+- **Invalid disc-image timestamps.** Library refresh and cover downloads no longer fail
+  with `Not a valid Win32 FileTime` when a removable or network file system reports a
+  FILETIME outside the `DateTime` range. Those images stay in the library, and the
+  metadata cache stores an unknown stamp so they are not reopened and hashed on every
+  scan. The disc-health cache uses the same safe stamp.
+- **OpenGL framebuffer allocation failures.** When Avalonia's compositor cannot create
+  the OpenGL control's framebuffer (`Unable to configure OpenGL FBO`), the UI thread
+  guard now tolerates a transient resize failure, then detaches the GL surface and
+  switches the game view to the CPU presenter instead of reporting an unhandled UI
+  exception every frame.
+
 ## [1.8.0] - 2026-11-11
 
 ### Added

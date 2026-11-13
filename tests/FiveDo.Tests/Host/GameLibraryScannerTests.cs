@@ -294,6 +294,44 @@ public sealed class GameLibraryScannerTests
         Assert.Equal(string.Empty, entry.Error);
     }
 
+    [Fact]
+    public void Scan_ToleratesAnInvalidFileTimestamp()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var directory = new TempDirectory();
+        var isoPath = Path.Combine(directory.Path, "game.iso");
+        WriteIso(isoPath, sectors: 3);
+        var cachePath = Path.Combine(directory.Path, "library-cache.json");
+
+        Assert.True(TestFileTimes.TrySetInvalidLastWriteTime(isoPath));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _ = new FileInfo(isoPath).LastWriteTimeUtc);
+
+        GameLibraryScanResult initial = GameLibraryScanner.BeginScan(
+            [directory.Path],
+            cachePath: cachePath);
+        Assert.Single(initial.Entries);
+        Assert.Single(initial.PendingPaths);
+
+        GameLibraryEntry enriched = Assert.Single(
+            GameLibraryScanner.InspectPending(initial.PendingPaths, cachePath));
+        Assert.Equal(3, enriched.SectorCount);
+        Assert.Equal(string.Empty, enriched.Error);
+
+        // The cached record has no timestamp, so unchanged files still reuse it instead
+        // of reopening and hashing the image on every scan.
+        GameLibraryScanResult cached = GameLibraryScanner.BeginScan(
+            [directory.Path],
+            cachePath: cachePath);
+        GameLibraryEntry cachedEntry = Assert.Single(cached.Entries);
+        Assert.False(cachedEntry.Pending);
+        Assert.Equal(3, cachedEntry.SectorCount);
+        Assert.Empty(cached.PendingPaths);
+    }
+
     private static void WriteIso(string path, int sectors)
     {
         var data = new byte[2048 * sectors];

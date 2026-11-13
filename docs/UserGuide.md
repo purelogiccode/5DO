@@ -153,7 +153,9 @@ Default player 1 keyboard bindings:
 **Input** opens the binding editor. Keyboard bindings can be captured for all six
 players. The **Gamepad** tab maps physical controls to 3DO buttons; left-stick
 directions fall back to the D-pad, and analog triggers fall back to the matching
-shoulder button when no explicit binding exists.
+shoulder button when no explicit binding exists. The controller preview draws a 3DO
+pad beside the tabs: blue outlines mark mapped buttons, amber marks the selected row,
+and a held key or gamepad control lights its mapped button green.
 
 Supported gamepad backends:
 
@@ -411,15 +413,23 @@ emulation. **Output resolution** selects the final presentation size: match the 
 native 320x240, 2x/3x/4x, 720p, 1080p, 1440p, or 4K. This is output upscaling, not
 internal CEL rendering. **Overscan crop L/T/R/B** (Settings > Video) hides 0-32 pixels
 from each edge for TVs and captures that show the outer frame; native screenshots use
-the same crop, and per-game profiles can store their own crop. **Void border** draws a
+the same crop, and per-game profiles can store their own crop. **Auto-crop borders**
+detects blank edges on the presented frame (up to 25% per edge, matching 4DO), waits
+one second before accepting a larger crop, and is disabled by any manual or per-game
+crop. **Void border** draws a
 0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image;
 the adjacent **pattern** selector draws solid, checkerboard, grid, or scanline fills in
 the same color. Patterns are shell-composited, so they sit behind OpenGL, GLES, Vulkan,
 and Direct3D 11 output identically.
-Both options change presentation only, not emulation, input, audio, or save states. The renderer falls back
+Crop, border, and auto-crop options change presentation only, not emulation, input,
+audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report
 the reason.
+
+While a game is running and unpaused, 5DO keeps the display and system awake on
+Windows. Pausing, stopping, a core fault, or exiting releases the request. Linux and
+macOS compositors may still blank the display during play; that path is best-effort.
 
 **Latency** (Settings > Video) adds run-ahead, frame delay, and adaptive sync controls.
 **Run-ahead** (0-2 frames, default 0) saves and restores the machine each displayed frame so

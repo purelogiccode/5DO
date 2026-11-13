@@ -154,6 +154,7 @@ public sealed class AppSettingsStoreTests
             FrameDelayFrames = 3,
             Vrr = true,
             AudioSyncMilliseconds = -40,
+            AutoCrop = true,
         };
 
         AppSettingsStore.Save(settings, path);
@@ -174,6 +175,7 @@ public sealed class AppSettingsStoreTests
         Assert.Equal(3, loaded.FrameDelayFrames);
         Assert.True(loaded.Vrr);
         Assert.Equal(-40, loaded.AudioSyncMilliseconds);
+        Assert.True(loaded.AutoCrop);
     }
 
     [Fact]

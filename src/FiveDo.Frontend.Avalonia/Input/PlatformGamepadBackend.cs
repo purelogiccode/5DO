@@ -12,6 +12,7 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
 {
     private readonly IRawGamepadSource _source;
     private readonly ControllerState[] _states = new ControllerState[PbusEncoder.MaxControllers];
+    private readonly GamepadState[] _rawStates = new GamepadState[PbusEncoder.MaxControllers];
     private InputProfile _profile;
     private int _count;
     private bool _menuChordHeld;
@@ -84,10 +85,13 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
             if (player >= available || player >= profile.Players.Length)
             {
                 _states[player] = ControllerState.Empty;
+                _rawStates[player] = GamepadState.Empty;
                 continue;
             }
 
-            _states[player] = GamepadMapper.Map(profile.Players[player], _source.Read(player));
+            GamepadState raw = _source.Read(player);
+            _rawStates[player] = raw;
+            _states[player] = GamepadMapper.Map(profile.Players[player], raw);
         }
 
         _count = available;
@@ -106,6 +110,20 @@ public sealed class PlatformGamepadBackend : IGamepadBackend, IDisposable
     public ControllerState GetState(int player)
     {
         return player >= 0 && player < _states.Length ? _states[player] : ControllerState.Empty;
+    }
+
+    /// <summary>
+    /// Gets the raw platform sample from the last <see cref="Poll"/> for a controller.
+    /// </summary>
+    /// <remarks>
+    /// Intended for UI previews that apply their own (possibly unsaved) bindings. The
+    /// value is a best-effort snapshot; it is not synchronized with the polling thread.
+    /// </remarks>
+    /// <param name="player">Zero-based controller index.</param>
+    /// <returns>The last raw sample, or <see cref="GamepadState.Empty"/>.</returns>
+    public GamepadState GetRawState(int player)
+    {
+        return player >= 0 && player < _rawStates.Length ? _rawStates[player] : GamepadState.Empty;
     }
 
     /// <inheritdoc />

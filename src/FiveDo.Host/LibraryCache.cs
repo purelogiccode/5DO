@@ -57,7 +57,10 @@ internal sealed class CachedLibraryEntry
         {
             Path = entry.Path,
             Length = info.Length,
-            LastWriteTimeUtcTicks = info.LastWriteTimeUtc.Ticks,
+
+            // Some removable and network file systems report a FILETIME that cannot
+            // become a DateTime. Such discs stay in the library with an unknown stamp.
+            LastWriteTimeUtcTicks = FileStamp.GetLastWriteTimeUtcTicks(info),
             Format = entry.Format,
             SectorCount = entry.SectorCount,
             GameId = entry.GameId,
@@ -70,8 +73,7 @@ internal sealed class CachedLibraryEntry
     /// <returns><see langword="true"/> when the size and timestamp match.</returns>
     public bool Matches(FileInfo info)
     {
-        return info.Length == Length
-               && info.LastWriteTimeUtc.Ticks == LastWriteTimeUtcTicks;
+        return FileStamp.Matches(info, Length, LastWriteTimeUtcTicks);
     }
 }
 

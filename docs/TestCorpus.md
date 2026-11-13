@@ -3550,3 +3550,42 @@ at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published che
 verify. Local PE/ELF inspection confirmed the x64/arm64 apphosts for the four
 Windows/Linux bundles, and the published assets (including both macOS DMGs) were copied
 into `src/FiveDo.Frontend.Avalonia/bin/Release`.
+
+### 1.1bu UX-31 controller preview (2026-11-13)
+
+**Controller preview.** Input Bindings now shows a vector 3DO pad drawn by
+`ControllerPadPreview` from the 4DO JohnnyInput layout (219x98 reference units):
+mapped buttons are outlined, the hovered or focused binding row is amber, and a held
+key or gamepad control lights the mapped button green. Keyboard presses are matched
+through the current player profile; gamepad samples come from
+`PlatformGamepadBackend.GetRawState` and are mapped with the dialog's edited copy, so
+an unsaved remap lights the new button. The dialog keeps the existing editor and
+round-trips the profile through `InputProfileStore`.
+
+`ControllerPreviewTests` (9 tests) cover state precedence, per-button bit isolation,
+None/combined rejection, keyboard and gamepad lookup, the `KeyboardInputMapper` press
+path, and the edited-profile save/load round-trip. Full suite **2,169/2,169**; build,
+format, and InspectCode are clean.
+
+### 1.1bv VID-18 auto-crop and UX-32 display sleep (2026-11-13)
+
+**Auto-crop borders (VID-18).** `AutoCropDetector` ports 4DO's `frame.cpp`
+`Get_Frame_Bitmap` comparison: content means any color component's top five bits are at
+least 15/31, a blank frame crops at 25% per edge, and `AutoCropTracker` ports
+`CropHelper`'s one-second hysteresis (showing more pixels is immediate; cropping more
+must stay stable). Settings > Video > Overscan adds **Auto-crop borders**.
+`AppSettings.TryResolveManualCrop` gives a per-game profile precedence over the global
+crop, and an explicit zero per-game crop opts out of auto-crop. The crop runs only in
+`MainWindow.ApplyOverscan` and native screenshot assembly, so frame hashes, audio,
+input, and save states are unchanged. `AutoCropTests` (13 tests) cover the content
+border, the blank-frame limit, the 0x77/0x78 threshold, PAL dimensions, source-frame
+immutability, all hysteresis transitions, and the manual override.
+
+**Display sleep (UX-32).** `DisplaySleepPolicy` acquires on run, releases on pause,
+stop, fault, and exit, and retries only on a state transition. `DisplaySleepBackend`
+uses `SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED)`
+on Windows; Linux/macOS return the null backend and are documented as best-effort.
+`DisplaySleepPolicyTests` (7 tests) cover acquire/release, duplicate states, pause
+before run, acquire failure, release, null arguments, and the platform factory.
+
+Full suite **2,189/2,189**; build, format, and InspectCode are clean.

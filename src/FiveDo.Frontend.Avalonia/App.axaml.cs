@@ -5,6 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.OpenGL;
 using Avalonia.Threading;
 using FiveDo.Core;
 using FiveDo.Frontend.Avalonia.ViewModels;
@@ -19,6 +20,8 @@ namespace FiveDo.Frontend.Avalonia;
 public class App : Application
 {
     private InstanceLock? _instanceLock;
+    private int _openGlSurfaceFailures;
+    private DateTime _lastOpenGlSurfaceFailureUtc;
 
     /// <summary>Loads the application XAML resources.</summary>
     public override void Initialize()
@@ -42,6 +45,16 @@ public class App : Application
     {
         Dispatcher.UIThread.UnhandledException += (_, eventArgs) =>
         {
+            // Avalonia's OpenGlControlBase throws from the compositor when the driver
+            // cannot allocate the control's framebuffer. That happens outside the
+            // surface's OnOpenGlRender callback, so it cannot fall back on its own.
+            // Switch to the CPU presenter instead of failing the compositor every frame.
+            if (TryHandleOpenGlSurfaceFailure(eventArgs.Exception))
+            {
+                eventArgs.Handled = true;
+                return;
+            }
+
             // Exceptions raised by async void event handlers surface on the dispatcher.
             // Log them and keep the process alive instead of letting it terminate.
             Serilog.Log.Error(eventArgs.Exception, "Unhandled UI thread exception.");
@@ -104,6 +117,55 @@ public class App : Application
         {
             Serilog.Log.Fatal(exception, "Desktop shell initialization failed.");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Handles the framebuffer failure that Avalonia's <c>OpenGlControlBase</c> raises
+    /// from the compositor. The failure happens outside the video surface's render
+    /// callback, so the surface cannot fall back on its own. A few transient failures
+    /// are tolerated (window resize and driver reallocation); a persistent failure
+    /// detaches the GL control and switches the game view to the CPU presenter.
+    /// </summary>
+    /// <param name="exception">Exception raised by the compositor.</param>
+    /// <returns><see langword="true"/> when the exception was handled.</returns>
+    private bool TryHandleOpenGlSurfaceFailure(Exception exception)
+    {
+        if (exception is not OpenGlException openGlException
+            || !openGlException.Message.Contains("OpenGL FBO", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        DateTime now = DateTime.UtcNow;
+        if ((now - _lastOpenGlSurfaceFailureUtc).TotalSeconds >= 10)
+        {
+            _openGlSurfaceFailures = 0;
+        }
+
+        _lastOpenGlSurfaceFailureUtc = now;
+        _openGlSurfaceFailures++;
+        Serilog.Log.Debug(
+            openGlException,
+            "The Avalonia OpenGL surface could not allocate its framebuffer (attempt {Attempt}).",
+            _openGlSurfaceFailures);
+
+        if (_openGlSurfaceFailures < 3)
+        {
+            // Let the compositor retry: a resize can fail once and recover.
+            return true;
+        }
+
+        switch (ApplicationLifetime)
+        {
+            case IClassicDesktopStyleApplicationLifetime { MainWindow: MainWindow main }:
+                main.DisableOpenGlPresenter(openGlException);
+                return true;
+            case IClassicDesktopStyleApplicationLifetime { MainWindow: GlProbeWindow probe }:
+                probe.FailOpenGl(openGlException);
+                return true;
+            default:
+                return false;
         }
     }
 

@@ -91,6 +91,9 @@ public partial class MainWindow : Window, IDisposable
     private string? _gifPath;
     private FrameSkipMode _gifPreviousFrameSkip;
     private VdlFrame? _overscanFrame;
+    private readonly AutoCropTracker _autoCrop = new();
+    private CropInsets _manualOverscan;
+    private bool _manualOverscanSet;
     private WavAudioSink? _audioRecorder;
     private string? _audioRecordingPath;
     private float _meterPeak;
@@ -146,6 +149,7 @@ public partial class MainWindow : Window, IDisposable
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
     private bool _runAheadAutoDisabledShown;
     private readonly FocusPausePolicy _focusPause = new();
+    private readonly DisplaySleepPolicy _displaySleep = new(DisplaySleepBackend.Create());
 
     /// <summary>
     /// Creates the main emulator window and wires drag-and-drop, activation, and
@@ -280,6 +284,7 @@ public partial class MainWindow : Window, IDisposable
             // window before the main loop starts can shut down the dispatcher.
             _ = new SettingsWindow(_settings, _gameId, _gameName);
             _ = new CheatsWindow();
+            _ = new InputBindingsWindow(_settings.Input);
             _ = new DiscBrowserWindow();
             _ = new DiscInfoWindow();
             _ = new BiosNvramManagerWindow();
@@ -1422,6 +1427,8 @@ public partial class MainWindow : Window, IDisposable
 
             _gameId = gameId;
             _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            RefreshOverscanSettings();
+            _autoCrop.Reset();
             ApplyFieldHandling(effective.Deinterlace);
             _libraryState.RecordLaunch(gameId, path);
             LibraryStateStore.Save(_libraryState);
@@ -1633,6 +1640,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void SetPlayState(bool running)
     {
+        _displaySleep.SetRunning(running);
         PlayPauseText.Text = running ? "Pause" : "Start";
         PlayPauseMenuItem.Header = running ? "Pause" : "Start";
         HeaderPlayPauseText.Text = running ? "Pause" : "Start";
@@ -2563,16 +2571,15 @@ public partial class MainWindow : Window, IDisposable
         _runner!.Invoke(() =>
         {
             VdlFrame source = _machine.Frame;
-            CropInsets crop = _settings.ResolveOverscan();
-            if (!crop.IsEmpty && crop.Fits(source.SourceWidth, source.SourceHeight))
+            if (TryResolvePresentationCrop(
+                    source,
+                    out var left,
+                    out var top,
+                    out var width,
+                    out var height))
             {
                 var cropped = new VdlFrame();
-                cropped.CopyCroppedFrom(
-                    source,
-                    crop.Left,
-                    crop.Top,
-                    source.SourceWidth - crop.Horizontal,
-                    source.SourceHeight - crop.Vertical);
+                cropped.CopyCroppedFrom(source, left, top, width, height);
                 source = cropped;
             }
 
@@ -4445,7 +4452,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ShowInputBindingsAsync()
     {
-        var window = new InputBindingsWindow(_settings.Input);
+        var window = new InputBindingsWindow(_settings.Input, ReadGamepadPreview);
         var profile = await window.ShowDialog<InputProfile?>(this).ConfigureAwait(true);
         if (profile is null)
         {
@@ -4471,6 +4478,24 @@ public partial class MainWindow : Window, IDisposable
             "Input bindings saved ({Conflicts} conflict(s)); {Gamepads} gamepad(s).",
             conflicts.Count,
             _gamepad?.ConnectedControllers ?? 0);
+    }
+
+    private GamepadState ReadGamepadPreview()
+    {
+        // The emulation thread polls the shared backend while a game is running. Outside
+        // a session (or before the first frame) the UI owns the poll so the binding
+        // editor still shows live controller state.
+        if (_gamepad is null)
+        {
+            return GamepadState.Empty;
+        }
+
+        if (!_running)
+        {
+            _gamepad.Poll();
+        }
+
+        return _gamepad.GetRawState(0);
     }
 
     private void ApplyAudioSettings()
@@ -5119,6 +5144,39 @@ public partial class MainWindow : Window, IDisposable
         StatusText.Text = $"Direct3D 11 unavailable ({exception.Message}); trying OpenGL.";
     }
 
+    /// <summary>
+    /// Stops using Avalonia's OpenGL surface after the compositor reports that it cannot
+    /// allocate the control's framebuffer, and falls back to the CPU presenter.
+    /// </summary>
+    /// <param name="exception">Compositor failure to report.</param>
+    internal void DisableOpenGlPresenter(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (Video.Parent is Panel parent)
+        {
+            // Removing the control tears down its GL context and stops the compositor
+            // from retrying the framebuffer allocation that keeps failing. Detaching is
+            // also what makes this safe to call when the control was only hidden (for
+            // example after the software or Vulkan renderer was selected).
+            parent.Children.Remove(Video);
+            if (_rendererKind == VideoRendererKind.OpenGl)
+            {
+                // The fallback is handled, so it must not create a bug report on every
+                // affected driver; the log still records the driver error.
+                _logger.ForCategory(LogCategory.Video).WithoutBugReport().Warning(
+                    exception,
+                    "The OpenGL surface could not allocate a framebuffer; switching to the CPU presenter.");
+            }
+        }
+
+        _openGlDisabled = true;
+        Video.IsVisible = false;
+        if (_rendererKind == VideoRendererKind.OpenGl)
+        {
+            StartCpuFallback(exception);
+        }
+    }
+
     private void OnOpenGlFailed(object? sender, OpenGlFailedEventArgs e)
     {
         if (_rendererKind != VideoRendererKind.OpenGl || _openGlDisabled)
@@ -5689,21 +5747,80 @@ public partial class MainWindow : Window, IDisposable
 
     private VdlFrame ApplyOverscan(VdlFrame frame)
     {
-        CropInsets crop = _settings.ResolveOverscan();
-        if (crop.IsEmpty || !crop.Fits(frame.SourceWidth, frame.SourceHeight))
+        if (!_manualOverscanSet && _settings.AutoCrop)
+        {
+            _autoCrop.Consider(AutoCropDetector.Detect(frame), Environment.TickCount64);
+        }
+
+        if (!TryResolvePresentationCrop(
+                frame,
+                out var left,
+                out var top,
+                out var width,
+                out var height))
         {
             return frame;
         }
 
-        int width = frame.SourceWidth - crop.Horizontal;
-        int height = frame.SourceHeight - crop.Vertical;
         _overscanFrame ??= new VdlFrame();
-        _overscanFrame.CopyCroppedFrom(frame, crop.Left, crop.Top, width, height);
+        _overscanFrame.CopyCroppedFrom(frame, left, top, width, height);
         return _overscanFrame;
+    }
+
+    private bool TryResolvePresentationCrop(
+        VdlFrame frame,
+        out int left,
+        out int top,
+        out int width,
+        out int height)
+    {
+        left = 0;
+        top = 0;
+        width = frame.SourceWidth;
+        height = frame.SourceHeight;
+
+        if (_manualOverscanSet)
+        {
+            if (_manualOverscan.IsEmpty || !_manualOverscan.Fits(width, height))
+            {
+                return false;
+            }
+
+            left = _manualOverscan.Left;
+            top = _manualOverscan.Top;
+            width -= _manualOverscan.Horizontal;
+            height -= _manualOverscan.Vertical;
+            return true;
+        }
+
+        if (!_settings.AutoCrop)
+        {
+            return false;
+        }
+
+        AutoCropInsets crop = _autoCrop.Current;
+        if (crop.IsEmpty || !crop.Fits(width, height))
+        {
+            return false;
+        }
+
+        left = crop.Left;
+        top = crop.Top;
+        width -= crop.Horizontal;
+        height -= crop.Vertical;
+        return true;
+    }
+
+    private void RefreshOverscanSettings()
+    {
+        // A per-game profile (including an explicit zero crop) is the manual override.
+        _manualOverscanSet = _settings.TryResolveManualCrop(_gameId, out _manualOverscan);
     }
 
     private void ApplyVideoPresentationSettings()
     {
+        RefreshOverscanSettings();
+        _autoCrop.Reset();
         int border = Math.Clamp(_settings.VideoBorderPixels, 0, 64);
         Color color;
         try
@@ -5971,6 +6088,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _shuttingDown = true;
+        _displaySleep.Release();
         StopDisplayRefresh();
         _libraryScanCts?.Cancel();
         _playtime.Stop();
