@@ -3806,7 +3806,34 @@ quick menu, or losing window focus disarms the quit step. `EscapeQuitPolicyTests
 tests) cover the sequence, the already-paused case, disarming, and repeated presses while
 running.
 
-**Build and gates.** Full suite **2,259/2,259** passes in Debug; build and
-`dotnet format --verify-no-changes` are clean. `jb inspectcode --severity=WARNING` reports
-only the three known analysis-only `GameLibraryWindow` symbol errors; the same symbols
-resolve in `dotnet build` and the test suite.
+### 1.1cd v1.9.1 localization and Escape release validation (2026-11-14)
+
+**Release contents.** v1.9.1 ships the nine-catalog localization update, the reversible
+locale-switching fix, the two-step Escape pause/quit shortcut, and the clean
+warning-severity InspectCode gate. The version is `1.9.1` in `FiveDoVersion` and
+`Directory.Build.props`; `CHANGELOG.md`, `WhatsNew.md`, `ReleaseNotes-1.9.1.md`, the
+MkDocs navigation, README, installation/status pages, and curated wiki pages were
+updated.
+
+**Local gates.** Full suite **2,259/2,259** passes in Debug and Release. Locked restore,
+build, `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING`
+report no warnings or errors. The Windows x64 framework-dependent bundle was built
+locally, reports `5DO 1.9.1`, passes `selftest`, contains no runtime/PDB/XML files, and
+writes `FRONTEND SMOKE OK 1.9.1` with `locale=fr`/`firstMenuHeader=Fichier`. The Japanese
+smoke run writes `firstMenuHeader=ファイル`.
+
+**CI.** Run <https://github.com/purelogiccode/5DO/actions/runs/43565870407> passed all
+required jobs: Windows/Linux/macOS build-test, the RID-agnostic lock check, format,
+benchmark gates, trimmed CLI/frontend, both NativeAOT apphosts, all six bundle jobs, and
+the aggregate gate. The Windows build-test job was rerun once after an ILLink native
+crash in the trimmed publish; the rerun passed. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43565870395> passed build, Pages
+deploy, and wiki publishing.
+
+**Release.** Tag `v1.9.1`; release run
+<https://github.com/purelogiccode/5DO/actions/runs/43566963957> published
+`5do-1.9.1-win-x64.zip`, `5do-1.9.1-win-arm64.zip`,
+`5do-1.9.1-linux-x64.tar.gz`, `5do-1.9.1-linux-arm64.tar.gz`,
+`5do-1.9.1-osx-x64.dmg`, `5do-1.9.1-osx-arm64.dmg`, and `SHA256SUMS.txt` at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>. All six checksums verify;
+the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.

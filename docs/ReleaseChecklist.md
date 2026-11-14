@@ -370,34 +370,42 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ## 1.9.1 localization and quality-of-life gate
 
-- [ ] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.9.1`.
-- [ ] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.9.1.md`,
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.9.1`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.9.1.md`,
       `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`, the
       MkDocs navigation, and the curated wiki pages.
-- [ ] Add Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and
-      Simplified Chinese catalogs; verify every translated catalog covers every
-      non-tooltip key and the core shell tooltips.
-- [ ] Fix the language-switch regression so selecting English after German restores the
+- [x] Add Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and
+      Simplified Chinese catalogs; every translated catalog covers every non-tooltip
+      key and the core shell tooltips (591 keys each).
+- [x] Fix the language-switch regression so selecting English after German restores the
       labels in the same session, including when `--locale` was used for the launch.
-- [ ] Implement the two-step Escape shortcut: first press pauses, second press closes
+- [x] Implement the two-step Escape shortcut: first press pauses, second press closes
       5DO; fullscreen, quick-menu, library, text entry, resume/stop, and focus changes
-      keep priority.
-- [ ] Full suite passes in Debug and Release; `dotnet restore --locked-mode`,
-      `dotnet build`, `dotnet format --verify-no-changes`, and
-      `jb inspectcode --severity=WARNING` are clean.
-- [ ] Build all six framework-dependent bundles from the `v1.9.1` tag, verify contents
+      keep priority. `EscapeQuitPolicyTests` cover the sequence.
+- [x] Full suite **2,259/2,259** passes in Debug and Release;
+      `dotnet restore --locked-mode`, `dotnet build`,
+      `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING`
+      report no warnings or errors.
+- [x] Build all six framework-dependent bundles from the `v1.9.1` tag, verify contents
       and apphost architectures, and keep local copies in
-      `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test` (`FRONTEND SMOKE OK 1.9.1`)
-      and at least one translated smoke marker.
-- [ ] Create and push tag `v1.9.1`; the release workflow publishes six versioned bundles
+      `src/FiveDo.Frontend.Avalonia/bin/Release`. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/43566963957> built and
+      published them.
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      (`FRONTEND SMOKE OK 1.9.1`) and translated smoke markers
+      (`locale=fr`, `firstMenuHeader=Fichier`; `locale=ja`,
+      `firstMenuHeader=ファイル`).
+- [x] Create and push tag `v1.9.1`; the release workflow published six versioned bundles
       and `SHA256SUMS.txt` at
-      <https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>.
-- [ ] CI passes every required job: Windows/Linux/macOS build-test, the RID-agnostic
-      lock check, format, benchmark gates, trimmed CLI/frontend, both NativeAOT
-      apphosts, the six bundle jobs, and the aggregate gate.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for
-      `WhatsNew.html`, `ReleaseNotes-1.9.1.html`, and `wiki/Release-1.9.1`.
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>. All six checksums
+      verify locally.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43565870407> passed
+      every required job after one Windows ILLink rerun: Windows/Linux/macOS build-test,
+      the RID-agnostic lock check, format, benchmark gates, trimmed CLI/frontend, both
+      NativeAOT apphosts, the six bundle jobs, and the aggregate gate.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for
+      `WhatsNew.html`, `ReleaseNotes-1.9.1.html`, and `wiki/Release-1.9.1`. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/43565870395> passed.
 
 ---
 

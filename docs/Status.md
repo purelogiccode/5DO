@@ -96,6 +96,21 @@ at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published che
 verify. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
 
+**1.9.1 release update (2026-11-14):** **v1.9.1** publishes six framework-dependent
+single-file bundles (macOS as DMG) and `SHA256SUMS.txt` at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43565870407> passed every required
+job: Windows/Linux/macOS build-test, the RID-agnostic lock check, format, benchmark
+gates, trimmed CLI/frontend publishes, both NativeAOT apphosts, all six bundle jobs, and
+the aggregate gate. The Windows build-test job was rerun once after an ILLink native
+crash during the trimmed publish; the rerun passed. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43566963957> built and published all
+six assets; every checksum verifies, and the assets are copied into
+`src/FiveDo.Frontend.Avalonia/bin/Release`. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43565870395> deployed Pages and the
+wiki. The suite is **2,259 tests**; build, format, and InspectCode are clean. See
+[`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.9.1.md`](ReleaseNotes-1.9.1.md).
+
 **1.9.0 release update (2026-11-14):** **v1.9.0** publishes six framework-dependent
 single-file bundles (macOS as DMG) and `SHA256SUMS.txt` at
 <https://github.com/purelogiccode/5DO/releases/tag/v1.9.0>. CI run
