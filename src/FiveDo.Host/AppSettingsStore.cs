@@ -164,6 +164,11 @@ public static class AppSettingsStore
             ApplyLegacyRendererPreference(json, settings);
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.Language = string.IsNullOrWhiteSpace(settings.Language)
+                ? "system"
+                : settings.Language.Trim();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
             settings.Input.Normalize();
             // JSON can deserialize null despite the non-nullable annotation.

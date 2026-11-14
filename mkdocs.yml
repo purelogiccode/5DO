@@ -131,6 +131,8 @@ nav:
   - Reference:
       - CLI reference: CliReference.md
       - Configuration: Configuration.md
+      - Localization: Localization.md
+      - Library metadata: Metadata.md
       - Cover art: CoverArt.md
       - Game database: GameDatabase.md
       - Machine options: MachineOptions.md

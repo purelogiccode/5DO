@@ -3589,3 +3589,83 @@ on Windows; Linux/macOS return the null backend and are documented as best-effor
 before run, acquire failure, release, null arguments, and the platform factory.
 
 Full suite **2,189/2,189**; build, format, and InspectCode are clean.
+
+### 1.1bw UX-09 localization, SYS-21 optical drive, and SYS-23 DirectInput (2026-11-13)
+
+**Localization (UX-09).** The new `FiveDo.Localization` project embeds `en.json` and
+`de.json` and exposes `Localizer` plus a trimming/NativeAOT-safe `JsonDocument` parser.
+The English baseline externalizes every static Avalonia view string (labels, menu items,
+headers, titles, placeholders, and tooltips) and the CLI usage/error strings. The German
+catalog translates the complete visible shell and dialogs, all CLI-facing strings, and
+the core shell tooltips; uncatalogued secondary-dialog tooltips fall back to English.
+`App.Initialize` installs a `Loaded` class handler that walks each realized window and
+sets only unbound presentation properties. Settings gains **General > UI language**
+(`AppSettings.Language`, settings version 8); both executables accept `--locale <code>`
+and `--list-locales`. The translated smoke run on Windows x64 produced:
+
+```text
+FRONTEND SMOKE OK 1.8.0
+locale=de
+firstMenuHeader=Datei
+windowState=Normal
+```
+
+`LocalizationTests` (12 tests) cover catalog loading, German non-tooltip parity and shell
+tooltips, reverse lookup, fallback, regional normalization, malformed catalogs, and
+locale switching. `LocalizationCoverageTests` verifies that every static view string is
+externalized. CLI evidence: `--list-locales` printed `de\tDeutsch` and `en\tEnglish`;
+`--locale de --help` printed `Aufruf: 5do <Befehl> [Optionen]` / `Befehle:`. See
+[Localization.md](Localization.md).
+
+**Physical optical drive (SYS-21).** `PhysicalDiscSource` opens a Windows CD/DVD drive
+through the cooked block interface (read-only, shared) and exposes 2048-byte user-data
+sectors to the existing disc abstraction. `DriveInfo` enumeration drives **File > Boot
+Optical Drive...**, and `DiscImageFactory.Open` accepts `D:`, `D:\`, `\\.\D:`, and
+`/dev/sr0` drive roots for CLI and startup paths. Length falls back from `GetFileSizeEx`
+to `IOCTL_DISK_GET_LENGTH_INFO`, the Linux `BLKGETSIZE64` ioctl, and a bounded read
+probe. Audio tracks are not exposed through `ITrackedDiscSource`; CD-DA still requires a
+BIN/CUE or CHD image. `PhysicalDiscSourceTests` (13 cases) cover drive-root recognition,
+image-path rejection, non-drive open rejection, and drive enumeration. The hardware
+`Done when` line remains open until a physical 3DO disc is available.
+
+**DirectInput/HID gamepads (SYS-23).** `DirectInputGamepadSource` loads `dinput8.dll`
+dynamically, enumerates attached game controllers, opens each with
+`c_dfDIJoystick2`, and polls axes, four POV hats, 128 buttons, and Z/Rz triggers. Trigger
+rest positions are calibrated per device; a centered Z axis splits into left/right
+movement. `WindowsGamepadSource` lists DirectInput pads first, filters Xbox/XInput names
+to prevent duplicates, and appends XInput as the fallback. Re-enumeration every ten
+seconds handles hot-plug and unplug. `--gamepad-probe` prints the active source, count,
+and raw samples. `DirectInputStateTranslatorTests` (5 tests) cover buttons, diagonal POV
+hats, axis normalization, trigger thresholds, and short buffers. The probe reported
+`source=WindowsGamepadSource connected=0` on the validation host (no pad attached), and
+the smoke log reported `Windows gamepad backend ready (DirectInput 0 device(s), XInput
+fallback active)`. The physical DirectInput-only `Done when` line remains open.
+
+Full suite **2,225/2,225**; build, format, and InspectCode are clean.
+
+### 1.1bx UX-28 external metadata and manual media (2026-11-13)
+
+**External metadata provider.** `MetadataCatalogClient` downloads the same
+`library-metadata.json` schema from an HTTP(S) or `file:` URL, validates the version and
+the 8 MB cap, writes a canonical cache through `AtomicFile` to
+`<data>/metadata-cache.json`, and searches by optional game ID and normalized title. A
+failed request falls back to a valid cache and returns a warning. `metadata lookup
+<title> [--url ...] [--cache ...] [--write [path]]` writes the best record through
+`LibraryMetadataStore.Upsert`, so the next library scan uses it.
+
+**Manual media.** `LibraryMetadataRecord.Media` stores absolute user-attached paths.
+`metadata media <disc> --add/--remove/--list` manages them; paths are never copied or
+modified. `--metadata <path>` supports named profiles and tests. The Game Metadata
+window lists attachments and adds, removes, or opens them while preserving the list on
+save.
+
+**Evidence.** A file catalog containing `Test Game` / `TEST0001` returned the record and
+wrote the cache. After deleting the source file, the same lookup returned
+`fromCache: true`, the same record, and the expected warning. `--add`, `--list`, and
+`--remove` round-tripped `manual.pdf` in `library-metadata.json`.
+`MetadataCatalogClientTests` (6 tests) cover file lookup, cache write, offline fallback,
+game-ID preference, unsupported version, attach/detach idempotence, and an unknown game.
+See [Metadata.md](Metadata.md).
+
+Full suite **2,234/2,234**; build and format are clean, and InspectCode reports **0**
+findings at warning severity for the full solution.

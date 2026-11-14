@@ -63,6 +63,9 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliCoverVerifyResult))]
 [JsonSerializable(typeof(CliCoverVerifyFailure))]
 [JsonSerializable(typeof(CliCoverCacheResult))]
+[JsonSerializable(typeof(CliMetadataLookupResult))]
+[JsonSerializable(typeof(CliMetadataRecord))]
+[JsonSerializable(typeof(CliMetadataMediaResult))]
 internal sealed partial class CliJsonContext : JsonSerializerContext;
 
 /// <summary>

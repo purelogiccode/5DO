@@ -34,6 +34,13 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   executable. `FIVEDO_DATA_DIR` overrides the data directory even when `--portable` is
   not used. `--config-profile <name>` selects `<data-directory>/profiles/<name>/` for
   an isolated named configuration; `FIVEDO_PROFILE` is the environment equivalent.
+- `--locale <code>` selects the CLI UI language (`en` or `de`); `--list-locales` prints
+  the embedded catalogs. Machine-readable JSON remains English. See
+  [`Localization.md`](Localization.md).
+- A disc argument may be a host optical-drive root (`D:`, `D:\`, `\\.\D:`, or
+  `/dev/sr0`) instead of an image file. Data discs boot through the cooked block
+  interface; physical CD-DA tracks are not exposed yet. See
+  [`Configuration.md`](Configuration.md) §6.
 - `--json` is accepted by commands that have structured output. It is ignored by
   `trace` and `disasm`, which are text-only.
 - On startup, an interactive CLI run without `--json` checks GitHub's public release feed
@@ -78,6 +85,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `settings options` | Print the validated machine-option registry as Markdown, text, or JSON. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
 | `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
+| `metadata lookup <title>` | Match and cache an external library-metadata catalog. |
+| `metadata media <disc>` | Add, remove, or list manual media attachments. |
 | `audio devices [--json]` | List OpenAL playback devices. |
 | `diagnostics bundle [--out path]` | Write a privacy-scrubbed support zip. Options: `--state`, `--frame`, `--movie`, `--settings`, `--logs`, `--notes`, `--json`. |
 | `state diff <a> <b> [--json]` | Compare two states section by section (presence, version, length, hash, first difference). |
@@ -619,6 +628,25 @@ and updates the same `library-health.json` cache the desktop uses for its known-
 badges. `--cache` redirects the cache for CI or a portable run. `--dat` matches each disc
 against a Redump/No-Intro DAT; when omitted, the configured `DiscDatPath` is used. The
 command exits 1 when any disc has a read error.
+
+### `metadata` commands
+
+```powershell
+5do metadata lookup "Battle Chess" --url https://example.invalid/metadata.json --cache cache.json --json
+5do metadata lookup "Battle Chess" --url file:///C:/metadata.json --write
+5do metadata media "Battle Chess (USA).cue" --add "C:\media\manual.pdf" --json
+5do metadata media "Battle Chess (USA).cue" --list
+5do metadata media --game-id TETU0001 --remove "C:\media\manual.pdf"
+```
+
+`lookup` downloads a library-metadata JSON catalog (the same `Version: 1` schema as
+`library-metadata.json`), caches the canonical document at `<data>/metadata-cache.json`,
+and searches by title and optional `--game-id`. `--write` adds the best record to the
+offline metadata file (or the `--write <path>` target), so the library picks it up on the
+next scan. When the download fails, a valid cache is used and a warning is emitted.
+`file:` URLs work offline and in tests. `media --add/--remove/--list` manages manual
+media attachments on a game's metadata record; paths are stored absolute and the files
+are never copied or modified. See [Metadata.md](Metadata.md).
 
 ### `covers` commands
 

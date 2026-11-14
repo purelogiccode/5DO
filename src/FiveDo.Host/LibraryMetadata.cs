@@ -39,6 +39,15 @@ public sealed class LibraryMetadataRecord
 
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets user-attached media paths (manual, screenshots, music, or video files).
+    /// </summary>
+    /// <remarks>
+    /// Attachments are metadata only. The emulator stores the absolute paths and never
+    /// copies or modifies the referenced files.
+    /// </remarks>
+    public IList<string> Media { get; set; } = [];
 }
 
 /// <summary>Offline library metadata document.</summary>
@@ -101,6 +110,16 @@ public sealed class LibraryMetadataCatalog
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             foreach (LibraryMetadataRecord record in metadata.Records ?? [])
             {
+                // JSON can deserialize null despite the non-nullable annotation.
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                if (record is null)
+                {
+                    continue;
+                }
+
+                // JSON can deserialize a null list despite the non-nullable annotation.
+                // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                record.Media ??= [];
                 catalog.Add(record);
             }
 
@@ -219,6 +238,20 @@ public static class LibraryMetadataStore
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             metadata.Records ??= [];
+            foreach (LibraryMetadataRecord record in metadata.Records)
+            {
+                // JSON can deserialize null despite the non-nullable annotation.
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                if (record is null)
+                {
+                    continue;
+                }
+
+                // JSON can deserialize a null list despite the non-nullable annotation.
+                // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                record.Media ??= [];
+            }
+
             return metadata;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)

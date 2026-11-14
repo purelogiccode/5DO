@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written through a temporary file and an atomic replace by default and carry
-`"SettingsVersion": 7`. An older file is loaded with defaults for new properties and
+`"SettingsVersion": 8`. An older file is loaded with defaults for new properties and
 rewritten at the current version on the next save. If a cloud-sync provider, read-only
 file, or another process denies the atomic replace, the store copies the completed
 temporary file over the destination; if even that write is denied, the application keeps
@@ -83,7 +83,8 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `7` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `8` | Settings schema version. Unversioned files are migrated on load. |
+| `Language` | string | `"system"` | UI locale code (`en`, `de`) or `system`. Presentation-only; `--locale` overrides it for one launch. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -256,7 +257,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 7,
+  "SettingsVersion": 8,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",
@@ -483,7 +484,29 @@ or one hotkey is bound to multiple actions.
 uses the embedded `AppSettings.Input` object. There is no separate `input.json` by
 default.
 
-### 3.1 PBUS devices
+### 3.1 Native gamepad backends
+
+The Windows gamepad source is `WindowsGamepadSource`. It enumerates legacy
+DirectInput 8/HID gamepads first (axes, POV hats, and triggers, with per-device trigger
+rest calibration) and appends XInput slots as the fallback. XInput devices are filtered
+out of the DirectInput list by name, so one physical pad is never exposed twice. The
+first XInput device remains player 1 when no DirectInput pad is attached, so existing
+profiles are unchanged.
+
+- DirectInput uses background, non-exclusive cooperative level; the emulator does not
+  take exclusive ownership of a pad.
+- Devices are re-enumerated every ten seconds. Unplugged devices are released; a newly
+  attached pad appears without restarting the emulator.
+- Button 0-9 follow the common HID layout (South, East, West, North, LB, RB, Select,
+  Start, L3, R3). POV hat 0 maps to the D-pad. Z and Rz are treated as triggers with a
+  calibrated rest position; a centered Z axis is split into left/right movement.
+- `--gamepad-probe` prints the active source, connected count, and raw samples for
+  controller diagnostics.
+
+Linux uses `EvdevGamepadSource`; macOS uses `MacOsGamepadSource` (IOKit HID). The
+eight-player binding profile is identical on every platform.
+
+### 3.2 PBUS devices
 
 `AppSettings.InputDevices` stores one device name per PBUS port. Missing, blank, or
 unknown entries fall back to `Joypad`, so older settings files keep working. The
@@ -658,6 +681,16 @@ written after the run when supplied.
 | `LibraryMetadataPath` | Optional offline metadata overlay; empty means `.../5DO/library-metadata.json`. |
 | `DiscDatPath` | Optional Redump/No-Intro DAT for the library disc-health badge; empty asks on first verification. |
 
+**Physical optical drives.** **File > Boot Optical Drive...** lists attached CD/DVD
+drives that currently contain media. A drive root can also be passed directly:
+`5do run D:` or `5do info D:`. `PhysicalDiscSource` reads the host's cooked block
+interface, so data discs present the same 2048-byte user-data sectors as an image file.
+The drive is opened read-only with shared access and is never written. Audio tracks are
+not exposed through `ITrackedDiscSource` yet, so CD-DA playback from a physical drive is
+not available; use a BIN/CUE or CHD image for CD audio. Windows accepts `D:`, `D:\`, and
+`\\.\D:`; Linux accepts `/dev/sr0` and similar block devices. macOS physical drives are
+not validated.
+
 Library entries are sorted by title then path. Cover art is matched by file name: a
 sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg`, or
 `.webp` (for example `game.png` beside `game.chd`) takes precedence. If no sibling
@@ -667,6 +700,12 @@ name as the title and show `Unknown`; known discs use the embedded 4DO database
 metadata. Covers are decoded once per file at a bounded height on background threads and
 shared by path, so the game list appears before cover art finishes loading and duplicate
 discs in different library folders reuse the same bitmap.
+
+Optional external metadata can be matched with `5do metadata lookup` and written into
+`library-metadata.json`; the downloaded catalog is cached deterministically at
+`<data>/metadata-cache.json` and is used when the source is unavailable. Manual media
+paths live in the same record's `Media` list and are managed with `5do metadata media`.
+See [Metadata.md](Metadata.md).
 
 The optional online catalog is configured under **Settings > Covers**. 5DO downloads a
 small `catalog.json` from `https://assets.purelogiccode.com/5do/v1`,

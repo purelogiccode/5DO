@@ -26,11 +26,13 @@ using FiveDo.Diagnostics.Donations;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Frontend.Avalonia.Controls;
 using FiveDo.Frontend.Avalonia.Input;
+using FiveDo.Frontend.Avalonia.Localization;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Host;
 using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
+using FiveDo.Localization;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Tas;
@@ -152,11 +154,29 @@ public partial class MainWindow : Window, IDisposable
     private readonly DisplaySleepPolicy _displaySleep = new(DisplaySleepBackend.Create());
 
     /// <summary>
+    /// Gets the first top-level menu header after localization. Smoke-test evidence uses
+    /// this to prove the selected locale reached the realized logical tree.
+    /// </summary>
+    internal string? LocalizedFirstMenuHeader =>
+        MainMenu.Items.Count > 0 && MainMenu.Items[0] is MenuItem item
+            ? item.Header as string
+            : null;
+
+    /// <summary>
     /// Creates the main emulator window and wires drag-and-drop, activation, and
     /// configuration-reload handlers.
     /// </summary>
     public MainWindow()
     {
+        // The locale must be selected before XAML is realized so the first loaded pass
+        // sees the same catalog as every later dialog. --locale wins for this launch.
+        _settings = AppSettingsStore.Load();
+        if (Program.LocaleOverride is null
+            && !Localizer.TryUse(_settings.Language))
+        {
+            _ = Localizer.TryUse(Localizer.DefaultLocale);
+        }
+
         InitializeComponent();
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
@@ -166,7 +186,6 @@ public partial class MainWindow : Window, IDisposable
         Video.FramePresented += OnFramePresented;
         Direct3DVideo.FramePresented += OnFramePresented;
         VulkanVideo.FramePresented += OnFramePresented;
-        _settings = AppSettingsStore.Load();
         _coverService = new CoverService(CoverServiceOptions.FromSettings(_settings));
         IconSizeSlider.Value = Math.Clamp(
             _settings.LibraryCardSize,
@@ -840,6 +859,40 @@ public partial class MainWindow : Window, IDisposable
         AsyncEvent.Run(OpenDiscAsync, "opening a disc");
     }
 
+    private void OnOpenOpticalDriveAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(OpenOpticalDriveAsync, "opening an optical drive");
+    }
+
+    private async Task OpenOpticalDriveAsync()
+    {
+        if (!TryLoadConfiguredBios())
+        {
+            StatusText.Text = "A 3DO BIOS is required before a disc can be loaded. Choose a BIOS first.";
+            await OpenBiosAsync("Open 3DO BIOS (required for discs)").ConfigureAwait(true);
+            if (!_biosLoaded)
+            {
+                StatusText.Text = "No BIOS loaded; the disc was not opened.";
+                return;
+            }
+        }
+
+        IReadOnlyList<string> drives = PhysicalDiscSource.GetOpticalDriveNames();
+        if (drives.Count == 0)
+        {
+            StatusText.Text = "No optical drive with media was found.";
+            ShowOsd("No optical drive with media was found.", OsdSeverity.Warning);
+            return;
+        }
+
+        var picker = new OpticalDriveWindow(drives);
+        string? selected = await picker.ShowDialog<string?>(this).ConfigureAwait(true);
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            OpenDiscPath(selected, autoStart: true);
+        }
+    }
+
     private async Task OpenDiscAsync()
     {
         if (!TryLoadConfiguredBios())
@@ -1426,7 +1479,9 @@ public partial class MainWindow : Window, IDisposable
             }
 
             _gameId = gameId;
-            _gameName = record?.Name ?? Path.GetFileNameWithoutExtension(path);
+            var displayName = Path.GetFileNameWithoutExtension(
+                path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            _gameName = record?.Name ?? (displayName.Length > 0 ? displayName : path);
             RefreshOverscanSettings();
             _autoCrop.Reset();
             ApplyFieldHandling(effective.Deinterlace);
@@ -4171,6 +4226,7 @@ public partial class MainWindow : Window, IDisposable
         var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
         var previousAllowUnsignedDiscs = _settings.AllowUnsignedDiscs;
+        var previousLanguage = _settings.Language;
         AppSettings previousEffective = _settings.CreateEffectiveForGame(_gameId);
         var previousInputDevices = string.Join(",", previousEffective.ResolveInputDevices(_gameId));
         var window = new SettingsWindow(_settings, _gameId, _gameName);
@@ -4193,6 +4249,18 @@ public partial class MainWindow : Window, IDisposable
         if (!AppSettingsStore.Save(_settings))
         {
             StatusText.Text = "Settings could not be saved; check the data folder permissions.";
+        }
+
+        if (!string.Equals(previousLanguage, _settings.Language, StringComparison.Ordinal))
+        {
+            if (!Localizer.TryUse(_settings.Language))
+            {
+                _ = Localizer.TryUse(Localizer.DefaultLocale);
+            }
+
+            // Menus, labels, and tooltips are static presentation; dynamic status text
+            // updates from the running game stay in the language they were produced in.
+            UiLocalizer.Apply(this);
         }
 
         var coverSettingsChanged =

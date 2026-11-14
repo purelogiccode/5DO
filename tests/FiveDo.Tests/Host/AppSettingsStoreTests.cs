@@ -24,6 +24,33 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Load_DefaultsAnOlderFileToTheSystemLocale()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        File.WriteAllText(path, """{"SettingsVersion":7,"BiosPath":"old.bin"}""");
+
+        AppSettings settings = AppSettingsStore.Load(path);
+
+        Assert.Equal("system", settings.Language);
+        Assert.Equal(AppSettings.CurrentVersion, settings.SettingsVersion);
+    }
+
+    [Fact]
+    public void SaveAndLoad_RoundTripsTheUiLocale()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings { Language = "de" };
+
+        Assert.True(AppSettingsStore.Save(settings, path));
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.Equal("de", loaded.Language);
+        Assert.Equal(AppSettings.CurrentVersion, loaded.SettingsVersion);
+    }
+
+    [Fact]
     public void Load_BacksUpAMalformedFileAndUsesDefaults()
     {
         using var temp = new TemporaryDirectory();

@@ -6,7 +6,26 @@
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="*,Auto" Margin="12">
-        <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, and path settings.">
+        <TabControl Grid.Row="0" ToolTip.Tip="Video, audio, emulation, path, and language settings.">
+            <TabItem Header="General" ToolTip.Tip="UI language and desktop presentation behavior.">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <Grid ColumnDefinitions="170,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
+                          Margin="8">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Language"
+                                   FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="UI language" VerticalAlignment="Center"
+                                   ToolTip.Tip="Select the language used by menus, dialogs, and status labels." />
+                        <ComboBox x:Name="LanguageCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"
+                                  ToolTip.Tip="Choose the UI language. System follows the host locale when a matching catalog exists." />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                   Text="Changing the language only changes presentation strings. Emulation, input, audio, save states, and frame hashes are unchanged."
+                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   ToolTip.Tip="The selected locale is stored in settings.json and can be overridden for one launch with --locale." />
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Video" ToolTip.Tip="Renderer, output resolution, display refresh, filter, aspect ratio, scaling, overlay, OSD notifications, quick menu, bloom, and FSR options.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <Grid ColumnDefinitions="170,*"

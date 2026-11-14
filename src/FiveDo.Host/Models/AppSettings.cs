@@ -29,9 +29,10 @@ public sealed class AppSettings
     /// refresh rate. Version 4 adds the game-library card size. Version 5 adds the
     /// unsigned-disc/RSA-patch option. Version 6 adds the latency options (run-ahead,
     /// frame delay, adaptive sync, and audio sync). Version 7 adds the online cover
-    /// catalog options. Older files load with the documented defaults for new properties.
+    /// catalog options. Version 8 adds the UI locale. Older files load with the documented
+    /// defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 7;
+    public const int CurrentVersion = 8;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -41,6 +42,16 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets a value indicating whether the first-run guide has been shown.</summary>
     public bool FirstRunCompleted { get; set; }
+
+    /// <summary>
+    /// Gets or sets the UI locale code, or <c>system</c> to use the host locale.
+    /// </summary>
+    /// <remarks>
+    /// The locale only changes presentation strings. It never affects emulation, input,
+    /// audio, save states, or frame hashes. <c>--locale</c> overrides this value for one
+    /// desktop launch.
+    /// </remarks>
+    public string Language { get; set; } = "system";
 
     /// <summary>
     /// Gets or sets a value indicating whether the desktop shell checks GitHub for a newer

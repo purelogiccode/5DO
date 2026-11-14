@@ -16,6 +16,7 @@ using FiveDo.Host;
 using FiveDo.Host.Osd;
 using FiveDo.Host.Rewind;
 using FiveDo.Input;
+using FiveDo.Localization;
 using FiveDo.Storage;
 using FiveDo.Video;
 
@@ -51,6 +52,22 @@ public partial class SettingsWindow : Window
                 new(VideoRendererKind.Vulkan, "Vulkan"),
                 new(VideoRendererKind.Software, "Software (CPU)"),
             ];
+    }
+
+    private static readonly LanguageOption[] _languageOptions = CreateLanguageOptions();
+
+    private static LanguageOption[] CreateLanguageOptions()
+    {
+        var options = new List<LanguageOption>
+        {
+            new(Localizer.SystemLocale, $"System default ({Localizer.ResolveSystemLocale()})"),
+        };
+        foreach (LocalizationCatalog catalog in Localizer.Available)
+        {
+            options.Add(new LanguageOption(catalog.Locale, $"{catalog.DisplayName} ({catalog.Locale})"));
+        }
+
+        return [.. options];
     }
 
     private static readonly FrameSkipOption[] _frameSkipOptions =
@@ -257,6 +274,10 @@ public partial class SettingsWindow : Window
         _settings = settings;
         _libraryFolders.AddRange(settings.LibraryFolders);
 
+        LanguageCombo.ItemsSource = _languageOptions;
+        LanguageCombo.SelectedItem = _languageOptions.FirstOrDefault(
+                option => string.Equals(option.Code, settings.Language, StringComparison.OrdinalIgnoreCase))
+            ?? _languageOptions[0];
         RendererCombo.ItemsSource = _rendererOptions;
         RendererCombo.SelectedItem = _rendererOptions.FirstOrDefault(option => option.Value == settings.Renderer)
             ?? _rendererOptions[0];
@@ -1206,6 +1227,9 @@ public partial class SettingsWindow : Window
             settings.OsdDurationMilliseconds = osdDuration;
         }
 
+        settings.Language = LanguageCombo.SelectedItem is LanguageOption language
+            ? language.Code
+            : Localizer.SystemLocale;
         settings.QuickMenuEnabled = QuickMenuCheck.IsChecked == true;
         settings.SaveNativeScreenshot = NativeScreenshotCheck.IsChecked == true;
         settings.CheckForUpdates = CheckUpdatesCheck.IsChecked == true;
@@ -2175,6 +2199,14 @@ public partial class SettingsWindow : Window
 
         mode = FixMode.None;
         return false;
+    }
+
+    private sealed record LanguageOption(string Code, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
     }
 
     private sealed record RendererOption(VideoRendererKind Value, string Label)

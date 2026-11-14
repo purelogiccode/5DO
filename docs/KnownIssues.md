@@ -16,6 +16,53 @@ after 1.0 (2026-11-10). See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
+## Localization (2026-11-13)
+
+- The English baseline externalizes every static view string and the CLI usage text.
+  German covers all visible shell and dialog labels, the menu tree, Settings, CLI
+  messages, and the core shell tooltips. Tooltips in secondary dialogs that have no
+  German key fall back to English; they are not mistranslated.
+- Dynamic status sentences produced by the emulator, game titles, log messages, JSON
+  fields, and developer help text remain English. Changing the locale never restarts
+  the machine, resets audio, or changes frame/state hashes.
+- The desktop is built with invariant globalization, so `system` resolves through the
+  locale environment variables and `CurrentUICulture`; on a Windows host without those
+  variables it falls back to English until a locale is selected in Settings or passed
+  with `--locale`.
+
+## Physical optical drives (2026-11-13)
+
+- **File > Boot Optical Drive...** and drive-root CLI arguments read the host's cooked
+  block interface. Data-only 3DO discs are supported; physical CD-DA tracks are not.
+  Audio-only discs still need a BIN/CUE or CHD image.
+- The source is read-only, but some Windows systems require an elevated process for raw
+  optical-device access. A permission failure is reported as a disc-open error and does
+  not crash the shell.
+- Windows and Linux drive paths are implemented and unit-tested. macOS physical drives
+  are not validated. A physical 3DO disc has not yet been booted from a drive on the
+  validation host; the SYS-21 `Done when` line remains open.
+
+## Windows gamepads (2026-11-13)
+
+- The DirectInput/HID backend enumerates legacy pads and appends XInput slots. The
+  translation, hot-plug, and trigger calibration paths are covered by tests, but the
+  validation host had no physical DirectInput-only pad attached. Use
+  `FiveDo.Frontend.Avalonia --gamepad-probe` to record the source, count, and raw
+  samples for the hardware check.
+- DirectInput device button numbering follows the common HID layout; unusual vendor
+  mappings can be remapped in Input Bindings. XInput remains the fallback when no
+  DirectInput pad is present.
+
+## External metadata and media (2026-11-13)
+
+- UX-28 does not bundle a third-party metadata service or API key. `metadata lookup`
+  downloads the catalog URL the user supplies; no library, game, or user data is sent.
+- Matching is exact/containment after normalization, not the fuzzy cover matcher. A miss
+  exits 1 and leaves the offline metadata file unchanged unless `--write` is used.
+- Manual media paths are metadata only. The Game Metadata window lists, attaches,
+  removes, and opens them; `5do metadata media` manages the same list for automation.
+  A missing media file is ignored at display time and never copied or deleted by 5DO.
+
 ## Beyond-title compatibility (2026-11-08)
 
 - The binary beyond-title pass covers all **378** game/homebrew titles. Every row has a

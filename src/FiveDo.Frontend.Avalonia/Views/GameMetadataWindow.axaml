@@ -12,7 +12,7 @@
                    ToolTip.Tip="Values entered here are stored per game and take precedence over the game database and file names." />
 
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+            <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Title" VerticalAlignment="Center"
                            ToolTip.Tip="Display title shown in the game library." />
                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TitleBox" ToolTip.Tip="Display title. Empty keeps the database title." />
@@ -51,7 +51,22 @@
                          TextWrapping="Wrap" MinHeight="120" MaxHeight="200"
                          ToolTip.Tip="Free-form description shown in the library details." />
 
-                <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" x:Name="StatusText"
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Media" VerticalAlignment="Top" Margin="0,6,0,0"
+                           ToolTip.Tip="Manual media attachments stored with this game." />
+                <Grid Grid.Row="8" Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="4">
+                    <ListBox x:Name="MediaList" Height="76"
+                             ToolTip.Tip="Attached media paths. Select one to remove or open." />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
+                        <Button Content="Add..." Click="OnAddMediaAsync"
+                                ToolTip.Tip="Choose files to attach to this game." />
+                        <Button Content="Remove" Click="OnRemoveMediaClick"
+                                ToolTip.Tip="Remove the selected media attachment." />
+                        <Button Content="Open" Click="OnOpenMediaClick"
+                                ToolTip.Tip="Open the selected media file." />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" x:Name="StatusText"
                            Opacity="0.75" FontSize="11" TextWrapping="Wrap"
                            ToolTip.Tip="Metadata file and save status." />
             </Grid>

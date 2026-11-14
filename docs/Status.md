@@ -1,5 +1,15 @@
 # Project Status and Next Steps
 
+**2026-11-13 update:** UX-09 localization is complete (English/German catalogs,
+Settings > General > UI language, and `--locale`/`--list-locales` in both executables);
+the translated smoke run records `locale=de` and `firstMenuHeader=Datei`. SYS-21
+(physical optical drive) and SYS-23 (Windows DirectInput/HID gamepad backend) are
+implemented with automated tests; both keep their `Done when` lines open pending
+physical hardware evidence. UX-28 adds an external metadata catalog lookup with a
+deterministic cache plus manual media attachments (`metadata lookup` / `metadata media`).
+See [Localization.md](Localization.md), [Metadata.md](Metadata.md), and
+[TestCorpus.md](TestCorpus.md) 1.1bw and 1.1bx.
+
 **Snapshot:** 2026-11-11, v1.8.0: MMPX 2x and bicubic filters, wider aspect presets,
 and the .NET 11 / C# 15 toolchain; the CHD startup-stutter fix and dependency refresh;
 the native platform runtime smoke, CD subcode, disc

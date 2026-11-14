@@ -146,7 +146,7 @@ internal static class PlatformRawGamepadSource
     {
         if (OperatingSystem.IsWindows())
         {
-            return XInputGamepadSource.TryCreate() ?? (IRawGamepadSource)NullRawGamepadSource.Instance;
+            return WindowsGamepadSource.TryCreate() ?? (IRawGamepadSource)NullRawGamepadSource.Instance;
         }
 
         if (OperatingSystem.IsLinux())
@@ -160,6 +160,74 @@ internal static class PlatformRawGamepadSource
         }
 
         return NullRawGamepadSource.Instance;
+    }
+}
+
+/// <summary>
+/// Combines legacy DirectInput/HID pads with XInput slots on Windows.
+/// </summary>
+/// <remarks>
+/// DirectInput devices are listed first so a DirectInput-only pad works without any
+/// configuration; XInput remains the fallback for Xbox-compatible controllers. XInput
+/// devices are filtered out of the DirectInput list so a pad is never exposed twice.
+/// </remarks>
+internal sealed class WindowsGamepadSource : IRawGamepadSource
+{
+    private readonly DirectInputGamepadSource? _directInput;
+    private readonly XInputGamepadSource? _xinput;
+    private int _count;
+
+    private WindowsGamepadSource(DirectInputGamepadSource? directInput, XInputGamepadSource? xinput)
+    {
+        _directInput = directInput;
+        _xinput = xinput;
+    }
+
+    /// <inheritdoc />
+    public int Count => _count;
+
+    /// <summary>Creates the Windows source.</summary>
+    /// <returns>The source, or <see langword="null"/> when neither backend is available.</returns>
+    internal static WindowsGamepadSource? TryCreate()
+    {
+        DirectInputGamepadSource? directInput = DirectInputGamepadSource.TryCreate();
+        XInputGamepadSource? xinput = XInputGamepadSource.TryCreate();
+        if (directInput is null && xinput is null)
+        {
+            return null;
+        }
+
+        Serilog.Log.Information(
+            "Windows gamepad backend ready (DirectInput {DirectInputDevices} device(s), XInput fallback active).",
+            directInput?.Count ?? 0);
+        return new WindowsGamepadSource(directInput, xinput);
+    }
+
+    /// <inheritdoc />
+    public void Poll()
+    {
+        _directInput?.Poll();
+        _xinput?.Poll();
+        _count = (_directInput?.Count ?? 0) + (_xinput?.Count ?? 0);
+    }
+
+    /// <inheritdoc />
+    public GamepadState Read(int index)
+    {
+        int directInputCount = _directInput?.Count ?? 0;
+        if (index >= 0 && index < directInputCount)
+        {
+            return _directInput!.Read(index);
+        }
+
+        return _xinput?.Read(index - directInputCount) ?? GamepadState.Empty;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _directInput?.Dispose();
+        _xinput?.Dispose();
     }
 }
 

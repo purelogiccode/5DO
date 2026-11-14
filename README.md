@@ -135,6 +135,8 @@ or `5do-1.8.0-osx-arm64.dmg`.
 - Avalonia game library with local and online covers, favorites, play time, metadata
   filters, and sorts. The online catalog uses precomputed 4DO game IDs plus annotation-
   stripped Jaro-Winkler fallback and an optional bulk pack for offline use.
+- External library-metadata lookup with a deterministic offline cache and manual media
+  attachments, plus an English/German UI catalog (`--locale`, Settings > General).
 - BIOS manager with region/Kanji/Anvil/patch detection, auto-selection, and per-game
   overrides.
 - Shared and per-game NVRAM with backup, import, reset, and delete.
@@ -146,12 +148,12 @@ or `5do-1.8.0-osx-arm64.dmg`.
 - Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
   per-frame movie editor.
 - Disc browser with file/directory extraction, disc info, track listing, and integrity
-  verification.
+  verification. Data discs can boot from a host CD/DVD drive (no image file required).
 - Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
   overlay.
-- Eight-player keyboard and gamepad mapping; XInput on Windows, evdev on Linux, and
-  IOKit HID on macOS; joypad, flightstick, mouse, lightgun, arcade lightgun, and Orbatak
-  trackball devices. Input scripts can drive pointer devices.
+- Eight-player keyboard and gamepad mapping; DirectInput/HID plus XInput on Windows,
+  evdev on Linux, and IOKit HID on macOS; joypad, flightstick, mouse, lightgun, arcade
+  lightgun, and Orbatak trackball devices. Input scripts can drive pointer devices.
 - Opt-in focus-loss pausing with automatic resume, and solid/checker/grid/scanline
   void-area patterns recorded in screenshot sidecars.
 - Portable mode, named configuration profiles, per-game profiles, and an instance lock.
@@ -273,6 +275,8 @@ players in **Input**.
 | [FAQ](https://purelogiccode.github.io/5DO/FAQ.html) | BIOS, discs, releases, performance, platforms, saves, and licensing |
 | [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html) | Every command, option, exit code, and JSON response |
 | [Configuration](https://purelogiccode.github.io/5DO/Configuration.html) | `settings.json`, profiles, paths, input, NVRAM, environment variables |
+| [Localization](https://purelogiccode.github.io/5DO/Localization.html) | UI catalogs, `--locale`, translated smoke evidence, adding a locale |
+| [Library metadata](https://purelogiccode.github.io/5DO/Metadata.html) | External metadata lookup, deterministic cache, manual media |
 | [Cover art](https://purelogiccode.github.io/5DO/CoverArt.html) | Online catalog, WebP pack, matching, R2 hosting, and takedown |
 | [Compatibility](https://purelogiccode.github.io/5DO/Compatibility.html) | BIOS/disc compatibility, per-title status, and sweep evidence |
 | [5DO vs 4DO vs Phoenix](https://purelogiccode.github.io/5DO/CompatibilityComparison.html) | Unique-title compatibility matrix, verdicts, regressions, and evidence |
@@ -350,7 +354,8 @@ Contracts        FiveDo.Core (interfaces, value types, state contracts, constant
 
 The core is platform-neutral and deterministic. The host owns files, devices, windows,
 and settings. The Avalonia frontend and CLI are replaceable consumers of the same host
-layer. See [Architecture](https://purelogiccode.github.io/5DO/Architecture.html) and
+layer. `FiveDo.Localization` is a dependency-free support assembly embedded in both
+frontends for the UI catalogs. See [Architecture](https://purelogiccode.github.io/5DO/Architecture.html) and
 [Developer Guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html).
 
 ## Build, test, and publish

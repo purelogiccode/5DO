@@ -339,6 +339,9 @@
           "FiveDo.Core": "[1.8.0, )"
         }
       },
+      "fivedo.localization": {
+        "type": "Project"
+      },
       "fivedo.machine": {
         "type": "Project",
         "dependencies": {

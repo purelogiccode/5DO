@@ -48,6 +48,8 @@ loadability and duplicate coverage.
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
 | Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux GPU presentation remains preview/best-effort | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
+| Localization | English/German UI catalogs; `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
+| Metadata | External metadata lookup with deterministic cache and manual media attachments | [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
 
 The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
 (static pad card), `LameNES Emulator` (minimal “HELLO, WORLD!” frame), and the standalone
@@ -59,8 +61,9 @@ The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL
 REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **PLAT-01**,
 **PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-09**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
-**SYS-06/07/08/12/17/18/22**, **UX-25**, **UX-26**, **UX-31**, **UX-32**,
-**VID-04/12/16/17/18** items.
+**SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-31**,
+**UX-32**, **VID-04/12/16/17/18** items. `SYS-21` and `SYS-23` are code-complete but remain open
+for their named hardware evidence.
 
 `ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
 §4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
@@ -172,21 +175,24 @@ the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode
 
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
-| **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
+| **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. **Implemented 2026-11-13** in `PhysicalDiscSource`, `File > Boot Optical Drive...`, and the CLI drive-root path. The remaining check is hardware evidence on a machine with an attached drive and a 3DO disc. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
 | **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **UX-09** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. |
+| **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
 | **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
 | **VID-16 — Done** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. Evidence: `FrameAssemblerTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **UX-28** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. |
+| **UX-28 — Done** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. Evidence: `MetadataCatalogClient` and `metadata lookup`/`metadata media` (2026-11-13), `MetadataCatalogClientTests`, [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx. |
 | **UX-29** | L | **TAS Lua scripting and input timeline**: script input/movies and edit an input timeline in the shell. | The deterministic movie container, editor, and PBUS packet format already exist. | A Lua-authored movie replays deterministically; the timeline edits and round-trips a movie. |
 | **UX-30** | M | **4DO `.4dosav` import/export (best-effort)**: map the native state to/from 4DO’s format. | The native state sections are versioned and documented; the mapping is additive and optional. | A known 4DO state imports with warnings where fields are unsupported; export round-trips in 5DO. |
 | **UX-31 — Done** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. Evidence: `ControllerPadPreview` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bu. |
 | **UX-32 — Done** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. Evidence: `DisplaySleepPolicy` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
 | **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
-| **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
+| **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 `UX-30` is explicitly best-effort; native 4DO state compatibility is **not** a goal.
+`UX-28` uses the existing `library-metadata.json` schema as its provider format, writes a
+canonical `metadata-cache.json`, and manages manual media paths through
+`5do metadata media`; see [Metadata.md](Metadata.md).
 
 ### 3.7 P3 — Requested 4DO parity order (2026-11-11)
 
@@ -203,6 +209,17 @@ pad (mapped/selected/pressed states), Settings > Video > Overscan has a 4DO-comp
 auto-crop with a one-second hysteresis, and a running game keeps the Windows display
 awake. `ControllerPreviewTests`, `AutoCropTests`, and `DisplaySleepPolicyTests` cover
 the logic; see [TestCorpus.md](TestCorpus.md) 1.1bu and 1.1bv.
+
+**UX-09, SYS-21, and SYS-23 (the requested parity order) are implemented (2026-11-13).**
+UX-09 is complete with English/German catalogs, a General settings tab, and
+`--locale`/`--list-locales` in both executables; the translated smoke marker records
+`firstMenuHeader=Datei`. SYS-21 and SYS-23 are code-complete with automated tests, but
+their `Done when` lines still require a physical host drive and a physical DirectInput
+pad respectively. `--gamepad-probe` records the active backend and raw samples for that
+hardware check; the physical drive is reachable from **File > Boot Optical Drive...** or
+a drive-root CLI argument. See [Localization.md](Localization.md),
+[Configuration.md](Configuration.md) §3.1 and §6, and [TestCorpus.md](TestCorpus.md)
+1.1bw.
 
 ---
 ## 4. Blocked, residual, or not achievable (do not add checkboxes)
@@ -254,9 +271,11 @@ documented limitation, not that it is unachievable.
 5. **P2 accuracy:** `ACC-03` is **done**; `SYS-01` moved to §4 after the BIOS CD player
    listed the TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until
    their revisit conditions are met.
-6. **P3 product:** `SYS-22`, `UX-25`, `UX-31`, `VID-16`, `VID-17`, `VID-18`, and
-   `UX-32` are **done**. The remaining product items do not block a release. The
-   requested 4DO parity order is `UX-09` → `SYS-21` → `SYS-23` (see §3.7).
+6. **P3 product:** `SYS-22`, `UX-09`, `UX-25`, `UX-28`, `UX-31`, `VID-16`, `VID-17`,
+   `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23` are implemented and tested but keep
+   their `Done when` lines open until a physical optical drive and a physical
+   DirectInput-only pad are available. The requested 4DO parity order `UX-09` →
+   `SYS-21` → `SYS-23` is complete in code (see §3.7).
 
 **Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
 P1 platform smoke is failing.

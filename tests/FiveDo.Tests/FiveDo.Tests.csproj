@@ -52,6 +52,7 @@
     <ProjectReference Include="..\..\src\FiveDo.Frontend.Avalonia\FiveDo.Frontend.Avalonia.csproj" />
     <ProjectReference Include="..\..\tools\FiveDo.DiffHarness\FiveDo.DiffHarness.csproj" />
     <ProjectReference Include="..\..\tools\FiveDo.Fuzz\FiveDo.Fuzz.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Localization\FiveDo.Localization.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,10 @@ using FiveDo.Core;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Diagnostics.Statistics;
 using FiveDo.Frontend.Avalonia.Audio;
+using FiveDo.Frontend.Avalonia.Input;
+using FiveDo.Input;
+using FiveDo.Localization;
+using FiveDo.Storage;
 
 namespace FiveDo.Frontend.Avalonia;
 
@@ -75,6 +79,12 @@ internal static class Program
     /// </summary>
     internal static bool SkipUpdateCheck { get; private set; }
 
+    /// <summary>
+    /// Gets the locale requested with <c>--locale</c>. When set it overrides the saved
+    /// desktop setting for this launch only.
+    /// </summary>
+    internal static string? LocaleOverride { get; private set; }
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -93,6 +103,30 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("FIVEDO_PROFILE", args[profileIndex + 1]);
             args = args.Where((_, index) => index != profileIndex && index != profileIndex + 1).ToArray();
+        }
+
+        var localeIndex = Array.FindIndex(
+            args,
+            arg => string.Equals(arg, "--locale", StringComparison.OrdinalIgnoreCase));
+        if (localeIndex >= 0)
+        {
+            if (localeIndex + 1 < args.Length
+                && !args[localeIndex + 1].StartsWith('-'))
+            {
+                LocaleOverride = args[localeIndex + 1];
+            }
+
+            var removeCount = localeIndex + 1 < args.Length
+                && !args[localeIndex + 1].StartsWith('-')
+                ? 2
+                : 1;
+            args = args.Where((_, index) => index < localeIndex || index >= localeIndex + removeCount).ToArray();
+        }
+
+        if (LocaleOverride is not null && !Localizer.TryUse(LocaleOverride))
+        {
+            Console.Error.WriteLine(
+                $"warning: unknown locale '{LocaleOverride}'; using {Localizer.Locale}.");
         }
 
         try
@@ -142,6 +176,12 @@ internal static class Program
             if (HasFlag(args, "--version"))
             {
                 Console.WriteLine(FiveDoVersion.Version);
+                return;
+            }
+
+            if (HasFlag(args, "--list-locales"))
+            {
+                PrintLocales();
                 return;
             }
 
@@ -221,6 +261,12 @@ internal static class Program
                 return;
             }
 
+            if (HasFlag(args, "--gamepad-probe"))
+            {
+                Environment.ExitCode = RunGamepadProbe();
+                return;
+            }
+
             SmokeTest = HasFlag(args, "--smoke-test");
             SmokeOutputPath = FindOptionValue(args, "--smoke-output");
             if (HasFlag(args, "--gl-probe"))
@@ -286,7 +332,11 @@ internal static class Program
     /// The window state at smoke completion. Recorded so the launch-mode argument
     /// (for example <c>--fullscreen</c>) has end-to-end evidence.
     /// </param>
-    internal static void CompleteSmokeTest(string? windowState = null)
+    /// <param name="firstMenuHeader">
+    /// The first menu header read from the realized window. A translated value proves the
+    /// locale pass reached the logical tree rather than only the catalog.
+    /// </param>
+    internal static void CompleteSmokeTest(string? windowState = null, string? firstMenuHeader = null)
     {
         if (!SmokeTest || string.IsNullOrWhiteSpace(SmokeOutputPath))
         {
@@ -302,6 +352,12 @@ internal static class Program
             }
 
             var marker = $"FRONTEND SMOKE OK {FiveDoVersion.Version}{Environment.NewLine}";
+            marker += $"locale={Localizer.Locale}{Environment.NewLine}";
+            if (!string.IsNullOrWhiteSpace(firstMenuHeader))
+            {
+                marker += $"firstMenuHeader={firstMenuHeader}{Environment.NewLine}";
+            }
+
             if (!string.IsNullOrWhiteSpace(windowState))
             {
                 marker += $"windowState={windowState}{Environment.NewLine}";
@@ -317,6 +373,39 @@ internal static class Program
         }
     }
 
+    private static int RunGamepadProbe()
+    {
+        using PlatformGamepadBackend? backend = PlatformGamepadBackend.TryCreate(
+            InputProfile.CreateDefault());
+        if (backend is null)
+        {
+            Console.WriteLine("No gamepad backend is available.");
+            return 1;
+        }
+
+        backend.Poll();
+        Console.WriteLine($"source={backend.SourceName}");
+        Console.WriteLine($"connected={backend.ConnectedControllers}");
+        for (var index = 0; index < backend.ConnectedControllers; index++)
+        {
+            GamepadState state = backend.GetRawState(index);
+            Console.WriteLine(
+                $"pad{index}: buttons={state.Buttons} lx={state.LeftStickX:0.###} ly={state.LeftStickY:0.###} "
+                + $"rx={state.RightStickX:0.###} ry={state.RightStickY:0.###} lt={state.LeftTrigger:0.###} "
+                + $"rt={state.RightTrigger:0.###}");
+        }
+
+        return 0;
+    }
+
+    private static void PrintLocales()
+    {
+        foreach (LocalizationCatalog catalog in Localizer.Available)
+        {
+            Console.WriteLine($"{catalog.Locale}\t{catalog.DisplayName}");
+        }
+    }
+
     private static void PrintUsage()
     {
         Console.WriteLine("5DO desktop frontend");
@@ -328,6 +417,8 @@ internal static class Program
         Console.WriteLine("  -f, -fullscreen, --fullscreen  Start in fullscreen.");
         Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  --config-profile <name> Use profiles/<name> for settings, NVRAM, cheats, and logs.");
+        Console.WriteLine("  --locale <code>         UI locale (for example en or de); overrides the saved setting.");
+        Console.WriteLine("  --list-locales          List the embedded UI locales and exit.");
         Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, vulkan, or d3d11.");
         Console.WriteLine("  --no-update-check       Skip the startup GitHub release check.");
         Console.WriteLine("  --version               Print the version and exit.");
@@ -338,6 +429,7 @@ internal static class Program
         Console.WriteLine("  --vk-probe <json> | --vk-window-probe <json> ...");
         Console.WriteLine("  --d3d-probe <json> | --d3d-window-probe <json> ...");
         Console.WriteLine("  --smoke-test [--smoke-output <path>]");
+        Console.WriteLine("  --gamepad-probe         List the active gamepad source and raw controller samples.");
         Console.WriteLine("  --audio-soak <seconds> [--audio-soak-output <json>] [--audio-device <name>]");
         Console.WriteLine("                         [--audio-buffer 20..500] [--audio-sync -250..250] [--region auto|ntsc|pal1|pal2]");
     }
@@ -364,6 +456,7 @@ internal static class Program
     internal static bool IsAutomatedRun(string[] args)
     {
         return HasFlag(args, "--smoke-test")
+               || HasFlag(args, "--gamepad-probe")
                || HasFlag(args, "--audio-soak")
                || HasFlag(args, "--gl-probe")
                || HasFlag(args, "--vk-probe")
@@ -429,6 +522,11 @@ internal static class Program
                 continue;
             }
 
+            if (PhysicalDiscSource.IsOpticalDrivePath(argument))
+            {
+                return argument;
+            }
+
             if (File.Exists(argument))
             {
                 return Path.GetFullPath(argument);
@@ -447,6 +545,7 @@ internal static class Program
 
         var previous = args[index - 1];
         return string.Equals(previous, "--disc", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(previous, "--locale", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--bios", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--smoke-output", StringComparison.OrdinalIgnoreCase)
             || string.Equals(previous, "--audio-soak", StringComparison.OrdinalIgnoreCase)

@@ -322,6 +322,7 @@
         "type": "Project",
         "dependencies": {
           "FiveDo.Host": "[1.8.0, )",
+          "FiveDo.Localization": "[1.8.0, )",
           "FiveDo.Tas": "[1.8.0, )",
           "Serilog": "[4.4.0, )",
           "System.CommandLine": "[3.0.0, )"
@@ -377,6 +378,7 @@
           "Avalonia.Themes.Fluent": "[12.1.6, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "FiveDo.Host": "[1.8.0, )",
+          "FiveDo.Localization": "[1.8.0, )",
           "FiveDo.Tas": "[1.8.0, )",
           "FiveDo.Video.Direct3D": "[1.8.0, )",
           "FiveDo.Video.OpenGL": "[1.8.0, )",
@@ -414,6 +416,9 @@
         "dependencies": {
           "FiveDo.Core": "[1.8.0, )"
         }
+      },
+      "fivedo.localization": {
+        "type": "Project"
       },
       "fivedo.machine": {
         "type": "Project",

@@ -34,6 +34,14 @@ public static class DiscImageFactory
         int chdReadAheadHunks = 4)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (PhysicalDiscSource.IsOpticalDrivePath(path))
+        {
+            // A drive root is not a file; the cooked block-device reader presents the same
+            // 2048-byte user-data sectors as an image. Read-ahead is skipped because a
+            // disc change or media error must be reported immediately.
+            return PhysicalDiscSource.Open(path);
+        }
+
         if (!File.Exists(path))
         {
             throw new DiscImageException($"Disc image '{path}' does not exist.");

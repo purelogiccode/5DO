@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.OpenGL;
 using Avalonia.Threading;
 using FiveDo.Core;
+using FiveDo.Frontend.Avalonia.Localization;
 using FiveDo.Frontend.Avalonia.ViewModels;
 using FiveDo.Frontend.Avalonia.Views;
 
@@ -26,6 +27,10 @@ public class App : Application
     /// <summary>Loads the application XAML resources.</summary>
     public override void Initialize()
     {
+        // Every window, including dialogs built in code, gets the selected locale after
+        // its logical tree is realized. The pass only changes presentation properties.
+        Control.LoadedEvent.AddClassHandler<Window>(
+            static (window, _) => UiLocalizer.Apply(window));
         try
         {
             AvaloniaXamlLoader.Load(this);
@@ -103,7 +108,9 @@ public class App : Application
                         DispatcherTimer.RunOnce(
                             () =>
                             {
-                                Program.CompleteSmokeTest(window.WindowState.ToString());
+                                Program.CompleteSmokeTest(
+                                    window.WindowState.ToString(),
+                                    window.LocalizedFirstMenuHeader);
                                 desktop.Shutdown();
                             },
                             TimeSpan.FromMilliseconds(750));

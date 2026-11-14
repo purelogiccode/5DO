@@ -18,6 +18,7 @@ using FiveDo.Diagnostics.Logging;
 using FiveDo.Diagnostics.Statistics;
 using FiveDo.Host;
 using FiveDo.Input;
+using FiveDo.Localization;
 using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Tas;
@@ -38,6 +39,20 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("FIVEDO_PROFILE", configProfile);
             args = configArgs;
+        }
+
+        if (TryTakeOption(args, "--locale", out var locale, out var localeArgs))
+        {
+            if (!Localizer.TryUse(locale))
+            {
+                Console.Error.WriteLine(Localizer.Format("cli.unknown_locale", locale, Localizer.Locale));
+            }
+
+            args = localeArgs;
+        }
+        else
+        {
+            _ = Localizer.TryUse(null);
         }
 
         var skipUpdateCheck = HasFlag(args, "--no-update-check");
@@ -66,6 +81,16 @@ internal static class Program
 
         try
         {
+            if (HasFlag(args, "--list-locales"))
+            {
+                foreach (LocalizationCatalog catalog in Localizer.Available)
+                {
+                    Console.WriteLine($"{catalog.Locale}\t{catalog.DisplayName}");
+                }
+
+                return 0;
+            }
+
             if (args.Length == 0)
             {
                 PrintUsage();
@@ -94,6 +119,7 @@ internal static class Program
                     "disc" => DiscCommand(args),
                     "library" => LibraryCommand(args),
                     "covers" => CoverCommand(args),
+                    "metadata" => MetadataCommand(args),
                     "settings" => SettingsCommand(args),
                     "fs" => FsCommand(args),
                     "bios" => Bios(args),
@@ -186,7 +212,7 @@ internal static class Program
 
     private static bool IsDiagnosticCommand(string command)
     {
-        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb";
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb" or "metadata";
     }
 
     private sealed record BiosLoadResult(
@@ -370,7 +396,7 @@ internal static class Program
         }
         else
         {
-            Console.Error.WriteLine($"Unknown command: {command}");
+            Console.Error.WriteLine(Localizer.Format("cli.unknown_command", command));
         }
 
         return 2;
@@ -2290,6 +2316,205 @@ internal static class Program
         }
 
         throw new ArgumentException($"Unknown settings subcommand '{args[1]}'.", nameof(args));
+    }
+
+    private static int MetadataCommand(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            throw new ArgumentException(
+                "metadata needs 'lookup' or 'media'.",
+                nameof(args));
+        }
+
+        var subcommand = args[1].ToLowerInvariant();
+        ParsedOptions options = Parse(args, startIndex: 2);
+        return subcommand switch
+        {
+            "lookup" => MetadataLookup(options),
+            "media" => MetadataMedia(options),
+            _ => throw new ArgumentException(
+                $"Unknown metadata subcommand '{args[1]}'.",
+                nameof(args)),
+        };
+    }
+
+    private static int MetadataLookup(ParsedOptions options)
+    {
+        var title = options.Positional ?? options.Get("--title");
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("metadata lookup needs a title.", nameof(options));
+        }
+
+        var gameId = options.Get("--game-id");
+        var url = options.Get("--url");
+        var cachePath = options.Get("--cache");
+        using var client = new MetadataCatalogClient();
+        MetadataLookupResult result = client
+            .LookupAsync(title, gameId, url, cachePath)
+            .GetAwaiter()
+            .GetResult();
+        var output = new CliMetadataLookupResult(
+            result.Record is not null,
+            title,
+            gameId,
+            result.FromCache,
+            result.Warning,
+            result.Record is null ? null : ToCliMetadata(result.Record),
+            result.Matches.Select(ToCliMetadata).ToArray());
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliMetadataLookupResult));
+        }
+        else
+        {
+            if (result.Warning is not null)
+            {
+                Console.Error.WriteLine($"warning: {result.Warning}");
+            }
+
+            Console.WriteLine($"query:       {title}");
+            Console.WriteLine($"from cache:  {result.FromCache}");
+            Console.WriteLine($"matches:     {output.Matches.Count}");
+            if (output.Record is { } record)
+            {
+                Console.WriteLine($"game id:     {record.GameId}");
+                Console.WriteLine($"title:       {record.Title}");
+                Console.WriteLine($"developer:   {record.Developer}");
+                Console.WriteLine($"publisher:   {record.Publisher}");
+                Console.WriteLine($"year:        {record.ReleaseYear}");
+                Console.WriteLine($"genre:       {record.Genre}");
+                Console.WriteLine($"regions:     {record.Regions}");
+                Console.WriteLine($"players:     {record.Players}");
+                if (record.Media.Count > 0)
+                {
+                    Console.WriteLine("media:");
+                    foreach (var media in record.Media)
+                    {
+                        Console.WriteLine($"  {media}");
+                    }
+                }
+            }
+        }
+
+        var write = options.Get("--write");
+        if (write is not null && result.Record is not null)
+        {
+            var target = string.Equals(write, "true", StringComparison.OrdinalIgnoreCase) ? null : write;
+            LibraryMetadataStore.Upsert(result.Record, target);
+            if (!options.Json)
+            {
+                Console.WriteLine($"wrote:       {target ?? LibraryMetadataStore.DefaultPath}");
+            }
+        }
+
+        return result.Record is not null ? 0 : 1;
+    }
+
+    private static int MetadataMedia(ParsedOptions options)
+    {
+        var discPath = options.Positional ?? options.Get("--disc");
+        var gameId = options.Get("--game-id") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(discPath) && gameId.Length == 0)
+        {
+            throw new ArgumentException(
+                "metadata media needs a disc path or --game-id.",
+                nameof(options));
+        }
+
+        if (gameId.Length == 0)
+        {
+            using IDiscSource disc = DiscImageFactory.Open(discPath!);
+            gameId = GameId.Compute(disc);
+        }
+
+        var metadataPath = options.Get("--metadata");
+        var add = options.Get("--add");
+        var remove = options.Get("--remove");
+        LibraryMetadataRecord? record;
+        if (add is not null || remove is not null)
+        {
+            LibraryMetadata metadata = LibraryMetadataStore.Load(metadataPath);
+            record = metadata.Records.FirstOrDefault(item => string.Equals(
+                item.GameId.Trim(),
+                gameId.Trim(),
+                StringComparison.OrdinalIgnoreCase));
+            if (record is null)
+            {
+                record = new LibraryMetadataRecord
+                {
+                    GameId = gameId,
+                    Path = discPath ?? string.Empty,
+                };
+                LibraryMetadataStore.Upsert(record, metadataPath);
+            }
+
+            if (add is not null)
+            {
+                record = MetadataCatalogClient.AttachMedia(
+                    gameId,
+                    discPath,
+                    [add],
+                    metadataPath);
+            }
+
+            if (remove is not null)
+            {
+                record = MetadataCatalogClient.DetachMedia(
+                    gameId,
+                    discPath,
+                    [remove],
+                    metadataPath);
+            }
+        }
+        else
+        {
+            LibraryMetadata metadata = LibraryMetadataStore.Load(metadataPath);
+            record = metadata.Records.FirstOrDefault(item => string.Equals(
+                item.GameId.Trim(),
+                gameId.Trim(),
+                StringComparison.OrdinalIgnoreCase));
+        }
+
+        IReadOnlyList<string> media = record is null ? [] : [.. record.Media];
+        var output = new CliMetadataMediaResult(
+            record is not null,
+            discPath ?? string.Empty,
+            gameId,
+            media,
+            record is null ? "No metadata record exists for this game." : null);
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, CliJsonContext.Default.CliMetadataMediaResult));
+        }
+        else
+        {
+            Console.WriteLine($"game id: {gameId}");
+            Console.WriteLine($"metadata:{metadataPath ?? LibraryMetadataStore.DefaultPath}");
+            foreach (var item in media)
+            {
+                Console.WriteLine($"media:   {item}");
+            }
+        }
+
+        return record is not null ? 0 : 1;
+    }
+
+    private static CliMetadataRecord ToCliMetadata(LibraryMetadataRecord record)
+    {
+        return new CliMetadataRecord(
+            record.GameId,
+            record.Path,
+            record.Title,
+            record.Developer,
+            record.Publisher,
+            record.ReleaseYear,
+            record.Genre,
+            record.Regions,
+            record.Players,
+            record.Description,
+            [.. record.Media]);
     }
 
     private static int CoverCommand(string[] args)
@@ -5775,9 +6000,9 @@ internal static class Program
     private static void PrintUsage()
     {
         Console.WriteLine($"{FiveDoVersion.ProductName} {FiveDoVersion.Version}");
-        Console.WriteLine("Usage: 5do <command> [options]");
+        Console.WriteLine(Localizer.Translate("cli.usage"));
         Console.WriteLine();
-        Console.WriteLine("Commands:");
+        Console.WriteLine(Localizer.Translate("cli.commands"));
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--state-in path] [--state-out path]");
         Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path] [--cd-commands path] [--cd-register-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
@@ -5828,6 +6053,10 @@ internal static class Program
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  library verify [--folder dir] [--dat path] [--cache path] [--json]");
         Console.WriteLine("                                       Verify every library disc and update the health cache.");
+        Console.WriteLine("  metadata lookup <title> [--game-id ID] [--url URL] [--cache path] [--write [path]] [--json]");
+        Console.WriteLine("                                       Match an external library-metadata catalog and cache it.");
+        Console.WriteLine("  metadata media <disc> --add path|--remove path|--list [--metadata path] [--game-id ID] [--json]");
+        Console.WriteLine("                                       Attach, detach, or list manual media files for a game.");
         Console.WriteLine("  covers update [--url URL] [--catalog path] [--cache dir] [--force] [--json]");
         Console.WriteLine("                                       Refresh the online cover catalog.");
         Console.WriteLine("  covers download [--folder dir] [--all] [--catalog path] [--cache dir] [--dry-run] [--json]");
@@ -5859,6 +6088,8 @@ internal static class Program
         Console.WriteLine("  settings options [--format markdown|text] [--json]");
         Console.WriteLine("                                       List the validated machine-option registry.");
         Console.WriteLine("  --config-profile <name>              Use profiles/<name> for settings, NVRAM, cheats, and logs.");
+        Console.WriteLine("  --locale <code>                      Use a UI locale (en or de) for this command.");
+        Console.WriteLine("  --list-locales                       List the embedded UI locales.");
         Console.WriteLine("  --portable                           Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");
         Console.WriteLine("                                       Manage per-game cheats. add needs --name and --code;");
@@ -5883,7 +6114,9 @@ internal static class Program
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
         Console.WriteLine();
-        Console.WriteLine("Options:");
+        Console.WriteLine(Localizer.Translate("cli.options"));
+        Console.WriteLine(Localizer.Translate("cli.locale_option"));
+        Console.WriteLine(Localizer.Translate("cli.list_locales_option"));
         Console.WriteLine("  -v, --version  Show version");
         Console.WriteLine("  -h, --help     Show help");
         Console.WriteLine("  --no-update-check  Skip the interactive startup update check.");

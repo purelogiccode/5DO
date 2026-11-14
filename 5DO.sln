@@ -67,6 +67,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiveDo.Fuzz", "tools\FiveDo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiveDo.CoverPackager", "tools\FiveDo.CoverPackager\FiveDo.CoverPackager.csproj", "{A2378631-A389-4997-87A1-56419550BED8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiveDo.Localization", "src\FiveDo.Localization\FiveDo.Localization.csproj", "{C059BF75-472E-46D0-A80E-1FB3D1E254D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -413,6 +415,18 @@ Global
 		{A2378631-A389-4997-87A1-56419550BED8}.Release|x64.Build.0 = Release|Any CPU
 		{A2378631-A389-4997-87A1-56419550BED8}.Release|x86.ActiveCfg = Release|Any CPU
 		{A2378631-A389-4997-87A1-56419550BED8}.Release|x86.Build.0 = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|x64.Build.0 = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Debug|x86.Build.0 = Debug|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|x64.ActiveCfg = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|x64.Build.0 = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|x86.ActiveCfg = Release|Any CPU
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -446,5 +460,6 @@ Global
 		{8F1F031F-C564-49BF-8FD8-2413D78627D7} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{6E26A541-9ABB-4725-82A5-0F97388F5B12} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 		{A2378631-A389-4997-87A1-56419550BED8} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{C059BF75-472E-46D0-A80E-1FB3D1E254D3} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
