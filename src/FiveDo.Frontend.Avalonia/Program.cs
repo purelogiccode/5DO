@@ -91,6 +91,20 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // The frontend is a Windows-subsystem executable, so it does not inherit the
+        // console code page when it prints --list-locales or --help. Use UTF-8 so the
+        // native locale names survive a redirected or terminal output stream.
+        try
+        {
+            Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+        }
+        catch (IOException)
+        {
+        }
+        catch (PlatformNotSupportedException)
+        {
+        }
+
         if (Array.Exists(args, arg => string.Equals(arg, "--portable", StringComparison.OrdinalIgnoreCase)))
         {
             Environment.SetEnvironmentVariable("FIVEDO_PORTABLE", "1");
@@ -417,7 +431,7 @@ internal static class Program
         Console.WriteLine("  -f, -fullscreen, --fullscreen  Start in fullscreen.");
         Console.WriteLine("  --portable              Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  --config-profile <name> Use profiles/<name> for settings, NVRAM, cheats, and logs.");
-        Console.WriteLine("  --locale <code>         UI locale (for example en or de); overrides the saved setting.");
+        Console.WriteLine("  --locale <code>         UI locale (for example en, de, ja, or pt-br); overrides the saved setting.");
         Console.WriteLine("  --list-locales          List the embedded UI locales and exit.");
         Console.WriteLine("  --gl-backend <backend>  auto (default), wgl, angle, software, vulkan, or d3d11.");
         Console.WriteLine("  --no-update-check       Skip the startup GitHub release check.");

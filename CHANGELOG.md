@@ -1,7 +1,34 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.9.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.9.1, a documented-compatibility
 release.
+
+## [1.9.1] - 2026-11-14
+
+### Added
+
+- **Additional UI languages.** Embedded catalogs for Brazilian Portuguese (`pt-br`),
+  French (`fr`), Spanish (`es`), Italian (`it`), Japanese (`ja`), Korean (`ko`), and
+  Simplified Chinese (`zh`), alongside English and German. Each catalog covers every
+  non-tooltip shell/dialog/CLI string and the core shell tooltips; missing secondary
+  tooltips fall back to English. Language-only codes such as `pt` resolve to their
+  regional catalog (`pt-br`), and `zh-CN` resolves to `zh`.
+- **Two-step Escape.** While a game is running, the first Escape press pauses it and the
+  next press closes 5DO. Fullscreen exit, the quick menu, and text entry keep priority;
+  resuming, stopping, opening the quick menu, or losing window focus disarms the quit
+  step. See `UserGuide.md`.
+
+### Fixed
+
+- Switching the UI language back to English now restores the English labels immediately
+  instead of leaving the previous language in place until the application restarted. The
+  localization pass remembers the original text for each control and retranslates from
+  that source when the locale changes. This also works when the launch used `--locale`.
+- The desktop `--list-locales` output is written as UTF-8 so the native names are not
+  corrupted in a terminal or redirected log.
+- The three analysis-only `GameLibraryWindow` symbol errors from
+  `jb inspectcode --severity=WARNING` are resolved with an explicit type alias, so the
+  warning gate is clean.
 
 ## [1.9.0] - 2026-11-14
 

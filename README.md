@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.9.0-orange" alt="Version 1.9.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.9.1-orange" alt="Version 1.9.1"></a>
 </p>
 
 <p align="center">
@@ -27,8 +27,9 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.9.0**, a documented-compatibility release with English/German
-> localization, external metadata and media, physical optical-drive boot, Windows
+> 5DO is at **v1.9.1**, a documented-compatibility release with UI catalogs for
+> English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean,
+> and Simplified Chinese, external metadata and media, physical optical-drive boot, Windows
 > DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, an
 > editable input timeline, and best-effort 4DO state interop. Windows x64 is the
 > validated GPU target; Linux x64 full suite passed (GPU presentation is
@@ -74,10 +75,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.9.0` release (GitHub Releases) |
+| Version | `1.9.1` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,252 tests** in the current test assembly |
+| Automated tests | **2,259 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -98,20 +99,20 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.9.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.9.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.9.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.9.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.9.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.9.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.9.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-win-x64.zip) |
+| Windows arm64 | [`5do-1.9.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-win-arm64.zip) |
+| Linux x64 | [`5do-1.9.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.9.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.9.1-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.9.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.1/5do-1.9.1-osx-arm64.dmg) |
 
 The apps are single-file executables. **Install the .NET 11 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.9.1)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.9.0-win-arm64.zip`
-or `5do-1.9.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.9.1-win-arm64.zip`
+or `5do-1.9.1-osx-arm64.dmg`.
 
 ## Features
 
@@ -138,7 +139,11 @@ or `5do-1.9.0-osx-arm64.dmg`.
   filters, and sorts. The online catalog uses precomputed 4DO game IDs plus annotation-
   stripped Jaro-Winkler fallback and an optional bulk pack for offline use.
 - External library-metadata lookup with a deterministic offline cache and manual media
-  attachments, plus an English/German UI catalog (`--locale`, Settings > General).
+  attachments, plus nine embedded UI catalogs (`--locale`, Settings > General) that
+  switch back to English without a restart.
+- Two-step **Escape** shortcut: the first press pauses the game, the second closes 5DO.
+  Fullscreen exit, the quick menu, text entry, resume/stop, and focus changes keep the
+  shortcut from closing the app by surprise.
 - BIOS manager with region/Kanji/Anvil/patch detection, auto-selection, and per-game
   overrides.
 - Shared and per-game NVRAM with backup, import, reset, and delete.
@@ -197,7 +202,7 @@ or `5do-1.9.0-osx-arm64.dmg`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.9.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.9.1 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

@@ -363,6 +363,16 @@ public static class Localizer
             }
         }
 
+        // A language-only or unmatched regional code may be served by the only shipped
+        // regional catalog for that language (for example pt -> pt-br).
+        foreach (LocalizationCatalog catalog in Catalogs)
+        {
+            if (catalog.Locale.StartsWith(language + "-", StringComparison.Ordinal))
+            {
+                return catalog;
+            }
+        }
+
         return null;
     }
 

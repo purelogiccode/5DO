@@ -34,9 +34,9 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   executable. `FIVEDO_DATA_DIR` overrides the data directory even when `--portable` is
   not used. `--config-profile <name>` selects `<data-directory>/profiles/<name>/` for
   an isolated named configuration; `FIVEDO_PROFILE` is the environment equivalent.
-- `--locale <code>` selects the CLI UI language (`en` or `de`); `--list-locales` prints
-  the embedded catalogs. Machine-readable JSON remains English. See
-  [`Localization.md`](Localization.md).
+- `--locale <code>` selects the CLI UI language (`de`, `en`, `es`, `fr`, `it`, `ja`,
+  `ko`, `pt-br`, or `zh`); `--list-locales` prints the embedded catalogs.
+  Machine-readable JSON remains English. See [`Localization.md`](Localization.md).
 - A disc argument may be a host optical-drive root (`D:`, `D:\`, `\\.\D:`, or
   `/dev/sr0`) instead of an image file. Data discs boot through the cooked block
   interface; physical CD-DA tracks are not exposed yet. See

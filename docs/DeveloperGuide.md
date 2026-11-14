@@ -331,7 +331,10 @@ lines from the current VDLP state for the optional multitask path.
 - Keyboard/gamepad profiles are per-player; gamepad fallbacks for sticks/triggers.
 - `HotkeyRouter` resolves the persisted console hotkeys; the shell dispatches
   them before forwarding a key to the emulated pad. F11 works from the library,
-  and Escape leaves fullscreen before the pause action runs. F6/F7 change slots;
+  and Escape leaves fullscreen before the pause action runs. `EscapeQuitPolicy`
+  turns Escape into a two-step shortcut: pause first, close the shell on the next
+  press while still paused. It is disarmed when emulation resumes or stops, when the
+  quick menu opens, and when the window loses focus. F6/F7 change slots;
   F9 steps one frame through `CoreRunner.StepFrame` and leaves emulation paused.
 
 ### Diagnostics

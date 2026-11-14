@@ -1,7 +1,7 @@
 # 5DO — Consolidated Implementation Plan
 
 **Snapshot:** 2026-11-14
-**Release:** v1.9.0
+**Release:** v1.9.1
 **Status:** the compatibility program is complete. This file is the single actionable plan;
 it tracks only **achievable post-1.9 work**.
 **Merged from:** the former active plan and
@@ -44,11 +44,11 @@ loadability and duplicate coverage.
 | Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom) | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
-| Release | **v1.9.0** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt`; localization, metadata and media, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0) |
+| Release | **v1.9.1** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt`; nine UI catalogs with reversible locale switching, two-step Escape pause/quit, metadata and media, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.9.1) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
 | Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux GPU presentation remains preview/best-effort | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |
-| Localization | English/German UI catalogs; `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
+| Localization | Nine embedded UI catalogs (English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, Simplified Chinese); `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
 | Metadata | External metadata lookup with deterministic cache and manual media attachments | [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
 
 The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
@@ -177,7 +177,7 @@ the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode
 |---|---|---|---|---|
 | **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. **Implemented 2026-11-13** in `PhysicalDiscSource`, `File > Boot Optical Drive...`, and the CLI drive-root path. The remaining check is hardware evidence on a machine with an attached drive and a 3DO disc. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
 | **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
+| **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13; expanded 2026-11-14 to nine catalogs), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
 | **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
 | **VID-16 — Done** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. Evidence: `FrameAssemblerTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
@@ -211,9 +211,11 @@ awake. `ControllerPreviewTests`, `AutoCropTests`, and `DisplaySleepPolicyTests` 
 the logic; see [TestCorpus.md](TestCorpus.md) 1.1bu and 1.1bv.
 
 **UX-09, SYS-21, and SYS-23 (the requested parity order) are implemented (2026-11-13).**
-UX-09 is complete with English/German catalogs, a General settings tab, and
+UX-09 is complete with nine catalogs (English, German, Brazilian Portuguese, French,
+Spanish, Italian, Japanese, Korean, and Simplified Chinese), a General settings tab, and
 `--locale`/`--list-locales` in both executables; the translated smoke marker records
-`firstMenuHeader=Datei`. SYS-21 and SYS-23 are code-complete with automated tests, but
+`firstMenuHeader=Datei`. Changing back to English in Settings restores the English
+labels immediately. SYS-21 and SYS-23 are code-complete with automated tests, but
 their `Done when` lines still require a physical host drive and a physical DirectInput
 pad respectively. `--gamepad-probe` records the active backend and raw samples for that
 hardware check; the physical drive is reachable from **File > Boot Optical Drive...** or

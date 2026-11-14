@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.9.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.9.1 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -22,7 +22,8 @@ aspect presets, and the .NET 11 / C# 15 toolchain.
 v1.9.0 adds English/German localization, external metadata and media, physical
 optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
 display-sleep inhibition, Lua input scripting, the input timeline, and best-effort 4DO
-`.4dosav` import/export.
+`.4dosav` import/export. v1.9.1 adds seven UI languages, reversible locale switching, and
+the two-step Escape pause/quit shortcut.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -367,6 +368,39 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.9.1 localization and quality-of-life gate
+
+- [ ] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.9.1`.
+- [ ] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.9.1.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`, the
+      MkDocs navigation, and the curated wiki pages.
+- [ ] Add Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and
+      Simplified Chinese catalogs; verify every translated catalog covers every
+      non-tooltip key and the core shell tooltips.
+- [ ] Fix the language-switch regression so selecting English after German restores the
+      labels in the same session, including when `--locale` was used for the launch.
+- [ ] Implement the two-step Escape shortcut: first press pauses, second press closes
+      5DO; fullscreen, quick-menu, library, text entry, resume/stop, and focus changes
+      keep priority.
+- [ ] Full suite passes in Debug and Release; `dotnet restore --locked-mode`,
+      `dotnet build`, `dotnet format --verify-no-changes`, and
+      `jb inspectcode --severity=WARNING` are clean.
+- [ ] Build all six framework-dependent bundles from the `v1.9.1` tag, verify contents
+      and apphost architectures, and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test` (`FRONTEND SMOKE OK 1.9.1`)
+      and at least one translated smoke marker.
+- [ ] Create and push tag `v1.9.1`; the release workflow publishes six versioned bundles
+      and `SHA256SUMS.txt` at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>.
+- [ ] CI passes every required job: Windows/Linux/macOS build-test, the RID-agnostic
+      lock check, format, benchmark gates, trimmed CLI/frontend, both NativeAOT
+      apphosts, the six bundle jobs, and the aggregate gate.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for
+      `WhatsNew.html`, `ReleaseNotes-1.9.1.html`, and `wiki/Release-1.9.1`.
+
+---
+
 ## Cover-art hosting gate
 
 - [ ] Run `packaging/package-covers.ps1`; review `artifacts/covers/v1/report.json`.
@@ -469,8 +503,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.9.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.8.0 are historical |
-| Release timing | **Prepared 2026-11-14** | v1.9.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Version | **`v1.9.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.9.0 are historical |
+| Release timing | **Prepared 2026-11-14** | v1.9.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 

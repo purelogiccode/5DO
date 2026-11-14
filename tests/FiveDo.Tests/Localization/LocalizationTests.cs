@@ -18,36 +18,66 @@ public sealed class LocalizerTestsGroup
 public sealed class LocalizationTests
 {
     [Fact]
-    public void EmbeddedCatalogs_IncludeEnglishAndGerman()
+    public void EmbeddedCatalogs_IncludeEveryShippedLocale()
     {
-        LocalizationCatalog english = Assert.Single(
-            Localizer.Available,
-            catalog => string.Equals(catalog.Locale, "en", StringComparison.Ordinal));
-        Assert.Equal("en", english.Locale);
-        LocalizationCatalog german = Assert.Single(
-            Localizer.Available,
-            catalog => string.Equals(catalog.Locale, "de", StringComparison.Ordinal));
-        Assert.Equal("Deutsch", german.DisplayName);
-        Assert.True(german.Count > 400);
+        string[] locales = ["de", "en", "es", "fr", "it", "ja", "ko", "pt-br", "zh"];
+        foreach (var locale in locales)
+        {
+            LocalizationCatalog catalog = GetCatalog(locale);
+            Assert.Equal(locale, catalog.Locale);
+            Assert.False(string.IsNullOrWhiteSpace(catalog.DisplayName));
+            Assert.True(catalog.Count > 400);
+        }
+
+        Assert.Equal("Deutsch", GetCatalog("de").DisplayName);
+        Assert.Equal("English", GetCatalog("en").DisplayName);
+        Assert.Equal("Português (Brasil)", GetCatalog("pt-br").DisplayName);
+        Assert.Equal("日本語", GetCatalog("ja").DisplayName);
+        Assert.Equal("한국어", GetCatalog("ko").DisplayName);
+        Assert.Equal("简体中文", GetCatalog("zh").DisplayName);
     }
 
     [Fact]
-    public void GermanLocale_TranslatesEveryNonToolTipString()
+    public void EveryTranslatedLocale_CoversEveryNonToolTipString()
     {
         LocalizationCatalog english = GetCatalog("en");
-        LocalizationCatalog german = GetCatalog("de");
-        var missing = english.Strings.Keys
-            .Where(key => !key.StartsWith("ui.tip.", StringComparison.Ordinal))
-            .Where(key => !german.Strings.ContainsKey(key))
-            .OrderBy(key => key, StringComparer.Ordinal)
-            .ToArray();
-
-        Assert.Empty(missing);
-        Assert.All(german.Strings, pair =>
+        foreach (LocalizationCatalog catalog in Localizer.Available)
         {
-            Assert.True(english.Strings.ContainsKey(pair.Key));
-            Assert.False(string.IsNullOrWhiteSpace(pair.Value));
-        });
+            if (catalog.IsBaseline)
+            {
+                continue;
+            }
+
+            var missing = english.Strings.Keys
+                .Where(key => !key.StartsWith("ui.tip.", StringComparison.Ordinal))
+                .Where(key => !catalog.Strings.ContainsKey(key))
+                .OrderBy(key => key, StringComparer.Ordinal)
+                .ToArray();
+
+            Assert.True(
+                missing.Length == 0,
+                $"Locale '{catalog.Locale}' is missing non-tooltip keys:"
+                + Environment.NewLine
+                + string.Join(Environment.NewLine, missing));
+            Assert.All(catalog.Strings, pair =>
+            {
+                Assert.True(english.Strings.ContainsKey(pair.Key));
+                Assert.False(string.IsNullOrWhiteSpace(pair.Value));
+            });
+        }
+    }
+
+    [Fact]
+    public void SwitchingLocales_RetranslatesAndRestoresEnglish()
+    {
+        using var locale = new ActiveLocale("de");
+        Assert.Equal("Datei", Localizer.TranslateText("File"));
+
+        Assert.True(Localizer.TryUse("fr"));
+        Assert.Equal("Fichier", Localizer.TranslateText("File"));
+
+        Assert.True(Localizer.TryUse(Localizer.DefaultLocale));
+        Assert.Equal("File", Localizer.TranslateText("File"));
     }
 
     [Fact]
@@ -111,8 +141,14 @@ public sealed class LocalizationTests
         Assert.Equal("de", Localizer.Locale);
         Assert.True(Localizer.TryUse("de_AT"));
         Assert.Equal("de", Localizer.Locale);
+        Assert.True(Localizer.TryUse("PT"));
+        Assert.Equal("pt-br", Localizer.Locale);
+        Assert.True(Localizer.TryUse("pt-BR"));
+        Assert.Equal("pt-br", Localizer.Locale);
+        Assert.True(Localizer.TryUse("pt-PT"));
+        Assert.Equal("pt-br", Localizer.Locale);
         Assert.False(Localizer.TryUse("zz-ZZ"));
-        Assert.Equal("de", Localizer.Locale);
+        Assert.Equal("pt-br", Localizer.Locale);
     }
 
     [Fact]

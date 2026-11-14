@@ -122,6 +122,7 @@ public partial class MainWindow : Window, IDisposable
     private DispatcherTimer? _cpuTimer;
     private byte[]? _cpuPixels;
     private bool _running;
+    private readonly EscapeQuitPolicy _escapeQuit = new();
     private bool _shuttingDown;
     private bool _biosLoaded;
     private string _biosMd5 = string.Empty;
@@ -1583,9 +1584,44 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
+    /// <summary>
+    /// Handles the two-step Escape shortcut: the first press pauses emulation, and the
+    /// next press closes the application. Fullscreen exit, the quick menu, the library,
+    /// and text-entry focus keep priority over this shortcut.
+    /// </summary>
+    /// <returns><see langword="true"/> when the key was consumed.</returns>
+    private bool HandleEscape()
+    {
+        if (LibraryView.IsVisible || FocusManager.GetFocusedElement() is TextBox)
+        {
+            return false;
+        }
+
+        if (!EmulationView.IsVisible || _machine is null)
+        {
+            return false;
+        }
+
+        if (_escapeQuit.ShouldQuit(_running))
+        {
+            Close();
+            return true;
+        }
+
+        if (_running)
+        {
+            PauseEmulation(showLibrary: false);
+        }
+
+        StatusText.Text = "Paused. Press Escape again to quit.";
+        ShowOsd("Paused. Press Escape again to quit.");
+        return true;
+    }
+
     private void StartEmulation(bool showGameView)
     {
         _focusPause.Clear();
+        _escapeQuit.Disarm();
         if ((!_biosLoaded && _moviePlayback is null) || _machine is null || _runner is null)
         {
             StatusText.Text = "Open a 3DO BIOS before starting emulation.";
@@ -1671,6 +1707,7 @@ public partial class MainWindow : Window, IDisposable
     private void StopEmulation()
     {
         _focusPause.Clear();
+        _escapeQuit.Disarm();
         StopAudioRecording();
         StopGifRecording();
         StopMovie(save: true);
@@ -2806,6 +2843,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void ShowLibraryView()
     {
+        _escapeQuit.Disarm();
         if (WindowState == WindowState.FullScreen)
         {
             WindowState = WindowState.Normal;
@@ -3059,6 +3097,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnWindowDeactivated()
     {
+        _escapeQuit.Disarm();
         CancelFastForward();
 
         // Release held keyboard bindings so a focus switch cannot leave a
@@ -4237,7 +4276,7 @@ public partial class MainWindow : Window, IDisposable
         var previousCheatsDirectory = _settings.ResolveCheatsDirectory();
         var previousAutoBios = _settings.AutoBios;
         var previousAllowUnsignedDiscs = _settings.AllowUnsignedDiscs;
-        var previousLanguage = _settings.Language;
+        var previousLocale = Localizer.Locale;
         AppSettings previousEffective = _settings.CreateEffectiveForGame(_gameId);
         var previousInputDevices = string.Join(",", previousEffective.ResolveInputDevices(_gameId));
         var window = new SettingsWindow(_settings, _gameId, _gameName);
@@ -4262,13 +4301,13 @@ public partial class MainWindow : Window, IDisposable
             StatusText.Text = "Settings could not be saved; check the data folder permissions.";
         }
 
-        if (!string.Equals(previousLanguage, _settings.Language, StringComparison.Ordinal))
+        if (!Localizer.TryUse(_settings.Language))
         {
-            if (!Localizer.TryUse(_settings.Language))
-            {
-                _ = Localizer.TryUse(Localizer.DefaultLocale);
-            }
+            _ = Localizer.TryUse(Localizer.DefaultLocale);
+        }
 
+        if (!string.Equals(previousLocale, Localizer.Locale, StringComparison.Ordinal))
+        {
             // Menus, labels, and tooltips are static presentation; dynamic status text
             // updates from the running game stay in the language they were produced in.
             UiLocalizer.Apply(this);
@@ -4816,6 +4855,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _quickMenuOpen = true;
+        _escapeQuit.Disarm();
         _quickMenuResumeAfterClose = _running;
         if (_running)
         {
@@ -6442,6 +6482,14 @@ public partial class MainWindow : Window, IDisposable
         if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
         {
             ToggleFullscreen();
+            e.Handled = true;
+            return;
+        }
+
+        // Escape pauses on the first press and closes 5DO on the second. This runs
+        // before the configurable Pause hotkey so Escape cannot resume the game.
+        if (e.Key == Key.Escape && HandleEscape())
+        {
             e.Handled = true;
             return;
         }

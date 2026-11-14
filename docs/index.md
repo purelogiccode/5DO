@@ -75,18 +75,20 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.9.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.9.1.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-14, v1.9.0 release (GitHub Releases).**
+**2026-11-14, v1.9.1 release (GitHub Releases).**
 
-- **2,252 tests** are present in the current test assembly.
-- Localization (English/German), external metadata and manual media, physical
+- **2,259 tests** are present in the current test assembly.
+- Localization (English, German, Brazilian Portuguese, French, Spanish, Italian,
+  Japanese, Korean, and Simplified Chinese), external metadata and manual media, physical
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview,
-  auto-crop, display-sleep inhibition, Lua input scripting, the input timeline, and
-  best-effort 4DO `.4dosav` import/export are available.
+  auto-crop, display-sleep inhibition, Lua input scripting, the input timeline,
+  best-effort 4DO `.4dosav` import/export, and the two-step Escape pause/quit
+  shortcut are available.
 - The 50-title differential panel matches **50/50 frame hashes** at frames
   60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
   samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field
@@ -111,13 +113,12 @@
 - Windows x64 is the validated GPU target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS x64/arm64, Linux arm64, and Windows
   arm64 pass the native CLI/frontend runtime smoke (2026-11-10).
-- v1.9.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0)
+- v1.9.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.1)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
   desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 11 runtime
-  is required on the host and is not bundled. The release adds localization, external
-  metadata and media, physical optical-drive boot, DirectInput gamepads, auto-crop,
-  display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state
-  interop. See [What's new](WhatsNew.md).
+  is required on the host and is not bundled. The release adds seven UI languages, fixes
+  switching back to English, and adds the two-step Escape pause/quit shortcut. See
+  [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

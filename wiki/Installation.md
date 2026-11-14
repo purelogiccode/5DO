@@ -3,16 +3,16 @@
 ## Download
 
 Download the bundle for your system and architecture from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.1):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.9.0-win-x64.zip` |
-| Windows arm64 | `5do-1.9.0-win-arm64.zip` |
-| Linux x64 | `5do-1.9.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.9.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.9.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.9.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.9.1-win-x64.zip` |
+| Windows arm64 | `5do-1.9.1-win-arm64.zip` |
+| Linux x64 | `5do-1.9.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.9.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.9.1-osx-x64.dmg` |
+| macOS arm64 | `5do-1.9.1-osx-arm64.dmg` |
 
 Each bundle contains both the desktop app and the CLI. The bundles are
 framework-dependent: install the **.NET 11 Runtime** from
@@ -43,12 +43,12 @@ Linux:
 
 ```sh
 mkdir 5do-linux-x64
-tar -xzf 5do-1.9.0-linux-x64.tar.gz -C 5do-linux-x64
+tar -xzf 5do-1.9.1-linux-x64.tar.gz -C 5do-linux-x64
 cd 5do-linux-x64
 ./FiveDo.Frontend.Avalonia
 ```
 
-macOS: open `5do-1.9.0-osx-<arch>.dmg`, drag `5DO.app` to Applications, and launch it.
+macOS: open `5do-1.9.1-osx-<arch>.dmg`, drag `5DO.app` to Applications, and launch it.
 The CLI is inside `5DO.app/Contents/MacOS/FiveDo.Cli`.
 
 If the extracted executable is not executable on Linux/macOS:

@@ -6323,7 +6323,7 @@ internal static class Program
         Console.WriteLine("  settings options [--format markdown|text] [--json]");
         Console.WriteLine("                                       List the validated machine-option registry.");
         Console.WriteLine("  --config-profile <name>              Use profiles/<name> for settings, NVRAM, cheats, and logs.");
-        Console.WriteLine("  --locale <code>                      Use a UI locale (en or de) for this command.");
+        Console.WriteLine("  --locale <code>                      Use a UI locale (for example en, de, ja, or pt-br) for this command.");
         Console.WriteLine("  --list-locales                       List the embedded UI locales.");
         Console.WriteLine("  --portable                           Store settings, NVRAM, cheats, and logs beside the executable.");
         Console.WriteLine("  cheat list|add|enable|disable|remove|import|export --game ID [--dir path] [--json]");

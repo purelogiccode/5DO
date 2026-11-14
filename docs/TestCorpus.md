@@ -3780,3 +3780,33 @@ the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. The local
 bundle reports `5DO 1.9.0`, passes `selftest`, and writes `FRONTEND SMOKE OK 1.9.0` with
 `locale=de` and `firstMenuHeader=Datei`; `whatsnew.md`, the 1.9.0 release notes, and the
 legal docs are present, with no runtime, PDB, or XML files.
+
+### 1.1cc Additional UI languages, reversible locale switching, and two-step Escape (2026-11-14)
+
+**Catalogs.** Seven new embedded catalogs — Brazilian Portuguese (`pt-br`), French
+(`fr`), Spanish (`es`), Italian (`it`), Japanese (`ja`), Korean (`ko`), and Simplified
+Chinese (`zh`) — join English and German in `FiveDo.Localization`. Each mirrors the 591-key
+German catalog: every non-tooltip shell/dialog/CLI string plus the core shell tooltips.
+`LocalizationCatalog` now resolves language-only and unmatched regional codes to the
+shipped regional catalog (`pt`, `pt-PT`, `pt-BR` → `pt-br`; `zh-CN` → `zh`).
+`--list-locales` prints all nine names, and the frontend sets UTF-8 console output so the
+native names survive redirection.
+
+**Locale switching.** `UiLocalizer` remembers the original English text per
+control/property and retranslates from that source on every pass. Selecting English after
+German now restores the English labels immediately instead of requiring a restart;
+`UiLocalizerTests` verifies both `TextBlock.Text` and `ToolTip.Tip` restoration. The
+localization tests also check every catalog's non-tooltip coverage and a de → fr → en
+switch.
+
+**Two-step Escape.** `EscapeQuitPolicy` implements the requested shortcut: while a game
+runs, the first Escape pauses it; the next Escape closes 5DO. Fullscreen exit, the quick
+menu, the library, and text-entry focus keep priority. Resuming, stopping, opening the
+quick menu, or losing window focus disarms the quit step. `EscapeQuitPolicyTests` (4
+tests) cover the sequence, the already-paused case, disarming, and repeated presses while
+running.
+
+**Build and gates.** Full suite **2,259/2,259** passes in Debug; build and
+`dotnet format --verify-no-changes` are clean. `jb inspectcode --severity=WARNING` reports
+only the three known analysis-only `GameLibraryWindow` symbol errors; the same symbols
+resolve in `dotnet build` and the test suite.

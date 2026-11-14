@@ -1,21 +1,22 @@
 # Project Status and Next Steps
 
-**2026-11-14 update:** **v1.9.0** is the feature and interoperability release. It adds
-English/German localization (`--locale`, `--list-locales`, Settings > General > UI
-language), external metadata lookup with manual media attachments (`metadata lookup` /
-`metadata media`), physical optical-drive boot (SYS-21), the Windows DirectInput/HID
-gamepad backend with XInput fallback (SYS-23), a live controller preview (UX-31),
-automatic blank-border crop (VID-18), display-sleep inhibition (UX-32), Lua input
-scripting and the editable input timeline (UX-29), and best-effort 4DO `.4dosav`
-import/export (UX-30). The suite is **2,252 tests**; build, format, and a clean-cache
-InspectCode pass are clean. SYS-21 and SYS-23 keep their `Done when` lines open pending
-physical hardware evidence. See [Localization.md](Localization.md),
+**2026-11-14 update:** **v1.9.1** is a localization and quality-of-life release. It adds
+Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and Simplified Chinese
+to the English/German UI catalogs (`--locale`, `--list-locales`, Settings > General > UI
+language), fixes switching the desktop back to English without a restart, and adds the
+two-step Escape pause/quit shortcut. The full v1.9.0 feature set remains: external
+metadata and media, physical optical-drive boot, Windows DirectInput/HID gamepads, the
+controller preview, auto-crop, display-sleep inhibition, Lua input scripting, the input
+timeline, and best-effort 4DO `.4dosav` import/export. The suite is **2,259 tests**;
+build, format, and InspectCode are clean. SYS-21 and SYS-23 keep their `Done when` lines
+open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
-and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, and 1.1bz.
+and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-14, v1.9.0: localization, external metadata and media, physical
-optical-drive boot, Windows DirectInput/HID gamepads, controller preview, auto-crop,
-display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
+**Snapshot:** 2026-11-14, v1.9.1: nine UI catalogs with reversible locale switching,
+two-step Escape pause/quit, external metadata and media, physical optical-drive boot,
+Windows DirectInput/HID gamepads, controller preview, auto-crop, display-sleep
+inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 The underlying v1.8.0 snapshot remains: MMPX 2x and bicubic filters, wider aspect
 presets, the .NET 11 / C# 15 toolchain, the CHD startup-stutter fix and dependency
 refresh; the native platform runtime smoke, CD subcode, disc
@@ -105,7 +106,8 @@ and the aggregate gate. Release run
 <https://github.com/purelogiccode/5DO/actions/runs/43558324543> built and published all
 six assets; every checksum verifies, and the assets and internal macOS tarballs are
 copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. The suite is **2,252 tests**;
-a clean-cache InspectCode run is clear. Docs for `WhatsNew`, the 1.9.0 release notes,
+the three analysis-only `GameLibraryWindow` symbol errors were resolved with a type
+alias in 1.9.1. Docs for `WhatsNew`, the 1.9.0 release notes,
 and `wiki/Release-1.9.0` return HTTP 200. See
 [`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.9.0.md`](ReleaseNotes-1.9.0.md).
 

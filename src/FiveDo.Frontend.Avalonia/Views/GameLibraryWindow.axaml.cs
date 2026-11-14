@@ -11,6 +11,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using FiveDo.Host;
 using FiveDo.Storage;
+using HostLibraryMetadataCatalog = FiveDo.Host.LibraryMetadataCatalog;
 
 namespace FiveDo.Frontend.Avalonia.Views;
 
@@ -21,7 +22,7 @@ public partial class GameLibraryWindow : Window
 {
     private readonly AppSettings _settings;
     private readonly LibraryState _libraryState;
-    private LibraryMetadataCatalog _libraryMetadata;
+    private HostLibraryMetadataCatalog _libraryMetadata;
     private DiscHealthCache _discHealth;
     private CancellationTokenSource? _scanCts;
     private int _scanGeneration;
@@ -41,7 +42,7 @@ public partial class GameLibraryWindow : Window
         InitializeComponent();
         _settings = settings;
         _libraryState = LibraryStateStore.Load();
-        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _libraryMetadata = HostLibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         _discHealth = DiscHealthCacheStore.Load();
         Closed += (_, _) =>
         {
@@ -308,7 +309,7 @@ public partial class GameLibraryWindow : Window
 
     private async Task RefreshAsync()
     {
-        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
+        _libraryMetadata = HostLibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
         var generation = ++_scanGeneration;
         _scanCts?.Cancel();
         _scanCts?.Dispose();

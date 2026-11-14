@@ -84,7 +84,7 @@ every serialized property in `AppSettings`.
 | Property | Type | Default | Meaning |
 |---|---|---|---|
 | `SettingsVersion` | int | `8` | Settings schema version. Unversioned files are migrated on load. |
-| `Language` | string | `"system"` | UI locale code (`en`, `de`) or `system`. Presentation-only; `--locale` overrides it for one launch. |
+| `Language` | string | `"system"` | UI locale code (`de`, `en`, `es`, `fr`, `it`, `ja`, `ko`, `pt-br`, `zh`) or `system`. Presentation-only; `--locale` overrides it for one launch. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
 | `Bios2Path` | string | `""` | Optional BIOS2/Kanji font path. |
@@ -473,9 +473,10 @@ slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewi
 second), Tab (hold to fast-forward), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
 Escape (pause), and F10 (reset). The shell dispatches these bindings before forwarding a
 key to the emulated pad; F11 also works from the library, and Escape leaves fullscreen
-before it reaches the pause action. `HotkeyRouter` resolves the persisted action names
-case-insensitively, so a custom key assignment in the profile is honored. Unknown action
-names and unbound keys are ignored.
+before it reaches the pause action. While paused, a second Escape closes 5DO; resuming,
+stopping, opening the quick menu, or losing window focus disarms that second press.
+`HotkeyRouter` resolves the persisted action names case-insensitively, so a custom key
+assignment in the profile is honored. Unknown action names and unbound keys are ignored.
 
 The binding editor reports conflicts when one key/control is bound to multiple buttons
 or one hotkey is bound to multiple actions.

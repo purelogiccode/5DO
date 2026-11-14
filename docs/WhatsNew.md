@@ -1,102 +1,66 @@
-# What's new in 5DO 1.9.0
+# What's new in 5DO 1.9.1
 
 **Released:** 2026-11-14
 
-5DO 1.9.0 is a **feature and interoperability release**. It adds localization, external
-metadata and media attachments, physical optical-drive boot, a Windows DirectInput/HID
-gamepad backend, a live controller preview, automatic blank-border crop, display-sleep
-inhibition, Lua input scripting with an editable input timeline, and best-effort 4DO
-`.4dosav` import/export. The emulation core and the documented compatibility model are
-unchanged.
+5DO 1.9.1 is a **localization and quality-of-life update**. It adds seven UI languages
+to English and German, fixes switching the desktop back to English without a restart,
+and adds a RetroArch-style two-step Escape shortcut. The deterministic emulation core,
+frame/audio/state hashes, and the documented compatibility model are unchanged.
 
 ## Highlights
 
-### English and German UI
+### Nine UI languages
 
-- The desktop shell and CLI now load embedded **English and German** catalogs.
-- **Settings > General > UI language** selects `system`, `en`, or `de`; `--locale <code>`
-  overrides it for one desktop launch. `--list-locales` prints the available catalogs.
-- Menus, labels, tabs, placeholders, and tooltips are translated after each window is
-  realized. Data-bound values, JSON output, and machine diagnostics stay stable.
-- A translated smoke run records `locale=de` and `firstMenuHeader=Datei`.
+- The desktop shell and CLI now load **English, German, Brazilian Portuguese, French,
+  Spanish, Italian, Japanese, Korean, and Simplified Chinese** catalogs.
+- Every translated catalog covers the full shell, dialogs, CLI-facing strings, and the
+  core shell tooltips (591 keys, mirroring the existing German catalog). Secondary
+  tooltips without a key fall back to English.
+- **Settings > General > UI language** lists every catalog. `--locale <code>` overrides
+  the saved setting for one launch, and `--list-locales` prints the embedded catalogs.
+- Language-only and regional codes resolve sensibly: `pt`, `pt-PT`, and `pt-BR` select
+  `pt-br`; `zh-CN` and `zh-Hans` select `zh`.
+- The frontend prints `--list-locales` as UTF-8, so native names stay readable in
+  terminals and redirected logs.
 
-### Metadata and manual media
+### Language switching works in both directions
 
-- `metadata lookup` downloads a versioned library-metadata catalog over HTTP(S) or a
-  `file:` URI, validates it, writes a deterministic cache, and searches by game ID,
-  title, or normalized containment.
-- `metadata media` and the **Game Metadata** window attach, remove, open, and list manual
-  media files. Attachments are metadata only; 5DO never copies or modifies the files.
+- The desktop localization pass now remembers each control's original English text and
+  retranslates from that source on every locale change.
+- Selecting **English** after German (or any other catalog) restores the English labels
+  and tooltips immediately instead of requiring an application restart.
+- Changing the language also works when the launch used `--locale`, because the pass
+  compares the active catalog rather than only the saved setting.
 
-### Physical optical drives
+### Two-step Escape
 
-- **File > Boot Optical Drive...** lists attached CD/DVD drives with media and boots the
-  selected disc through the host's cooked 2048-byte sector interface.
-- Drive-root paths such as `D:`, `\\.\D:`, and `/dev/sr0` work in the CLI.
-- Data discs boot like the equivalent image. CD-DA playback from a physical drive is not
-  exposed yet.
-
-### Gamepads and controller preview
-
-- Windows enumerates **DirectInput/HID** pads alongside XInput, including axes, POV hats,
-  and calibrated triggers. XInput remains the fallback and duplicate Xbox pads are
-  filtered out.
-- **Input Bindings** shows a live 3DO pad: mapped buttons are outlined, the selected row
-  is amber, and a held key or gamepad control turns its button green.
-- `--gamepad-probe` prints the active source and raw controller samples.
-
-### Presentation
-
-- **Auto-crop borders** uses 4DO's 25%-per-edge detector and a one-second hysteresis.
-  Manual and per-game crops override it; hashes, audio, input, and save states do not
-  change.
-- **Display-sleep inhibition** keeps the Windows display and system awake while a game is
-  running and unpaused, and releases on pause, stop, fault, and exit. Linux and macOS
-  remain best-effort.
-- The OpenGL framebuffer-failure path now falls back to the CPU presenter instead of
-  raising an unhandled UI exception every frame.
-
-### TAS and 4DO state interop
-
-- **Lua input scripting** runs under MoonSharp's hard sandbox. `run` and `movie record`
-  accept `--input-lua`; the API exposes `frame`, `hold`, `press`, and `release` (also
-  `input.*`). The emitted entries replay through the normal deterministic movie path.
-- **Emulation > Input Timeline...** draws one row per pad button with a playhead. The CLI
-  provides `movie timeline export|set|apply` and preserves the embedded state and other
-  controller slots.
-- `state import-4do` and `state export-4do` map ARM, memory (with high-resolution
-  mirrors), MADAM, CLIO, DSP, SPORT, VDLP, Quartz, and XBUS. Unsupported fields are
-  reported as warnings. Native 4DO state compatibility is not guaranteed.
+- While a game is running, the **first Escape** pauses emulation and shows
+  `Paused. Press Escape again to quit.`
+- The **second Escape** closes 5DO, matching the requested RetroArch-style flow.
+- Fullscreen exit, the quick menu, the library view, and text-entry focus keep priority.
+  Resuming or stopping emulation, opening the quick menu, or losing window focus disarms
+  the quit step so the app is not closed by surprise.
 
 ## Fixed
 
-- Removable and network volumes with an invalid FILETIME no longer abort the library scan
-  with `Not a valid Win32 FileTime`.
-- The library and disc-health caches keep an unknown stamp instead of re-hashing the file
-  on every scan.
-- An empty or unreadable optical drive disposes its device handle before reporting the
-  error.
-- External metadata with a null title/path no longer matches every query; null records
-  are dropped, and `metadata lookup --write` preserves existing media and the local disc
-  path.
-- The DirectInput enumeration callback stays rooted for the native call.
-- 4DO export writes the 64-byte XBUS device-offset table required by FreeDOCore's
-  loader.
-- Dependencies updated: Meziantou.Analyzer 3.0.340, CHDSharp 1.7.0, SkiaSharp 4.156.0,
-  Microsoft.NET.Test.Sdk 18.12.0, and MoonSharp 2.0.0.
+- Switching the UI language back to English no longer leaves the previous language on
+  screen until restart.
+- `--list-locales` from the desktop executable now writes UTF-8, so non-ASCII display
+  names are not corrupted.
+- The three long-standing analysis-only `GameLibraryWindow` symbol errors in
+  `jb inspectcode` are resolved with an explicit type alias.
 
 ## Validation
 
-- Full suite **2,252/2,252** passes in Debug with .NET SDK 11.0.100.
-- `dotnet build`, `dotnet restore --locked-mode`, `dotnet format --verify-no-changes`, and
-  a clean-cache `jb inspectcode --severity=WARNING` are clean.
+- Full suite **2,259/2,259** passes in Debug with .NET SDK 11.0.100.
+- `dotnet restore --locked-mode`, `dotnet build`, and
+  `dotnet format --verify-no-changes` are clean.
+- `jb inspectcode --severity=WARNING` reports **0 results**.
 - Trimmed win-x64 single-file CLI and frontend publishes pass; the frontend smoke writes
-  `FRONTEND SMOKE OK 1.9.0`, `locale=de`, and `firstMenuHeader=Datei`.
+  `FRONTEND SMOKE OK 1.9.1`. French and Japanese smoke runs write `firstMenuHeader=Fichier`
+  and `firstMenuHeader=ファイル`.
 - CI covers Windows, Linux, and macOS; trimmed single-file publishes; NativeAOT apphosts;
   and the six release bundles.
-- Each bundle contains the CLI, desktop app, `README.md`, `LICENSE`,
-  `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs, with no runtime,
-  PDB, or XML files.
 
 ## Requirements
 
@@ -106,21 +70,22 @@ unchanged.
 - Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, CHD, or a compatible physical
   optical drive.
 - Optional: network access for the online cover catalog and external metadata lookup.
+  Local covers, the core emulator, and cached metadata work offline.
 
 ## Download
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.9.0-win-x64.zip` |
-| Windows arm64 | `5do-1.9.0-win-arm64.zip` |
-| Linux x64 | `5do-1.9.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.9.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.9.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.9.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.9.1-win-x64.zip` |
+| Windows arm64 | `5do-1.9.1-win-arm64.zip` |
+| Linux x64 | `5do-1.9.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.9.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.9.1-osx-x64.dmg` |
+| macOS arm64 | `5do-1.9.1-osx-arm64.dmg` |
 
 Each bundle contains the framework-dependent single-file CLI and desktop app, `README.md`,
 `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the release/legal docs. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0) for
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.9.1) for
 `SHA256SUMS.txt`.
 
 ## Known limits
@@ -129,6 +94,8 @@ Each bundle contains the framework-dependent single-file CLI and desktop app, `R
 - CD command cadence remains the residual differential on the 50-title panel.
 - Windows x64 remains the validated GPU target; Linux GPU presentation under
   llvmpipe/SSH is preview/best-effort.
+- The bundled Inter font has no CJK glyphs; Japanese, Korean, and Simplified Chinese
+  depend on the host's system font fallback.
 - Physical optical drive and DirectInput evidence still needs a host with the relevant
   hardware.
 - 4DO state import/export is best-effort and does not guarantee native compatibility.

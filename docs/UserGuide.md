@@ -215,7 +215,9 @@ is widened.
 - **F2** toggles the input display (frame, lag, skip counters, and the selected
   controller's buttons) or use **View > Input Display**. Choose the controller port in
   **Settings > Video > Input display player**.
-- **Escape** pauses emulation; in fullscreen it exits fullscreen first.
+- **Escape** pauses emulation; press **Escape** again while paused to close 5DO. In
+  fullscreen it exits fullscreen first. Resuming or stopping emulation, opening the quick
+  menu, or switching away from the window disarms the second press.
 - **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
   fullscreen are also available from the toolbar and the **Emulation** menu.
 
@@ -443,12 +445,14 @@ Windows. Pausing, stopping, a core fault, or exiting releases the request. Linux
 macOS compositors may still blank the display during play; that path is best-effort.
 
 **Settings > General > UI language** selects the shell language: **System default**
-follows the host locale when an embedded catalog matches, while **English** and
-**Deutsch** select a catalog explicitly. The pass translates window titles, menus,
+follows the host locale when an embedded catalog matches, while **Deutsch**, **English**,
+**Español**, **Français**, **Italiano**, **日本語**, **한국어**, **Português (Brasil)**,
+and **简体中文** select a catalog explicitly. The pass translates window titles, menus,
 labels, tabs, placeholders, and tooltips; data-bound values and dynamic status text are
-left alone. Passing `--locale <code>` to the desktop app overrides the saved setting for
-one launch, and `--list-locales` prints the embedded catalogs. The CLI accepts the same
-two options; JSON output stays in English.
+left alone. Changing the language updates the main window immediately, including when
+switching back to English. Passing `--locale <code>` to the desktop app overrides the
+saved setting for one launch, and `--list-locales` prints the embedded catalogs. The CLI
+accepts the same two options; JSON output stays in English.
 
 **Latency** (Settings > Video) adds run-ahead, frame delay, and adaptive sync controls.
 **Run-ahead** (0-2 frames, default 0) saves and restores the machine each displayed frame so

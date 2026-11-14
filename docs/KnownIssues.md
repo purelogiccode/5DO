@@ -1,9 +1,10 @@
 # Known Issues
 
-**Snapshot:** 2026-11-14, v1.9.0: English/German localization, external metadata and
-manual media, physical optical-drive boot, Windows DirectInput/HID gamepads, the
-controller preview, automatic blank-border crop, display-sleep inhibition, Lua input
-scripting, the input timeline, and best-effort 4DO `.4dosav` import/export, on top of the
+**Snapshot:** 2026-11-14, v1.9.1: nine UI catalogs with reversible locale switching,
+the two-step Escape pause/quit shortcut, external metadata and manual media, physical
+optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, automatic
+blank-border crop, display-sleep inhibition, Lua input scripting, the input timeline,
+and best-effort 4DO `.4dosav` import/export, on top of the
 v1.8.0 MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9 aspect presets,
 and the .NET 11 / C# 15 toolchain. This list covers the supported local corpus and the
 current prototype state. It is not a compatibility guarantee.
@@ -16,12 +17,16 @@ after 1.0 (2026-11-10). See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
-## Localization (2026-11-13)
+## Localization (2026-11-14)
 
 - The English baseline externalizes every static view string and the CLI usage text.
-  German covers all visible shell and dialog labels, the menu tree, Settings, CLI
-  messages, and the core shell tooltips. Tooltips in secondary dialogs that have no
-  German key fall back to English; they are not mistranslated.
+  German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and
+  Simplified Chinese cover all visible shell and dialog labels, the menu tree, Settings,
+  CLI messages, and the core shell tooltips. Tooltips in secondary dialogs that have no
+  translation key fall back to English; they are not mistranslated.
+- Switching the UI language now updates the main window immediately in both directions.
+  The localization pass remembers the original English text, so selecting English again
+  restores the English labels without restarting the application.
 - Dynamic status sentences produced by the emulator, game titles, log messages, JSON
   fields, and developer help text remain English. Changing the locale never restarts
   the machine, resets audio, or changes frame/state hashes.
@@ -29,6 +34,9 @@ checksums are attached, and legal/attribution sign-off is recorded.
   locale environment variables and `CurrentUICulture`; on a Windows host without those
   variables it falls back to English until a locale is selected in Settings or passed
   with `--locale`.
+- The bundled Inter font has no CJK glyphs. Japanese, Korean, and Simplified Chinese
+  text relies on the host's system font fallback; a minimal Linux image without a CJK
+  font may show missing-glyph boxes even though the catalog is selected correctly.
 
 ## Physical optical drives (2026-11-13)
 
