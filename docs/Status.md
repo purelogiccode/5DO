@@ -95,6 +95,20 @@ at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; all published che
 verify. See [`WhatsNew.md`](WhatsNew.md) and
 [`ReleaseNotes-1.7.0.md`](ReleaseNotes-1.7.0.md).
 
+**1.9.0 release update (2026-11-14):** **v1.9.0** publishes six framework-dependent
+single-file bundles (macOS as DMG) and `SHA256SUMS.txt` at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.9.0>. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43558322127> passed every required
+job: Windows/Linux/macOS build-test, the RID-agnostic lock check, format, benchmark
+gates, trimmed CLI/frontend publishes, both NativeAOT apphosts, all six bundle jobs,
+and the aggregate gate. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43558324543> built and published all
+six assets; every checksum verifies, and the assets and internal macOS tarballs are
+copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. The suite is **2,252 tests**;
+a clean-cache InspectCode run is clear. Docs for `WhatsNew`, the 1.9.0 release notes,
+and `wiki/Release-1.9.0` return HTTP 200. See
+[`WhatsNew.md`](WhatsNew.md) and [`ReleaseNotes-1.9.0.md`](ReleaseNotes-1.9.0.md).
+
 **1.8.0 release update (2026-11-11):** **v1.8.0** adds MMPX 2x and Catmull-Rom
 bicubic filtering to OpenGL/GLES, Direct3D 11, Vulkan, and the CPU fallback, with opt-in
 GPU parity coverage against `MmpxFilter` and `FrameScaler`. Settings > Video > Aspect

@@ -87,14 +87,18 @@ macOS x64/arm64 (native CI, 2026-11-10):
 
 ## 1.9.0 bundle validation (2026-11-14)
 
+- Release run <https://github.com/purelogiccode/5DO/actions/runs/43558324543> built and
+  published six framework-dependent bundles and `SHA256SUMS.txt` at
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.9.0>.
+- The Windows x64 and Linux x64 bundle jobs ran CLI `--version`/`selftest` and the
+  desktop `--smoke-test`; all jobs verified the apphost architecture, the
+  no-runtime/no-PDB/no-XML rule, and the bundle contents.
+- The local Windows x64 bundle reports `5DO 1.9.0`, passes `selftest`, and writes
+  `FRONTEND SMOKE OK 1.9.0` with `locale=de` and `firstMenuHeader=Datei`.
+- All six published `5do-1.9.0-*` SHA-256 entries verify; the assets and internal macOS
+  tarballs are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
 - Full suite **2,252/2,252**, locked restore, build, format, and a clean-cache
   `jb inspectcode --severity=WARNING` pass.
-- The trimmed win-x64 CLI and frontend single-file publishes pass their smoke tests;
-  the frontend writes `FRONTEND SMOKE OK 1.9.0` with `locale=de` and
-  `firstMenuHeader=Datei`.
-- The six framework-dependent release bundles are built from the `v1.9.0` tag and
-  verified for architecture, single-file apphosts, contents, and checksums.
-- Local copies are kept in `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 ## 1.8.0 bundle validation (2026-11-11)
 

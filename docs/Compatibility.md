@@ -599,6 +599,13 @@ The self-contained frontend then aborted during Avalonia/OpenAL teardown **after
 marker; the 1.7.1 bundle reproduces the same teardown abort on this VM, so it is not
 introduced by UX-29/UX-30. Linux GPU presentation remains preview/best-effort.
 
+**2026-11-14 v1.9.0 Linux CI rerun:** the `linux-x64` bundle job in CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43558322127> built the single-file
+CLI/frontend, verified the ELF architecture and bundle contents, and passed CLI
+`selftest` plus the Xvfb frontend smoke. The platform runtime validation run
+<https://github.com/purelogiccode/5DO/actions/runs/43558322082> also passed. GPU
+presentation under llvmpipe remains preview/best-effort.
+
 **2026-11-08 compatibility-pass note:** the Windows x64 1.5.0 bundle extracted and
 passed both `FiveDo.Cli.exe --help` and `FiveDo.Frontend.Avalonia.exe --smoke-test`
 (OpenGL 4.0 + OpenAL ready). The Linux rerun could not start the local 8 GB `LinuxMint`

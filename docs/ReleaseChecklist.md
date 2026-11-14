@@ -345,18 +345,25 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Local win-x64 framework-dependent bundle verified: CLI `--version`/`selftest`,
       frontend `FRONTEND SMOKE OK 1.9.0`, `whatsnew.md`/release notes present, and no
       runtime, PDB, or XML files.
-- [ ] Build all six framework-dependent bundles from the `v1.9.0` tag and keep local
+- [x] Build all six framework-dependent bundles from the `v1.9.0` tag and keep local
       copies in `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+- [x] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
       `whatsnew.md`, the 1.9.0 release notes, and the legal notices, and contains no
       `runtime/`, `*.pdb`, or `*.xml` files.
-- [ ] Create and push tag `v1.9.0`; the release workflow publishes six versioned bundles
-      and `SHA256SUMS.txt`.
-- [ ] CI passes every required job: build/test on Windows/Linux/macOS, trimmed
-      CLI/frontend, both NativeAOT apphosts, the six bundle jobs, and the aggregate gate.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
-      1.9.0 release, including `WhatsNew.html`, `ReleaseNotes-1.9.0.html`, and
-      `wiki/Release-1.9.0`.
+- [x] Create and push tag `v1.9.0`; release run
+      <https://github.com/purelogiccode/5DO/actions/runs/43558324543> built and
+      published six versioned bundles and `SHA256SUMS.txt` at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.9.0>. All six checksums
+      verify and the assets are kept in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43558322127> passed
+      every required job: build/test on Windows/Linux/macOS, the RID-agnostic lock
+      check, format, benchmark gates, trimmed CLI/frontend, both NativeAOT apphosts,
+      the six bundle jobs, and the aggregate gate.
+- [x] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.9.0 release. Docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/43557896567> passed;
+      `WhatsNew.html`, `ReleaseNotes-1.9.0.html`, and `wiki/Release-1.9.0` return
+      HTTP 200.
 
 ---
 

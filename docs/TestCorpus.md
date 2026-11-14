@@ -3770,5 +3770,13 @@ restore, build, and `dotnet format --verify-no-changes` are clean. A clean-cache
 `jb inspectcode --severity=WARNING` reports 0 results; the earlier 3 stale-cache
 `GameLibraryWindow` symbol errors were not reproducible with a fresh cache. Trimmed
 win-x64 CLI and frontend single-file publishes succeeded (MoonSharp/VendoredFlac/SharpGen
-IL2104 warnings remain non-fatal as documented). The six framework-dependent bundles are
-built locally and verified after tagging.
+IL2104 warnings remain non-fatal as documented). CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43558322127> passed all required jobs,
+including the RID-agnostic lock check and the six bundle jobs. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43558324543> published the six
+`5do-1.9.0-*` assets and `SHA256SUMS.txt` at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.9.0>; every checksum verifies and
+the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. The local win-x64
+bundle reports `5DO 1.9.0`, passes `selftest`, and writes `FRONTEND SMOKE OK 1.9.0` with
+`locale=de` and `firstMenuHeader=Datei`; `whatsnew.md`, the 1.9.0 release notes, and the
+legal docs are present, with no runtime, PDB, or XML files.
