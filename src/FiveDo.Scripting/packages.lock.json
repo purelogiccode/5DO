@@ -8,12 +8,6 @@
         "resolved": "3.0.340",
         "contentHash": "0Dj49/kQSH0UgitHPNUH9o76+2Awo0TEvnOnSKaYG11vWdu85zmutX3es7ltfPeDddIzPx8mhjBVFq5LfrRmAQ=="
       },
-      "Microsoft.NET.ILLink.Tasks": {
-        "type": "Direct",
-        "requested": "[11.0.0, )",
-        "resolved": "11.0.0",
-        "contentHash": "gK2aq4XvChj5kvozpPHrkfKkr7zc5Z4xoTrJb4GPZzDEPMlCk0TX632bwY3LsWcX2UVcVRQBBGzsBGC2lq6YhA=="
-      },
       "MoonSharp": {
         "type": "Direct",
         "requested": "[2.0.0, )",
@@ -42,7 +36,6 @@
           "FiveDo.Input": "[1.9.0, )"
         }
       }
-    },
-    "net11.0/win-x64": {}
+    }
   }
 }

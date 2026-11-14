@@ -57,12 +57,6 @@
         "resolved": "3.0.340",
         "contentHash": "0Dj49/kQSH0UgitHPNUH9o76+2Awo0TEvnOnSKaYG11vWdu85zmutX3es7ltfPeDddIzPx8mhjBVFq5LfrRmAQ=="
       },
-      "Microsoft.DotNet.ILCompiler": {
-        "type": "Direct",
-        "requested": "[11.0.0, )",
-        "resolved": "11.0.0",
-        "contentHash": "lw6gUL92db6XPwYsQwaGwrJxgRM0X0qQKl0QkwuZIACMtgH0eFu6jmq6W+/L8qTxQZwggfV/dGjICyMqVHdehg=="
-      },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
         "requested": "[11.0.0, )",
@@ -559,73 +553,6 @@
           "SharpGen.Runtime": "2.4.2-beta",
           "Vortice.DirectX": "3.8.3"
         }
-      }
-    },
-    "net11.0/win-x64": {
-      "Microsoft.DotNet.ILCompiler": {
-        "type": "Direct",
-        "requested": "[11.0.0, )",
-        "resolved": "11.0.0",
-        "contentHash": "lw6gUL92db6XPwYsQwaGwrJxgRM0X0qQKl0QkwuZIACMtgH0eFu6jmq6W+/L8qTxQZwggfV/dGjICyMqVHdehg==",
-        "dependencies": {
-          "runtime.win-x64.Microsoft.DotNet.ILCompiler": "11.0.0"
-        }
-      },
-      "Avalonia.Angle.Windows.Natives": {
-        "type": "Transitive",
-        "resolved": "2.1.27548.20260419",
-        "contentHash": "l17nI3XVDN3oMnpjf2pnmJg0YTwK4m6NLsn/itAjDMdObTFxN77D5F1M9sRMSfViSY3KKcse1ROczwgoWLJsnA=="
-      },
-      "Avalonia.Native": {
-        "type": "Transitive",
-        "resolved": "12.1.6",
-        "contentHash": "c9+4tsRB8K2bKd9wvhb9jY1vD1ItV1SVYpN6valUtOg/Pu6/AlqRKzLo8zyv8mwcqFZzgtp+WunareH//6+VUQ==",
-        "dependencies": {
-          "Avalonia": "12.1.6"
-        }
-      },
-      "HarfBuzzSharp.NativeAssets.Linux": {
-        "type": "Transitive",
-        "resolved": "8.3.1.3",
-        "contentHash": "RI6A1LgmooU30+4QIyFt5rmBCzP0VzTR+587IJSGvYIsHHWlahFufihYxtraLfsIhW7I8dn6+xX+DZGygOPKWQ=="
-      },
-      "HarfBuzzSharp.NativeAssets.macOS": {
-        "type": "Transitive",
-        "resolved": "8.3.1.3",
-        "contentHash": "KPTq0xnslkI6nAo0jh3ptcQPJvZZr7MWYXa2jUe4SnHc9q+JlHElmNXp0sfFoiTgoCX7WOYpYsurypuH9Gehxw=="
-      },
-      "HarfBuzzSharp.NativeAssets.Win32": {
-        "type": "Transitive",
-        "resolved": "8.3.1.3",
-        "contentHash": "bx8CE8Js+XGX8PUxAHCBDEORt5aaBYtMN4Hr9QFs57Xithh6yjUyYqksizH6eRDhJkwsGI+SXWmPmMm8lZC9Pw=="
-      },
-      "runtime.win-x64.Microsoft.DotNet.ILCompiler": {
-        "type": "Transitive",
-        "resolved": "11.0.0",
-        "contentHash": "GhYzDaU4IbNnTgyFgxT2URnUogx+xuphFHscUx8v1H8ZRKiIlYa/8Lkpd0SXJZ+pEWHJFJXLvEPpWLEcwyNkmQ=="
-      },
-      "SkiaSharp.NativeAssets.Linux": {
-        "type": "Transitive",
-        "resolved": "3.119.4",
-        "contentHash": "UAyVzbqNfZsZbKbzj68zXLyUyF/SbTKmzTfOO6qDu++dtIUMMTzPBe8oOuzU/DiewpfKoUUlOSsJmqWc6blxBw=="
-      },
-      "Silk.NET.OpenAL.Soft.Native": {
-        "type": "CentralTransitive",
-        "requested": "[1.23.1, )",
-        "resolved": "1.23.1",
-        "contentHash": "gZIbksInoiXbJZmepYnTs5O6Edg5O5k86c1+Uus0zSaVnQx5WRbInGz2VTlvudbs0qAqXs/asL1YvJzco/nfAQ=="
-      },
-      "SkiaSharp.NativeAssets.macOS": {
-        "type": "CentralTransitive",
-        "requested": "[4.156.0, )",
-        "resolved": "3.119.4",
-        "contentHash": "fgBOWEqbY012x7gMfJU4ezgz6dfhJb30Z6YdW35h85Zoe39+a8YNbAAwL29ihPfWoppg5AjvyKNzD1oCvlqWwA=="
-      },
-      "SkiaSharp.NativeAssets.Win32": {
-        "type": "CentralTransitive",
-        "requested": "[4.156.0, )",
-        "resolved": "3.119.4",
-        "contentHash": "XOpbx/4CReO2wYsq2s6rbvdauc6dntG4Zv499sHGTJ87bwZaFXszFkwql3+FIZMc8kUPeaj3Mx2ezIJmo8a1Kg=="
       }
     }
   }
