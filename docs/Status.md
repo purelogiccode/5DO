@@ -1,24 +1,24 @@
 # Project Status and Next Steps
 
-**2026-11-13 update:** UX-29 Lua input scripting and the input timeline are complete:
-`FiveDo.Scripting` runs a hard-sandboxed MoonSharp script into frame/button entries,
-`run`/`movie record` accept `--input-lua`, `movie timeline export|set|apply` round-trip
-a movie, and **Emulation > Input Timeline...** draws per-button segments with a playhead.
-UX-30 adds best-effort 4DO `.4dosav` import/export (`state import-4do` /
-`state export-4do`). UX-09 localization is complete (English/German catalogs,
-Settings > General > UI language, and `--locale`/`--list-locales` in both executables);
-the translated smoke run records `locale=de` and `firstMenuHeader=Datei`. SYS-21
-(physical optical drive) and SYS-23 (Windows DirectInput/HID gamepad backend) are
-implemented with automated tests; both keep their `Done when` lines open pending
-physical hardware evidence. UX-28 adds an external metadata catalog lookup with a
-deterministic cache plus manual media attachments (`metadata lookup` / `metadata media`).
-See [Localization.md](Localization.md), [Metadata.md](Metadata.md), [Tas.md](Tas.md)
-§8-9, [SaveStates.md](SaveStates.md) §9, and [TestCorpus.md](TestCorpus.md) 1.1bw,
-1.1bx, and 1.1bz.
+**2026-11-14 update:** **v1.9.0** is the feature and interoperability release. It adds
+English/German localization (`--locale`, `--list-locales`, Settings > General > UI
+language), external metadata lookup with manual media attachments (`metadata lookup` /
+`metadata media`), physical optical-drive boot (SYS-21), the Windows DirectInput/HID
+gamepad backend with XInput fallback (SYS-23), a live controller preview (UX-31),
+automatic blank-border crop (VID-18), display-sleep inhibition (UX-32), Lua input
+scripting and the editable input timeline (UX-29), and best-effort 4DO `.4dosav`
+import/export (UX-30). The suite is **2,252 tests**; build, format, and a clean-cache
+InspectCode pass are clean. SYS-21 and SYS-23 keep their `Done when` lines open pending
+physical hardware evidence. See [Localization.md](Localization.md),
+[Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
+and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, and 1.1bz.
 
-**Snapshot:** 2026-11-11, v1.8.0: MMPX 2x and bicubic filters, wider aspect presets,
-and the .NET 11 / C# 15 toolchain; the CHD startup-stutter fix and dependency refresh;
-the native platform runtime smoke, CD subcode, disc
+**Snapshot:** 2026-11-14, v1.9.0: localization, external metadata and media, physical
+optical-drive boot, Windows DirectInput/HID gamepads, controller preview, auto-crop,
+display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
+The underlying v1.8.0 snapshot remains: MMPX 2x and bicubic filters, wider aspect
+presets, the .NET 11 / C# 15 toolchain, the CHD startup-stutter fix and dependency
+refresh; the native platform runtime smoke, CD subcode, disc
 conversion, focus/void/pixel-format work, the two Tier C gameplay-depth increments, and
 the 1.6.0 compatibility-completion release; the TEST-07
 audio-gating, scripted-input, and nightly

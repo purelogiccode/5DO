@@ -59,8 +59,8 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Yes - **v1.8.0** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0). There is one
+Yes - **v1.9.0** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0). There is one
 bundle per system and architecture (Windows x64/arm64, Linux x64/arm64, macOS
 x64/arm64). Windows/Linux bundles are ZIP/tar.gz; macOS is a DMG. Each bundle contains
 both the desktop app and the CLI. Install the **.NET 11 Runtime** first; the bundles do

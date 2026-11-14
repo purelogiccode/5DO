@@ -168,6 +168,44 @@ public sealed class MetadataCatalogClientTests
             Path.Combine(temp.Path, "metadata.json")));
     }
 
+    [Fact]
+    public async Task Lookup_DoesNotMatchARecordWithNoTitleOrPath()
+    {
+        using var temp = new TempDirectory();
+        var catalog = Path.Combine(temp.Path, "catalog.json");
+        File.WriteAllText(
+            catalog,
+            """{"Version":1,"Records":[{"GameId":"","Title":"","Path":""}]}""");
+
+        using var client = new MetadataCatalogClient();
+        MetadataLookupResult result = await client.LookupAsync(
+            "Test Game",
+            null,
+            new Uri(catalog).AbsoluteUri,
+            Path.Combine(temp.Path, "cache.json"));
+
+        Assert.Null(result.Record);
+        Assert.Empty(result.Matches);
+    }
+
+    [Fact]
+    public void Load_DropsNullRecordsAndNormalizesMedia()
+    {
+        using var temp = new TempDirectory();
+        var metadata = Path.Combine(temp.Path, "library-metadata.json");
+        File.WriteAllText(
+            metadata,
+            """{"Version":1,"Records":[null,{"GameId":"TEST0001","Title":"Test Game","Media":null}]}""");
+
+        LibraryMetadata loaded = LibraryMetadataStore.Load(metadata);
+
+        Assert.Single(loaded.Records);
+        LibraryMetadataRecord record = loaded.Records[0];
+        Assert.Equal("TEST0001", record.GameId);
+        Assert.NotNull(record.Media);
+        Assert.Empty(record.Media);
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         public TempDirectory()

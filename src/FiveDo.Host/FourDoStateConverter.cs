@@ -930,6 +930,9 @@ public static class FourDoStateConverter
         reader.ReadBytes(result.AsSpan(4 + XbusStatusFifoSize + 1, XbusCommandFifoSize));
         result[4 + XbusStatusFifoSize] = statusLength;
         result[4 + XbusStatusFifoSize + 1 + XbusCommandFifoSize] = commandPointer;
+        // The following 16-int table contains offsets to per-device state. FreeDO's
+        // loader reads it even when no device is attached, so a zero table (no
+        // device data) is required for a structurally valid record.
         notes.Add("4DO input devices are host-side; attached controller state was not exported.");
         return result;
     }

@@ -143,6 +143,13 @@ public sealed class PhysicalDiscSource : IDiscSource
 
             return new PhysicalDiscSource(devicePath, stream, length);
         }
+        catch (DiscImageException)
+        {
+            // Empty media and implausible-size probing already produce a domain
+            // exception; dispose the handle before letting it reach the caller.
+            stream?.Dispose();
+            throw;
+        }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
             or NotSupportedException

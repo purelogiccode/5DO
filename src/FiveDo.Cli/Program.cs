@@ -2422,6 +2422,20 @@ internal static class Program
         if (write is not null && result.Record is not null)
         {
             var target = string.Equals(write, "true", StringComparison.OrdinalIgnoreCase) ? null : write;
+            LibraryMetadataRecord? local = LibraryMetadataCatalog
+                .Load(target)
+                .Find(result.Record.GameId, result.Record.Path);
+            if (local is not null)
+            {
+                // The external catalog does not own user attachments or the local disc
+                // path; keep them when refreshing the record.
+                result.Record.Media = [.. local.Media];
+                if (string.IsNullOrWhiteSpace(result.Record.Path))
+                {
+                    result.Record.Path = local.Path;
+                }
+            }
+
             LibraryMetadataStore.Upsert(result.Record, target);
             if (!options.Json)
             {
@@ -2460,7 +2474,7 @@ internal static class Program
                 item.GameId.Trim(),
                 gameId.Trim(),
                 StringComparison.OrdinalIgnoreCase));
-            if (record is null)
+            if (record is null && add is not null)
             {
                 record = new LibraryMetadataRecord
                 {
@@ -3906,7 +3920,7 @@ internal static class Program
             File.ReadAllBytes(input),
             baseState.ToArray(),
             out IReadOnlyList<string> warnings);
-        var output = options.Get("--out") ?? Path.ChangeExtension(input, ".state");
+        var output = options.Get("--out") ?? Path.ChangeExtension(input, ".tdos");
         EnsureParentDirectory(output);
         File.WriteAllBytes(output, imported);
         WriteFourDoStateResult(

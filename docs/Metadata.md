@@ -56,8 +56,8 @@ is never blocked by a lookup.
 
 `--write` stores the best record in `library-metadata.json` (or an explicit
 `--write <path>`) through `LibraryMetadataStore.Upsert`, so the next library scan shows
-the metadata. Without `--write`, the catalog remains external and only the CLI prints
-the result.
+the metadata. Existing user media attachments and the local disc path are preserved.
+Without `--write`, the catalog remains external and only the CLI prints the result.
 
 The lookup is a metadata provider, not a scraper: it only downloads the configured URL
 and sends no library, game, or user data.
@@ -79,7 +79,8 @@ named profiles.
 
 - `MetadataCatalogClientTests` cover a file-URI lookup, cache write, offline fallback,
   exact game-ID preference, unsupported catalog version, media attach/detach idempotence,
-  and an unknown game.
+  an unknown game, an empty-title/path record that must not match every query, and
+  null-record/media normalization.
 - `LibraryStateTests` continue to cover the offline overlay and per-game precedence.
 - Game Metadata window smoke: the **Media** list is populated from the record, the
   **Add...** picker appends files, **Remove** deletes the selection, **Open** launches the

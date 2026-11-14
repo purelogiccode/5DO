@@ -1,12 +1,12 @@
 # Known Issues
 
-**Snapshot:** 2026-11-11, v1.8.0: MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/
-16:10/21:9 aspect presets, and the .NET 11 / C# 15 toolchain, plus the P0 quality pass,
-native platform runtime smoke, CD subcode, disc conversion, focus/void/pixel-format
-work, pointer input scripts, and macOS DMG distribution. The 1.8.0 update also restores
-the reference MMPX luma tie-breaks and matches OpenGL's MMPX finishing sampler to
-Direct3D 11/Vulkan. This list covers the supported local corpus and the current
-prototype state. It is not a compatibility guarantee.
+**Snapshot:** 2026-11-14, v1.9.0: English/German localization, external metadata and
+manual media, physical optical-drive boot, Windows DirectInput/HID gamepads, the
+controller preview, automatic blank-border crop, display-sleep inhibition, Lua input
+scripting, the input timeline, and best-effort 4DO `.4dosav` import/export, on top of the
+v1.8.0 MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9 aspect presets,
+and the .NET 11 / C# 15 toolchain. This list covers the supported local corpus and the
+current prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi, and
@@ -62,6 +62,18 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - Manual media paths are metadata only. The Game Metadata window lists, attaches,
   removes, and opens them; `5do metadata media` manages the same list for automation.
   A missing media file is ignored at display time and never copied or deleted by 5DO.
+
+## Lua input and 4DO states (2026-11-14)
+
+- Lua input scripts author controller input only. They run under MoonSharp's hard
+  sandbox, cannot read files or the network, and are limited to 10,000,000 emitted
+  frames. The movie/timeline path, not the Lua runtime, provides replay determinism.
+- Applying an input timeline rewrites player 1 and clears the recorded final evidence;
+  re-verify the new movie before treating it as a validated run.
+- 4DO `.4dosav` import/export is best-effort. The format is versionless and
+  compiler-layout dependent; only the 32-bit and 64-bit ARM layouts produced by current
+  FreeDOCore builds are accepted. Unsupported fields are reported as warnings, and
+  native 4DO state compatibility is not guaranteed.
 
 ## Beyond-title compatibility (2026-11-08)
 

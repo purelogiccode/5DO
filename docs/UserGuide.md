@@ -310,8 +310,9 @@ finishes a recording or detaches playback. Stopping emulation or closing the win
 also saves an active recording.
 
 **File > Game Metadata...** edits the current disc's offline library metadata
-(title, developer, publisher, year, genre, regions, players, description). Saving
-upserts the record in `library-metadata.json`; **Clear Metadata** removes it.
+(title, developer, publisher, year, genre, regions, players, description) and its
+manual media attachments. Saving upserts the record in `library-metadata.json`;
+**Clear Metadata** removes it.
 **File > Movie Editor...** opens a `.5domovie` and lists every frame with player-1
 buttons. Select a frame, toggle buttons, and Apply; Insert copy after, Delete frame, and
 Trim after frame edit the timeline, then Save As writes a new movie. The CLI equivalents
@@ -321,6 +322,16 @@ hash, ARM PC, and state hash; it exits with code 2 on a mismatch. Branching keep
 prefix so a new attempt can be recorded from a checkpoint. Movies contain input and a
 save state, not BIOS or disc content. See [`Tas.md`](Tas.md) for the container layout
 and the full command set.
+
+**Lua input scripting and the input timeline.** `run` and `movie record` accept
+`--input-lua <file.lua>`; the hard-sandboxed script calls `frame`, `hold`, `press`, and
+`release` (also under `input.*`) to emit frame-stamped buttons. **Emulation > Input
+Timeline...** loads a `.5domovie`, draws one row per pad button with a playhead, and lets
+you edit a frame or save the timeline as a plain script. The CLI equivalents are
+`movie timeline export`, `movie timeline set`, and `movie timeline apply`. Applying a
+timeline rewrites player 1 and clears the recorded final evidence, so re-verify the new
+movie. `state import-4do` and `state export-4do` convert best-effort 4DO `.4dosav`
+states; unsupported fields are reported as warnings.
 
 ### Multi-disc playlists
 
@@ -430,6 +441,14 @@ the reason.
 While a game is running and unpaused, 5DO keeps the display and system awake on
 Windows. Pausing, stopping, a core fault, or exiting releases the request. Linux and
 macOS compositors may still blank the display during play; that path is best-effort.
+
+**Settings > General > UI language** selects the shell language: **System default**
+follows the host locale when an embedded catalog matches, while **English** and
+**Deutsch** select a catalog explicitly. The pass translates window titles, menus,
+labels, tabs, placeholders, and tooltips; data-bound values and dynamic status text are
+left alone. Passing `--locale <code>` to the desktop app overrides the saved setting for
+one launch, and `--list-locales` prints the embedded catalogs. The CLI accepts the same
+two options; JSON output stays in English.
 
 **Latency** (Settings > Video) adds run-ahead, frame delay, and adaptive sync controls.
 **Run-ahead** (0-2 frames, default 0) saves and restores the machine each displayed frame so

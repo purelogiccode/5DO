@@ -83,7 +83,7 @@ local set.
 the catalog locale and the first menu header read from the realized window:
 
 ```text
-FRONTEND SMOKE OK 1.8.0
+FRONTEND SMOKE OK 1.9.0
 locale=de
 firstMenuHeader=Datei
 windowState=Normal
@@ -129,5 +129,5 @@ missing `locale`/`strings` objects. The test suite also checks that:
 - CLI: `--list-locales` prints `de	Deutsch` and `en	English`; `--locale de --help`
   prints `Aufruf: 5do <Befehl> [Optionen]` and `Befehle:`.
 - Desktop: the translated smoke marker above was produced on Windows x64 on
-  2026-11-13. The main menu, Settings tabs, and visible dialog labels use the German
+  2026-11-14. The main menu, Settings tabs, and visible dialog labels use the German
   catalog, and the first menu header is `Datei`.

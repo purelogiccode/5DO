@@ -73,6 +73,15 @@ public sealed class LuaTimelineTests
     }
 
     [Fact]
+    public void Compile_RejectsHoldsAndPressesBeyondTheFrameLimit()
+    {
+        Assert.Throws<FormatException>(
+            () => LuaInputScript.Compile("hold(0, 10000001, 'A')"));
+        Assert.Throws<FormatException>(
+            () => LuaInputScript.Compile("press(10000000, 'A', 1)"));
+    }
+
+    [Fact]
     public void LuaAuthoredMovie_ReplaysDeterministically()
     {
         IReadOnlyList<InputScriptEntry> entries = LuaInputScript.Compile(

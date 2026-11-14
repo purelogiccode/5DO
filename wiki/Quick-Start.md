@@ -6,7 +6,7 @@
    <https://dotnet.microsoft.com/download/dotnet/11.0>. It is not included in the
    bundle.
 2. Download the bundle for your system from
-   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0) and
+   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0) and
    extract it.
 3. Start the desktop app:
 

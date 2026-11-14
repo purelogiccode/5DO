@@ -139,6 +139,14 @@ public static class LuaInputScript
                 throw new ArgumentException($"hold({from}, {to}) ends before it starts.", nameof(to));
             }
 
+            if (to > maxFrames)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(to),
+                    to,
+                    $"The hold end exceeds the {maxFrames} limit.");
+            }
+
             Set(from, Parse(buttons));
             if (to < maxFrames)
             {
@@ -150,10 +158,15 @@ public static class LuaInputScript
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
             Set(frame, Parse(buttons));
-            if (frame <= maxFrames - count)
+            if (count > maxFrames - frame)
             {
-                Set(frame + count, default);
+                throw new ArgumentOutOfRangeException(
+                    nameof(count),
+                    count,
+                    $"press({frame}, ..., {count}) exceeds the {maxFrames} limit.");
             }
+
+            Set(frame + count, default);
         }
 
         public void Release(int frame)

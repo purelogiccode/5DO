@@ -233,13 +233,14 @@ public sealed class MetadataCatalogClient : IDisposable
     private static bool Matches(LibraryMetadataRecord record, string? gameId, string? discPath)
     {
         var normalizedId = gameId?.Trim().ToUpperInvariant() ?? string.Empty;
+        var recordId = record.GameId.Trim();
         if (normalizedId.Length > 0
-            && string.Equals(record.GameId.Trim(), normalizedId, StringComparison.OrdinalIgnoreCase))
+            && string.Equals(recordId, normalizedId, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(discPath))
+        if (string.IsNullOrWhiteSpace(discPath) || string.IsNullOrWhiteSpace(record.Path))
         {
             return false;
         }
@@ -275,9 +276,20 @@ public sealed class MetadataCatalogClient : IDisposable
             }
 
             var byId = normalizedId.Length > 0
-                && string.Equals(record.GameId.Trim(), normalizedId, StringComparison.OrdinalIgnoreCase);
+                && string.Equals(
+                    record.GameId.Trim(),
+                    normalizedId,
+                    StringComparison.OrdinalIgnoreCase);
             var candidate = NormalizeTitle(
-                string.IsNullOrWhiteSpace(record.Title) ? Path.GetFileNameWithoutExtension(record.Path) : record.Title);
+                string.IsNullOrWhiteSpace(record.Title)
+                    ? Path.GetFileNameWithoutExtension(record.Path)
+                    : record.Title);
+            if (candidate.Length == 0)
+            {
+                // An empty title/path must not match every query through containment.
+                continue;
+            }
+
             var byTitle = query.Length > 0 && string.Equals(candidate, query, StringComparison.Ordinal);
             var byContains = query.Length > 0
                 && (candidate.Contains(query, StringComparison.Ordinal)
@@ -394,17 +406,20 @@ public sealed class MetadataCatalogClient : IDisposable
         // JSON can deserialize null despite the non-nullable annotation.
         // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         metadata.Records ??= [];
-        foreach (LibraryMetadataRecord record in metadata.Records)
+        for (var index = metadata.Records.Count - 1; index >= 0; index--)
         {
+            LibraryMetadataRecord record = metadata.Records[index];
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (record is null)
             {
+                metadata.Records.RemoveAt(index);
                 continue;
             }
 
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             record.Media ??= [];
+            LibraryMetadataStore.NormalizeRecord(record);
         }
 
         return metadata;

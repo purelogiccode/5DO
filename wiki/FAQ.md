@@ -13,7 +13,7 @@ and M3U/M3U8 playlists for multi-disc games.
 ## Is there a download?
 
 Yes. **v1.6.0** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0). There is
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0). There is
 one bundle per system and architecture (Windows, Linux, and macOS on x64 and arm64),
 and each bundle contains both the desktop app and the CLI. You can also build from
 source.

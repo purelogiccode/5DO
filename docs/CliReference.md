@@ -960,7 +960,7 @@ JSON is a PascalCase array of `SaveStateSlotInfo`:
 ```
 
 `import-4do` needs `--bios` (or `--bios-auto`) to build the base 5DO state for the
-sections 4DO does not record. `--out` defaults to the input name with `.state` or
+sections 4DO does not record. `--out` defaults to the input name with `.tdos` or
 `.4dosav`. Both commands return:
 
 | Field | Meaning |

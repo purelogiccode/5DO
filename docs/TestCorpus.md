@@ -3747,3 +3747,28 @@ Tier A proxy measured 313.9 fps / 3.19 ms per emulated frame, below the 12 ms Ti
 core budget. Real GLES 3.1 hardware and a real Tier B device were unavailable and are
 recorded as best-effort in [Performance.md](Performance.md) §8.8. `PLAT-06` remains a
 documented partial measurement item, not a correctness risk.
+
+### 1.1cb v1.9.0 feature release validation (2026-11-14)
+
+**Review fixes.** The post-1.8.0 review fixed an optical-drive handle leak on
+empty/unreadable media, an external-metadata containment match that treated an empty
+title/path as matching every query, null-record handling in the metadata loader (null
+records are now removed instead of skipped), `metadata lookup --write` overwriting user
+media/disc path, `metadata media --remove` creating an empty record, Lua hold/press
+bounds beyond the frame limit, the DirectInput enumeration callback lifetime, and the
+4DO XBUS export record size (the 64-byte device-offset table is now present).
+
+**Catalog and UI evidence.** `MetadataCatalogClientTests` adds a no-title/no-path match
+case and a null-record/media normalization case; `LuaTimelineTests` adds frame-limit
+cases. The translated smoke run on Windows x64 (trimmed single-file frontend) wrote
+`FRONTEND SMOKE OK 1.9.0`, `locale=de`, `firstMenuHeader=Datei`, and
+`windowState=Normal`. The English run wrote the same marker with `locale=en` and
+`firstMenuHeader=File`. `--list-locales` printed `de	Deutsch` and `en	English`.
+
+**Build and gates.** Full suite **2,252/2,252** passes in Debug and Release; a locked
+restore, build, and `dotnet format --verify-no-changes` are clean. A clean-cache
+`jb inspectcode --severity=WARNING` reports 0 results; the earlier 3 stale-cache
+`GameLibraryWindow` symbol errors were not reproducible with a fresh cache. Trimmed
+win-x64 CLI and frontend single-file publishes succeeded (MoonSharp/VendoredFlac/SharpGen
+IL2104 warnings remain non-fatal as documented). The six framework-dependent bundles are
+built locally and verified after tagging.

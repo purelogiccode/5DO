@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.8.0 presentation and toolchain release** (published on
+The project is at the **v1.9.0 feature and interoperability release** (published on
 GitHub). The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
@@ -18,10 +18,12 @@ GitHub). The compatibility plan is complete:
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
-- v1.8.0 adds MMPX 2x and Catmull-Rom bicubic filtering to every presenter, wider aspect
-  presets, and the .NET 11 / C# 15 toolchain.
+- v1.9.0 adds English/German localization, external metadata and media, physical
+  optical-drive boot, Windows DirectInput/HID gamepads, the controller preview,
+  auto-crop, display-sleep inhibition, Lua input scripting, the input timeline, and
+  best-effort 4DO state interop.
 
-## Post-1.8
+## Post-1.9
 
 **Playability depth (in progress):**
 

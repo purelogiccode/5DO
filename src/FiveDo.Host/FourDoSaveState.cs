@@ -59,8 +59,14 @@ public sealed class FourDoSaveState
     /// <summary>Size of the MADAM record in current 4DO builds.</summary>
     public const int MadamSize = 8_544;
 
-    /// <summary>Size of the XBUS record in current 4DO builds.</summary>
-    public const int XbusSize = 268;
+    /// <summary>Size of the XBUS structure written by FreeDOCore.</summary>
+    public const int XbusStructSize = 268;
+
+    /// <summary>Size of the XBUS device-offset table that follows the structure.</summary>
+    public const int XbusDeviceTableSize = 16 * sizeof(int);
+
+    /// <summary>Minimum size of the XBUS record including the device table.</summary>
+    public const int XbusSize = XbusStructSize + XbusDeviceTableSize;
 
     private readonly byte[] _data;
     private readonly int[] _offsets;
@@ -122,7 +128,7 @@ public sealed class FourDoSaveState
     public ReadOnlySpan<byte> Madam => _data.AsSpan(_offsets[7], Math.Min(MadamSize, _offsets[8] - _offsets[7]));
 
     /// <summary>Gets the XBUS record.</summary>
-    public ReadOnlySpan<byte> Xbus => _data.AsSpan(_offsets[8], Math.Min(XbusSize, _offsets[9] - _offsets[8]));
+    public ReadOnlySpan<byte> Xbus => _data.AsSpan(_offsets[8], _offsets[9] - _offsets[8]);
 
     /// <summary>Parses a 4DO state image.</summary>
     /// <param name="data">Complete <c>.4dosav</c> bytes.</param>

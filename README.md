@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.8.0-orange" alt="Version 1.8.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.9.0-orange" alt="Version 1.9.0"></a>
 </p>
 
 <p align="center">
@@ -27,12 +27,14 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.8.0**, a documented-compatibility release with bicubic and MMPX 2x
-> filters, wider aspect presets, and a .NET 11 / C# 15 toolchain. Windows x64 is the
+> 5DO is at **v1.9.0**, a documented-compatibility release with English/German
+> localization, external metadata and media, physical optical-drive boot, Windows
+> DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, an
+> editable input timeline, and best-effort 4DO state interop. Windows x64 is the
 > validated GPU target; Linux x64 full suite passed (GPU presentation is
 > preview/best-effort), and macOS x64/arm64, Linux arm64, and Windows arm64 pass the
-> native CLI/frontend runtime smoke (2026-11-10). No BIOS ROMs, game images, or extracted
-> game assets are included. You must supply legally obtained files.
+> native CLI/frontend runtime smoke. No BIOS ROMs, game images, or extracted game
+> assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -72,10 +74,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.8.0` release (GitHub Releases) |
+| Version | `1.9.0` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,158 tests** in the current test assembly |
+| Automated tests | **2,252 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -96,20 +98,20 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.8.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.8.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.8.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.8.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.8.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.8.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.8.0/5do-1.8.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.9.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.9.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.9.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.9.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.9.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.9.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.9.0/5do-1.9.0-osx-arm64.dmg) |
 
 The apps are single-file executables. **Install the .NET 11 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.8.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.9.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.8.0-win-arm64.zip`
-or `5do-1.8.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.9.0-win-arm64.zip`
+or `5do-1.9.0-osx-arm64.dmg`.
 
 ## Features
 
@@ -146,16 +148,19 @@ or `5do-1.8.0-osx-arm64.dmg`.
   presentation, a -250..250 ms audio sync offset, and software input-to-present telemetry.
 - Per-game cheats with raw/typed/conditional/button codes and a desktop manager.
 - Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
-  per-frame movie editor.
+  per-frame movie editor. Lua input scripts (`--input-lua`) and **Emulation > Input
+  Timeline...** add scripted and editable timeline authoring.
 - Disc browser with file/directory extraction, disc info, track listing, and integrity
   verification. Data discs can boot from a host CD/DVD drive (no image file required).
+- Best-effort 4DO `.4dosav` import/export (`state import-4do` / `state export-4do`).
 - Screenshots, screenshot gallery, GIF recording, WAV recording, and a live FPS/input
   overlay.
 - Eight-player keyboard and gamepad mapping; DirectInput/HID plus XInput on Windows,
   evdev on Linux, and IOKit HID on macOS; joypad, flightstick, mouse, lightgun, arcade
   lightgun, and Orbatak trackball devices. Input scripts can drive pointer devices.
-- Opt-in focus-loss pausing with automatic resume, and solid/checker/grid/scanline
-  void-area patterns recorded in screenshot sidecars.
+- Opt-in focus-loss pausing with automatic resume, display-sleep inhibition while a game
+  is running, automatic blank-border crop, and solid/checker/grid/scanline void-area
+  patterns recorded in screenshot sidecars.
 - Portable mode, named configuration profiles, per-game profiles, and an instance lock.
 - Privacy-scrubbed diagnostics bundles and an in-app log viewer.
 
@@ -192,7 +197,7 @@ or `5do-1.8.0-osx-arm64.dmg`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.8.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.9.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

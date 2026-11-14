@@ -120,6 +120,7 @@ public sealed class LibraryMetadataCatalog
                 // JSON can deserialize a null list despite the non-nullable annotation.
                 // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
                 record.Media ??= [];
+                LibraryMetadataStore.NormalizeRecord(record);
                 catalog.Add(record);
             }
 
@@ -238,18 +239,18 @@ public static class LibraryMetadataStore
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             metadata.Records ??= [];
-            foreach (LibraryMetadataRecord record in metadata.Records)
+            for (var index = metadata.Records.Count - 1; index >= 0; index--)
             {
+                LibraryMetadataRecord record = metadata.Records[index];
                 // JSON can deserialize null despite the non-nullable annotation.
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                 if (record is null)
                 {
+                    metadata.Records.RemoveAt(index);
                     continue;
                 }
 
-                // JSON can deserialize a null list despite the non-nullable annotation.
-                // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-                record.Media ??= [];
+                NormalizeRecord(record);
             }
 
             return metadata;
@@ -259,6 +260,29 @@ public static class LibraryMetadataStore
             Serilog.Log.Debug(exception, "Library metadata {Path} is unreadable; ignoring it.", resolved);
             return new LibraryMetadata();
         }
+    }
+
+    /// <summary>
+    /// Repairs null strings and lists that JSON can produce despite the non-nullable
+    /// annotations, so callers can use the record without null checks.
+    /// </summary>
+    /// <param name="record">Record to normalize.</param>
+    internal static void NormalizeRecord(LibraryMetadataRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        // JSON can deserialize null despite the non-nullable annotations.
+        // ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        record.GameId ??= string.Empty;
+        record.Path ??= string.Empty;
+        record.Title ??= string.Empty;
+        record.Developer ??= string.Empty;
+        record.Publisher ??= string.Empty;
+        record.ReleaseYear ??= string.Empty;
+        record.Genre ??= string.Empty;
+        record.Regions ??= string.Empty;
+        record.Description ??= string.Empty;
+        record.Media ??= [];
+        // ReSharper restore NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
     }
 
     /// <summary>Adds or replaces the record for a game/path and saves the document.</summary>

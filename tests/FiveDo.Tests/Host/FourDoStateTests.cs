@@ -106,6 +106,8 @@ public sealed class FourDoStateTests
         byte[] exported = FourDoStateConverter.Export(saved.ToArray(), out IReadOnlyList<string> exportWarnings);
         FourDoSaveState parsedExport = FourDoSaveState.Parse(exported);
         Assert.Equal(12, parsedExport.PointerSize);
+        Assert.Equal(FourDoSaveState.XbusSize, parsedExport.Xbus.Length);
+        Assert.Equal(0, BinaryPrimitives.ReadInt32LittleEndian(parsedExport.Xbus[FourDoSaveState.XbusStructSize..]));
         Assert.Equal(0x03000010u, BinaryPrimitives.ReadUInt32LittleEndian(parsedExport.ArmRegisters[60..]));
         Assert.Equal(7, BinaryPrimitives.ReadInt32LittleEndian(parsedExport.Clio[(65_536 * 4)..]));
         Assert.Contains(exportWarnings, warning => warning.Contains("CD-ROM", StringComparison.Ordinal));

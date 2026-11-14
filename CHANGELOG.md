@@ -1,11 +1,31 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.8.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.9.0, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.9.0] - 2026-11-14
 
 ### Added
+
+- **Localization (UX-09).** Embedded English and German catalogs in
+  `FiveDo.Localization`, a runtime pass for window titles, labels, tabs, placeholders,
+  and tooltips, Settings > General > UI language, and `--locale`/`--list-locales` in both
+  executables. CLI usage and error text are localized; JSON output and diagnostics stay
+  in English. The translated smoke test records `locale=de` and `firstMenuHeader=Datei`.
+  See `Localization.md`.
+- **External metadata and manual media (UX-28).** `metadata lookup` downloads a
+  versioned catalog from HTTP(S) or `file:`, validates it, writes a deterministic atomic
+  cache, and searches by game ID, title, or normalized containment. `metadata media` and
+  the Game Metadata window attach, remove, open, and list media paths without copying the
+  files. See `Metadata.md`.
+- **Physical optical drive boot (SYS-21).** File > Boot Optical Drive... and drive-root
+  CLI paths (`D:`, `\\.\D:`, `/dev/sr0`) read the host's cooked 2048-byte sectors.
+  Windows and Linux drive paths are implemented and unit-tested; CD-DA from a physical
+  drive remains unavailable. See `KnownIssues.md`.
+- **Windows DirectInput/HID gamepads (SYS-23).** DirectInput 8 enumeration adds axes,
+  POV hats, and calibrated triggers alongside XInput, with duplicate Xbox pads filtered
+  out and XInput as the fallback. `--gamepad-probe` reports the active source and raw
+  samples.
 
 - **Lua input scripting and input timeline (UX-29).** `FiveDo.Scripting` uses a hard
   MoonSharp sandbox and exposes `frame`, `hold`, `press`, and `release` (also under
@@ -52,6 +72,26 @@ release.
   guard now tolerates a transient resize failure, then detaches the GL surface and
   switches the game view to the CPU presenter instead of reporting an unhandled UI
   exception every frame.
+- **Metadata matching and data loss.** External records with a null title/path no longer
+  match every query, null records are dropped when a document loads, the CLI does not
+  create an empty record for `metadata media --remove`, and `metadata lookup --write`
+  preserves existing user media attachments and the local disc path.
+- **Optical-drive handle leak.** An empty or unreadable drive now disposes its device
+  handle before the domain error is reported.
+- **DirectInput callback lifetime.** The enumeration callback stays rooted for the
+  native `EnumDevices` call.
+- **4DO XBUS record layout.** `state export-4do` now writes the 64-byte device-offset
+  table that follows the 268-byte XBUS structure, so FreeDOCore's loader can read the
+  record without running past its end.
+
+### Changed
+
+- Updated Meziantou.Analyzer 3.0.340, CHDSharp 1.7.0, SkiaSharp 4.156.0, and
+  Microsoft.NET.Test.Sdk 18.12.0. Added MoonSharp 2.0.0 for Lua input scripting and
+  refreshed all RID-agnostic lock files.
+- The desktop video view now detaches Avalonia's GL surface after persistent
+  framebuffer-allocation failures and switches to the CPU presenter. The Vulkan surface
+  turns resize failures into a clean presenter fallback.
 
 ## [1.8.0] - 2026-11-11
 

@@ -340,6 +340,10 @@ internal sealed class DirectInputGamepadSource : IRawGamepadSource
             Marshal.GetFunctionPointerForDelegate(callback),
             IntPtr.Zero,
             DiEDflAttachedOnly);
+
+        // The native enumerator calls through a function pointer that the GC cannot
+        // see. Keep the delegate rooted until EnumDevices returns.
+        GC.KeepAlive(callback);
         if (result < 0)
         {
             return;

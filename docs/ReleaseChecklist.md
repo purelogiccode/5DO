@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.8.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.9.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -19,6 +19,10 @@ native macOS/arm64 runtime smoke, and DMG distribution for macOS. v1.7.1 removes
 startup prefetch stall and audio underruns and refreshes the desktop/CLI/test
 dependencies. v1.8.0 adds MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9
 aspect presets, and the .NET 11 / C# 15 toolchain.
+v1.9.0 adds English/German localization, external metadata and media, physical
+optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
+display-sleep inhibition, Lua input scripting, the input timeline, and best-effort 4DO
+`.4dosav` import/export.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -318,6 +322,44 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.9.0 feature and interoperability gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.9.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.9.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`,
+      `docs/ImplementationPlan.md`, `docs/KnownIssues.md`, `docs/Roadmap.md`, the MkDocs
+      navigation, and the wiki.
+- [x] Add English/German localization, `--locale`/`--list-locales`, Settings > General >
+      UI language, and the translated smoke marker.
+- [x] Add external metadata lookup, the deterministic cache, and manual media
+      attachments in the CLI and Game Metadata window.
+- [x] Add physical optical-drive boot, the Windows DirectInput/HID gamepad backend,
+      controller preview, auto-crop, and display-sleep inhibition.
+- [x] Add Lua input scripting, the input timeline, and best-effort 4DO `.4dosav`
+      import/export.
+- [x] Fix the invalid FILETIME scan abort, the OpenGL FBO fallback, and the metadata,
+      optical-handle, and DirectInput lifetime defects found in review.
+- [x] Full suite **2,252/2,252** passes in Debug; `dotnet restore --locked-mode`,
+      `dotnet build`, and `dotnet format --verify-no-changes` are clean; a clean-cache
+      `jb inspectcode --severity=WARNING` reports 0 results.
+- [x] Local win-x64 framework-dependent bundle verified: CLI `--version`/`selftest`,
+      frontend `FRONTEND SMOKE OK 1.9.0`, `whatsnew.md`/release notes present, and no
+      runtime, PDB, or XML files.
+- [ ] Build all six framework-dependent bundles from the `v1.9.0` tag and keep local
+      copies in `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Verify each bundle contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`,
+      `whatsnew.md`, the 1.9.0 release notes, and the legal notices, and contains no
+      `runtime/`, `*.pdb`, or `*.xml` files.
+- [ ] Create and push tag `v1.9.0`; the release workflow publishes six versioned bundles
+      and `SHA256SUMS.txt`.
+- [ ] CI passes every required job: build/test on Windows/Linux/macOS, trimmed
+      CLI/frontend, both NativeAOT apphosts, the six bundle jobs, and the aggregate gate.
+- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for the
+      1.9.0 release, including `WhatsNew.html`, `ReleaseNotes-1.9.0.html`, and
+      `wiki/Release-1.9.0`.
+
+---
+
 ## Cover-art hosting gate
 
 - [ ] Run `packaging/package-covers.ps1`; review `artifacts/covers/v1/report.json`.
@@ -420,8 +462,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.8.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0, v1.1.0, v1.2.0, v1.2.1, v1.2.2, v1.3.0, v1.4.0, v1.5.0, v1.6.0, v1.7.0, and v1.7.1 are historical |
-| Release timing | **Prepared 2026-11-11** | v1.8.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Version | **`v1.9.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.8.0 are historical |
+| Release timing | **Prepared 2026-11-14** | v1.9.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 
