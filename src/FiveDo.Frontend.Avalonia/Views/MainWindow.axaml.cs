@@ -1948,6 +1948,17 @@ public partial class MainWindow : Window, IDisposable
         await window.ShowDialog(this).ConfigureAwait(true);
     }
 
+    private void OnInputTimelineAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ShowInputTimelineAsync, "showing the input timeline");
+    }
+
+    private async Task ShowInputTimelineAsync()
+    {
+        var window = new InputTimelineWindow();
+        await window.ShowDialog(this).ConfigureAwait(true);
+    }
+
     private void OnRecordAudioAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(ToggleAudioRecordingAsync, "recording audio");

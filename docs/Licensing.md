@@ -77,6 +77,7 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - Microsoft.Extensions.* (MIT)
 - xUnit (Apache-2.0)
 - Serilog, Serilog.Sinks.Console, Serilog.Sinks.File (Apache-2.0)
+- MoonSharp 2.0.0 (BSD-3-Clause; sandboxed Lua input scripting)
 - BenchmarkDotNet (MIT)
 - Silk.NET (MIT), including Silk.NET.OpenGL, Silk.NET.OpenAL, and Silk.NET.Vulkan
 - XenoAtom.ShaderCompiler.Build (BSD-2-Clause; build-time GLSL-to-SPIR-V compiler,

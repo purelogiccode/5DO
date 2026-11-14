@@ -20,6 +20,7 @@ using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Localization;
 using FiveDo.Machine;
+using FiveDo.Scripting;
 using FiveDo.Storage;
 using FiveDo.Tas;
 using FiveDo.Video;
@@ -458,6 +459,13 @@ internal static class Program
                 nameof(args));
         }
 
+        if (movie is not null && options.Get("--input-lua") is not null)
+        {
+            throw new ArgumentException(
+                "--movie-play and --input-lua cannot be combined.",
+                nameof(args));
+        }
+
         if (movie is not null && options.Get("--autopilot") is not null)
         {
             throw new ArgumentException(
@@ -494,6 +502,7 @@ internal static class Program
         var dumpRamLength = options.GetInt("--dump-ram-length", 0x1000);
         var dumpDspPrefix = options.Get("--dump-dsp");
         var inputScriptPath = options.Get("--input-script");
+        var inputLuaPath = options.Get("--input-lua");
         var inputScriptBase = options.Get("--script-base");
         var inputDevices = ParseInputDevices(options.Get("--input-device"));
         PbusFormat? pbusFormat = ParsePbusFormat(options.Get("--pbus-format"));
@@ -668,9 +677,20 @@ internal static class Program
 
         ScriptedPbusSource? scriptedInput = null;
         IReadOnlyList<InputScriptEntry>? scriptEntries = null;
+        if (inputScriptPath is not null && inputLuaPath is not null)
+        {
+            throw new ArgumentException("--input-script and --input-lua cannot be combined.", nameof(args));
+        }
+
         if (inputScriptPath is not null)
         {
             scriptEntries = InputScript.Load(inputScriptPath);
+            scriptedInput = new ScriptedPbusSource(scriptEntries);
+            machine.PbusSource = scriptedInput;
+        }
+        else if (inputLuaPath is not null)
+        {
+            scriptEntries = LuaInputScript.Load(inputLuaPath);
             scriptedInput = new ScriptedPbusSource(scriptEntries);
             machine.PbusSource = scriptedInput;
         }
@@ -683,9 +703,9 @@ internal static class Program
                 $"Unknown script base '{inputScriptBase}'. Supported: absolute, state.", nameof(args));
         }
 
-        if (inputScriptBase is not null && inputScriptPath is null)
+        if (inputScriptBase is not null && inputScriptPath is null && inputLuaPath is null)
         {
-            throw new ArgumentException("--script-base requires --input-script.", nameof(args));
+            throw new ArgumentException("--script-base requires --input-script or --input-lua.", nameof(args));
         }
 
         if (string.Equals(inputScriptBase, "state", StringComparison.OrdinalIgnoreCase)
@@ -3810,10 +3830,21 @@ internal static class Program
             return 0;
         }
 
+        if (args.Length >= 2 && string.Equals(args[1], "import-4do", StringComparison.OrdinalIgnoreCase))
+        {
+            return StateImportFourDo(args);
+        }
+
+        if (args.Length >= 2 && string.Equals(args[1], "export-4do", StringComparison.OrdinalIgnoreCase))
+        {
+            return StateExportFourDo(args);
+        }
+
         if (args.Length < 2 || !string.Equals(args[1], "inspect", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(
-                "state needs 'inspect <path>', 'diff <a> <b>', or 'slots <dir>'.",
+                "state needs 'inspect <path>', 'diff <a> <b>', 'slots <dir>', "
+                + "'import-4do <file> --bios <path>', or 'export-4do <state>'.",
                 nameof(args));
         }
 
@@ -3844,6 +3875,85 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static int StateImportFourDo(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var input = options.Positional
+            ?? throw new ArgumentException("state import-4do needs a .4dosav path.", nameof(args));
+        BiosLoadResult bios = LoadBios(
+            options.Get("--bios"),
+            options.Get("--bios2"),
+            options.Get("--bios-auto"),
+            game: null,
+            discPath: null,
+            allowUnsignedDiscs: options.Get("--allow-unsigned-discs") is not null);
+        if (bios.Image is null)
+        {
+            throw new ArgumentException(
+                "state import-4do needs --bios <path> or --bios-auto <folder> to build the base state.",
+                nameof(args));
+        }
+
+        var machine = new FiveDoMachine();
+        machine.LoadBios(bios.Image.Bios1.Span, bios.Image.Bios2.Span);
+        machine.Reset();
+        using var baseState = new MemoryStream();
+        machine.SaveState(baseState, compress: false);
+
+        byte[] imported = FourDoStateConverter.Import(
+            File.ReadAllBytes(input),
+            baseState.ToArray(),
+            out IReadOnlyList<string> warnings);
+        var output = options.Get("--out") ?? Path.ChangeExtension(input, ".state");
+        EnsureParentDirectory(output);
+        File.WriteAllBytes(output, imported);
+        WriteFourDoStateResult(
+            new CliFourDoStateResult(true, input, output, imported.LongLength, warnings),
+            options.Json);
+        return 0;
+    }
+
+    private static int StateExportFourDo(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var input = options.Positional
+            ?? throw new ArgumentException("state export-4do needs a 5DO state path.", nameof(args));
+        byte[] exported = FourDoStateConverter.Export(
+            File.ReadAllBytes(input),
+            out IReadOnlyList<string> warnings);
+        var output = options.Get("--out") ?? Path.ChangeExtension(input, ".4dosav");
+        EnsureParentDirectory(output);
+        File.WriteAllBytes(output, exported);
+        WriteFourDoStateResult(
+            new CliFourDoStateResult(true, input, output, exported.LongLength, warnings),
+            options.Json);
+        return 0;
+    }
+
+    private static void EnsureParentDirectory(string path)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    private static void WriteFourDoStateResult(CliFourDoStateResult result, bool json)
+    {
+        if (json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliFourDoStateResult));
+            return;
+        }
+
+        Console.WriteLine($"{result.InputPath} -> {result.OutputPath} ({result.Bytes} bytes)");
+        foreach (var warning in result.Warnings)
+        {
+            Console.WriteLine($"note: {warning}");
+        }
     }
 
     private static int CheatCommand(string[] args)
@@ -4346,8 +4456,9 @@ internal static class Program
             "play" => MoviePlay(args, verify: false),
             "verify" => MoviePlay(args, verify: true),
             "branch" or "trim" => MovieBranch(args),
+            "timeline" => MovieTimeline(args),
             _ => throw new ArgumentException(
-                $"Unknown movie subcommand '{args[1]}'. Supported: info, record, play, verify, branch.",
+                $"Unknown movie subcommand '{args[1]}'. Supported: info, record, play, verify, branch, timeline.",
                 nameof(args)),
         };
     }
@@ -4524,6 +4635,116 @@ internal static class Program
         Console.WriteLine(
             $"movie: branched {Path.GetFullPath(path)} at frame {frame} -> "
             + $"{Path.GetFullPath(output)} ({branch.FrameCount} frames)");
+        return 0;
+    }
+
+    private static int MovieTimeline(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            throw new ArgumentException(
+                "movie timeline needs a subcommand: export <movie> --out <script> | "
+                + "apply <script> <movie> --out <movie> | set <script> --frame N --buttons A [--out <script>].",
+                nameof(args));
+        }
+
+        return args[2].ToLowerInvariant() switch
+        {
+            "export" => MovieTimelineExport(args),
+            "apply" => MovieTimelineApply(args),
+            "set" => MovieTimelineSet(args),
+            _ => throw new ArgumentException(
+                $"Unknown movie timeline subcommand '{args[2]}'. Supported: export, apply, set.",
+                nameof(args)),
+        };
+    }
+
+    private static int MovieTimelineExport(string[] args)
+    {
+        if (args.Length < 4)
+        {
+            throw new ArgumentException("movie timeline export needs a movie path.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 4);
+        Movie movie = MovieFile.Load(args[3]);
+        InputTimeline timeline = InputTimeline.FromMovie(movie);
+        var output = options.Get("--out") ?? Path.ChangeExtension(args[3], ".timeline.txt");
+        timeline.Save(output);
+        return WriteTimelineResult(
+            new CliMovieActionResult(
+                Ok: true,
+                Path: Path.GetFullPath(output),
+                FrameCount: timeline.Entries.Count,
+                Message: $"exported {timeline.Entries.Count} entries from {movie.FrameCount} frames"),
+            options.Json);
+    }
+
+    private static int MovieTimelineApply(string[] args)
+    {
+        if (args.Length < 5)
+        {
+            throw new ArgumentException(
+                "movie timeline apply needs a timeline path and a movie path.",
+                nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 5);
+        Movie movie = MovieFile.Load(args[4]);
+        InputTimeline timeline = InputTimeline.Load(args[3], movie.FrameCount);
+        Movie updated = timeline.ApplyTo(movie);
+        var output = options.Get("--out")
+            ?? throw new ArgumentException("movie timeline apply needs --out <movie>.", nameof(args));
+        MovieFile.Save(output, updated);
+        return WriteTimelineResult(
+            new CliMovieActionResult(
+                Ok: true,
+                Path: Path.GetFullPath(output),
+                FrameCount: updated.FrameCount,
+                Message: $"applied {timeline.Entries.Count} timeline entries"),
+            options.Json);
+    }
+
+    private static int MovieTimelineSet(string[] args)
+    {
+        if (args.Length < 4)
+        {
+            throw new ArgumentException("movie timeline set needs a timeline path.", nameof(args));
+        }
+
+        ParsedOptions options = Parse(args, startIndex: 4);
+        var frame = options.GetInt("--frame", -1);
+        if (frame < 0)
+        {
+            throw new ArgumentException("movie timeline set needs --frame N.", nameof(args));
+        }
+
+        var buttons = options.Get("--buttons") ?? "None";
+        ControllerState state = InputScript.ParseButtons(buttons);
+        var frameCount = options.GetInt("--frames", int.MaxValue);
+        InputTimeline timeline = InputTimeline.Load(args[3], frameCount);
+        InputTimeline updated = timeline.WithFrame(frame, state);
+        var output = options.Get("--out") ?? args[3];
+        updated.Save(output);
+        return WriteTimelineResult(
+            new CliMovieActionResult(
+                Ok: true,
+                Path: Path.GetFullPath(output),
+                FrameCount: updated.Entries.Count,
+                Message: $"frame {frame} = {InputRecorder.FormatButtons(state.Buttons)}"),
+            options.Json);
+    }
+
+    private static int WriteTimelineResult(CliMovieActionResult result, bool json)
+    {
+        if (json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliMovieActionResult));
+            return 0;
+        }
+
+        Console.WriteLine($"timeline: {result.Message}");
+        Console.WriteLine($"path:     {result.Path}");
         return 0;
     }
 
@@ -6008,7 +6229,7 @@ internal static class Program
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
-        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
+        Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--input-lua path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
@@ -6098,6 +6319,9 @@ internal static class Program
         Console.WriteLine("  movie record <disc> --out <movie> [run options]");
         Console.WriteLine("                                       Record deterministic PBUS input while running.");
         Console.WriteLine("  movie play <movie> [--disc path] [run options]");
+        Console.WriteLine("  movie timeline export <movie> --out <script>");
+        Console.WriteLine("  movie timeline apply <script> <movie> --out <movie>");
+        Console.WriteLine("  movie timeline set <script> --frame N --buttons A,B [--out <script>]");
         Console.WriteLine("                                       Play a movie; the embedded state is optional.");
         Console.WriteLine("  movie verify <movie> [--disc path] [--json]");
         Console.WriteLine("                                       Replay a movie and compare recorded evidence.");
@@ -6105,6 +6329,10 @@ internal static class Program
         Console.WriteLine("                                       Keep frames before N for a new branch. See docs/Tas.md.");
         Console.WriteLine("  audio analyze <wav> [--json]         WAV format, peak, RMS, clipping, and DC offset.");
         Console.WriteLine("  state inspect <path> [--json]        Save-state header and section table.");
+        Console.WriteLine("  state import-4do <file> --bios <path> [--out <state>]");
+        Console.WriteLine("                                       Import a 4DO .4dosav into a 5DO state.");
+        Console.WriteLine("  state export-4do <state> [--out <file>]");
+        Console.WriteLine("                                       Export a 5DO state as a 4DO .4dosav.");
         Console.WriteLine("  state slots <dir> [--count N] [--json]");
         Console.WriteLine("                                       List numbered save slots and metadata.");
         Console.WriteLine("  disasm <file> [--offset N] [--count N] [--base 0xADDR]");

@@ -581,6 +581,24 @@ shipped as a **preview/best-effort** build: the CLI, frontend launch, and audio 
 validated, while GPU presentation should be re-tested on a hardware-accelerated Linux
 desktop before claiming full GL support. See [`KnownIssues.md`](KnownIssues.md).
 
+**2026-11-13 UX-29/UX-30 Linux rerun:** the self-contained `linux-x64` 1.8.0 publish
+was copied to `~/5do-linux-ux29` on the same Linux Mint 22.3 VM. `FiveDo.Cli --version`
+reported `5DO 1.8.0`, `selftest --json` passed, a Lua-authored 2-frame movie recorded
+and verified (`movieVerification: pass`), `state export-4do` produced a 5,620,420-byte
+container, and `state import-4do` produced an 8,897-byte native state that
+`state inspect` accepted. The frontend smoke under `xvfb-run` wrote:
+
+```text
+FRONTEND SMOKE OK 1.8.0
+locale=en
+firstMenuHeader=File
+windowState=Normal
+```
+
+The self-contained frontend then aborted during Avalonia/OpenAL teardown **after** the
+marker; the 1.7.1 bundle reproduces the same teardown abort on this VM, so it is not
+introduced by UX-29/UX-30. Linux GPU presentation remains preview/best-effort.
+
 **2026-11-08 compatibility-pass note:** the Windows x64 1.5.0 bundle extracted and
 passed both `FiveDo.Cli.exe --help` and `FiveDo.Frontend.Avalonia.exe --smoke-test`
 (OpenGL 4.0 + OpenAL ready). The Linux rerun could not start the local 8 GB `LinuxMint`

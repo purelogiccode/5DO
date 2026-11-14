@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>FiveDo.Scripting</RootNamespace>
+    <AssemblyName>FiveDo.Scripting</AssemblyName>
+    <Description>Deterministic Lua input scripting for 5DO TAS movies.</Description>
+    <LangVersion>15</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\FiveDo.Input\FiveDo.Input.csproj" />
+    <ProjectReference Include="..\FiveDo.Tas\FiveDo.Tas.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MoonSharp" />
+    <PackageReference Include="Roslynator.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

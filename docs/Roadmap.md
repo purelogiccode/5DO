@@ -55,7 +55,10 @@ GitHub). The compatibility plan is complete:
   associations are in place (2026-11-10); macOS packaging needs a macOS host, and
   signing remains conditional on certificates.
 - Additional metadata providers and media in the library.
-- More TAS tooling, Lua scripting, and an input timeline.
+- More TAS tooling: multi-player Lua authoring and multi-player timeline editing
+  (single-player Lua scripting and the input timeline shipped in UX-29).
+- Best-effort 4DO `.4dosav` import/export (UX-30); native 4DO state compatibility is
+  not a goal.
 - CD subcode is complete (2026-11-10); full PAL library validation was completed on
   2026-11-10.
 

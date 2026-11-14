@@ -41,6 +41,10 @@ public sealed class PhysicalDiscSource : IDiscSource
     }
 
     /// <summary>Gets the normalized host device path.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "UnusedAutoPropertyAccessor.Global",
+        Justification = "Public diagnostic identity used by host tooling and tests.")]
     public string DevicePath { get; }
 
     /// <inheritdoc />

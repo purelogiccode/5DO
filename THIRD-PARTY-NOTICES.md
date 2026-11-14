@@ -79,6 +79,15 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   on request through the project issue tracker. The library is dynamically
   loaded, so users may replace it with a compatible build without rebuilding 5DO.
 
+### MoonSharp
+
+- Package: `MoonSharp` 2.0.0.
+- License: 3-clause BSD.
+- Use: the sandboxed Lua interpreter in `FiveDo.Scripting` for deterministic TAS input
+  authoring. Scripts run under MoonSharp's hard sandbox preset and emit controller
+  entries; no Lua code or MoonSharp source is modified. MoonSharp is not used on the
+  emulation hot path.
+
 ### Serilog
 
 - Packages: `Serilog` 4.4.0, `Serilog.Sinks.Console` 6.1.1, and
@@ -112,6 +121,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Microsoft.Extensions.DependencyInjection | Frontend composition | MIT |
 | System.CommandLine | CLI parsing | MIT |
 | Serilog / Serilog.Sinks.Console / Serilog.Sinks.File | Structured logging, console, and rolling-file sinks | Apache-2.0 |
+| MoonSharp 2.0.0 | Sandboxed Lua input scripting for TAS movies | BSD-3-Clause |
 | xUnit | Tests | Apache-2.0 |
 | Microsoft.NET.Test.Sdk | Tests | MIT |
 | coverlet.collector | Coverage | MIT |

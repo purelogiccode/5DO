@@ -4,6 +4,9 @@ using System.IO;
 using System.Text.Json;
 using FiveDo.Audio;
 using FiveDo.Core;
+using FiveDo.Host;
+using FiveDo.Input;
+using FiveDo.Machine;
 using FiveDo.Storage;
 
 namespace FiveDo.Tests.Cli;
@@ -1980,11 +1983,11 @@ public sealed class CliProcessTests
 
             CliResult migrate = Invoke("settings", "migrate", path);
             Assert.Equal(0, migrate.Code);
-            Assert.Contains($"toVersion:   {FiveDo.Host.AppSettings.CurrentVersion}", migrate.Output, StringComparison.Ordinal);
+            Assert.Contains($"toVersion:   {AppSettings.CurrentVersion}", migrate.Output, StringComparison.Ordinal);
 
             CliResult after = Invoke("settings", "validate", path);
             Assert.Equal(0, after.Code);
-            Assert.Contains($"version: {FiveDo.Host.AppSettings.CurrentVersion}", after.Output, StringComparison.Ordinal);
+            Assert.Contains($"version: {AppSettings.CurrentVersion}", after.Output, StringComparison.Ordinal);
         }
         finally
         {
@@ -2300,6 +2303,153 @@ public sealed class CliProcessTests
             Assert.NotEqual(0, result.Code);
             Assert.Contains("overwrite", result.Error, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(original, File.ReadAllBytes(sourcePath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void StateFourDo_ImportAndExportRoundTrip()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "fivedo-cli-4do-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            FiveDoMachine machine = new();
+            machine.RunFrames(1);
+            using var state = new MemoryStream();
+            machine.SaveState(state);
+            byte[] fourDo = FourDoStateConverter.Export(state.ToArray(), out _);
+            string fourDoPath = Path.Combine(directory, "run.4dosav");
+            File.WriteAllBytes(fourDoPath, fourDo);
+
+            string biosPath = Path.Combine(directory, "bios.bin");
+            File.WriteAllBytes(biosPath, new byte[EmulatorConstants.RomBankSize]);
+            string statePath = Path.Combine(directory, "run.state");
+
+            CliResult import = Invoke(
+                "state",
+                "import-4do",
+                fourDoPath,
+                "--bios",
+                biosPath,
+                "--out",
+                statePath,
+                "--json");
+
+            Assert.Equal(0, import.Code);
+            Assert.Contains("\"ok\": true", import.Output, StringComparison.Ordinal);
+            Assert.True(File.Exists(statePath));
+
+            string exportedPath = Path.Combine(directory, "roundtrip.4dosav");
+            CliResult export = Invoke(
+                "state",
+                "export-4do",
+                statePath,
+                "--out",
+                exportedPath,
+                "--json");
+
+            Assert.Equal(0, export.Code);
+            Assert.Contains("\"ok\": true", export.Output, StringComparison.Ordinal);
+            FourDoSaveState parsed = FourDoSaveState.Parse(File.ReadAllBytes(exportedPath));
+            Assert.Equal(12, parsed.PointerSize);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Run_InputLuaOptionLoadsAScript()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "fivedo-cli-lua-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string biosPath = Path.Combine(directory, "bios.bin");
+            File.WriteAllBytes(biosPath, new byte[EmulatorConstants.RomBankSize]);
+            string scriptPath = Path.Combine(directory, "input.lua");
+            File.WriteAllText(
+                scriptPath,
+                """
+                frame(0, "A")
+                frame(2, "B")
+                release(4)
+                """);
+
+            CliResult result = Invoke(
+                "run",
+                "--bios",
+                biosPath,
+                "--frames",
+                "0",
+                "--input-lua",
+                scriptPath,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Contains("\"ok\": true", result.Output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void MovieTimeline_ExportSetApplyRoundTrip()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "fivedo-cli-timeline-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var recorder = new FiveDo.Tas.MovieRecorder();
+
+            for (var frame = 0; frame < 8; frame++)
+            {
+                ControllerState state = frame switch
+                {
+                    0 => new ControllerState(ControllerButton.A),
+                    2 => new ControllerState(ControllerButton.B),
+                    5 => ControllerState.Empty,
+                    _ => frame < 2 ? new ControllerState(ControllerButton.A) : ControllerState.Empty,
+                };
+                var packet = new byte[PbusEncoder.PacketSize];
+                PbusEncoder.Encode([state], packet);
+                recorder.Record(packet);
+            }
+
+            FiveDo.Tas.Movie movie = recorder.Build(
+                new FiveDo.Tas.MovieHeader { GameName = "timeline", FrameCount = 8 });
+            string moviePath = Path.Combine(directory, "input.5domovie");
+            FiveDo.Tas.MovieFile.Save(moviePath, movie);
+
+            string scriptPath = Path.Combine(directory, "input.timeline.txt");
+            CliResult export = Invoke(
+                "movie", "timeline", "export", moviePath, "--out", scriptPath, "--json");
+            Assert.Equal(0, export.Code);
+            Assert.True(File.Exists(scriptPath));
+
+            string editedPath = Path.Combine(directory, "edited.timeline.txt");
+            CliResult set = Invoke(
+                "movie", "timeline", "set", scriptPath,
+                "--frame", "3", "--buttons", "Up,Down", "--out", editedPath, "--json");
+            Assert.Equal(0, set.Code);
+            Assert.True(File.Exists(editedPath));
+
+            string appliedPath = Path.Combine(directory, "applied.5domovie");
+            CliResult apply = Invoke(
+                "movie", "timeline", "apply", editedPath, moviePath,
+                "--out", appliedPath, "--json");
+            Assert.Equal(0, apply.Code);
+            FiveDo.Tas.Movie applied = FiveDo.Tas.MovieFile.Load(appliedPath);
+            ControllerState[] controllers = applied.GetControllers(3);
+            Assert.True(controllers[0].IsDown(ControllerButton.Up));
+            Assert.True(controllers[0].IsDown(ControllerButton.Down));
         }
         finally
         {

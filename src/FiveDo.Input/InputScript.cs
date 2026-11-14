@@ -101,6 +101,16 @@ public static class InputScript
         return Parse(File.ReadAllText(path));
     }
 
+    /// <summary>Parses a comma/plus/bar-separated button list.</summary>
+    /// <param name="text">Button names, or <c>None</c>/empty for no buttons.</param>
+    /// <returns>The parsed controller state.</returns>
+    /// <exception cref="FormatException">Thrown when a button name is unknown.</exception>
+    public static ControllerState ParseButtons(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return ParseButtons(text, lineNumber: 0);
+    }
+
     /// <summary>
     /// Shifts script frame numbers by a base frame, so a script written from zero can
     /// be applied after loading a save state.

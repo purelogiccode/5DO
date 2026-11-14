@@ -323,6 +323,7 @@
         "dependencies": {
           "FiveDo.Host": "[1.8.0, )",
           "FiveDo.Localization": "[1.8.0, )",
+          "FiveDo.Scripting": "[1.8.0, )",
           "FiveDo.Tas": "[1.8.0, )",
           "Serilog": "[4.4.0, )",
           "System.CommandLine": "[3.0.0, )"
@@ -448,6 +449,15 @@
           "FiveDo.Core": "[1.8.0, )"
         }
       },
+      "fivedo.scripting": {
+        "type": "Project",
+        "dependencies": {
+          "FiveDo.Core": "[1.8.0, )",
+          "FiveDo.Input": "[1.8.0, )",
+          "FiveDo.Tas": "[1.8.0, )",
+          "MoonSharp": "[2.0.0, )"
+        }
+      },
       "fivedo.sport": {
         "type": "Project",
         "dependencies": {
@@ -566,6 +576,12 @@
         "requested": "[8.4.2, )",
         "resolved": "8.4.2",
         "contentHash": "WadCzGEc2U+3e20avRLng4qNtt4zoOGWrdUISqJWrHe3/FSnrYjuM5Sb4yQb09LhkBXrrI4Zt3dLKgRMbItsrg=="
+      },
+      "MoonSharp": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "uiAcRh7d+53k3xW9pFDJfAFVw4RnjHVCJG05M3oPAVEVwPtFavhg1H/IpC6So4X1j9kJlzuLlA3OghhPcIvc5A=="
       },
       "Serilog": {
         "type": "CentralTransitive",

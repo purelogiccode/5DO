@@ -7,6 +7,22 @@ release.
 
 ### Added
 
+- **Lua input scripting and input timeline (UX-29).** `FiveDo.Scripting` uses a hard
+  MoonSharp sandbox and exposes `frame`, `hold`, `press`, and `release` (also under
+  `input.*`). `run`/`movie record` accept `--input-lua`. `InputTimeline` coalesces
+  player-1 state changes, exports a plain input script, edits frames, and applies back
+  to a movie while preserving the embedded state and other slots. CLI:
+  `movie timeline export|set|apply`; shell: **Emulation > Input Timeline...** draws one
+  row per pad button with a playhead and lets the user edit a frame or write the result
+  to a new movie. `LuaTimelineTests` and the CLI timeline tests cover deterministic
+  Lua-authored movie replay and the export/edit/apply round-trip. See `Tas.md` §8-9.
+- **4DO `.4dosav` import/export (UX-30, best-effort).** `state import-4do` maps a
+  FreeDOCore state into a native `.tdos` state using a freshly reset machine as the base,
+  and `state export-4do` writes the 32-bit 4DO container. The converter maps ARM banks,
+  memory (including the stock high-resolution mirrors), MADAM, CLIO, DSP, SPORT, VDLP,
+  Quartz, and XBUS; unsupported fields are reported as `warnings`. `FourDoStateTests`
+  and the CLI round-trip test cover validation, pointer-layout detection, field mapping,
+  and re-import. See `SaveStates.md` §9.
 - **Controller preview (UX-31).** Input Bindings draws a 3DO pad using Avalonia
   primitives. Buttons with a keyboard or gamepad binding are outlined, the hovered or
   focused binding row is highlighted, and a held key or gamepad control lights its

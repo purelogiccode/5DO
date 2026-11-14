@@ -30,7 +30,8 @@ src/
   FiveDo.Diagnostics/        PNG/frame dumps, tracing, timing, benchmark gates
   FiveDo.Machine/            composition root, frame loop, Quartz scheduler
   FiveDo.Cheats/             per-game cheat parser, engine, and JSON document store
-  FiveDo.Tas/                TAS movie container, record/replay, branching, verification
+  FiveDo.Tas/                TAS movie container, record/replay, branching, verification, input timeline
+  FiveDo.Scripting/          Sandboxed Lua input scripting (MoonSharp)
   FiveDo.Host/               core runner, pacing, settings, slots, library, fixes, autopilot, cheats
   FiveDo.Cli/                headless commands and JSON contracts
   FiveDo.Frontend.Avalonia/  desktop shell, video surface, dialogs, GPU probe
@@ -69,6 +70,7 @@ FiveDo.Audio --------------> Core (+ Silk.NET.OpenAL)
 FiveDo.Input --------------> Core
 FiveDo.Cheats ------------> Machine, Input
 FiveDo.Tas --------------> Core, Input
+FiveDo.Scripting --------> Core, Input, Tas, MoonSharp
 FiveDo.Video --------------> Core
 FiveDo.Diagnostics --------> Core
 FiveDo.Memory -------------> Core
@@ -116,6 +118,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Machine` | Composition root, frame loop, Quartz scheduler, state sections, device wiring | `FiveDoMachine`, `Quartz` | Core + chips |
 | `FiveDo.Cheats` | Per-game cheat parser, typed/conditional/button engine, atomic JSON store | `CheatSet`, `CheatEntry`, `CheatDocument`, `CheatStore` | Machine, Input |
 | `FiveDo.Tas` | TAS movie container, recorder/playback PBUS sources, branch/trim editor, frame/PC/state verifier | `MovieFile`, `Movie`, `MovieHeader`, `MovieRecorder`, `MoviePbusSource`, `MovieEditor`, `MovieVerifier` | Core, Input |
+| `FiveDo.Scripting` | Sandboxed Lua input scripting and frame/button emission | `LuaInputScript` | Core, Input, Tas, MoonSharp |
 | `FiveDo.Host` | Core thread/pacing, settings, BIOS/disc/NVRAM loading, audio/input backends, save slots, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Core, Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless commands, JSON contracts | `Program`, `CliJsonModels` | Host |
 | `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, donation banner, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |

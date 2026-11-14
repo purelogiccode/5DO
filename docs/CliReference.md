@@ -84,7 +84,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `settings profiles` | List named configuration profiles under the data directory. |
 | `settings options` | Print the validated machine-option registry as Markdown, text, or JSON. |
 | `cheat list\|add\|enable\|disable\|remove\|import\|export` | Manage per-game RAM cheat files. |
-| `movie info\|record\|play\|verify\|branch` | Inspect, record, replay, verify, or branch `.5domovie` TAS movies. |
+| `movie info\|record\|play\|verify\|branch\|timeline` | Inspect, record, replay, verify, branch, or edit `.5domovie` TAS movies and their input timeline. |
 | `metadata lookup <title>` | Match and cache an external library-metadata catalog. |
 | `metadata media <disc>` | Add, remove, or list manual media attachments. |
 | `audio devices [--json]` | List OpenAL playback devices. |
@@ -93,6 +93,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
 | `state slots <dir>` | List numbered save slots and metadata. |
+| `state import-4do <file>` | Import a 4DO `.4dosav` into a native `.tdos` state. |
+| `state export-4do <state>` | Export a native `.tdos` state as a 4DO `.4dosav`. |
 | `disasm <file>` | Disassemble raw little-endian ARM words. |
 | `bench` | Synthetic-ROM frame benchmark (or real content with options); `--profile` selects the timing bundle. |
 | `selftest` | Determinism and state roundtrip checks for every named timing profile. |
@@ -224,6 +226,7 @@ prints a warning and runs silently. `--realtime` only affects pacing, not the ba
 | Option | Default | Meaning |
 |---|---|---|
 | `--input-script <path>` | none | Frame-stamped controller script. |
+| `--input-lua <path>` | none | Sandboxed Lua input script that emits frame/button entries. Cannot be combined with `--input-script`, `--autopilot`, or `--movie-play`. |
 | `--script-base absolute|state` | `absolute` | `state` shifts script frames by the loaded state's frame count. Requires `--state-in`. |
 | `--autopilot road` | none | Road Rash autopilot. Cannot be combined with `--input-script`. |
 | `--progress N` | 0 (off) | Print a progress line to stderr every N frames. |
@@ -833,7 +836,27 @@ new branch can be recorded. `movie info` reads only the header.
 `movie info --json` returns the format/version, game/disc/BIOS metadata, frame range,
 final hashes, state size, options, notes, and file size. `movie verify` uses the
 normal `run --json` contract with `moviePath`, `movieFrames`, `movieVerification`
-(`pass`/`fail`), and `movieFailures`. See [`Tas.md`](Tas.md).
+(`pass`/`fail`), and `movieFailures`.
+
+### `movie timeline`
+
+```powershell
+5do movie timeline export run.5domovie --out run.timeline.txt --json
+5do movie timeline set run.timeline.txt --frame 300 --buttons Down,A --out edited.txt --json
+5do movie timeline apply edited.txt run.5domovie --out edited.5domovie --json
+```
+
+`export` writes the movie's player-1 state changes as a plain input-script document.
+`set` replaces one frame's buttons in that document (`--frames` defaults to unlimited).
+`apply` rewrites player 1's input on every movie frame, preserves the other slots and
+the embedded state, and clears completion evidence. See [`Tas.md`](Tas.md) §9.
+
+### Lua input
+
+`run` and `movie record` accept `--input-lua <path>`. The sandboxed Lua API provides
+`frame(n, buttons)`, `hold(from, to, buttons)`, `press(n, buttons, count)`, and
+`release(n)` (also under `input.*`). The script emits a normal input-script entry list;
+replay determinism still comes from the resulting movie. See [`Tas.md`](Tas.md) §8.
 
 ---
 
@@ -928,6 +951,27 @@ Text output prints the header fields, the stored file size, and one
 
 Lists `slot-00` through `slot-(count-1)` in the directory. `--count` defaults to 10.
 JSON is a PascalCase array of `SaveStateSlotInfo`:
+
+### `state import-4do` / `state export-4do`
+
+```powershell
+5do state import-4do run.4dosav --bios bios/panafz1.bin --out run.tdos --json
+5do state export-4do run.tdos --out run.4dosav --json
+```
+
+`import-4do` needs `--bios` (or `--bios-auto`) to build the base 5DO state for the
+sections 4DO does not record. `--out` defaults to the input name with `.state` or
+`.4dosav`. Both commands return:
+
+| Field | Meaning |
+|---|---|
+| `ok` | Whether the conversion completed. |
+| `inputPath` | Source file. |
+| `outputPath` | Written file. |
+| `bytes` | Written file size. |
+| `warnings` | Unsupported fields and conversion notes. |
+
+See [`SaveStates.md`](SaveStates.md) §9 for the container mapping.
 
 | Field | Meaning |
 |---|---|

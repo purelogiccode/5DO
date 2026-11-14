@@ -3669,3 +3669,81 @@ See [Metadata.md](Metadata.md).
 
 Full suite **2,234/2,234**; build and format are clean, and InspectCode reports **0**
 findings at warning severity for the full solution.
+
+### 1.1by UX-30 4DO `.4dosav` import/export (2026-11-13)
+
+**Container parser.** `FourDoSaveState` validates the FreeDOCore index table, derives
+the ARM structure size from the record deltas, and accepts both the 32-bit (195-byte)
+and 64-bit (207-byte) pointer layouts. It exposes the ARM register block, the 3 MB
+DRAM/VRAM image, 2 MB ROM, 32 KB NVRAM, and the VDLP, DSP, CLIO, Quartz, SPORT, MADAM,
+and XBUS records. Truncated, non-monotonic, or mis-sized records throw
+`InvalidDataException`.
+
+**Mapping.** `FourDoStateConverter.Import` builds a base state from a freshly reset
+machine and replaces CPU, Memory, MADAM, CLIO, DSP, SPORT, VDLP, Quartz, and XBUS. The
+3 MB big-endian DRAM/VRAM image is converted to 5DO words and the stock 16 mirror planes
+are rebuilt; the DSP tail is read from the end of the record so the decoded instruction
+cache does not shift fields. `state import-4do` and `state export-4do` expose the
+conversion with a `warnings` array for unsupported fields (decoded DSP caches, derived
+VDL frame, CD-ROM drive, controller attachments, exact timer slot, and matrix
+temporaries). `state export-4do` writes the 32-bit ARM layout with zeroed pointer fields.
+
+**Evidence.** `FourDoStateTests` (5 tests) cover container validation, pointer-layout
+detection, architectural-field mapping, a full import/export/import round-trip, and a
+truncated record. `CliProcessTests.StateFourDo_ImportAndExportRoundTrip` writes an
+exported `.4dosav`, imports it through the CLI with a synthetic BIOS, exports the result,
+and re-parses it. The round-trip preserved PC, R0, CPSR, DRAM/VRAM words, VDLP cursors,
+DSP PC/seed, CLIO registers, Quartz accumulators, SPORT registers, and the MADAM FSM.
+See [SaveStates.md](SaveStates.md) §9.
+
+Full suite **2,240/2,240**; build, format, and InspectCode are clean.
+
+### 1.1bz UX-29 Lua input scripting and input timeline (2026-11-13)
+
+**Lua sandbox.** `FiveDo.Scripting` adds `LuaInputScript` on MoonSharp 2.0.0's hard
+sandbox preset. Scripts emit ordinary `InputScriptEntry` values through `frame(n, buttons)`,
+`hold(from, to, buttons)`, `press(n, buttons, count)`, and `release(n)`, also exposed as
+`input.*`. Consecutive identical states are coalesced, frames are bounded at 10,000,000,
+and file/process/clock/network APIs are unavailable. `run` and `movie record` accept
+`--input-lua`; it cannot be combined with `--input-script`, `--autopilot`, or
+`--movie-play`. `--script-base state` offsets Lua entries like text scripts.
+
+**Timeline.** `InputTimeline` extracts player-1 changes from a movie, coalesces them,
+edits one frame or button, trims, serializes to the normal frame/buttons script format,
+and applies back to a movie while preserving the other slots and embedded state.
+`movie timeline export|set|apply` expose the workflow headlessly. **Emulation > Input
+Timeline...** opens an Avalonia window with one colored row per 3DO button, a one-second
+grid, a clickable playhead, frame slider, button checkboxes, Save Timeline, and Apply to
+Movie.
+
+**Evidence.** `LuaTimelineTests` (5 tests) cover hold/press/release emission, Lua
+loops/locals, invalid buttons/frames and sandbox rejection, deterministic replay of a
+Lua-authored movie, and a timeline export/edit/load/apply round-trip.
+`CliProcessTests.Run_InputLuaOptionLoadsAScript` and
+`CliProcessTests.MovieTimeline_ExportSetApplyRoundTrip` cover the CLI paths. The
+localization coverage gate passes with the new window strings in English and German.
+
+**Linux x64 rerun.** The self-contained `linux-x64` 1.8.0 publish ran on the Linux Mint
+22.3 VM: `selftest --json` passed, the Lua-authored 2-frame movie verified, the 4DO
+export/import pair completed (5,620,420 → 8,897 bytes), and the frontend smoke wrote
+`FRONTEND SMOKE OK 1.8.0`. The self-contained frontend aborts during Avalonia/OpenAL
+teardown after the marker; the 1.7.1 bundle does the same on this VM, so Linux GPU
+presentation remains preview/best-effort. See [Compatibility.md](Compatibility.md) §10.3.
+
+Full suite **2,249/2,249**; build, format, and InspectCode are clean.
+
+### 1.1ca PLAT-06 presentation matrix refresh (2026-11-13)
+
+Reran the 4K offscreen probe on the RTX 4070 with the current build
+(`--gl-probe-size 3840x2160 --gl-probe-offscreen`, 120 measured frames after 30 warm-up):
+
+| Backend | API | Present mean / p99 | GPU mean / p99 | Managed B/frame |
+|---|---|---:|---:|---:|
+| WGL | OpenGL 4.0 | 0.151 / 0.459 ms | 0.118 / 0.210 ms | 0 |
+| ANGLE | OpenGL ES 3.0 | 0.207 / 0.538 ms | not reported | 0 |
+
+`PixelSizeTests` already covers 100/125/150/200% physical-pixel sizing. The synthetic
+Tier A proxy measured 313.9 fps / 3.19 ms per emulated frame, below the 12 ms Tier B
+core budget. Real GLES 3.1 hardware and a real Tier B device were unavailable and are
+recorded as best-effort in [Performance.md](Performance.md) §8.8. `PLAT-06` remains a
+documented partial measurement item, not a correctness risk.

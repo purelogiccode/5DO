@@ -966,3 +966,29 @@ audio sync offset reported 0 dropped samples and 0 underruns over 240 Lemmings f
 input-to-photon measurement and real adaptive-sync hardware confirmation remain external
 validation caveats, not missing software features. PERF-02 and SYS-12 are also complete;
 AUD-01 keeps only resampler quality, exclusive mode, and long-session platform drift work.
+
+### 8.8 PLAT-06 presentation matrix refresh (2026-11-13)
+
+The 4K offscreen probe was rerun on the RTX 4070 development machine with the current
+build. Both runs use `--gl-probe-size 3840x2160 --gl-probe-offscreen`, 120 measured
+frames after 30 warm-up frames:
+
+| Backend | API | Present mean / p99 | GPU mean / p99 | Managed bytes/frame |
+|---|---|---:|---:|---:|
+| WGL | OpenGL 4.0 | 0.151 / 0.459 ms | 0.118 / 0.210 ms | 0 |
+| ANGLE | OpenGL ES 3.0 | 0.207 / 0.538 ms | not reported by the offscreen probe | 0 |
+
+The WGL and ANGLE captures both keep the CPU oracle hash; the ANGLE path selects the
+GLSL ES 300 shaders and reports integer-texture support.
+
+**DPI 100/150/200%.** `PixelSizeTests` covers physical-pixel sizing for 1.0, 1.25, 1.5,
+and 2.0 scaling, including fractional bounds and degenerate sizes. Live window resize and
+an actual display at each OS scaling remain **best-effort** because the validation host
+has one physical desktop configuration.
+
+**GLES 3.1 and Tier B hardware.** Real GLES 3.1 hardware and a slower Tier B device were
+not available. The GLES path is validated at OpenGL ES 3.0 through ANGLE; GLES 3.1 uses
+the same shader and texture path. A synthetic Tier A proxy (`bench --frames 120`, Release)
+measured 313.9 fps / 3.19 ms per emulated frame, under the 12 ms Tier B core budget, but
+this is not a substitute for a real Tier B percentile run. Both residues are recorded as
+**best-effort**; `PLAT-06` remains a measurement item rather than a correctness risk.

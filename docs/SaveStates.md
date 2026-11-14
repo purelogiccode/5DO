@@ -1,16 +1,19 @@
 # Save States
 
 5DO uses a native, versioned save-state format with the `.tdos` extension. The format
-is designed for deterministic continuation of the emulated machine, not for
-interoperability with FreeDO/4DO `.state` files. There is no legacy 4DO state import in
-this release.
+is designed for deterministic continuation of the emulated machine. A best-effort
+importer/exporter maps 4DO `.4dosav` files to and from the native format; see section 9.
+Native states remain authoritative, and 4DO interoperability is explicitly not a
+bit-for-bit compatibility guarantee.
 
 - Writer/reader: `StateWriter` / `StateReader` (`FiveDo.Core`).
 - Machine framing: `FiveDoMachine.SaveState` / `LoadState`.
 - Slot management: `SaveStateSlotManager` (`FiveDo.Host`).
 - Inspector: `StateInspector` (`FiveDo.Host`).
 - Diff: `StateDiff` (`FiveDo.Host`) and `state diff`.
-- CLI: `state inspect`, `state slots`; `run --state-in`/`--state-out`.
+- CLI: `state inspect`, `state slots`, `state import-4do`, `state export-4do`;
+  `run --state-in`/`--state-out`.
+- 4DO interop: `FourDoSaveState` and `FourDoStateConverter` (`FiveDo.Host`).
 
 ---
 
@@ -410,3 +413,103 @@ cross-version loads visible, not to guarantee compatibility.
 
 For binary inspection, `state inspect --json` is the supported path; do not hand-edit
 `.tdos` files. For format experiments, copy the file first and keep the original.
+
+---
+
+## 9. 4DO state interoperability (UX-30)
+
+4DO writes `.4dosav` files as the raw `_3do_Save` buffer from FreeDOCore. The container
+is versionless and depends on the C structure layout of the producing build. 5DO reads
+the 32-bit and 64-bit ARM layouts used by current builds, maps the architectural fields,
+and preserves the sections 4DO does not record.
+
+### Container
+
+```text
++---------------------------------------------------------------+
+| 64-byte index table                                           |
+|   int32[0]  magic 0x97970101                                  |
+|   int32[1]  64 (ARM record start)                             |
+|   int32[2]  VDL record start                                  |
+|   int32[3]  DSP record start                                  |
+|   int32[4]  CLIO record start                                 |
+|   int32[5]  Quartz record start                               |
+|   int32[6]  SPORT record start                                |
+|   int32[7]  MADAM record start                                |
+|   int32[8]  XBUS record start                                 |
+|   int32[9]  end of file                                       |
++---------------------------------------------------------------+
+| ARM record                                                    |
+|   three pointer fields (12 or 24 bytes, ignored on load)      |
+|   USER[16], CASH[7], SVC[2], ABT[2], FIQ[7], IRQ[2], UND[2],  |
+|   SPSR[6], CPSR, nFIQ, SecondROM, MAS_Access_Exept            |
+|   3 MB DRAM/VRAM, 2 MB ROM, 32 KB NVRAM                       |
++---------------------------------------------------------------+
+| VDLP (132), DSP (73,029), CLIO (262,496), Quartz (32),         |
+| SPORT (12), MADAM (8,544), XBUS (268)                         |
++---------------------------------------------------------------+
+```
+
+The ARM record size reveals the pointer width: 12 bytes means a 32-bit build and
+24 bytes means a 64-bit build. The core ignores the pointer values and rebinds its own
+buffers. The DSP record starts with `RBASEx4`, followed by the decoded `INSTTRAS` cache;
+5DO reads the fixed tail from the end of the record, so a larger cache does not shift
+the fields.
+
+### Import
+
+```powershell
+5do state import-4do run.4dosav --bios bios/panafz1.bin --out run.tdos
+5do state import-4do run.4dosav --bios-auto bios --out run.tdos --json
+```
+
+Import builds a base 5DO state from a freshly reset machine with the supplied BIOS and
+then replaces the CPU, Memory, MADAM, CLIO, DSP, SPORT, VDLP, Quartz, and XBUS sections.
+The base state's CD-ROM drive, derived video frame, machine options, and controller
+chain are preserved because 4DO does not store them. The command prints a `note:` line
+for every unsupported field; `--json` returns the same notes in `warnings`.
+
+Mapped state:
+
+- **CPU:** all register banks, CPSR, FIQ pending, second-ROM select, and the
+  `MAS_Access_Exept` latch.
+- **Memory:** the 3 MB DRAM/VRAM image is byte-swapped from FreeDOCore's big-endian
+  words into 5DO's word representation; the stock 16 high-resolution mirror planes are
+  rebuilt from the VRAM bank. The 2 MB ROM and 32 KB NVRAM are mapped directly.
+- **MADAM:** 2048+64 registers, PLUT, the 20-byte PBUS queue prefix (the 256-byte 5DO
+  queue is filled with `0xFF`), read/write modulo, and the CEL FSM.
+- **CLIO:** 65,536 registers, DSP window words, input/output FIFO pointers and
+  descriptors. The timer accumulator is cleared as FreeDOCore does on load, and the two
+  scope-only timer fields plus the 5DO PRNG seed start at their defaults.
+- **DSP:** PC, status/counters, ALU/multiplier/shifter latches, masks, running/FIQ flags,
+  `RBASEx4`, register index, seed, CPU-supply flags, data memory, and instruction memory.
+  The decoded instruction cache and convolution/branch tables are rebuilt from IMem.
+- **SPORT and Quartz:** all persisted fields. 4DO's 8.24 DSP/VDL fractions are converted
+  to 5DO's exact cycle/accumulator units; the timer slot restarts at zero.
+- **VDLP:** CLUTs, background, head/current/modulo/bitmap/control/DMA/line-delay fields.
+  4DO has no successor cursor, so 5DO resumes from the current cursor.
+- **XBUS:** select/poll/FIFO fields are overlaid on the base state's controller chain.
+
+### Export
+
+```powershell
+5do state export-4do run.tdos --out run.4dosav
+5do state export-4do run.tdos --out run.4dosav --json
+```
+
+Export writes the 32-bit ARM structure because the 4DO reference application is x86,
+zeroes the ignored pointer fields, and emits the VDLP, DSP, CLIO, Quartz, SPORT, MADAM,
+and XBUS records. The 5DO-only fields (decoded VDL frame, CD-ROM drive, machine options,
+controller attachments, exact timer slot, and matrix temporaries) are omitted and
+reported as warnings. A stock `2 MB DRAM / 1 MB VRAM` state is required for a faithful
+4DO image; expanded DRAM or VRAM layouts are reported and only the stock window is
+exported.
+
+### Tests and limits
+
+`FourDoStateTests` covers container validation, pointer-layout detection, field mapping,
+a full import/export/import round-trip, and malformed records. `CliProcessTests` covers
+both CLI commands. The format is best-effort: a state from a modified FreeDOCore or a
+future 4DO structure revision is rejected with a clear size error rather than silently
+misread. 4DO input devices are host-side, so controller attachments do not transfer in
+either direction.
