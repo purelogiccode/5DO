@@ -101,7 +101,16 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 
         if (!MakeContextCurrent())
         {
-            throw new InvalidOperationException("The OpenAL context could not be made current.");
+            // MakeContextCurrent reports its own ALC error on the null device. Keep the
+            // failing path and code in the message so a replaced or mismatched OpenAL
+            // runtime is diagnosable instead of a generic "audio unavailable" warning.
+            ContextError openAlError = _alc.GetError(null);
+            string path = _setThreadContext is not null
+                ? "ALC_EXT_thread_local_context"
+                : "alcMakeContextCurrent";
+            throw new InvalidOperationException(
+                $"The OpenAL context could not be made current through {path} "
+                + $"(ALC error: {openAlError}).");
         }
 
         _source = _al.GenSource();
@@ -345,7 +354,15 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         catch (Exception exception)
         {
             error = exception.Message;
-            Serilog.Log.Warning(exception, "OpenAL audio output could not be created.");
+
+            // Audio availability is host state, not an application defect: headless
+            // runs, disconnected endpoints, and replaced OpenAL builds all reach this
+            // path. Keep the exception detail at Debug and let the CLI/frontend log
+            // their own user-facing warning without submitting a bug report.
+            Serilog.Log.Debug(
+                exception,
+                "OpenAL audio output could not be created: {Error}.",
+                exception.Message);
             return null;
         }
         finally

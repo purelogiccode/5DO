@@ -21,10 +21,22 @@ unmodified 1.23.1 upstream release. The file names are:
 | Linux x64 / arm64 | `libopenal.so` | `libopenal.so` |
 | macOS x64 / arm64 | `libopenal.dylib` | `libopenal.dylib` |
 
-The Windows copy is performed by `Directory.Build.targets`
+The Windows copies are performed by `Directory.Build.targets`
 (`FiveDoPublishOpenAlSoft`). Linux and macOS use the package's native file names.
 The library is loaded dynamically at runtime; 5DO does not statically link it into
 the executable.
+
+Both Windows names are intentional: `soft_oal.dll` is the upstream package file, while
+`OpenAL32.dll` is the name Silk.NET.OpenAL passes to the Windows loader. Publish must
+copy both after `dotnet publish`; a bundle that contains only `soft_oal.dll` can load a
+system OpenAL build instead. `packaging/package-bundle.ps1` and
+`.github/workflows/build-bundle.yml` now reject a bundle missing the loader-named
+runtime. To repair a 1.9.x or 1.10.0/1.10.1 copy, run this beside `FiveDo.exe` and
+`FiveDo.Cli.exe`:
+
+```powershell
+Copy-Item .\soft_oal.dll .\OpenAL32.dll -Force
+```
 
 ## 2. Copyright and license notice
 

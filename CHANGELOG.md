@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.10.1, a documented-compatibility
+All notable changes are recorded here. The project is at v1.10.2, a documented-compatibility
 release.
 
-## [Unreleased]
+## [1.10.2] - 2026-11-15
 
 ### Added
 
@@ -13,6 +13,20 @@ release.
   raw 2352-byte, and the 2353/2368/2448/2449-byte variants to `ITrackedDiscSource`.
   The game library, File > Open Disc, the CLI, and installer associations accept both
   formats. Malformed images fail with typed errors.
+
+### Fixed
+
+- **Windows bundles now contain the OpenAL Soft runtime under the name the loader
+  opens.** Publish copied only `soft_oal.dll`; the `OpenAL32.dll` copy existed in build
+  output but not in `dotnet publish` output, because `Content` `Link` metadata does not
+  rename the published file. Silk.NET.OpenAL loads `OpenAL32.dll`, so installed copies
+  could silently fall back to a system OpenAL build and fail with *The OpenAL context
+  could not be made current* (bug reports 69885-69891). `FiveDoPublishOpenAlSoft` now
+  copies both names after publish, `package-bundle.ps1` and the bundle workflow verify
+  the loader-named native library for every RID, and `OpenAlAudioOutput.TryCreate`
+  reports the failing path and ALC error at Debug instead of submitting an expected
+  host-audio failure as a bug report. Existing 1.9.x and 1.10.0/1.10.1 installations can work
+  around the issue by copying `soft_oal.dll` to `OpenAL32.dll` beside the apphosts.
 
 ## [1.10.1] - 2026-11-15
 

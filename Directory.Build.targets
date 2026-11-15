@@ -29,8 +29,19 @@
   </Target>
 
   <Target Name="FiveDoPublishOpenAlSoft" AfterTargets="Publish" Condition="'$(_FiveDoNeedsOpenAlWindowsNative)' == 'true'">
+    <!--
+      Publish must use the loader name, not the NuGet package name. Using
+      DestinationFolder here copies soft_oal.dll again and leaves Silk.NET searching
+      for a system OpenAL32.dll, which can exist but fail to create a context.
+      CopyToPublishDirectory on the Content item does not rename the file either.
+    -->
     <Copy SourceFiles="$(_FiveDoOpenAlSoftSource)"
-          DestinationFolder="$(PublishDir)"
+          DestinationFiles="$(PublishDir)OpenAL32.dll"
+          SkipUnchangedFiles="true" />
+    <!-- Keep the package-name copy too. Single-file publish may embed or drop the
+         runtime asset, and the licence notice documents both files beside the apps. -->
+    <Copy SourceFiles="$(_FiveDoOpenAlSoftSource)"
+          DestinationFiles="$(PublishDir)soft_oal.dll"
           SkipUnchangedFiles="true" />
   </Target>
 

@@ -32,7 +32,8 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults and is backed up. A read-only or cloud-synced data folder no longer crashes the shell; it logs the failure and continues. A bad custom path can still fail. |
 | Settings changes are not saved | The data folder is read-only, held by a sync client, or the file is locked. Check the log for "could not be written", make the folder available offline, clear the read-only attribute, or point `FIVEDO_DATA_DIR` at a local folder. |
 | Crash on close | Known Silk.NET/Avalonia shutdown ordering issue; the shell intentionally does not dispose the GL surface during close. If it persists, capture the stack trace. |
-| Missing `OpenAL32.dll` | Rebuild so `Directory.Build.targets` copies OpenAL Soft, or place the package's `soft_oal.dll` beside the executable as `OpenAL32.dll`. |
+| Missing `OpenAL32.dll` | Rebuild so `Directory.Build.targets` copies OpenAL Soft, or place the package's `soft_oal.dll` beside the executable as `OpenAL32.dll`. 1.10.2 bundles contain both names; if an older bundle has only `soft_oal.dll`, copy it to `OpenAL32.dll`. |
+| `OpenAL audio output could not be created` / *The OpenAL context could not be made current* | 1.9.x and 1.10.0/1.10.1 Windows bundles shipped only `soft_oal.dll`, so Silk.NET could load a system OpenAL build instead. Copy `soft_oal.dll` to `OpenAL32.dll` beside `FiveDo.exe` and `FiveDo.Cli.exe`, then restart. The startup failure is now logged at Debug with the ALC error and is not submitted as a bug report. |
 
 ---
 
@@ -133,6 +134,7 @@ report and backend.
 | Symptom | Cause / action |
 |---|---|
 | No sound at all | Check Settings > Audio (enabled/volume), OS output device, and Logs. If no OpenAL device is found, the app logs a warning and runs silently. |
+| `OpenAL audio output could not be created` | The app-local OpenAL runtime could not open a context; the Debug log records the failing path (`ALC_EXT_thread_local_context` or `alcMakeContextCurrent`) and the ALC error. On 1.9.x or 1.10.0/1.10.1 Windows bundles, first copy `soft_oal.dll` to `OpenAL32.dll` beside the executables. |
 | Test tone fails | No playback endpoint; use `ALSOFT_DRIVERS=null` for tests or configure a device. |
 | Constant crackle | Update to the 2026-10-28+ build (free-buffer pool fix). Capture `FIVEDO_AUDIO_TAP` and compare tap vs loopback. |
 | Crackle only on Bluetooth | Tap is clean but loopback is not; the link/codec is the issue. |

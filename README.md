@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.10.1-orange" alt="Version 1.10.1"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.10.2-orange" alt="Version 1.10.2"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.10.1**, a documented-compatibility release with RetroAchievements, UI catalogs for
+> 5DO is at **v1.10.2**, a documented-compatibility release with RetroAchievements, UI catalogs for
 > English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean,
 > and Simplified Chinese, external metadata and media, physical optical-drive boot,
 > DiscJuggler `.cdi` and Nero `.nrg` images, Windows
@@ -35,8 +35,10 @@
 > editable input timeline, and best-effort 4DO state interop. Windows x64 is the
 > validated GPU target; Linux x64 full suite passed (GPU presentation is
 > preview/best-effort), and macOS x64/arm64, Linux arm64, and Windows arm64 pass the
-> native CLI/frontend runtime smoke. No BIOS ROMs, game images, or extracted game
-> assets are included. You must supply legally obtained files.
+> native CLI/frontend runtime smoke. The Windows bundles include both `OpenAL32.dll`
+> and `soft_oal.dll`, so the bundled OpenAL Soft runtime is the one the loader opens.
+> No BIOS ROMs, game images, or extracted game assets are included. You must supply
+> legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -76,7 +78,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.10.1` release (GitHub Releases) |
+| Version | `1.10.2` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
 | Automated tests | **2,365 tests** in the current test assembly |
@@ -100,20 +102,23 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.10.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-win-x64.zip) |
-| Windows arm64 | [`5do-1.10.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-win-arm64.zip) |
-| Linux x64 | [`5do-1.10.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.10.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.10.1-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.10.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.10.2-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-win-x64.zip) |
+| Windows arm64 | [`5do-1.10.2-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-win-arm64.zip) |
+| Linux x64 | [`5do-1.10.2-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.10.2-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.10.2-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.10.2-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-osx-arm64.dmg) |
+
+The 1.10.2 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
+bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy.
 
 The apps are single-file executables. **Install the .NET 11 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.10.1-win-arm64.zip`
-or `5do-1.10.1-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.10.2-win-arm64.zip`
+or `5do-1.10.2-osx-arm64.dmg`.
 
 ## Features
 
@@ -211,7 +216,7 @@ or `5do-1.10.1-osx-arm64.dmg`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.10.1 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.10.2 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

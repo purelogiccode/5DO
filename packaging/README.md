@@ -55,6 +55,10 @@ docs/ReleaseNotes-*.md
 PACKAGE.txt
 ```
 
+The Windows bundle must contain **both** `OpenAL32.dll` and `soft_oal.dll`;
+`OpenAL32.dll` is the name Silk.NET.OpenAL passes to the loader. `package-bundle.ps1`
+and the bundle workflow reject an archive without the loader-named runtime.
+
 The apphosts are published with:
 
 ```text

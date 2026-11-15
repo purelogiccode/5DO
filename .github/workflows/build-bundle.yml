@@ -147,6 +147,27 @@ jobs:
             throw "The bundle must not contain XML documentation files: $($xml.Name -join ', ')"
           }
 
+      - name: Verify bundled OpenAL Soft runtime
+        shell: pwsh
+        run: |
+          $required = if ('${{ matrix.rid }}' -like 'win-*') {
+            @('OpenAL32.dll', 'soft_oal.dll')
+          }
+          elseif ('${{ matrix.rid }}' -like 'linux-*') {
+            @('libopenal.so')
+          }
+          else {
+            @('libopenal.dylib')
+          }
+
+          foreach ($name in $required) {
+            $path = Join-Path 'artifacts/bundle-smoke' $name
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "The bundle is missing the OpenAL Soft runtime '$name'."
+            }
+            Write-Host "$name $((Get-Item -LiteralPath $path).Length) bytes"
+          }
+
       - name: Verify Windows bundle architecture
         if: startsWith(matrix.rid, 'win-')
         shell: pwsh

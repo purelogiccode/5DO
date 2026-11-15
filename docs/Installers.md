@@ -85,6 +85,17 @@ macOS x64/arm64 (native CI, 2026-11-10):
   Local copies are in `src/FiveDo.Frontend.Avalonia/bin/Release`; all six
   `5do-1.7.1-*` SHA-256 entries verify.
 
+## 1.10.2 bundle validation (2026-11-15)
+
+- Local win-x64 bundle rebuilt from the fixed source: `FiveDo.Cli.exe --version` reports
+  `5DO 1.10.2`, both `OpenAL32.dll` and `soft_oal.dll` are present, the published CLI
+  loads OpenAL Soft `1.23.1`, `audio devices --json` lists the `OpenAL Soft on ...`
+  endpoints, and the published frontend writes `FRONTEND SMOKE OK 1.10.2`.
+- `package-bundle.ps1` rejects a publish tree missing `OpenAL32.dll` and includes both
+  DLLs in the win-x64 bundle.
+- Full suite **2,365/2,365**; build, locked restore, format, and InspectCode clean.
+- CI/release run links and the six asset hashes are recorded after the tag build.
+
 ## 1.10.1 bundle validation (2026-11-15)
 
 - CI run <https://github.com/purelogiccode/5DO/actions/runs/43760004443> passed every

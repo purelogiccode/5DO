@@ -1,10 +1,11 @@
 # Known Issues
 
-**Snapshot:** 2026-11-15, v1.10.1: RetroAchievements with a managed rcheevos
-engine, save-state hit persistence, 3DO hashing, a durable offline unlock queue,
-hardcore rules, rich presence, leaderboards, and OSD notifications, the `FiveDo`
-apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the
-loading overlay, on top of the v1.9.1 nine UI catalogs, reversible
+**Snapshot:** 2026-11-15, v1.10.2: CDI and NRG disc images, the Windows OpenAL bundle
+fix, RetroAchievements with a managed rcheevos engine, save-state hit persistence,
+3DO hashing, a durable offline unlock queue, hardcore rules, rich presence,
+leaderboards, and OSD notifications, the `FiveDo` apphost rename, deferred/ReadyToRun
+startup, the fullscreen pause/Escape flow, and the loading overlay, on top of the
+v1.9.1 nine UI catalogs, reversible
 locale switching, the two-step Escape pause/quit shortcut, external metadata and manual
 media, physical optical-drive boot, Windows DirectInput/HID gamepads, the controller
 preview, automatic blank-border crop, display-sleep inhibition, Lua input scripting, the
@@ -21,7 +22,18 @@ after 1.0 (2026-11-10). See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
-## Disc containers (2026-11-15)
+## OpenAL Windows bundles (fixed in 1.10.2)
+
+- 1.9.x and 1.10.x bundles **before 1.10.2** contain `soft_oal.dll` but not
+  `OpenAL32.dll`. Silk.NET.OpenAL loads `OpenAL32.dll`, so an installed copy with a
+  system OpenAL present can fail with `The OpenAL context could not be made current`
+  (bug reports 69885-69891). 1.10.2 ships both names, and `package-bundle.ps1`
+  rejects a bundle without the loader-named runtime. Audio startup failures now log
+  the failing path and ALC error at Debug instead of submitting a bug report.
+- If you are still on an older bundle, copy `soft_oal.dll` to `OpenAL32.dll` beside
+  `FiveDo.exe` and `FiveDo.Cli.exe` and restart.
+
+## Disc containers (1.10.2)
 
 - CDI and NRG are **read-only** container readers. `disc convert` still writes
   ISO/BIN/CUE/flat CHD; it does not emit CDI or NRG.

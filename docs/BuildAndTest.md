@@ -397,9 +397,12 @@ Release bundles are produced for `win-x64`, `win-arm64`, `linux-x64`,
 install the .NET 11 runtime on their machine.
 
 Both executables are single-file framework-dependent apphosts. The frontend also ships
-native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as `OpenAL32.dll` on Windows
-by `Directory.Build.targets`; Linux/macOS use the package's native names. PDB and XML
-documentation files are removed by `packaging/package-bundle.ps1`.
+native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as both `OpenAL32.dll` (the
+name Silk.NET.OpenAL loads) and `soft_oal.dll` (the package name) on Windows by
+`Directory.Build.targets`; publish runs the copy after `dotnet publish`, and
+`packaging/package-bundle.ps1` rejects a bundle missing the loader-named runtime.
+Linux/macOS use the package's native names. PDB and XML documentation files are
+removed by `packaging/package-bundle.ps1`.
 
 ### NativeAOT (opt-in, win-x64)
 
@@ -461,7 +464,7 @@ The bundle contains both framework-dependent apphosts and their native libraries
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.10.1-win-x64.zip`, `5do-1.10.1-win-arm64.zip`, or `5do-1.10.1-linux-arm64.tar.gz`; the version is read from
+`5do-1.10.2-win-x64.zip`, `5do-1.10.2-win-arm64.zip`, or `5do-1.10.2-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied. On macOS the same script
 additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
 the release workflow uploads the DMG, while the tarball remains the extraction/smoke
@@ -535,7 +538,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.10.1` |
+| `Version` | `1.10.2` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

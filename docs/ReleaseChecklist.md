@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.10.1 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.10.2 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -28,7 +28,7 @@ rcheevos engine, 3DO hashing, hardcore rules, a durable offline unlock queue,
 hardcore-only leaderboard submission, rich presence, OSD notifications, and an
 achievement window. v1.10.1 adds RetroAchievements save-state progress persistence, renames
 the desktop apphost to `FiveDo`, and cuts time to the first window with deferred startup
-work and ReadyToRun release bundles. It also adds the fullscreen pause/Escape flow, a localized loading overlay, and absolute release-note links.
+work and ReadyToRun release bundles. It also adds the fullscreen pause/Escape flow, a localized loading overlay, and absolute release-note links. v1.10.2 adds CDI/NRG disc images and fixes the Windows bundle's OpenAL runtime loader name.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -413,6 +413,27 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       <https://github.com/purelogiccode/5DO/actions/runs/43565870395> passed.
 
 ---
+
+## 1.10.2 CDI/NRG and Windows OpenAL patch gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.10.2`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.10.2.md`,
+      `README.md`, `docs/index.md`, `docs/Installation.md`, `docs/FAQ.md`,
+      `docs/Roadmap.md`, `docs/Status.md`, `docs/KnownIssues.md`,
+      `docs/Installers.md`, `docs/TestCorpus.md`, `docs/ImplementationPlan.md`, and the
+      MkDocs navigation.
+- [x] Full suite **2,365/2,365**; build, locked restore, format, and InspectCode clean.
+- [x] Publish win-x64 CLI and frontend; verify `OpenAL32.dll` and `soft_oal.dll` are
+      beside `FiveDo.Cli.exe` and `FiveDo.exe`.
+- [x] Run the published CLI with `ALSOFT_LOGLEVEL=3`; the log reports OpenAL Soft
+      `1.23.1`, and `audio devices --json` lists the `OpenAL Soft on ...` endpoints.
+- [x] Verify `package-bundle.ps1` rejects a publish tree without `OpenAL32.dll` and
+      includes both DLLs in the local `5do-1.10.2-win-x64.zip`.
+- [x] Run the published frontend `--smoke-test`; the marker reports
+      `FRONTEND SMOKE OK 1.10.2`.
+- [ ] Push tag `v1.10.2`; verify the six bundle jobs, the published assets,
+      `SHA256SUMS.txt`, and local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 ## 1.10.1 RetroAchievements continuity and startup gate
 

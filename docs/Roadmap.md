@@ -6,8 +6,8 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.10.1 RetroAchievements continuity release** (published on GitHub). The
-compatibility plan is complete:
+The project is at the **v1.10.2 Windows audio and disc-container patch release**
+(published on GitHub). The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
 - **375 are playable**; the other three are non-retail/add-on images with documented root
@@ -18,9 +18,10 @@ compatibility plan is complete:
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
-- v1.10.1 adds RetroAchievements save-state hit persistence, renames the desktop
-  apphost to `FiveDo`, and cuts time to the first window with deferred startup work
-  and ReadyToRun bundles. The v1.10.0 feature set remains: managed rcheevos
+- v1.10.2 adds DiscJuggler `.cdi` and Nero `.nrg` disc images and fixes the Windows
+  bundle's loader-named OpenAL runtime. The v1.10.1 feature set remains:
+  RetroAchievements save-state hit persistence, the `FiveDo` desktop apphost, and
+  deferred/ReadyToRun startup. The v1.10.0 feature set remains: managed rcheevos
   evaluation, 3DO disc identification, measured progress, a durable offline unlock
   queue, hardcore rules, rich presence, hardcore-only leaderboard submission, OSD
   notifications, and an achievement window.
@@ -29,7 +30,7 @@ compatibility plan is complete:
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
   display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.10.1
+## Post-1.10.2
 
 **Playability depth (in progress):**
 

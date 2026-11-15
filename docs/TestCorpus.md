@@ -3887,6 +3887,46 @@ typed failures. Full suite **2,365/2,365** passes in Debug; build, locked restor
 open through `NrgSharp`; `disc tracks` reports five data tracks and 1,126 sectors for
 `videocd.nrg`, and `p1.nrg` parses as two 2352-byte audio tracks.
 
+### 1.1ci OpenAL Windows bundle runtime fix (2026-11-15)
+
+**Root cause.** `dotnet publish` for win-x64/win-arm64 copied only `soft_oal.dll`.
+`Directory.Build.targets` added `OpenAL32.dll` after `Build`, which is why local
+`dotnet run` and the test host worked, but the `Publish` target used
+`DestinationFolder` and kept the package name. Silk.NET.OpenAL loads
+`OpenAL32.dll`, so a deployed bundle fell back to a system OpenAL build. Bug
+reports 69885-69891 show the resulting `InvalidOperationException: The OpenAL
+context could not be made current.`
+
+**Fix.** `FiveDoPublishOpenAlSoft` now copies both `OpenAL32.dll` and
+`soft_oal.dll` to `$(PublishDir)`. The duplicate `Content` items were removed so
+the single-file bundler no longer warns about the native asset. `TryCreate`
+records the failing path and the ALC error at Debug and no longer submits the
+expected host-audio failure as a bug report. `package-bundle.ps1` and
+`build-bundle.yml` verify the loader-named runtime for Windows, Linux, and macOS
+bundles.
+
+**Evidence.** The win-x64 CLI and frontend publishes contain both DLLs; the
+published CLI reports OpenAL Soft `1.23.1` with `ALSOFT_LOGLEVEL=3`, and
+`audio devices --json` lists two `OpenAL Soft on ...` endpoints. The published
+frontend writes `FRONTEND SMOKE OK 1.10.1`. A locally packaged win-x64 test bundle
+contains `OpenAL32.dll` and `soft_oal.dll`; removing `OpenAL32.dll` from both
+publish trees makes `package-bundle.ps1` exit 1 with the new guard message. Full
+suite **2,365/2,365** passes in Debug; build, format, and InspectCode are clean.
+
+### 1.1cj v1.10.2 CDI/NRG and Windows OpenAL release validation (2026-11-15)
+
+**Release contents.** v1.10.2 ships DiscJuggler `.cdi`/Nero `.nrg` readers and the
+Windows OpenAL bundle fix. The version is `1.10.2` in `FiveDoVersion` and
+`Directory.Build.props`.
+
+**Local gates.** Full suite **2,365/2,365**; build, locked restore, format, and
+InspectCode clean. The local win-x64 bundle reports `5DO 1.10.2`, contains both
+`OpenAL32.dll` and `soft_oal.dll`, loads OpenAL Soft `1.23.1`, lists the
+`OpenAL Soft on ...` endpoints, and writes `FRONTEND SMOKE OK 1.10.2`.
+
+**CI and release.** Pending tag `v1.10.2`; record the six bundle jobs, release run,
+checksums, and local copies after publication.
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

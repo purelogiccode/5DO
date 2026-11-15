@@ -113,6 +113,31 @@ try {
     Copy-PublishTree -Source $cliPath -Destination $staging
     Copy-PublishTree -Source $frontendPath -Destination $staging
 
+    # Silk.NET loads the loader name (OpenAL32.dll on Windows, libopenal.so on
+    # Linux, libopenal.dylib on macOS), not the NuGet package's soft_oal.dll. A
+    # bundle that ships only the package name silently falls back to a system
+    # OpenAL, which may exist but fail to make a context current.
+    $openAlRuntimes = if ($Rid -like 'win-*') {
+        @('OpenAL32.dll', 'soft_oal.dll')
+    }
+    elseif ($Rid -like 'linux-*') {
+        @('libopenal.so')
+    }
+    elseif ($Rid -like 'osx-*') {
+        @('libopenal.dylib')
+    }
+    else {
+        throw "Unsupported RID '$Rid' for the OpenAL runtime check."
+    }
+
+    foreach ($runtimeName in $openAlRuntimes) {
+        $runtimePath = Join-Path $staging $runtimeName
+        if (-not (Test-Path -LiteralPath $runtimePath)) {
+            throw ("The bundle is missing the OpenAL Soft runtime '$runtimeName'. " +
+                'Publish must copy the loader-named native library beside the apphosts.')
+        }
+    }
+
     # PDBs and XML documentation are build outputs, not runtime dependencies.
     Get-ChildItem -LiteralPath $staging -Recurse -File -Force -Filter '*.pdb' |
         Remove-Item -Force

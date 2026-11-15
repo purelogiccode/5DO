@@ -1,12 +1,21 @@
 # Project Status and Next Steps
 
-**2026-11-15 post-1.10.1 development:** **`SYS-24` is complete.** DiscJuggler `.cdi`
-and Nero `.nrg` images now open through the CLI, File > Open Disc, and the game library.
-Two standalone readers, `CDISharp` and `NRGSharp`, parse the trailing CDI descriptor and
-the NERO/NER5 chunk chain; `CdiDiscImage` and `NrgDiscImage` normalize cooked 2048-byte,
-2336-byte Mode 2, raw 2352-byte, and the 2353/2368/2448/2449-byte variants to the shared
+**2026-11-15, v1.10.2 release:** **`SYS-24` is complete and the Windows OpenAL
+runtime is fixed.** DiscJuggler `.cdi` and Nero `.nrg` images now open through the CLI,
+File > Open Disc, and the game library. Two standalone readers, `CDISharp` and
+`NRGSharp`, parse the trailing CDI descriptor and the NERO/NER5 chunk chain;
+`CdiDiscImage` and `NrgDiscImage` normalize cooked 2048-byte, 2336-byte Mode 2, raw
+2352-byte, and the 2353/2368/2448/2449-byte variants to the shared
 `IDiscSource`/`ITrackedDiscSource` contract. Malformed images fail with typed errors.
-The current suite is **2,365 tests**; build, format, and InspectCode are clean.
+
+Windows bundles now publish **`OpenAL32.dll`** beside `soft_oal.dll`. The publish target
+previously copied only the NuGet package name, so Silk.NET loaded a system OpenAL build
+and bug reports 69885-69891 failed with *The OpenAL context could not be made current*.
+`package-bundle.ps1` and the bundle workflow reject an archive without the loader-named
+runtime, and audio startup failures are logged with the failing path and ALC error
+without being submitted as bug reports. The suite is **2,365 tests**; build, format,
+and InspectCode are clean. Existing 1.9.x and 1.10.0/1.10.1 copies can copy `soft_oal.dll` to
+`OpenAL32.dll` as a workaround.
 
 **2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
@@ -68,7 +77,8 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-15, v1.10.1: RetroAchievements with a managed rcheevos engine,
+**Snapshot:** 2026-11-15, v1.10.2: CDI and NRG disc images, the Windows OpenAL bundle
+fix, RetroAchievements with a managed rcheevos engine,
 save-state hit persistence, durable offline unlocks, hardcore rules, leaderboards, rich
 presence, and OSD notifications; the `FiveDo` desktop apphost; deferred startup work and
 ReadyToRun release bundles; nine UI catalogs with reversible locale switching,
