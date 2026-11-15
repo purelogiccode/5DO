@@ -627,6 +627,22 @@
                         </Canvas>
                     </Grid>
                 </Border>
+
+                <!-- Shown from a fresh machine start until the first visible frame is presented. -->
+                <Border x:Name="LoadingOverlay" IsVisible="False"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        Background="#E6000000"
+                        ToolTip.Tip="Loading the game, BIOS, and renderer. This message disappears when the first frame is presented.">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                        <TextBlock Text="Loading game..." Foreground="#F2F4F6"
+                                   FontSize="22" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="Please wait..." Foreground="#9AA0A8"
+                                   FontSize="13" HorizontalAlignment="Center" />
+                        <ProgressBar IsIndeterminate="True" Width="260" Height="6" />
+                    </StackPanel>
+                </Border>
+
                 <Border x:Name="OverlayPanel" IsVisible="False" HorizontalAlignment="Left"
                         VerticalAlignment="Top" Margin="8" Padding="6,3"
                         Background="#A0000000" CornerRadius="3">

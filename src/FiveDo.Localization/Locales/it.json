@@ -613,6 +613,9 @@
     "ui.retroachievements_achievement": "Obiettivo",
     "ui.retroachievements_points": "Punti",
     "ui.retroachievements_progress": "Progresso",
-    "ui.retroachievements_status": "Stato"
+    "ui.retroachievements_status": "Stato",
+    "ui.loading_game": "Caricamento del gioco...",
+    "ui.please_wait": "Attendere...",
+    "ui.tip.loading_game": "Caricamento del gioco, del BIOS e del renderer. Questo messaggio scompare quando viene visualizzato il primo fotogramma."
   }
 }

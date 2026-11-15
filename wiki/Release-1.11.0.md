@@ -22,6 +22,18 @@ to `FiveDo.exe` / `FiveDo`, and the main window appears faster.
 - The CLI remains `FiveDo.Cli.exe` / `FiveDo.Cli`.
 - Existing settings, saves, BIOS paths, and data folders are unchanged.
 
+## Fullscreen Escape
+
+- Pressing **Escape** while a game is running in fullscreen leaves fullscreen and pauses
+  emulation in one step.
+- Press **Escape** again to close 5DO. **F11** still toggles fullscreen independently.
+
+## Loading overlay
+
+- Starting a game shows **Loading game... / Please wait...** until the first visible
+  frame appears, so the window is not blank while the BIOS, disc, and renderer start.
+- The overlay is localized and has a 30-second safety timeout.
+
 ## Faster startup
 
 - Audio initialization is lazy and runs when a game starts or audio settings change.

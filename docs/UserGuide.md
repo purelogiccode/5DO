@@ -23,7 +23,9 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
 
 3. On first run, choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
 4. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD image.
-5. Press **Play**. The status line shows the frame count, PC, cycles, and FPS.
+5. Press **Play**. The status line shows the frame count, PC, cycles, and FPS. While the
+   BIOS, disc, and renderer initialize, a **Loading game... / Please wait...** overlay
+   covers the video area and disappears as soon as the first visible frame is presented.
 
 If you choose **Open Disc** before a BIOS is loaded, 5DO asks for the BIOS first and then
 continues to the disc picker. The first-run guide is shown only once. **About** always
@@ -107,7 +109,7 @@ FiveDo.exe "D:\Games\Road Rash (USA).chd" `
 | `"<disc>"` | Positional disc path (ISO, BIN, CUE+BIN, or CHD); opens and auto-starts it. |
 | `--disc <path>` | Explicit disc path; same behavior as the positional form. |
 | `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file prints an error and exits with code 1. |
-| `-f`, `-fullscreen`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. Escape/F11 leaves fullscreen. |
+| `-f`, `-fullscreen`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. F11 toggles fullscreen; Escape exits fullscreen and pauses a running game. |
 | `--gl-backend <mode>` | `auto` (default), `wgl`, `angle`, `software`, `vulkan`, or `d3d11`. Direct3D is Windows-only. |
 | `--gl-probe-backend <mode>` | Alias for `--gl-backend` retained for the GPU probe. |
 | `--no-update-check` | Skip the startup GitHub release check for this launch. |
@@ -215,9 +217,10 @@ is widened.
 - **F2** toggles the input display (frame, lag, skip counters, and the selected
   controller's buttons) or use **View > Input Display**. Choose the controller port in
   **Settings > Video > Input display player**.
-- **Escape** pauses emulation; press **Escape** again while paused to close 5DO. In
-  fullscreen it exits fullscreen first. Resuming or stopping emulation, opening the quick
-  menu, or switching away from the window disarms the second press.
+- **Escape** pauses emulation; press **Escape** again while paused to close 5DO. When a
+  running game is fullscreen, the first press leaves fullscreen and pauses together, and
+  the second press closes 5DO. Resuming or stopping emulation, opening the quick menu, or
+  switching away from the window disarms the second press.
 - **Save State**, **Load State**, **Screenshot**, **Reset**, slot changes, and
   fullscreen are also available from the toolbar and the **Emulation** menu.
 

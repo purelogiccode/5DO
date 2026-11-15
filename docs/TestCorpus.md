@@ -3839,6 +3839,30 @@ with the exact `docs/ReleaseNotes-1.10.0.md` after the release-note selection fi
 six refreshed checksums verify; the assets are copied into
 `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
+### 1.1cf Fullscreen Escape behavior (2026-11-15)
+
+**Behavior.** While a game is running in fullscreen, the first Escape now leaves
+fullscreen and pauses emulation in one step, and the second Escape closes 5DO. The
+windowed pause-then-quit sequence is unchanged, F11 remains the independent fullscreen
+toggle, and the quick menu, library, and text-entry focus keep priority.
+
+**Implementation.** `MainWindow.OnKeyDown` exits fullscreen before the two-step
+`EscapeQuitPolicy` runs, so the same press both restores the window and arms the quit
+step. `docs/UserGuide.md`, `WhatsNew.md`, `ReleaseNotes-1.11.0.md`, the wiki release page,
+`CHANGELOG.md`, and the release checklist record the behavior.
+
+**Validation.** Real fullscreen Road Rash (EU CHD, `panafz1.bin`) run: first Escape
+changed the window rect from `0,0,3440,1440` to `914,191,2526,1177`, logged
+`Emulation paused.`, and left the process alive; the second Escape shut down with exit
+code 0. `EscapeQuitPolicyTests` remains 4/4.
+
+**Loading overlay.** A fresh Road Rash start logged `Loading overlay shown.` before the
+first frame, kept the overlay through the black boot frames, and logged `First visible
+frame submitted while loading.` followed by `Loading overlay hidden.` when the first
+non-black frame was presented (13.2 s on the validation host). The overlay is localized
+in all nine catalogs and has a 30-second safety timeout. `Loading game...` and
+`Please wait...` are covered by `LocalizationCoverageTests`.
+
 ### 1.1cd v1.9.1 localization and Escape release validation (2026-11-14)
 
 **Release contents.** v1.9.1 ships the nine-catalog localization update, the reversible

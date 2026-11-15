@@ -613,6 +613,9 @@
     "ui.retroachievements_achievement": "Errungenschaft",
     "ui.retroachievements_points": "Punkte",
     "ui.retroachievements_progress": "Fortschritt",
-    "ui.retroachievements_status": "Status"
+    "ui.retroachievements_status": "Status",
+    "ui.loading_game": "Spiel wird geladen...",
+    "ui.please_wait": "Bitte warten...",
+    "ui.tip.loading_game": "Spiel, BIOS und Renderer werden geladen. Diese Meldung verschwindet, sobald das erste Bild angezeigt wird."
   }
 }

@@ -613,6 +613,9 @@
     "ui.retroachievements_achievement": "Succès",
     "ui.retroachievements_points": "Points",
     "ui.retroachievements_progress": "Progression",
-    "ui.retroachievements_status": "État"
+    "ui.retroachievements_status": "État",
+    "ui.loading_game": "Chargement du jeu...",
+    "ui.please_wait": "Veuillez patienter...",
+    "ui.tip.loading_game": "Chargement du jeu, du BIOS et du moteur de rendu. Ce message dispara\u00eet d\u00e8s que la premi\u00e8re image est affich\u00e9e."
   }
 }

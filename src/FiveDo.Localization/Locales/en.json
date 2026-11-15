@@ -1092,6 +1092,9 @@
     "ui.tip.retroachievements_achievements_tip": "Achievements for the current disc.",
     "ui.tip.retroachievements_footer_tip": "The disc hash and RetroAchievements game ID appear here after identification.",
     "ui.tip.retroachievements_close_tip": "Close the RetroAchievements window.",
-    "ui.tip.retroachievements_hardcore_approval_pending": "RetroAchievements must recognize 5DO before hardcore unlocks count."
+    "ui.tip.retroachievements_hardcore_approval_pending": "RetroAchievements must recognize 5DO before hardcore unlocks count.",
+    "ui.loading_game": "Loading game...",
+    "ui.please_wait": "Please wait...",
+    "ui.tip.loading_game": "Loading the game, BIOS, and renderer. This message disappears when the first frame is presented."
   }
 }

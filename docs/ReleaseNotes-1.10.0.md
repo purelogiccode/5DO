@@ -12,7 +12,7 @@ model are unchanged.
 > `5DO/1.10.0` User-Agent is recognized, the server injects the zero-point
 > `Warning: Unknown Emulator` achievement and treats hardcore unlocks as casual.
 > Casual unlocks work normally. See
-> [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
+> [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.10.0/docs/RetroAchievementsCompliance.md).
 
 ## Highlights
 
@@ -101,14 +101,14 @@ model are unchanged.
 ## Known issues
 
 - Hardcore credit awaits RetroAchievements client approval and the six-month
-  public-availability window. See [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
+  public-availability window. See [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.10.0/docs/RetroAchievementsCompliance.md).
 - Bonus, specialty, and exclusive RA subsets are not selected. Unofficial achievements
   are listed but not activated.
 - The achievement window is a text/progress list; RetroArch-style badge overlays and a
   leaderboard browser are not implemented.
 - The API token is stored in plain `settings.json`; protect the data directory.
 - Full compatibility remains documented, not exhaustive. See
-  [KnownIssues.md](KnownIssues.md) and [Compatibility.md](Compatibility.md).
+  [KnownIssues.md](https://github.com/purelogiccode/5DO/blob/v1.10.0/docs/KnownIssues.md) and [Compatibility.md](https://github.com/purelogiccode/5DO/blob/v1.10.0/docs/Compatibility.md).
 
 ## Download
 

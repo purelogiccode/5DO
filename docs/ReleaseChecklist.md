@@ -435,6 +435,10 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       background the application-stats request.
 - [x] Enable ReadyToRun for single-file, untrimmed frontend publishes and verify
       win-x64, win-arm64, and linux-x64 builds.
+- [x] Make Escape leave fullscreen and pause a running game in one step; the next
+      Escape closes 5DO. Keep F11 as the independent fullscreen toggle.
+- [x] Show a localized **Loading game... / Please wait...** overlay from a fresh game
+      start until the first visible frame is presented, with a 30-second safety timeout.
 - [x] Full suite **2,344/2,344** passes in Debug; `dotnet build`,
       `dotnet format --verify-no-changes`, and
       `jb inspectcode --severity=WARNING` report no warnings or errors.

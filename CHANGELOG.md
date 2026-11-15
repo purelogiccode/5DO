@@ -19,6 +19,10 @@ release.
   `FiveDoStateDocument.Remove`.
 - Tests for hit-count and leaderboard-attempt round-trips, wrong-game rejection, the
   optional slot section, and service export/import.
+- A **Loading game... / Please wait...** overlay appears from a fresh game start until
+  the first visible frame is presented. It prevents a blank window while the BIOS, disc,
+  and renderer initialize, has a 30-second safety timeout, and is localized in all nine
+  UI catalogs.
 
 ### Changed
 
@@ -36,6 +40,9 @@ release.
   debug build.
 - Loading an older save state no longer clears an achievement that was already unlocked;
   trigger state restored as `Triggered` still promotes the local entry.
+- Pressing Escape while a game is running in fullscreen now leaves fullscreen and pauses
+  emulation in one step. The next Escape closes 5DO, matching the windowed two-step
+  behavior. F11 still toggles fullscreen independently.
 
 ## [1.10.0] - 2026-11-15
 

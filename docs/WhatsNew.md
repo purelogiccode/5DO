@@ -33,6 +33,19 @@ unchanged.
   the macOS app bundle, `PACKAGE.txt`, CI smoke commands, and the documentation all use
   the new name.
 
+### Fullscreen Escape
+
+- Pressing **Escape** while a game is running in fullscreen now leaves fullscreen and
+  pauses emulation in one step. Press **Escape** again to close 5DO. Windowed mode keeps
+  the existing pause-then-quit sequence, and **F11** still toggles fullscreen on its own.
+
+### Loading overlay
+
+- Starting a game now shows **Loading game... / Please wait...** until the first visible
+  frame is presented. The overlay replaces the blank window while the BIOS, disc, and
+  renderer initialize and disappears as soon as real video content appears.
+- The overlay is localized in all nine UI catalogs and has a 30-second safety timeout.
+
 ### Faster time to the main window
 
 - Audio initialization is lazy: the OpenAL device opens when a machine starts or the user

@@ -128,6 +128,9 @@ public partial class MainWindow : Window, IDisposable
     private bool _running;
     private readonly EscapeQuitPolicy _escapeQuit = new();
     private readonly Stopwatch _startupClock = Stopwatch.StartNew();
+    private readonly DispatcherTimer _loadingOverlayTimer = new() { Interval = TimeSpan.FromSeconds(30) };
+    private volatile bool _waitingForFirstFrame;
+    private volatile bool _firstVisibleFrameSubmitted;
     private bool _shuttingDown;
     private bool _biosLoaded;
     private string _biosMd5 = string.Empty;
@@ -194,6 +197,7 @@ public partial class MainWindow : Window, IDisposable
         Video.FramePresented += OnFramePresented;
         Direct3DVideo.FramePresented += OnFramePresented;
         VulkanVideo.FramePresented += OnFramePresented;
+        _loadingOverlayTimer.Tick += (_, _) => HideLoadingOverlay();
         _coverService = new CoverService(CoverServiceOptions.FromSettings(_settings));
         IconSizeSlider.Value = Math.Clamp(
             _settings.LibraryCardSize,
@@ -1593,9 +1597,10 @@ public partial class MainWindow : Window, IDisposable
     }
 
     /// <summary>
-    /// Handles the two-step Escape shortcut: the first press pauses emulation, and the
-    /// next press closes the application. Fullscreen exit, the quick menu, the library,
-    /// and text-entry focus keep priority over this shortcut.
+    /// Handles the two-step Escape shortcut: when a game is running, the first press
+    /// exits fullscreen (when active) and pauses emulation, and the next press closes
+    /// the application. The quick menu, the library, and text-entry focus keep priority
+    /// over this shortcut.
     /// </summary>
     /// <returns><see langword="true"/> when the key was consumed.</returns>
     private bool HandleEscape()
@@ -1626,6 +1631,29 @@ public partial class MainWindow : Window, IDisposable
         return true;
     }
 
+    private void ShowLoadingOverlay()
+    {
+        LoadingOverlay.IsVisible = true;
+        _waitingForFirstFrame = true;
+        _firstVisibleFrameSubmitted = false;
+        _loadingOverlayTimer.Stop();
+        _loadingOverlayTimer.Start();
+        Serilog.Log.Debug("Loading overlay shown.");
+    }
+
+    private void HideLoadingOverlay()
+    {
+        var wasVisible = LoadingOverlay.IsVisible;
+        _waitingForFirstFrame = false;
+        _firstVisibleFrameSubmitted = false;
+        _loadingOverlayTimer.Stop();
+        LoadingOverlay.IsVisible = false;
+        if (wasVisible)
+        {
+            Serilog.Log.Debug("Loading overlay hidden.");
+        }
+    }
+
     private void StartEmulation(bool showGameView)
     {
         _focusPause.Clear();
@@ -1638,6 +1666,11 @@ public partial class MainWindow : Window, IDisposable
 
         if (!_running)
         {
+            if (showGameView && !_runner.IsRunning)
+            {
+                ShowLoadingOverlay();
+            }
+
             _running = true;
             if (_runner.IsRunning)
             {
@@ -1716,6 +1749,7 @@ public partial class MainWindow : Window, IDisposable
     {
         _focusPause.Clear();
         _escapeQuit.Disarm();
+        HideLoadingOverlay();
         StopAudioRecording();
         StopGifRecording();
         StopMovie(save: true);
@@ -2920,6 +2954,7 @@ public partial class MainWindow : Window, IDisposable
     private void ShowLibraryView()
     {
         _escapeQuit.Disarm();
+        HideLoadingOverlay();
         if (WindowState == WindowState.FullScreen)
         {
             WindowState = WindowState.Normal;
@@ -6209,6 +6244,14 @@ public partial class MainWindow : Window, IDisposable
     private void SubmitFrameToActiveRenderer(VdlFrame frame)
     {
         VdlFrame presented = ApplyOverscan(frame);
+        if (_waitingForFirstFrame
+            && !_firstVisibleFrameSubmitted
+            && HasVisibleContent(presented))
+        {
+            _firstVisibleFrameSubmitted = true;
+            Serilog.Log.Debug("First visible frame submitted while loading.");
+        }
+
         if (_direct3DPresenter)
         {
             Direct3DVideo.SubmitFrame(presented);
@@ -6396,7 +6439,33 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnFramePresented(object? sender, FramePresentedEventArgs e)
     {
+        if (_waitingForFirstFrame && _firstVisibleFrameSubmitted)
+        {
+            HideLoadingOverlay();
+        }
+
         _displayPresents++;
+    }
+
+    private static bool HasVisibleContent(VdlFrame frame)
+    {
+        int width = Math.Clamp(frame.SourceWidth, 0, VdlLine.MaxPixels);
+        int height = Math.Clamp(frame.SourceHeight, 0, VdlFrame.MaxLines);
+        for (var line = 0; line < height; line += 2)
+        {
+            VdlLine sourceLine = frame[line];
+            Span<ushort> pixels = sourceLine.PixelBuffer;
+            for (var x = 0; x < width; x += 2)
+            {
+                FrameAssembler.ExpandPixel(sourceLine, pixels[x], out byte red, out byte green, out byte blue);
+                if (red > 0x08 || green > 0x08 || blue > 0x08)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -6830,7 +6899,8 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        // Fullscreen works from the library and game views; Escape always leaves fullscreen.
+        // Fullscreen works from the library and game views. F11 toggles it, while
+        // Escape leaves fullscreen and pauses a running game on the same press.
         if (hotkey == HotkeyAction.Fullscreen)
         {
             ToggleFullscreen();
@@ -6838,16 +6908,21 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
+        bool leavingFullscreen = e.Key == Key.Escape && WindowState == WindowState.FullScreen;
+        if (leavingFullscreen)
         {
             ToggleFullscreen();
-            e.Handled = true;
-            return;
         }
 
         // Escape pauses on the first press and closes 5DO on the second. This runs
         // before the configurable Pause hotkey so Escape cannot resume the game.
         if (e.Key == Key.Escape && HandleEscape())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (leavingFullscreen)
         {
             e.Handled = true;
             return;
