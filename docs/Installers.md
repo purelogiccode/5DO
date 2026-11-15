@@ -85,6 +85,37 @@ macOS x64/arm64 (native CI, 2026-11-10):
   Local copies are in `src/FiveDo.Frontend.Avalonia/bin/Release`; all six
   `5do-1.7.1-*` SHA-256 entries verify.
 
+## 1.10.0 bundle validation (2026-11-15)
+
+- CI run <https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed every
+  required job, including the six bundle jobs. The bundle jobs now assert that each
+  archive contains `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and
+  the exact `docs/ReleaseNotes-<version>.md` for the build version.
+- Initial release run
+  <https://github.com/purelogiccode/5DO/actions/runs/43733549470> published
+  `v1.10.0`. A packaging refresh run
+  <https://github.com/purelogiccode/5DO/actions/runs/43735694120> then rebuilt the six
+  bundles from master so the archives include `docs/ReleaseNotes-1.10.0.md` (the first
+  build selected the lexicographically latest 1.9.1 notes).
+- The release is marked latest at
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.10.0> with six bundles and
+  `SHA256SUMS.txt`.
+- The local Windows x64 bundle reports `5DO 1.10.0`, passes `selftest`, and writes
+  `FRONTEND SMOKE OK 1.10.0`; the bundle contains no `runtime/`, PDB, or XML files.
+- All six published `5do-1.10.0-*` SHA-256 entries verify; the assets are copied into
+  `src/FiveDo.Frontend.Avalonia/bin/Release`:
+  - `5do-1.10.0-win-arm64.zip` `3ac2ebd96aebbd9ed396f7203a3ce0538c25dbd4976c83f4822c549251dc764f`
+  - `5do-1.10.0-win-x64.zip` `5de65601addfb0cbd43989972bd4ef9b645fb40e144a0e268d9ff28b4c096adc`
+  - `5do-1.10.0-linux-arm64.tar.gz` `c5d39d82e6681603db0adeec9be8d04344d2326972291b128609e8e971d6d795`
+  - `5do-1.10.0-linux-x64.tar.gz` `8360bc40150344b824b25ba1d1f8796a578c5052a3c166e58556a602e1d62eba`
+  - `5do-1.10.0-osx-arm64.dmg` `63382fa44275b9679d5e04bb2f4fc76d21f45b0931f2eeb5071bc750107a4f95`
+  - `5do-1.10.0-osx-x64.dmg` `1c7063c32d4078e949a2faf386966fd45956349de36ba6f2ffcfb9dd0ba0e37d`
+- Full suite **2,338/2,338**, locked restore, build, format, and
+  `jb inspectcode --severity=WARNING` report no warnings or errors.
+- Docs run <https://github.com/purelogiccode/5DO/actions/runs/43734296836> deployed the
+  Pages site and wiki. `WhatsNew.html`, `ReleaseNotes-1.10.0.html`, and
+  `wiki/Release-1.10.0` return HTTP 200.
+
 ## 1.9.1 bundle validation (2026-11-14)
 
 - Release run <https://github.com/purelogiccode/5DO/actions/runs/43566963957> built and

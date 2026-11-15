@@ -437,16 +437,23 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `jb inspectcode --severity=WARNING` report no warnings or errors.
 - [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
       (`FRONTEND SMOKE OK 1.10.0`).
-- [ ] Build all six framework-dependent bundles from the `v1.10.0` tag, verify contents
+- [x] Build all six framework-dependent bundles from the `v1.10.0` tag, verify contents
       and apphost architectures, and keep local copies in
-      `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Create and push tag `v1.10.0`; verify the release workflow publishes six versioned
-      bundles and `SHA256SUMS.txt`.
-- [ ] Confirm the CI run passes every required job: Windows/Linux/macOS build-test, the
-      RID-agnostic lock check, format, benchmark gates, trimmed CLI/frontend, both
-      NativeAOT apphosts, the six bundle jobs, and the aggregate gate.
-- [ ] Confirm the docs workflow deploys the Pages site and publishes the wiki for
-      `WhatsNew.html`, `ReleaseNotes-1.10.0.html`, and `wiki/Release-1.10.0`.
+      `src/FiveDo.Frontend.Avalonia/bin/Release`. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/43733549470> and packaging
+      refresh run <https://github.com/purelogiccode/5DO/actions/runs/43735694120> built
+      and published them.
+- [x] Create and push tag `v1.10.0`; the release workflow published six versioned bundles
+      and `SHA256SUMS.txt` at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.10.0>. All six checksums
+      verify locally.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed
+      every required job: Windows/Linux/macOS build-test, the RID-agnostic lock check,
+      format, benchmark gates, trimmed CLI/frontend, both NativeAOT apphosts, the six
+      bundle jobs, and the aggregate gate.
+- [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43734296836> deployed
+      the Pages site and published the wiki. `WhatsNew.html`, `ReleaseNotes-1.10.0.html`,
+      and `wiki/Release-1.10.0` return HTTP 200.
 - [ ] Submit the compliance package to RetroAchievements and complete their review.
 - [ ] After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()` return
       `true`, remove the pending wording, and run a live hardcore award check.

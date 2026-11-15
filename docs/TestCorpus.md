@@ -3806,6 +3806,39 @@ quick menu, or losing window focus disarms the quit step. `EscapeQuitPolicyTests
 tests) cover the sequence, the already-paused case, disarming, and repeated presses while
 running.
 
+### 1.1ce v1.10.0 RetroAchievements release validation (2026-11-15)
+
+**Release contents.** v1.10.0 ships the managed rcheevos engine, 3DO `rc_hash_3do`
+hashing, sign-in, achievements, measured progress, rich presence, hardcore rules,
+hardcore-only leaderboard submission, OSD notifications, the achievement window, and
+the checksummed durable offline unlock queue. Hardcore permits fast-forward and creating
+save states while blocking save-state loading, rewind, frame advance, cheats,
+TAS/movie playback and recording, input recording, the movie editor, and the input
+timeline. Casual-to-hardcore switches reset the game before the hardcore session starts.
+The version is `1.10.0` in `FiveDoVersion` and `Directory.Build.props`.
+
+**Regression coverage.** New tests cover mode-specific hardcore unlock imports,
+casual-versus-hardcore leaderboard submission, and offline queue entries for a game that
+is not active. Full suite **2,338/2,338** passes in Debug. Build, locked restore,
+`dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` are clean.
+
+**Local bundle.** The Windows x64 framework-dependent bundle reports `5DO 1.10.0`,
+passes `selftest`, contains no runtime/PDB/XML files, includes
+`docs/ReleaseNotes-1.10.0.md`, and writes `FRONTEND SMOKE OK 1.10.0`.
+
+**CI.** Run <https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed every
+required job, including the new bundle-documentation check. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43734296836> passed build, Pages
+deploy, and wiki publishing.
+
+**Release.** Tag `v1.10.0`; initial release run
+<https://github.com/purelogiccode/5DO/actions/runs/43733549470> published the six
+bundles and `SHA256SUMS.txt`. Packaging refresh run
+<https://github.com/purelogiccode/5DO/actions/runs/43735694120> rebuilt them from master
+with the exact `docs/ReleaseNotes-1.10.0.md` after the release-note selection fix. All
+six refreshed checksums verify; the assets are copied into
+`src/FiveDo.Frontend.Avalonia/bin/Release`.
+
 ### 1.1cd v1.9.1 localization and Escape release validation (2026-11-14)
 
 **Release contents.** v1.9.1 ships the nine-catalog localization update, the reversible

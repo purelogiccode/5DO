@@ -16,6 +16,13 @@ not exercised because the tested 3DO sets had no leaderboards. Hardcore credit i
 RetroAchievements client approval. See [RetroAchievements.md](RetroAchievements.md) and
 [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
 
+**1.10.0 release update (2026-11-15):** **v1.10.0** is published on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.0) as six
+framework-dependent bundles (macOS as DMG) plus `SHA256SUMS.txt`. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed every required
+job. The docs workflow deployed the Pages site and wiki. All six checksums verify; the
+assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
+
 **2026-11-14 update:** **v1.9.1** is a localization and quality-of-life release. It adds
 Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and Simplified Chinese
 to the English/German UI catalogs (`--locale`, `--list-locales`, Settings > General > UI
