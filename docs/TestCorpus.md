@@ -3828,7 +3828,7 @@ passes `selftest`, contains no runtime/PDB/XML files, includes
 
 **CI.** Run <https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed every
 required job, including the new bundle-documentation check. Docs run
-<https://github.com/purelogiccode/5DO/actions/runs/43734296836> passed build, Pages
+<https://github.com/purelogiccode/5DO/actions/runs/43736567863> passed build, Pages
 deploy, and wiki publishing.
 
 **Release.** Tag `v1.10.0`; initial release run

@@ -112,7 +112,7 @@ macOS x64/arm64 (native CI, 2026-11-10):
   - `5do-1.10.0-osx-x64.dmg` `1c7063c32d4078e949a2faf386966fd45956349de36ba6f2ffcfb9dd0ba0e37d`
 - Full suite **2,338/2,338**, locked restore, build, format, and
   `jb inspectcode --severity=WARNING` report no warnings or errors.
-- Docs run <https://github.com/purelogiccode/5DO/actions/runs/43734296836> deployed the
+- Docs run <https://github.com/purelogiccode/5DO/actions/runs/43736567863> deployed the
   Pages site and wiki. `WhatsNew.html`, `ReleaseNotes-1.10.0.html`, and
   `wiki/Release-1.10.0` return HTTP 200.
 

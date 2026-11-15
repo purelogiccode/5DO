@@ -450,8 +450,9 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43735222579> passed
       every required job: Windows/Linux/macOS build-test, the RID-agnostic lock check,
       format, benchmark gates, trimmed CLI/frontend, both NativeAOT apphosts, the six
-      bundle jobs, and the aggregate gate.
-- [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43734296836> deployed
+      bundle jobs, and the aggregate gate. The final docs-only commit also passed CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/43736567771>.
+- [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43736567863> deployed
       the Pages site and published the wiki. `WhatsNew.html`, `ReleaseNotes-1.10.0.html`,
       and `wiki/Release-1.10.0` return HTTP 200.
 - [ ] Submit the compliance package to RetroAchievements and complete their review.
