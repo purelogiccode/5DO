@@ -91,7 +91,9 @@
 - The desktop apphost is **`FiveDo.exe`** on Windows and **`FiveDo`** on Linux/macOS;
   the CLI remains `FiveDo.Cli`. ReadyToRun release bundles and deferred startup work
   cut time to the first window on the validation host from about 1.09 s in Debug to
-  about 0.62 s.
+  about 0.62 s. A localized **Loading game...** overlay covers the first-frame wait,
+  and the first Escape in a running fullscreen game exits fullscreen and pauses in one
+  step.
 - Localization (English, German, Brazilian Portuguese, French, Spanish, Italian,
   Japanese, Korean, and Simplified Chinese), external metadata and manual media, physical
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview,

@@ -443,16 +443,26 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Full suite **2,344/2,344** passes in Debug; `dotnet build`,
       `dotnet format --verify-no-changes`, and
       `jb inspectcode --severity=WARNING` report no warnings or errors.
-- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+- [x] Verify the x64 CLI `selftest` and desktop `--smoke-test`
       (`FRONTEND SMOKE OK 1.10.1`) from the built bundle, and confirm the renamed
       `FiveDo.exe` apphost.
-- [ ] Build all six framework-dependent bundles from the `v1.10.1` tag, verify contents
+- [x] Build all six framework-dependent bundles from the `v1.10.1` tag, verify contents
       and apphost architectures, and keep local copies in
-      `src/FiveDo.Frontend.Avalonia/bin/Release`.
-- [ ] Create and push tag `v1.10.1`; the release workflow publishes six versioned
-      bundles and `SHA256SUMS.txt`, and all six checksums verify locally.
-- [ ] CI and Docs workflows pass; `WhatsNew.html`, `ReleaseNotes-1.10.1.html`, and
-      `wiki/Release-1.10.1` return HTTP 200.
+      `src/FiveDo.Frontend.Avalonia/bin/Release`. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/43760492909> built and
+      published them.
+- [x] Create and push tag `v1.10.1`; the release workflow published six versioned
+      bundles and `SHA256SUMS.txt` at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.10.1>. All six checksums
+      verify locally.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43760004443> passed
+      every required job: Windows/Linux/macOS build-test, the RID-agnostic lock check,
+      format, benchmark gates, trimmed CLI/frontend, both NativeAOT apphosts, the six
+      bundle jobs, and the aggregate gate. Platform runtime validation run
+      <https://github.com/purelogiccode/5DO/actions/runs/43760004576> passed.
+- [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43760004392> deployed
+      the Pages site and published the wiki. `WhatsNew.html`,
+      `ReleaseNotes-1.10.1.html`, and `wiki/Release-1.10.1` return HTTP 200.
 - [ ] Submit the compliance package to RetroAchievements and complete their review.
 - [ ] After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()` return
       `true`, remove the pending wording, and run a live hardcore award check.
@@ -611,7 +621,7 @@ been validated.**
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
 | Version | **`v1.10.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.10.0 are historical |
-| Release timing | **Prepared 2026-11-15** | v1.10.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Release timing | **Released 2026-11-15** | v1.10.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 

@@ -3863,6 +3863,31 @@ non-black frame was presented (13.2 s on the validation host). The overlay is lo
 in all nine catalogs and has a 30-second safety timeout. `Loading game...` and
 `Please wait...` are covered by `LocalizationCoverageTests`.
 
+### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
+
+**Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,
+the `FiveDo` desktop apphost, deferred/ReadyToRun startup, the fullscreen pause/Escape
+flow, the localized loading overlay, and absolute release-note links. The version is
+`1.10.1` in `FiveDoVersion` and `Directory.Build.props`.
+
+**Local gates.** Full suite **2,344/2,344** passes in Debug. Build, locked restore,
+`dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` are clean.
+The local Windows x64 bundle reports `5DO 1.10.1`, passes `selftest`, writes
+`FRONTEND SMOKE OK 1.10.1`, and contains no runtime/PDB/XML files.
+
+**CI and release.** CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004443> passed build/test on
+Windows/Linux/macOS, the RID-agnostic lock check, format, benchmark gates, trimmed
+CLI/frontend, both NativeAOT apphosts, the six bundle smoke jobs, and the aggregate
+gate. Platform runtime validation run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004576> passed. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43760492909> published six bundles and
+`SHA256SUMS.txt` at <https://github.com/purelogiccode/5DO/releases/tag/v1.10.1>; all
+six checksums verify. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004392> deployed the Pages site
+and wiki; `WhatsNew.html`, `ReleaseNotes-1.10.1.html`, and `wiki/Release-1.10.1` return
+HTTP 200. Checksums and bundle details are in [Installers.md](Installers.md) §1.10.1.
+
 ### 1.1cd v1.9.1 localization and Escape release validation (2026-11-14)
 
 **Release contents.** v1.9.1 ships the nine-catalog localization update, the reversible

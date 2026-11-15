@@ -3,7 +3,8 @@
 **Snapshot:** 2026-11-15, v1.10.1: RetroAchievements with a managed rcheevos
 engine, save-state hit persistence, 3DO hashing, a durable offline unlock queue,
 hardcore rules, rich presence, leaderboards, and OSD notifications, the `FiveDo`
-apphost rename, and deferred/ReadyToRun startup, on top of the v1.9.1 nine UI catalogs, reversible
+apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the
+loading overlay, on top of the v1.9.1 nine UI catalogs, reversible
 locale switching, the two-step Escape pause/quit shortcut, external metadata and manual
 media, physical optical-drive boot, Windows DirectInput/HID gamepads, the controller
 preview, automatic blank-border crop, display-sleep inhibition, Lua input scripting, the

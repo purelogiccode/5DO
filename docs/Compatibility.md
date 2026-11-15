@@ -599,6 +599,14 @@ The self-contained frontend then aborted during Avalonia/OpenAL teardown **after
 marker; the 1.7.1 bundle reproduces the same teardown abort on this VM, so it is not
 introduced by UX-29/UX-30. Linux GPU presentation remains preview/best-effort.
 
+**2026-11-15 v1.10.1 Linux CI:** CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004443> built both Linux
+bundles, verified the ELF architecture and bundle contents (`PACKAGE.txt`, exact
+release notes, no runtime/PDB/XML), and passed CLI `selftest` plus the Xvfb frontend
+smoke with the renamed `FiveDo` apphost. Platform runtime validation run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004576> also passed. GPU
+presentation under llvmpipe remains preview/best-effort.
+
 **2026-11-14 v1.9.0 Linux CI rerun:** the `linux-x64` bundle job in CI run
 <https://github.com/purelogiccode/5DO/actions/runs/43558322127> built the single-file
 CLI/frontend, verified the ELF architecture and bundle contents, and passed CLI

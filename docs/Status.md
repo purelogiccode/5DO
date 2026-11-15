@@ -9,8 +9,20 @@ delta/prior memory references, and active leaderboard attempts now live in a ded
 game hash and every definition match; otherwise the runtime resets normally. The suite
 is **2,344 tests**; build, format, and InspectCode are clean. The validation host reached
 the first window in about **0.62 s** with the ReadyToRun bundle versus **1.09 s** with
-the debug build. The shell also shows a localized **Loading game...** overlay until the first visible frame, and the first Escape in a running fullscreen game now leaves fullscreen and pauses in one step. See [WhatsNew.md](WhatsNew.md) and
+the debug build. The shell also shows a localized **Loading game...** overlay until the
+first visible frame, and the first Escape in a running fullscreen game now leaves
+fullscreen and pauses in one step. See [WhatsNew.md](WhatsNew.md) and
 [ReleaseNotes-1.10.1.md](ReleaseNotes-1.10.1.md).
+
+**1.10.1 release update (2026-11-15):** **v1.10.1** is published on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1) as six
+framework-dependent bundles (macOS as DMG) plus `SHA256SUMS.txt`. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43760004443> passed every required
+job, including the six bundle smoke jobs. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43760492909> built and published the
+bundles. Docs run <https://github.com/purelogiccode/5DO/actions/runs/43760004392>
+deployed the Pages site and published the wiki. All six checksums verify; the assets are
+copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 **1.10.0 update:** **v1.10.0** adds RetroAchievements as a managed in-tree feature.
 The MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
