@@ -19,6 +19,26 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
+
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    $Version = '0.0.0'
+    $props = Join-Path $repoRoot 'Directory.Build.props'
+    if (Test-Path -LiteralPath $props) {
+        $match = Select-String -LiteralPath $props -Pattern '<Version>([^<]+)</Version>'
+        if ($match -and $match.Matches.Count -gt 0) {
+            $Version = $match.Matches[0].Groups[1].Value
+        }
+    }
+}
+
+# Normalize a leading tag-style v and keep the version safe for a file name.
+$Version = $Version.Trim() -replace '^[vV]', ''
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    $Version = '0.0.0'
+}
+
+$safeVersion = $Version -replace '[^0-9A-Za-z._+-]', '_'
+
 $cliPath = (Resolve-Path -LiteralPath $CliPublishDirectory).Path
 $frontendPath = (Resolve-Path -LiteralPath $FrontendPublishDirectory).Path
 $outputPath = [System.IO.Path]::GetFullPath($OutputDirectory)
@@ -142,25 +162,6 @@ try {
         Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do-portable.desktop') `
             -Destination (Join-Path $staging '5do.desktop') -Force
     }
-
-    if ([string]::IsNullOrWhiteSpace($Version)) {
-        $Version = '0.0.0'
-        $props = Join-Path $repoRoot 'Directory.Build.props'
-        if (Test-Path -LiteralPath $props) {
-            $match = Select-String -LiteralPath $props -Pattern '<Version>([^<]+)</Version>'
-            if ($match -and $match.Matches.Count -gt 0) {
-                $Version = $match.Matches[0].Groups[1].Value
-            }
-        }
-    }
-
-    # Normalize a leading tag-style v and keep the version safe for a file name.
-    $Version = $Version.Trim() -replace '^[vV]', ''
-    if ([string]::IsNullOrWhiteSpace($Version)) {
-        $Version = '0.0.0'
-    }
-
-    $safeVersion = $Version -replace '[^0-9A-Za-z._+-]', '_'
 
     $commit = 'unknown'
     try {
