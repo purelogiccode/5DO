@@ -14,7 +14,7 @@ import sys
 import tarfile
 import time
 
-EXECUTABLES = {"FiveDo.Cli", "FiveDo.Frontend.Avalonia", "5do.desktop"}
+EXECUTABLES = {"FiveDo.Cli", "FiveDo", "5do.desktop"}
 
 
 def mode_for(name: str) -> int:

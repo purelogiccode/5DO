@@ -247,7 +247,7 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
   -c Release -r win-x64 --self-contained true `
   -p:FiveDoNativeAot=true -m:1 `
   -o artifacts/frontend-aot
-artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe --version
+artifacts/frontend-aot/FiveDo.exe --version
 # --smoke-test --smoke-output <path> opens the real window and exits 0
 
 # Trimmed frontend publish (Windows)
@@ -258,7 +258,7 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
 
 # Frontend smoke test: opens the real window, runs one UI pass (GL hidden), exits 0
 $process = Start-Process `
-  -FilePath artifacts/frontend-trim/FiveDo.Frontend.Avalonia.exe `
+  -FilePath artifacts/frontend-trim/FiveDo.exe `
   -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
   -PassThru
 $process.WaitForExit(60000)

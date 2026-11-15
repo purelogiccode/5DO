@@ -6,13 +6,13 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://FiveDo.Frontend.Avalonia/Styles/Palette.axaml" />
+                <ResourceInclude Source="avares://FiveDo/Styles/Palette.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://FiveDo.Frontend.Avalonia/Styles/Controls.axaml" />
+        <StyleInclude Source="avares://FiveDo/Styles/Controls.axaml" />
     </Application.Styles>
 </Application>

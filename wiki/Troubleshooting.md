@@ -10,7 +10,7 @@ If you installed .NET in a non-standard location on Linux/macOS, set `DOTNET_ROO
 that directory before running 5DO. On Linux/macOS, also make the apphosts executable:
 
 ```sh
-chmod +x FiveDo.Cli FiveDo.Frontend.Avalonia
+chmod +x FiveDo.Cli FiveDo
 ```
 
 ## The app opens but the game does not start

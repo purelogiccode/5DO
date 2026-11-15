@@ -83,7 +83,7 @@ jobs:
           dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
             --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -m:1 `
             -o artifacts/frontend-trim
-          $process = Start-Process -FilePath artifacts/frontend-trim/FiveDo.Frontend.Avalonia.exe `
+          $process = Start-Process -FilePath artifacts/frontend-trim/FiveDo.exe `
             -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-smoke.txt' `
             -PassThru
           if (-not $process.WaitForExit(60000)) {
@@ -171,7 +171,7 @@ jobs:
 
       - name: NativeAOT frontend smoke test
         run: |
-          $process = Start-Process -FilePath artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe `
+          $process = Start-Process -FilePath artifacts/frontend-aot/FiveDo.exe `
             -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/frontend-aot-smoke.txt' `
             -PassThru
           if (-not $process.WaitForExit(60000)) {

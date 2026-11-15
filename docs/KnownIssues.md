@@ -1,8 +1,9 @@
 # Known Issues
 
-**Snapshot:** 2026-11-15, v1.10.0: RetroAchievements with a managed rcheevos
-engine, 3DO hashing, a durable offline unlock queue, hardcore rules, rich presence,
-leaderboards, and OSD notifications, on top of the v1.9.1 nine UI catalogs, reversible
+**Snapshot:** 2026-11-15, v1.11.0: RetroAchievements with a managed rcheevos
+engine, save-state hit persistence, 3DO hashing, a durable offline unlock queue,
+hardcore rules, rich presence, leaderboards, and OSD notifications, the `FiveDo`
+apphost rename, and deferred/ReadyToRun startup, on top of the v1.9.1 nine UI catalogs, reversible
 locale switching, the two-step Escape pause/quit shortcut, external metadata and manual
 media, physical optical-drive boot, Windows DirectInput/HID gamepads, the controller
 preview, automatic blank-border crop, display-sleep inhibition, Lua input scripting, the
@@ -80,7 +81,7 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - The DirectInput/HID backend enumerates legacy pads and appends XInput slots. The
   translation, hot-plug, and trigger calibration paths are covered by tests, but the
   validation host had no physical DirectInput-only pad attached. Use
-  `FiveDo.Frontend.Avalonia --gamepad-probe` to record the source, count, and raw
+  `FiveDo --gamepad-probe` to record the source, count, and raw
   samples for the hardware check.
 - DirectInput device button numbering follows the common HID layout; unusual vendor
   mappings can be remapped in Input Bindings. XInput remains the fallback when no

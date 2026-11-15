@@ -50,7 +50,7 @@ CloseApplications=yes
 RestartApplications=no
 SetupIconFile=..\..\src\FiveDo.Frontend.Avalonia\icon2.ico
 LicenseFile=..\..\LICENSE
-UninstallDisplayIcon={app}\FiveDo.Frontend.Avalonia.exe
+UninstallDisplayIcon={app}\FiveDo.exe
 #ifdef SignToolName
 SignTool={#SignToolName}
 SignedUninstaller=yes
@@ -67,10 +67,10 @@ Name: "fileassoc"; Description: "Associate 3DO disc images (.iso, .cue, .chd, .b
 Source: "{#BundleDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\5DO"; Filename: "{app}\FiveDo.Frontend.Avalonia.exe"
+Name: "{group}\5DO"; Filename: "{app}\FiveDo.exe"
 Name: "{group}\5DO CLI"; Filename: "{app}\FiveDo.Cli.exe"
 Name: "{group}\Uninstall 5DO"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\5DO"; Filename: "{app}\FiveDo.Frontend.Avalonia.exe"; Tasks: desktopicon
+Name: "{autodesktop}\5DO"; Filename: "{app}\FiveDo.exe"; Tasks: desktopicon
 
 [Registry]
 ; Per-user associations when the installer runs without elevation, machine-wide
@@ -81,15 +81,15 @@ Root: HKA; Subkey: "Software\Classes\.chd"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.bin"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\.m3u"; ValueType: string; ValueName: ""; ValueData: "5DO.Playlist"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\5DO.Disc"; ValueType: string; ValueName: ""; ValueData: "3DO Disc Image"; Flags: uninsdeletekey; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\5DO.Disc\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FiveDo.Frontend.Avalonia.exe,0"; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\5DO.Disc\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FiveDo.Frontend.Avalonia.exe"" ""%1"""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\5DO.Disc\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FiveDo.exe,0"; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\5DO.Disc\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FiveDo.exe"" ""%1"""; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\5DO.Playlist"; ValueType: string; ValueName: ""; ValueData: "3DO Disc Playlist"; Flags: uninsdeletekey; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\5DO.Playlist\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FiveDo.Frontend.Avalonia.exe,0"; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\5DO.Playlist\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FiveDo.Frontend.Avalonia.exe"" ""%1"""; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.Frontend.Avalonia.exe\SupportedTypes"; ValueType: string; ValueName: ".iso"; ValueData: ""; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.Frontend.Avalonia.exe\SupportedTypes"; ValueType: string; ValueName: ".cue"; ValueData: ""; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.Frontend.Avalonia.exe\SupportedTypes"; ValueType: string; ValueName: ".chd"; ValueData: ""; Tasks: fileassoc
-Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.Frontend.Avalonia.exe\SupportedTypes"; ValueType: string; ValueName: ".bin"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\5DO.Playlist\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\FiveDo.exe,0"; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\5DO.Playlist\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\FiveDo.exe"" ""%1"""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".iso"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".cue"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".chd"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".bin"; ValueData: ""; Tasks: fileassoc
 
 [Run]
-Filename: "{app}\FiveDo.Frontend.Avalonia.exe"; Description: "Launch 5DO"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\FiveDo.exe"; Description: "Launch 5DO"; Flags: nowait postinstall skipifsilent

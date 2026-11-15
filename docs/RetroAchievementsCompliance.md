@@ -16,7 +16,7 @@ against the published [Hardcore Compliance Requirements](https://docs.retroachie
 | Item | Value |
 |---|---|
 | Emulator name | 5DO |
-| Stable User-Agent | `5DO/1.10.0` |
+| Stable User-Agent | `5DO/1.11.0` |
 | Source repository | <https://github.com/purelogiccode/5DO> |
 | Release page | <https://github.com/purelogiccode/5DO/releases> |
 | Supported system | 3DO Interactive Multiplayer (RA console 43) |
@@ -85,7 +85,7 @@ scripting tools do not load RetroAchievements, so they cannot earn achievements.
 | Leaderboards cannot be disabled in hardcore | Leaderboards stay active; only local toasts can be hidden |
 | Hardcore visibly indicated | Status bar shows `RA hardcore (pending)` until approval; game identification OSD says hardcore is active |
 | Mode-specific unlocks | Casual-only unlocks stay active in a hardcore session; hardcore unlocks count for both modes |
-| Unique stable user agent | `5DO/1.10.0`, one source constant in `RetroAchievementsCompliance` |
+| Unique stable user agent | `5DO/1.11.0`, one source constant in `RetroAchievementsCompliance` |
 
 ### Mode switch behavior
 
@@ -104,7 +104,7 @@ Switching hardcore → casual is allowed without a reset.
 | Check | Result |
 |---|---|
 | Build | 0 warnings, 0 errors |
-| Full .NET suite | 2,338 tests, including rcheevos vectors, 3DO hashing, API parsing, warning filtering, and queue round-trips |
+| Full .NET suite | 2,344 tests, including rcheevos vectors, 3DO hashing, API parsing, warning filtering, and queue round-trips |
 | 3DO hash parity | Byte-identical to RAHasher 1.8.3 on real CHDs |
 | Live login | Passed |
 | Live game data (`r=patch`) | Passed |

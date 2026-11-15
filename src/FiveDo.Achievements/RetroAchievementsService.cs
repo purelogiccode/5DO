@@ -458,6 +458,92 @@ public sealed class RetroAchievementsService : IDisposable
         RaiseAchievementState(force: true);
     }
 
+    /// <summary>
+    /// Captures the current achievement and leaderboard progress for a 5DO save state.
+    /// </summary>
+    /// <returns>The progress payload, or an empty array when no game is loaded.</returns>
+    /// <remarks>Call on the emulation thread; the runtime is not thread-safe.</remarks>
+    public byte[] ExportProgress()
+    {
+        lock (_gate)
+        {
+            return _game is null
+                ? []
+                : RcProgressCodec.Serialize(_game.Hash, _game.Runtime);
+        }
+    }
+
+    /// <summary>
+    /// Restores achievement and leaderboard progress from a 5DO save state.
+    /// </summary>
+    /// <param name="progress">The section payload captured by <see cref="ExportProgress"/>.</param>
+    /// <returns><see langword="true"/> when the progress matched the loaded game and was applied.</returns>
+    /// <remarks>
+    /// The payload is discarded when the game hash or any definition differs. Call on the
+    /// emulation thread and use <see cref="ResetRuntime"/> when this returns false.
+    /// </remarks>
+    public bool ImportProgress(ReadOnlySpan<byte> progress)
+    {
+        RuntimeGame? game;
+        lock (_gate)
+        {
+            game = _game;
+        }
+
+        if (game is null
+            || progress.IsEmpty
+            || !RcProgressCodec.TryDeserialize(progress, game.Hash, game.Runtime))
+        {
+            return false;
+        }
+
+        lock (_gate)
+        {
+            foreach (AchievementEntry entry in _entries)
+            {
+                RcAchievement? achievement = game.Runtime.GetAchievement(entry.Definition.Id);
+                if (achievement is null)
+                {
+                    continue;
+                }
+
+                if (achievement.Trigger.State == RcTriggerState.Triggered)
+                {
+                    entry.Unlocked = true;
+                    _unlocked.Add(entry.Definition.Id);
+                    entry.MeasuredValue = achievement.Trigger.MeasuredTarget;
+                }
+                else if (!entry.Unlocked)
+                {
+                    entry.MeasuredValue = achievement.Trigger.MeasuredTarget == 0
+                        || achievement.Trigger.MeasuredValue == RcTrigger.MeasuredUnknown
+                        ? 0
+                        : achievement.Trigger.MeasuredValue;
+                }
+            }
+
+            for (int index = 0; index < _leaderboards.Count; index++)
+            {
+                RcLeaderboardEntry? leaderboard = game.Runtime.GetLeaderboard(_leaderboards[index].Id);
+                if (leaderboard is null)
+                {
+                    continue;
+                }
+
+                _leaderboards[index] = new LeaderboardProgress
+                {
+                    Id = _leaderboards[index].Id,
+                    Title = _leaderboards[index].Title,
+                    Value = leaderboard.Value,
+                    IsActive = leaderboard.Leaderboard.State == RcLeaderboardState.Started,
+                };
+            }
+        }
+
+        RaiseAchievementState(force: true);
+        return true;
+    }
+
     /// <summary>Evaluates achievements, leaderboards, and rich presence for one frame.</summary>
     public void Tick()
     {

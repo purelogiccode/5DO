@@ -1,6 +1,18 @@
 # Project Status and Next Steps
 
-**2026-11-15 update:** **v1.10.0** adds RetroAchievements as a managed in-tree feature.
+**2026-11-15 update:** **v1.11.0** adds RetroAchievements save-state progress
+persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
+cuts time to the first window with lazy audio, deferred BIOS/disc loading, background
+cache loads, and ReadyToRun release bundles. Achievement hit counts, measured values,
+delta/prior memory references, and active leaderboard attempts now live in a dedicated
+`RetroAchievements` section of the `.tdos` save state and are restored only when the
+game hash and every definition match; otherwise the runtime resets normally. The suite
+is **2,344 tests**; build, format, and InspectCode are clean. The validation host reached
+the first window in about **0.62 s** with the ReadyToRun bundle versus **1.09 s** with
+the debug build. See [WhatsNew.md](WhatsNew.md) and
+[ReleaseNotes-1.11.0.md](ReleaseNotes-1.11.0.md).
+
+**1.10.0 update:** **v1.10.0** adds RetroAchievements as a managed in-tree feature.
 The MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
 is byte-identical to RAHasher 1.8.3 on real CHD images, and the desktop shell integrates
 sign-in, game identification, achievements, hardcore rules, leaderboards, rich presence,
@@ -36,9 +48,10 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-15, v1.10.0: RetroAchievements with a managed rcheevos engine,
-durable offline unlocks, hardcore rules, leaderboards, rich presence, and OSD
-notifications; nine UI catalogs with reversible locale switching,
+**Snapshot:** 2026-11-15, v1.11.0: RetroAchievements with a managed rcheevos engine,
+save-state hit persistence, durable offline unlocks, hardcore rules, leaderboards, rich
+presence, and OSD notifications; the `FiveDo` desktop apphost; deferred startup work and
+ReadyToRun release bundles; nine UI catalogs with reversible locale switching,
 two-step Escape pause/quit, external metadata and media, physical optical-drive boot,
 Windows DirectInput/HID gamepads, controller preview, auto-crop, display-sleep
 inhibition, Lua input scripting, the input timeline, and 4DO state interop.

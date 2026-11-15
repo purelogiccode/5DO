@@ -215,6 +215,20 @@ internal sealed class FiveDoStateDocument
         Sections.Add(new FiveDoStateSection(id, version, payload));
     }
 
+    public bool Remove(uint id)
+    {
+        for (var i = 0; i < Sections.Count; i++)
+        {
+            if (Sections[i].Id == id)
+            {
+                Sections.RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private sealed class RawStateSection(uint id, ushort version, byte[] payload) : IStateSection
     {
         public uint Id { get; } = id;

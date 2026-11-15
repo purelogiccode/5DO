@@ -112,19 +112,36 @@ public sealed class SaveStateSlotManager
     /// <param name="gameId">Game ID stored in the state header.</param>
     /// <param name="gameName">Display name stored in the sidecar.</param>
     /// <param name="slot">Slot to write, or <see langword="null"/> for <see cref="CurrentSlot"/>.</param>
+    /// <param name="retroAchievementsState">
+    /// Optional RetroAchievements progress payload stored as a separate state section.
+    /// </param>
     /// <returns>The written slot information.</returns>
     public SaveStateSlotInfo Save(
         FiveDoMachine machine,
         string? gameId = null,
         string? gameName = null,
-        int? slot = null)
+        int? slot = null,
+        byte[]? retroAchievementsState = null)
     {
         ArgumentNullException.ThrowIfNull(machine);
         var target = slot ?? CurrentSlot;
         ValidateSlot(target);
         System.IO.Directory.CreateDirectory(Directory);
 
-        machine.SaveStateToFile(GetStatePath(target), gameId);
+        string statePath = GetStatePath(target);
+        if (retroAchievementsState is { Length: > 0 })
+        {
+            using var buffer = new MemoryStream();
+            machine.SaveState(buffer, gameId);
+            FiveDoStateDocument document = FiveDoStateDocument.Parse(buffer.ToArray());
+            document.Replace(StateSectionIds.RetroAchievements, 1, retroAchievementsState);
+            WriteStateFile(statePath, document.Write());
+        }
+        else
+        {
+            machine.SaveStateToFile(statePath, gameId);
+        }
+
         WriteThumbnail(machine, target);
         var metadata = new SaveStateSlotMetadata(
             target,
@@ -148,6 +165,28 @@ public sealed class SaveStateSlotManager
     /// <exception cref="FileNotFoundException">Thrown when the slot has no state file.</exception>
     public SaveStateSlotInfo Load(FiveDoMachine machine, int? slot = null, string? expectedGameId = null)
     {
+        return LoadWithProgress(machine, slot, expectedGameId, out _);
+    }
+
+    /// <summary>Loads a slot and returns its optional RetroAchievements progress section.</summary>
+    /// <param name="machine">Machine to load.</param>
+    /// <param name="slot">Slot to read, or <see langword="null"/> for <see cref="CurrentSlot"/>.</param>
+    /// <param name="expectedGameId">
+    /// Optional game ID of the disc currently inserted. A mismatch is reported through
+    /// <see cref="FiveDoMachine.StateWarnings"/> rather than rejected.
+    /// </param>
+    /// <param name="retroAchievementsState">
+    /// Receives the RetroAchievements section payload, or <see langword="null"/> when the
+    /// state was written without one.
+    /// </param>
+    /// <returns>The loaded slot information.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the slot has no state file.</exception>
+    public SaveStateSlotInfo LoadWithProgress(
+        FiveDoMachine machine,
+        int? slot,
+        string? expectedGameId,
+        out byte[]? retroAchievementsState)
+    {
         ArgumentNullException.ThrowIfNull(machine);
         var target = slot ?? CurrentSlot;
         ValidateSlot(target);
@@ -157,7 +196,25 @@ public sealed class SaveStateSlotManager
             throw new FileNotFoundException($"Save slot {target} is empty.", path);
         }
 
-        machine.LoadStateFromFile(path, expectedGameId);
+        retroAchievementsState = null;
+        byte[] stateData = File.ReadAllBytes(path);
+        try
+        {
+            FiveDoStateDocument document = FiveDoStateDocument.Parse(stateData);
+            FiveDoStateSection? progress = document.Find(StateSectionIds.RetroAchievements);
+            if (progress is not null)
+            {
+                retroAchievementsState = progress.Payload;
+                document.Remove(StateSectionIds.RetroAchievements);
+                stateData = document.Write();
+            }
+        }
+        catch (InvalidStateException)
+        {
+            // Let the machine loader report the malformed state with its normal error.
+        }
+
+        machine.LoadState(new MemoryStream(stateData), expectedGameId);
         CurrentSlot = target;
         return Inspect(target);
     }
@@ -251,6 +308,13 @@ public sealed class SaveStateSlotManager
         }
 
         return CurrentSlot;
+    }
+
+    private static void WriteStateFile(string path, byte[] bytes)
+    {
+        string temporary = path + ".tmp";
+        File.WriteAllBytes(temporary, bytes);
+        File.Move(temporary, path, overwrite: true);
     }
 
     private void WriteThumbnail(FiveDoMachine machine, int slot)

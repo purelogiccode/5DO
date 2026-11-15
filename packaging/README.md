@@ -39,7 +39,7 @@ bundle.
 
 ```text
 FiveDo.Cli[.exe]              single-file apphost
-FiveDo.Frontend.Avalonia[.exe] single-file apphost
+FiveDo[.exe] single-file apphost
 OpenAL32.dll / soft_oal.dll   native OpenAL Soft (Windows)
 libopenal.so / libopenal.dylib
 libSkiaSharp.*, av_libglesv2.dll, ...

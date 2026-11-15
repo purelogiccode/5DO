@@ -98,7 +98,7 @@ The desktop executable accepts the following arguments. A positional disc path o
 form used by file associations and external emulator frontends:
 
 ```powershell
-FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
+FiveDo.exe "D:\Games\Road Rash (USA).chd" `
   --bios "D:\BIOS\panafz1.bin" --fullscreen
 ```
 
@@ -117,7 +117,7 @@ FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
 Launcher command template:
 
 ```text
-FiveDo.Frontend.Avalonia.exe "{rom}" --bios "{bios}" --fullscreen
+FiveDo.exe "{rom}" --bios "{bios}" --fullscreen
 ```
 
 Developer/CI options already supported by the frontend:

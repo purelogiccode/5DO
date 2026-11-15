@@ -391,6 +391,63 @@ public sealed class RcheevosTests
         Assert.Equal(expected, RcFormatter.FormatValue(value, (RcFormat)formatValue));
     }
 
+    [Fact]
+    public void ProgressRoundTripRestoresHitCounts()
+    {
+        var runtime = new RcRuntime();
+        Assert.Equal(RcError.Ok, runtime.ActivateAchievement(1, "0xH0000=1.4."));
+        var memory = new TestMemory([1]);
+        RcAchievement achievement = runtime.Achievements[0];
+
+        // Three true frames count as three hits; the fourth triggers.
+        _ = achievement.Trigger.Evaluate(memory.Peek, memory);
+        _ = achievement.Trigger.Evaluate(memory.Peek, memory);
+        _ = achievement.Trigger.Evaluate(memory.Peek, memory);
+        Assert.Equal(3u, achievement.Trigger.Requirement!.Conditions!.CurrentHits);
+
+        byte[] progress = RcProgressCodec.Serialize("game-hash", runtime);
+        runtime.Reset();
+        Assert.Equal(0u, achievement.Trigger.Requirement!.Conditions!.CurrentHits);
+        Assert.True(RcProgressCodec.TryDeserialize(progress, "game-hash", runtime));
+        Assert.Equal(3u, achievement.Trigger.Requirement!.Conditions!.CurrentHits);
+
+        Assert.Equal(
+            RcTriggerState.Triggered,
+            achievement.Trigger.Evaluate(memory.Peek, memory));
+    }
+
+    [Fact]
+    public void ProgressRoundTripRestoresLeaderboardAttempt()
+    {
+        var runtime = new RcRuntime();
+        Assert.Equal(
+            RcError.Ok,
+            runtime.ActivateLeaderboard(20, "STA:0xH0000=1::CAN:0xH0001=1::SUB:0xH0002=1::VAL:0xH0003"));
+        var memory = new TestMemory([0, 0, 0, 5]);
+
+        runtime.DoFrame(memory.Peek, memory, null);
+        memory.Bytes[0] = 1;
+        runtime.DoFrame(memory.Peek, memory, null);
+        Assert.Equal(RcLeaderboardState.Started, runtime.Leaderboards[0].Leaderboard.State);
+        Assert.Equal(5, runtime.Leaderboards[0].Value);
+
+        byte[] progress = RcProgressCodec.Serialize("game-hash", runtime);
+        runtime.Reset();
+        Assert.True(RcProgressCodec.TryDeserialize(progress, "game-hash", runtime));
+        Assert.Equal(RcLeaderboardState.Started, runtime.Leaderboards[0].Leaderboard.State);
+        Assert.Equal(5, runtime.Leaderboards[0].Value);
+    }
+
+    [Fact]
+    public void ProgressRoundTripRejectsAnotherGame()
+    {
+        var runtime = new RcRuntime();
+        Assert.Equal(RcError.Ok, runtime.ActivateAchievement(1, "0xH0000=1"));
+        byte[] progress = RcProgressCodec.Serialize("game-a", runtime);
+
+        Assert.False(RcProgressCodec.TryDeserialize(progress, "game-b", runtime));
+    }
+
     private static RcOperand ParseOperand(string text)
     {
         var cursor = new RcCursor(text);

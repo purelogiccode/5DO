@@ -64,7 +64,7 @@ Windows x64, Inno Setup 6.7.1, unsigned 1.6.0 bundle:
 Linux x64 (WSL Ubuntu 22.04):
 
 - `5do_1.6.0_amd64.deb` built with `dpkg-deb`; control metadata reports
-  `Architecture: amd64`, `Depends: dotnet-runtime-10.0`, and the expected
+  `Architecture: amd64`, `Depends: dotnet-runtime-11.0`, and the expected
   `/opt/5do`, `/usr/bin/5do`, desktop, icon, and MIME paths.
 - `5do-1.6.0-1.x86_64.rpm` built with `rpmbuild`; `rpm -qip` reports the expected
   name/version/license and `rpm -qlp` lists the same payload.

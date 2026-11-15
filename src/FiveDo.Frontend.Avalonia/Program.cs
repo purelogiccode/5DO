@@ -16,6 +16,8 @@ namespace FiveDo.Frontend.Avalonia;
 
 internal static class Program
 {
+    internal static readonly System.Diagnostics.Stopwatch StartupClock = System.Diagnostics.Stopwatch.StartNew();
+
     /// <summary>
     /// Gets the disc path passed on the command line, if any. File associations use
     /// this to open a disc when the desktop launches the application with a path.
@@ -321,7 +323,7 @@ internal static class Program
 
             if (GlProbe is null && VkProbe is null && D3dProbe is null && !SmokeTest)
             {
-                ApplicationStatsClient.TrackLaunch();
+                _ = Task.Run(ApplicationStatsClient.TrackLaunch);
             }
 
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -423,7 +425,7 @@ internal static class Program
     private static void PrintUsage()
     {
         Console.WriteLine("5DO desktop frontend");
-        Console.WriteLine("Usage: FiveDo.Frontend.Avalonia [disc-path] [options]");
+        Console.WriteLine("Usage: FiveDo [disc-path] [options]");
         Console.WriteLine();
         Console.WriteLine("  <disc-path>             Open and auto-start a disc image (ISO, BIN, CUE, CHD).");
         Console.WriteLine("  --disc <path>           Same as the positional disc path.");

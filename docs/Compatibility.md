@@ -607,7 +607,7 @@ CLI/frontend, verified the ELF architecture and bundle contents, and passed CLI
 presentation under llvmpipe remains preview/best-effort.
 
 **2026-11-08 compatibility-pass note:** the Windows x64 1.5.0 bundle extracted and
-passed both `FiveDo.Cli.exe --help` and `FiveDo.Frontend.Avalonia.exe --smoke-test`
+passed both `FiveDo.Cli.exe --help` and `FiveDo.exe --smoke-test`
 (OpenGL 4.0 + OpenAL ready). The Linux rerun could not start the local 8 GB `LinuxMint`
 VM because the host could not allocate the memory; no runtime code changed in the
 compatibility pass, so the 2026-11-02 Linux x64 gate above remains the current Linux
@@ -617,7 +617,7 @@ best-effort for GPU presentation and physical gamepad detection.
 
 **2026-11-08 1.6.0 release note:** the six framework-dependent 1.6.0 bundles were built
 locally and verified. The Windows x64 bundle passed `FiveDo.Cli.exe --version` (1.6.0),
-`selftest --json` (all checks `ok: true`), and `FiveDo.Frontend.Avalonia.exe
+`selftest --json` (all checks `ok: true`), and `FiveDo.exe
 --smoke-test` (`FRONTEND SMOKE OK 1.6.0`, OpenGL 4.0 + OpenAL ready). The bundle tree has
 no runtime folder, PDB, or XML files, and all six `SHA256SUMS.txt` entries verify. Local
 PE/ELF/Mach-O inspection confirms `win-x64`/`win-arm64`, `linux-x64`/`linux-arm64`, and

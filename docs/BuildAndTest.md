@@ -85,7 +85,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **2,338 tests** (verified 2026-11-15) and completes in a few seconds
+The current suite is **2,344 tests** (verified 2026-11-15) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -415,11 +415,11 @@ frontend AOT binary now has a headless `--audio-soak` mode that runs the same
 
 ```powershell
 # Null device (set ALSOFT_DRIVERS=null for the process)
-artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe "game.chd" --bios panafz1.bin `
+artifacts/frontend-aot/FiveDo.exe "game.chd" --bios panafz1.bin `
   --audio-soak 600 --audio-soak-output artifacts/audio-soak-null.json
 
 # Default Windows playback device (unset ALSOFT_DRIVERS)
-artifacts/frontend-aot/FiveDo.Frontend.Avalonia.exe "game.chd" --bios panafz1.bin `
+artifacts/frontend-aot/FiveDo.exe "game.chd" --bios panafz1.bin `
   --audio-soak 600 --audio-soak-output artifacts/audio-soak-real.json
 ```
 
@@ -433,7 +433,7 @@ artifacts/cli/win-x64/FiveDo.Cli.exe --version
 artifacts/cli/win-x64/FiveDo.Cli.exe selftest --json
 artifacts/cli/win-x64/FiveDo.Cli.exe bench --frames 2 --json
 
-artifacts/frontend/win-x64/FiveDo.Frontend.Avalonia.exe `
+artifacts/frontend/win-x64/FiveDo.exe `
   --smoke-test --smoke-output artifacts/frontend-smoke.txt
 ```
 
@@ -452,12 +452,12 @@ pwsh -File packaging/package-bundle.ps1 -Rid win-x64 `
 
 The bundle contains both framework-dependent apphosts and their native libraries,
 `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`,
-`docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the latest
-`docs/ReleaseNotes-*.md`, and a generated `PACKAGE.txt` with component, RID, version,
+`docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the exact
+`docs/ReleaseNotes-<version>.md`, and a generated `PACKAGE.txt` with component, RID, version,
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
 documentation files are removed, and no .NET runtime is copied into the bundle. The
 archive name includes the product version, for example
-`5do-1.10.0-win-x64.zip`, `5do-1.10.0-win-arm64.zip`, or `5do-1.10.0-linux-arm64.tar.gz`; the version is read from
+`5do-1.11.0-win-x64.zip`, `5do-1.11.0-win-arm64.zip`, or `5do-1.11.0-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied. On macOS the same script
 additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
 the release workflow uploads the DMG, while the tarball remains the extraction/smoke
@@ -531,7 +531,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.10.0` |
+| `Version` | `1.11.0` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

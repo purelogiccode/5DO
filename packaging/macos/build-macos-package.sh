@@ -65,12 +65,12 @@ if [[ -z "$bundle_version" ]]; then
     bundle_version="1.0"
 fi
 
-if [[ ! -f "$bundle/FiveDo.Frontend.Avalonia" ]]; then
-    echo "Bundle is missing FiveDo.Frontend.Avalonia: $bundle" >&2
+if [[ ! -f "$bundle/FiveDo" ]]; then
+    echo "Bundle is missing FiveDo: $bundle" >&2
     exit 1
 fi
-if ! file "$bundle/FiveDo.Frontend.Avalonia" | grep -qi "Mach-O"; then
-    echo "FiveDo.Frontend.Avalonia is not a Mach-O executable; publish the macOS bundle first." >&2
+if ! file "$bundle/FiveDo" | grep -qi "Mach-O"; then
+    echo "FiveDo is not a Mach-O executable; publish the macOS bundle first." >&2
     exit 1
 fi
 
@@ -100,7 +100,7 @@ sed \
     "$script_dir/Info.plist.in" >"$app/Contents/Info.plist"
 
 printf 'APPL????' >"$app/Contents/PkgInfo"
-chmod +x "$app/Contents/MacOS/FiveDo.Frontend.Avalonia" "$app/Contents/MacOS/FiveDo.Cli" || true
+chmod +x "$app/Contents/MacOS/FiveDo" "$app/Contents/MacOS/FiveDo.Cli" || true
 
 if [[ -n "$sign_identity" ]]; then
     if ! command -v codesign >/dev/null 2>&1; then

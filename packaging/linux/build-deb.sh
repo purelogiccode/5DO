@@ -55,7 +55,7 @@ case "$rid" in
     *) echo "Unsupported --rid: $rid (expected linux-x64 or linux-arm64)" >&2; exit 2 ;;
 esac
 
-for executable in FiveDo.Frontend.Avalonia FiveDo.Cli; do
+for executable in FiveDo FiveDo.Cli; do
     if [[ ! -x "$bundle/$executable" ]]; then
         echo "Bundle is missing executable $executable: $bundle" >&2
         exit 1
@@ -85,10 +85,10 @@ rm -f "$stage/opt/5do/5do.desktop"
 find "$stage/opt/5do" -type f \( -name '*.pdb' -o -name '*.xml' \) -delete
 find "$stage/opt/5do" -type d -exec chmod 0755 {} +
 find "$stage/opt/5do" -type f -exec chmod 0644 {} +
-chmod 0755 "$stage/opt/5do/FiveDo.Frontend.Avalonia" "$stage/opt/5do/FiveDo.Cli"
+chmod 0755 "$stage/opt/5do/FiveDo" "$stage/opt/5do/FiveDo.Cli"
 chmod 0755 "$stage"
 
-ln -sf /opt/5do/FiveDo.Frontend.Avalonia "$stage/usr/bin/5do"
+ln -sf /opt/5do/FiveDo "$stage/usr/bin/5do"
 ln -sf /opt/5do/FiveDo.Cli "$stage/usr/bin/5do-cli"
 install -m 0644 "$repo_root/packaging/5do.desktop" "$stage/usr/share/applications/5do.desktop"
 install -m 0644 "$repo_root/packaging/linux/5do.xml" "$stage/usr/share/mime/packages/5do.xml"
@@ -110,7 +110,7 @@ Architecture: $deb_arch
 Installed-Size: $installed_size
 Maintainer: 5DO <noreply@localhost>
 Homepage: https://github.com/purelogiccode/5DO
-Depends: dotnet-runtime-10.0
+Depends: dotnet-runtime-11.0
 Description: 3DO Interactive Multiplayer emulator
  5DO is a FreeDO-derived 3DO emulator with a headless CLI and an Avalonia desktop
  frontend. This package installs both apphosts under /opt/5do and registers the

@@ -380,6 +380,93 @@ public sealed class RetroAchievementsClientTests
     }
 
     [Fact]
+    public async Task ServiceProgressSurvivesExportAndImport()
+    {
+        var handler = new FakeHandler(request =>
+        {
+            string body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            if (body.Contains("r=patch", StringComparison.Ordinal))
+            {
+                return Json("""
+                    {
+                      "Success": true,
+                      "PatchData": {
+                        "ID": 77,
+                        "Title": "Test Game",
+                        "ConsoleID": 43,
+                        "Achievements": [
+                          {"ID":10,"Title":"Four Hits","Description":"","Flags":3,"Points":10,"MemAddr":"0xH0000=1.4.","Author":"","BadgeName":"","Created":1,"Modified":2,"Type":"","Rarity":10.0,"RarityHardcore":5.0}
+                        ],
+                        "Leaderboards": []
+                      }
+                    }
+                    """);
+            }
+
+            if (body.Contains("r=gameid", StringComparison.Ordinal))
+            {
+                return Json("""{"Success":true,"GameID":77}""");
+            }
+
+            if (body.Contains("r=startsession", StringComparison.Ordinal))
+            {
+                return Json("""{"Success":true,"Unlocks":[],"HardcoreUnlocks":[],"ServerNow":1700000000}""");
+            }
+
+            if (body.Contains("r=awardachievement", StringComparison.Ordinal))
+            {
+                Interlocked.Increment(ref _awardRequests);
+                return Json("""{"Success":true,"Score":10,"SoftcoreScore":10,"AchievementID":10,"AchievementsRemaining":0}""");
+            }
+
+            return Json("""{"Success":true}""");
+        });
+
+        var settings = new RetroAchievementsSettings
+        {
+            Enabled = true,
+            Username = "player",
+            ApiToken = "token",
+        };
+
+        var memory = new ByteArrayMemory(4);
+        using var service = new RetroAchievementsService(memory, settings, new HttpClient(handler));
+        var unlocked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        service.Notification += (_, args) =>
+        {
+            if (args.Notification.Kind == AchievementNotificationKind.AchievementUnlocked)
+            {
+                unlocked.TrySetResult();
+            }
+        };
+
+        service.BeginGame("0123456789abcdef0123456789abcdef", "Test Game");
+        DateTime deadline = DateTime.UtcNow.AddSeconds(10);
+        while (!service.State.GameLoaded && DateTime.UtcNow < deadline)
+        {
+            service.Tick();
+            await Task.Delay(20);
+        }
+
+        Assert.True(service.State.GameLoaded, service.State.Error);
+        memory.Set(0, 1);
+        service.Tick();
+        service.Tick();
+        service.Tick();
+        Assert.False(service.State.Achievements[0].Unlocked);
+        byte[] progress = service.ExportProgress();
+        Assert.NotEmpty(progress);
+
+        service.ResetRuntime();
+        service.Tick();
+        Assert.True(service.ImportProgress(progress));
+        service.Tick();
+
+        await unlocked.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.True(service.State.Achievements[0].Unlocked);
+    }
+
+    [Fact]
     public async Task HardcoreSessionKeepsCasualOnlyUnlockActive()
     {
         var handler = new FakeHandler(request =>

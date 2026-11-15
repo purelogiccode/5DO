@@ -44,6 +44,9 @@ public static class StateSectionIds
     /// <summary>Machine option snapshot (every registry entry).</summary>
     public const uint Options = 12;
 
+    /// <summary>RetroAchievements runtime progress (hit counts, measured values, leaderboards).</summary>
+    public const uint RetroAchievements = 13;
+
     /// <summary>Returns a human-readable name for a section identifier.</summary>
     /// <param name="id">Section identifier.</param>
     /// <returns>The stable name, or <c>Unknown</c> for an unrecognized identifier.</returns>
@@ -61,6 +64,7 @@ public static class StateSectionIds
         Quartz => "Quartz",
         Machine => "Machine",
         Options => "Options",
+        RetroAchievements => "RetroAchievements",
         _ => "Unknown",
     };
 }

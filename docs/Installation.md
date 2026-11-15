@@ -17,25 +17,25 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 ## Download
 
 Download the bundle for your system and architecture from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.0):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.10.0-win-x64.zip` |
-| Windows arm64 | `5do-1.10.0-win-arm64.zip` |
-| Linux x64 | `5do-1.10.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.10.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.10.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.10.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.11.0-win-x64.zip` |
+| Windows arm64 | `5do-1.11.0-win-arm64.zip` |
+| Linux x64 | `5do-1.11.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.11.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.11.0-osx-x64.dmg` |
+| macOS arm64 | `5do-1.11.0-osx-arm64.dmg` |
 
 Each bundle contains both the desktop app and the CLI. Install the .NET 11 Runtime
 first from <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundle does not
 contain a .NET runtime. On Windows extract the ZIP and run
-`FiveDo.Frontend.Avalonia.exe`; on Linux extract the tarball and run
-`./FiveDo.Frontend.Avalonia`; on macOS open the DMG and drag `5DO.app` to Applications.
+`FiveDo.exe`; on Linux extract the tarball and run
+`./FiveDo`; on macOS open the DMG and drag `5DO.app` to Applications.
 
-Bundles are versioned, for example `5do-1.10.0-win-arm64.zip` or
-`5do-1.10.0-osx-arm64.dmg`.
+Bundles are versioned, for example `5do-1.11.0-win-arm64.zip` or
+`5do-1.11.0-osx-arm64.dmg`.
 
 ### Installers and file associations
 
@@ -82,7 +82,7 @@ renderer, machine state, and paths.
 You can skip the open dialogs on later launches:
 
 ```powershell
-FiveDo.Frontend.Avalonia.exe "D:\Games\Road Rash (USA).chd" `
+FiveDo.exe "D:\Games\Road Rash (USA).chd" `
   --bios "D:\BIOS\panafz1.bin" --fullscreen
 ```
 

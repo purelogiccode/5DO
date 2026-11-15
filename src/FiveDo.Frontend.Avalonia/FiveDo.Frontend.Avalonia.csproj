@@ -3,12 +3,15 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <RootNamespace>FiveDo.Frontend.Avalonia</RootNamespace>
-    <AssemblyName>FiveDo.Frontend.Avalonia</AssemblyName>
+    <AssemblyName>FiveDo</AssemblyName>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>icon2.ico</ApplicationIcon>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
+    <!-- Bundle publishes are single-file and untrimmed; precompiling the managed
+         assemblies cuts cold-start JIT time on the desktop frontend. -->
+    <PublishReadyToRun Condition="'$(PublishSingleFile)' == 'true' and '$(PublishTrimmed)' != 'true'">true</PublishReadyToRun>
     <!-- Opt-in NativeAOT publish: -p:FiveDoNativeAot=true.
          Single-file AOT is validated; Silk.NET.Core's native-asset loader still
          uses Assembly.Location/CodeBase and DependencyContext, so the AOT analyzer

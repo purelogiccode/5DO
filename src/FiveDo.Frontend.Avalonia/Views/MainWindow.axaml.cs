@@ -127,6 +127,7 @@ public partial class MainWindow : Window, IDisposable
     private byte[]? _cpuPixels;
     private bool _running;
     private readonly EscapeQuitPolicy _escapeQuit = new();
+    private readonly Stopwatch _startupClock = Stopwatch.StartNew();
     private bool _shuttingDown;
     private bool _biosLoaded;
     private string _biosMd5 = string.Empty;
@@ -176,6 +177,7 @@ public partial class MainWindow : Window, IDisposable
         // The locale must be selected before XAML is realized so the first loaded pass
         // sees the same catalog as every later dialog. --locale wins for this launch.
         _settings = AppSettingsStore.Load();
+        Serilog.Log.Information("Startup timing: settings loaded at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
         if (Program.LocaleOverride is null
             && !Localizer.TryUse(_settings.Language))
         {
@@ -183,6 +185,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         InitializeComponent();
+        Serilog.Log.Information("Startup timing: XAML initialized at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
         AddHandler(DragDrop.DropEvent, OnWindowDrop);
@@ -199,8 +202,8 @@ public partial class MainWindow : Window, IDisposable
         ApplyLibraryCardSize(IconSizeSlider.Value);
         IconSizeSlider.ValueChanged += OnIconSizeChanged;
         _libraryState = LibraryStateStore.Load();
-        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
-        _discHealth = DiscHealthCacheStore.Load();
+        _libraryMetadata = LibraryMetadataCatalog.Empty;
+        _discHealth = new DiscHealthCache();
         _playtime = new LibraryPlaytimeTracker(
             _libraryState,
             () => LibraryStateStore.Save(_libraryState));
@@ -244,38 +247,13 @@ public partial class MainWindow : Window, IDisposable
         _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
         _input = new InputManager(_settings.Input, _gamepad);
         _settings.ApplyInputDevices(_input);
-        string? audioError = null;
         _audioDevice = _settings.AudioDevice;
         _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
         _audioSyncMilliseconds = _settings.AudioSyncMilliseconds;
-        _audio = _settings.AudioEnabled
-            ? OpenAlAudioOutput.TryCreate(
-                _audioBufferMilliseconds,
-                _audioDevice,
-                _audioSyncMilliseconds,
-                out audioError)
-            : null;
-        if (_audio is not null)
-        {
-            _audio.Volume = _settings.Volume;
-            _logger.ForCategory(LogCategory.Audio).Information(
-                "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, sync {SyncMs} ms, device {Device}).",
-                OpenAlAudioOutput.OutputSampleRate,
-                _audioBufferMilliseconds,
-                _audioSyncMilliseconds,
-                string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
-        }
-        else if (_settings.AudioEnabled)
-        {
-            _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
-                "OpenAL audio is unavailable; emulation continues silently ({Error}).",
-                audioError ?? "unknown error");
-        }
-
-        _nvramStore = CreateNvramStore(null);
         _nvramMode = _settings.NvramStorageMode;
         _nvramVersion = _settings.NvramVersion;
         _nvramDirectory = _settings.NvramDirectory;
+        _nvramStore = CreateNvramStore(null);
         HighResMenuItem.IsChecked = _settings.HighResolution;
         OverlayPanel.IsVisible = _settings.ShowOverlay;
         InputDisplayPanel.IsVisible = _settings.ShowInputDisplay;
@@ -368,10 +346,14 @@ public partial class MainWindow : Window, IDisposable
         };
         Opened += OnOpened;
         UpdateSlotText();
+        Serilog.Log.Information("Startup timing: MainWindow constructor completed at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
     }
 
     private void OnOpened(object? sender, EventArgs e)
     {
+        Serilog.Log.Information(
+            "Startup timing: MainWindow opened at {ElapsedMs} ms (process start).",
+            Program.StartupClock.ElapsedMilliseconds);
         if (Program.SmokeTest)
         {
             // The packaged smoke test validates XAML/window construction and exits;
@@ -389,10 +371,25 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        LoadConfiguredPaths();
+        LoadConfiguredPathsDeferred();
         EnterFullscreenIfRequested();
         AsyncEvent.Run(RefreshLibraryAsync, "refreshing the game library");
         StartUpdateCheck();
+    }
+
+    private void LoadConfiguredPathsDeferred()
+    {
+        // Let the shell paint before opening the remembered BIOS/disc. CHD open and
+        // BIOS validation can take a noticeable amount of time on cold storage.
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (!_shuttingDown)
+                {
+                    LoadConfiguredPaths();
+                }
+            },
+            DispatcherPriority.Normal);
     }
 
     /// <summary>
@@ -1833,7 +1830,12 @@ public partial class MainWindow : Window, IDisposable
         _runner!.Invoke(() =>
         {
             var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
-            _slots.Save(_machine, discHash, _gameName, slot);
+            _slots.Save(
+                _machine,
+                discHash,
+                _gameName,
+                slot,
+                retroAchievementsState: _achievements?.ExportProgress());
         });
         PersistSlot();
         UpdateSlotText();
@@ -1869,8 +1871,12 @@ public partial class MainWindow : Window, IDisposable
 
         _runner!.Invoke(() =>
         {
-            _slots.Load(_machine, slot, _gameId);
-            _achievements?.ResetRuntime();
+            _slots.LoadWithProgress(_machine, slot, _gameId, out byte[]? achievementsProgress);
+            if (achievementsProgress is null
+                || _achievements?.ImportProgress(achievementsProgress) != true)
+            {
+                _achievements?.ResetRuntime();
+            }
         });
         if (_machine.StateWarnings.Count > 0)
         {
@@ -3770,8 +3776,6 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        _libraryMetadata = LibraryMetadataCatalog.Load(_settings.ResolveLibraryMetadataPath());
-        _discHealth = DiscHealthCacheStore.Load();
         var generation = ++_scanGeneration;
         _libraryScanCts?.Cancel();
         _libraryScanCts?.Dispose();
@@ -3782,6 +3786,7 @@ public partial class MainWindow : Window, IDisposable
             : RecentFolders();
         var coverDirectory = _settings.CoverDirectory;
         var deduplicate = !_settings.ShowDuplicateLibraryEntries;
+        var metadataPath = _settings.ResolveLibraryMetadataPath();
         _libraryImageCount = 0;
         StatusText.Text = folders.Count == 0
             ? "No game folders configured. Use File > Add Game Folder or Settings > Paths > Game folders."
@@ -3792,21 +3797,31 @@ public partial class MainWindow : Window, IDisposable
         IReadOnlyList<GameLibraryEntry> finalEntries;
         try
         {
-            GameLibraryScanResult initial = folders.Count == 0
-                ? new GameLibraryScanResult([], [])
-                : await Task.Run(
-                    () => GameLibraryScanner.BeginScan(
-                        folders,
-                        cachePath: GameLibraryScanner.DefaultCachePath,
-                        cancellationToken: scanToken,
-                        coverDirectory: coverDirectory,
-                        deduplicate: deduplicate),
+            (LibraryMetadataCatalog Metadata, DiscHealthCache Health, GameLibraryScanResult Scan) scanData =
+                await Task.Run(
+                    () =>
+                    {
+                        LibraryMetadataCatalog metadata = LibraryMetadataCatalog.Load(metadataPath);
+                        DiscHealthCache health = DiscHealthCacheStore.Load();
+                        GameLibraryScanResult scan = folders.Count == 0
+                            ? new GameLibraryScanResult([], [])
+                            : GameLibraryScanner.BeginScan(
+                                folders,
+                                cachePath: GameLibraryScanner.DefaultCachePath,
+                                cancellationToken: scanToken,
+                                coverDirectory: coverDirectory,
+                                deduplicate: deduplicate);
+                        return (metadata, health, scan);
+                    },
                     scanToken).ConfigureAwait(true);
             if (_shuttingDown || generation != _scanGeneration)
             {
                 return;
             }
 
+            _libraryMetadata = scanData.Metadata;
+            _discHealth = scanData.Health;
+            GameLibraryScanResult initial = scanData.Scan;
             _libraryImageCount = initial.ImageCount;
             ReplaceLibraryEntries(initial.Entries);
             finalEntries = initial.Entries;
@@ -4620,7 +4635,12 @@ public partial class MainWindow : Window, IDisposable
                 }
 
                 SaveStateSlotInfo? result = null;
-                _runner!.Invoke(() => result = _slots.Save(_machine, _gameId, _gameName, slot));
+                _runner!.Invoke(() => result = _slots.Save(
+                    _machine,
+                    _gameId,
+                    _gameName,
+                    slot,
+                    retroAchievementsState: _achievements?.ExportProgress()));
                 return result;
             },
             slot =>
@@ -4629,8 +4649,12 @@ public partial class MainWindow : Window, IDisposable
                 {
                     _runner!.Invoke(() =>
                     {
-                        _slots.Load(_machine, slot, _gameId);
-                        _achievements?.ResetRuntime();
+                        _slots.LoadWithProgress(_machine, slot, _gameId, out byte[]? achievementsProgress);
+                        if (achievementsProgress is null
+                            || _achievements?.ImportProgress(achievementsProgress) != true)
+                        {
+                            _achievements?.ResetRuntime();
+                        }
                     });
                 }
             },
@@ -4703,64 +4727,67 @@ public partial class MainWindow : Window, IDisposable
             _machine.CdAudioMuted = effective.CdAudioMuted;
         }
 
-        if (effective.AudioEnabled)
-        {
-            bool configurationChanged =
-                !string.Equals(_audioDevice, effective.AudioDevice, StringComparison.Ordinal)
-                || _audioBufferMilliseconds != effective.AudioBufferMilliseconds
-                || _audioSyncMilliseconds != effective.AudioSyncMilliseconds;
-            if (_audio is null || configurationChanged)
-            {
-                OpenAlAudioOutput? previous = _audio;
-                OpenAlAudioOutput? replacement = OpenAlAudioOutput.TryCreate(
-                    effective.AudioBufferMilliseconds,
-                    effective.AudioDevice,
-                    effective.AudioSyncMilliseconds,
-                    out var audioError);
-                if (replacement is not null)
-                {
-                    replacement.Volume = effective.Volume;
-                    _audio = replacement;
-                    _audioDevice = effective.AudioDevice;
-                    _audioBufferMilliseconds = effective.AudioBufferMilliseconds;
-                    _audioSyncMilliseconds = effective.AudioSyncMilliseconds;
-                    if (_machine is not null)
-                    {
-                        UpdateAudioSink();
-                    }
+        EnsureAudioInitialized(effective);
+    }
 
-                    previous?.Dispose();
-                    _logger.ForCategory(LogCategory.Audio).Information(
-                        "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, sync {SyncMs} ms, device {Device}).",
-                        OpenAlAudioOutput.OutputSampleRate,
-                        _audioBufferMilliseconds,
-                        _audioSyncMilliseconds,
-                        string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
-                }
-                else
-                {
-                    _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
-                        "OpenAL audio is unavailable; emulation continues silently ({Error}).",
-                        audioError ?? "unknown error");
-                    if (previous is not null)
-                    {
-                        _audio = previous;
-                    }
-                }
-            }
-
-            if (_audio is not null)
-            {
-                _audio.Volume = effective.Volume;
-            }
-        }
-        else
+    private void EnsureAudioInitialized(AppSettings effective)
+    {
+        if (!effective.AudioEnabled)
         {
             _audio?.Dispose();
             _audio = null;
             if (_machine is not null)
             {
                 UpdateAudioSink();
+            }
+
+            return;
+        }
+
+        bool configurationChanged =
+            !string.Equals(_audioDevice, effective.AudioDevice, StringComparison.Ordinal)
+            || _audioBufferMilliseconds != effective.AudioBufferMilliseconds
+            || _audioSyncMilliseconds != effective.AudioSyncMilliseconds;
+        if (_audio is not null && !configurationChanged)
+        {
+            _audio.Volume = effective.Volume;
+            return;
+        }
+
+        OpenAlAudioOutput? previous = _audio;
+        OpenAlAudioOutput? replacement = OpenAlAudioOutput.TryCreate(
+            effective.AudioBufferMilliseconds,
+            effective.AudioDevice,
+            effective.AudioSyncMilliseconds,
+            out var audioError);
+        if (replacement is not null)
+        {
+            replacement.Volume = effective.Volume;
+            _audio = replacement;
+            _audioDevice = effective.AudioDevice;
+            _audioBufferMilliseconds = effective.AudioBufferMilliseconds;
+            _audioSyncMilliseconds = effective.AudioSyncMilliseconds;
+            if (_machine is not null)
+            {
+                UpdateAudioSink();
+            }
+
+            previous?.Dispose();
+            _logger.ForCategory(LogCategory.Audio).Information(
+                "OpenAL audio ready ({SampleRate} Hz stereo, {BufferMs} ms, sync {SyncMs} ms, device {Device}).",
+                OpenAlAudioOutput.OutputSampleRate,
+                _audioBufferMilliseconds,
+                _audioSyncMilliseconds,
+                string.IsNullOrWhiteSpace(_audioDevice) ? "default" : _audioDevice);
+        }
+        else
+        {
+            _logger.ForCategory(LogCategory.Audio).WithoutBugReport().Warning(
+                "OpenAL audio is unavailable; emulation continues silently ({Error}).",
+                audioError ?? "unknown error");
+            if (previous is not null)
+            {
+                _audio = previous;
             }
         }
     }
@@ -6067,6 +6094,7 @@ public partial class MainWindow : Window, IDisposable
         if (_machine is null)
         {
             AppSettings effective = _settings.CreateEffectiveForGame(gameId);
+            EnsureAudioInitialized(effective);
             _machine = new FiveDoMachine(effective.CreateEmulatorTuning() with
             {
                 FixMode = effective.ResolveFixMode(gameId),

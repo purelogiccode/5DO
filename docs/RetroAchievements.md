@@ -136,6 +136,11 @@ excluded so the hit counts do not double-count a replayed frame.
   the API token and keeps entries for up to 30 days.
 - Mode-specific session imports: a hardcore session only treats hardcore unlocks as
   complete, so casual-only achievements can be earned again with hardcore credit.
+- Save-state progress persistence: achievement hit counts, measured values, trigger state,
+  delta/prior memory references, and active leaderboard attempts are stored in a dedicated
+  `RetroAchievements` section of the `.tdos` state and restored on load. The section is
+  applied only when the game hash, achievement/leaderboard IDs, and definition hashes all
+  match; otherwise it is discarded and the runtime resets normally.
 - Unlock, progress, leaderboard, game-identification, and error notifications on the
   existing OSD queue.
 - An achievements window with title, description, points, progress, unlock state,
@@ -150,6 +155,10 @@ excluded so the hit counts do not double-count a replayed frame.
   usable now.
 - Offline queueing covers achievement unlocks; leaderboard scores still require a live
   connection when the leaderboard completes and are only submitted from hardcore mode.
+- Save-state progress is keyed to the current definitions. Applying a state after the
+  achievement set changes resets hit counts rather than guessing at incompatible progress.
+- Hardcore mode still blocks loading save states, so progress persistence is a casual-mode
+  feature. Creating states remains allowed.
 - Pending unlocks for a game sync when that game's session is active again. A queue entry
   for a game you do not reopen remains pending until it expires after 30 days.
 - The achievement window is a text list; the rich badge/overlay presentation from

@@ -8,6 +8,12 @@
         "resolved": "3.0.341",
         "contentHash": "zpogT6IwYBgNRa9+oETzs7aTU6Te3M/Osdkk/HN1TlJTDjz9dZwoUgh/yWqovT3jTofQGGLB1JqEK8I4uA6+yA=="
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "gK2aq4XvChj5kvozpPHrkfKkr7zc5Z4xoTrJb4GPZzDEPMlCk0TX632bwY3LsWcX2UVcVRQBBGzsBGC2lq6YhA=="
+      },
       "MoonSharp": {
         "type": "Direct",
         "requested": "[2.0.0, )",
@@ -26,16 +32,17 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.10.0, )"
+          "FiveDo.Core": "[1.11.0, )"
         }
       },
       "fivedo.tas": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.10.0, )",
-          "FiveDo.Input": "[1.10.0, )"
+          "FiveDo.Core": "[1.11.0, )",
+          "FiveDo.Input": "[1.11.0, )"
         }
       }
-    }
+    },
+    "net11.0/win-x64": {}
   }
 }

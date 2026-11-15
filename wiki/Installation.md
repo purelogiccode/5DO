@@ -36,7 +36,7 @@ Extract the bundle and run the executables.
 Windows:
 
 ```powershell
-.\FiveDo.Frontend.Avalonia.exe
+.\FiveDo.exe
 ```
 
 Linux:
@@ -45,7 +45,7 @@ Linux:
 mkdir 5do-linux-x64
 tar -xzf 5do-1.9.1-linux-x64.tar.gz -C 5do-linux-x64
 cd 5do-linux-x64
-./FiveDo.Frontend.Avalonia
+./FiveDo
 ```
 
 macOS: open `5do-1.9.1-osx-<arch>.dmg`, drag `5DO.app` to Applications, and launch it.
@@ -54,7 +54,7 @@ The CLI is inside `5DO.app/Contents/MacOS/FiveDo.Cli`.
 If the extracted executable is not executable on Linux/macOS:
 
 ```sh
-chmod +x FiveDo.Cli FiveDo.Frontend.Avalonia
+chmod +x FiveDo.Cli FiveDo
 ```
 
 Open the desktop app, choose **Open BIOS**, select a BIOS such as `panafz1.bin`, choose
@@ -63,7 +63,7 @@ Open the desktop app, choose **Open BIOS**, select a BIOS such as `panafz1.bin`,
 Open a disc directly:
 
 ```sh
-./FiveDo.Frontend.Avalonia "Road Rash (USA).chd" --bios panafz1.bin --fullscreen
+./FiveDo "Road Rash (USA).chd" --bios panafz1.bin --fullscreen
 ```
 
 ## Headless CLI

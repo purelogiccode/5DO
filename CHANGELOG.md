@@ -1,7 +1,41 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.10.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.11.0, a documented-compatibility
 release.
+
+## [1.11.0] - 2026-11-15
+
+### Added
+
+- **RetroAchievements save-state hit persistence.** Achievement hit counts, trigger state,
+  measured values, delta/prior memory-reference values, and active leaderboard attempts
+  are serialized into a dedicated `RetroAchievements` section of the normal `.tdos` save
+  state. Loading a state restores the progress instead of resetting the runtime. The
+  payload is validated against the game hash, achievement/leaderboard IDs, and definition
+  hashes; incompatible or stale state is discarded and the runtime resets normally.
+  Save slots, quick save/load, and the slot manager share the same path.
+- New `RcProgressCodec` format and `RetroAchievementsService.ExportProgress`/
+  `ImportProgress` APIs, `StateSectionIds.RetroAchievements` (section 13), and
+  `FiveDoStateDocument.Remove`.
+- Tests for hit-count and leaderboard-attempt round-trips, wrong-game rejection, the
+  optional slot section, and service export/import.
+
+### Changed
+
+- **The desktop apphost is now `FiveDo`.** Windows bundles run `FiveDo.exe`; Linux and
+  macOS bundles run `FiveDo`. The CLI remains `FiveDo.Cli.exe`/`FiveDo.Cli`. Windows
+  shortcuts, file associations, the Linux desktop entry, Debian/RPM packaging, the macOS
+  app bundle, `PACKAGE.txt`, CI smoke commands, and the documentation use the new name.
+- **Faster time to the main window.** Audio initialization is lazy and opens the OpenAL
+  device when a machine starts or settings are applied. The remembered BIOS/disc load
+  after the shell paints, and library metadata/disc-health caches load inside the
+  background scan. The application-stats request is explicitly backgrounded.
+- Release frontend publishes are **ReadyToRun** precompiled for each RID when
+  `PublishSingleFile=true` and `PublishTrimmed=false`. The validation host reached the
+  first window in about **0.62 s** with the ReadyToRun bundle versus **1.09 s** with the
+  debug build.
+- Loading an older save state no longer clears an achievement that was already unlocked;
+  trigger state restored as `Triggered` still promotes the local entry.
 
 ## [1.10.0] - 2026-11-15
 

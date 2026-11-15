@@ -19,7 +19,7 @@ Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $bundle = (Resolve-Path -LiteralPath $BundleDirectory).Path
-foreach ($executable in @('FiveDo.Frontend.Avalonia.exe', 'FiveDo.Cli.exe')) {
+foreach ($executable in @('FiveDo.exe', 'FiveDo.Cli.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $bundle $executable))) {
         throw "Bundle is missing $executable`: $bundle"
     }

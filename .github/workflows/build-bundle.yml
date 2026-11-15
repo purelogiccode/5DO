@@ -152,7 +152,7 @@ jobs:
         shell: pwsh
         run: |
           $expected = if ('${{ matrix.arch }}' -eq 'arm64') { 0xAA64 } else { 0x8664 }
-          foreach ($name in @('FiveDo.Cli.exe', 'FiveDo.Frontend.Avalonia.exe')) {
+          foreach ($name in @('FiveDo.Cli.exe', 'FiveDo.exe')) {
             $path = Join-Path 'artifacts/bundle-smoke' $name
             $bytes = [System.IO.File]::ReadAllBytes($path)
             $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
@@ -174,7 +174,7 @@ jobs:
         if: matrix.rid == 'win-x64'
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath artifacts/bundle-smoke/FiveDo.Frontend.Avalonia.exe `
+          $process = Start-Process -FilePath artifacts/bundle-smoke/FiveDo.exe `
             -ArgumentList '--smoke-test', '--smoke-output', 'artifacts/bundle-smoke/frontend-smoke.txt' `
             -PassThru
           if (-not $process.WaitForExit(60000)) {
@@ -195,11 +195,11 @@ jobs:
         run: |
           set -euo pipefail
           file artifacts/bundle-smoke/FiveDo.Cli
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia
+          file artifacts/bundle-smoke/FiveDo
           file artifacts/bundle-smoke/FiveDo.Cli | grep -q 'Mach-O 64-bit'
           file artifacts/bundle-smoke/FiveDo.Cli | grep -q '${{ matrix.arch }}'
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q 'Mach-O 64-bit'
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q '${{ matrix.arch }}'
+          file artifacts/bundle-smoke/FiveDo | grep -q 'Mach-O 64-bit'
+          file artifacts/bundle-smoke/FiveDo | grep -q '${{ matrix.arch }}'
 
       - name: Verify Linux bundle architecture
         if: startsWith(matrix.rid, 'linux-')
@@ -212,7 +212,7 @@ jobs:
             expected='ARM aarch64'
           fi
           file artifacts/bundle-smoke/FiveDo.Cli | grep -q "$expected"
-          file artifacts/bundle-smoke/FiveDo.Frontend.Avalonia | grep -q "$expected"
+          file artifacts/bundle-smoke/FiveDo | grep -q "$expected"
 
       - name: CLI and frontend smoke test (Linux)
         if: matrix.rid == 'linux-x64'
@@ -223,7 +223,7 @@ jobs:
           ./artifacts/bundle-smoke/FiveDo.Cli selftest --json
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb
-          xvfb-run -a ./artifacts/bundle-smoke/FiveDo.Frontend.Avalonia \
+          xvfb-run -a ./artifacts/bundle-smoke/FiveDo \
             --smoke-test --smoke-output artifacts/bundle-smoke/frontend-smoke.txt
           cat artifacts/bundle-smoke/frontend-smoke.txt
           grep -q 'FRONTEND SMOKE OK' artifacts/bundle-smoke/frontend-smoke.txt

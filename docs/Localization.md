@@ -120,8 +120,8 @@ Both executables accept `--locale <code>` and `--list-locales`:
 5do --list-locales
 5do --locale de --help
 5do --locale ja --version
-FiveDo.Frontend.Avalonia --list-locales
-FiveDo.Frontend.Avalonia --locale pt-br --smoke-test --smoke-output marker.txt
+FiveDo --list-locales
+FiveDo --locale pt-br --smoke-test --smoke-output marker.txt
 ```
 
 The CLI localizes its banner, `Usage`, `Commands`, and `Options` labels, the unknown

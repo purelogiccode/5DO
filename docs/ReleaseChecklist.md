@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.10.0 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.11.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
@@ -26,7 +26,9 @@ display-sleep inhibition, Lua input scripting, the input timeline, and best-effo
 the two-step Escape pause/quit shortcut. v1.10.0 adds RetroAchievements with a managed
 rcheevos engine, 3DO hashing, hardcore rules, a durable offline unlock queue,
 hardcore-only leaderboard submission, rich presence, OSD notifications, and an
-achievement window.
+achievement window. v1.11.0 adds RetroAchievements save-state progress persistence, renames
+the desktop apphost to `FiveDo`, and cuts time to the first window with deferred startup
+work and ReadyToRun release bundles.
 Ship the platforms and titles that are validated, publish an honest per-title matrix
 and known issues, and move everything else to the post-1.0 backlog.
 
@@ -412,6 +414,46 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## 1.11.0 RetroAchievements continuity and startup gate
+
+- [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.11.0`.
+- [x] Update `CHANGELOG.md`, `docs/WhatsNew.md`, `docs/ReleaseNotes-1.11.0.md`,
+      `README.md`, `docs/Status.md`, `docs/index.md`, `docs/Installation.md`,
+      `docs/KnownIssues.md`, `docs/BuildAndTest.md`, `docs/FAQ.md`,
+      `docs/ImplementationPlan.md`, `docs/Roadmap.md`,
+      `docs/RetroAchievementsCompliance.md`, and the MkDocs navigation.
+- [x] Persist achievement hit counts, trigger state, measured values, delta/prior memref
+      values, and leaderboard attempts in a dedicated `RetroAchievements` `.tdos`
+      section; validate the game hash, IDs, and definition hashes before applying it.
+- [x] Wire slot saves, quick saves, and slot loads through
+      `ExportProgress`/`ImportProgress`, and reset the runtime when the section is
+      missing or incompatible.
+- [x] Rename the frontend apphost to `FiveDo`, and update the Windows installer, Linux
+      desktop entry/DEB/RPM scripts, macOS app bundle, packaging, CI smoke commands,
+      probe tests, and documentation.
+- [x] Defer audio initialization, BIOS/disc loading, and metadata/disc-health caches;
+      background the application-stats request.
+- [x] Enable ReadyToRun for single-file, untrimmed frontend publishes and verify
+      win-x64, win-arm64, and linux-x64 builds.
+- [x] Full suite **2,344/2,344** passes in Debug; `dotnet build`,
+      `dotnet format --verify-no-changes`, and
+      `jb inspectcode --severity=WARNING` report no warnings or errors.
+- [ ] Verify the x64 CLI `selftest` and desktop `--smoke-test`
+      (`FRONTEND SMOKE OK 1.11.0`) from the built bundle, and confirm the renamed
+      `FiveDo.exe` apphost.
+- [ ] Build all six framework-dependent bundles from the `v1.11.0` tag, verify contents
+      and apphost architectures, and keep local copies in
+      `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [ ] Create and push tag `v1.11.0`; the release workflow publishes six versioned
+      bundles and `SHA256SUMS.txt`, and all six checksums verify locally.
+- [ ] CI and Docs workflows pass; `WhatsNew.html`, `ReleaseNotes-1.11.0.html`, and
+      `wiki/Release-1.11.0` return HTTP 200.
+- [ ] Submit the compliance package to RetroAchievements and complete their review.
+- [ ] After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()` return
+      `true`, remove the pending wording, and run a live hardcore award check.
+
+---
+
 ## 1.10.0 RetroAchievements gate
 
 - [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.10.0`.
@@ -563,8 +605,8 @@ been validated.**
 | Renderer | OpenGL default, CPU fallback | Filter family is complete |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.10.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.9.1 are historical |
-| Release timing | **Prepared 2026-11-15** | v1.10.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Version | **`v1.11.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.10.0 are historical |
+| Release timing | **Prepared 2026-11-15** | v1.11.0 bundles (macOS as DMG) and checksums are attached to the GitHub release |
 
 ---
 

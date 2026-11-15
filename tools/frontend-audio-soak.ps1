@@ -24,7 +24,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $discPath = (Resolve-Path -LiteralPath $Disc).Path
 $biosPath = (Resolve-Path -LiteralPath $Bios).Path
 $outputPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $Output))
-$exe = Join-Path $repoRoot (Join-Path $AotDirectory 'FiveDo.Frontend.Avalonia.exe')
+$exe = Join-Path $repoRoot (Join-Path $AotDirectory 'FiveDo.exe')
 
 if (-not (Test-Path -LiteralPath $exe)) {
     if ($SkipBuild) {

@@ -56,7 +56,7 @@ case "$rid" in
     *) echo "Unsupported --rid: $rid (expected linux-x64 or linux-arm64)" >&2; exit 2 ;;
 esac
 
-for executable in FiveDo.Frontend.Avalonia FiveDo.Cli; do
+for executable in FiveDo FiveDo.Cli; do
     if [[ ! -x "$bundle/$executable" ]]; then
         echo "Bundle is missing executable $executable: $bundle" >&2
         exit 1
@@ -85,7 +85,7 @@ Summary:        3DO Interactive Multiplayer emulator
 License:        FreeDO modified LGPL
 URL:            https://github.com/purelogiccode/5DO
 BuildArch:      $rpm_arch
-Requires:       dotnet-runtime-10.0
+Requires:       dotnet-runtime-11.0
 
 %description
 5DO is a FreeDO-derived 3DO emulator with a headless CLI and an Avalonia desktop
@@ -105,8 +105,8 @@ rm -f %{buildroot}/opt/5do/5do.desktop
 find %{buildroot}/opt/5do -type f \\( -name '*.pdb' -o -name '*.xml' \\) -delete
 find %{buildroot}/opt/5do -type d -exec chmod 0755 {} +
 find %{buildroot}/opt/5do -type f -exec chmod 0644 {} +
-chmod 0755 %{buildroot}/opt/5do/FiveDo.Frontend.Avalonia %{buildroot}/opt/5do/FiveDo.Cli
-ln -sf /opt/5do/FiveDo.Frontend.Avalonia %{buildroot}/usr/bin/5do
+chmod 0755 %{buildroot}/opt/5do/FiveDo %{buildroot}/opt/5do/FiveDo.Cli
+ln -sf /opt/5do/FiveDo %{buildroot}/usr/bin/5do
 ln -sf /opt/5do/FiveDo.Cli %{buildroot}/usr/bin/5do-cli
 install -m 0644 %{_repo_dir}/packaging/5do.desktop %{buildroot}/usr/share/applications/5do.desktop
 install -m 0644 %{_repo_dir}/packaging/linux/5do.xml %{buildroot}/usr/share/mime/packages/5do.xml

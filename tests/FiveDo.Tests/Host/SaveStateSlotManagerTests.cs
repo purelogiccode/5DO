@@ -94,6 +94,37 @@ public sealed class SaveStateSlotManagerTests
     }
 
     [Fact]
+    public void SaveAndLoad_RetroAchievementsProgressRoundtrips()
+    {
+        using var directory = new TempDirectory();
+        var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
+        FiveDoMachine machine = CreateMachine();
+        machine.RunFrames(3);
+        byte[] progress = [1, 2, 3, 4, 5];
+
+        manager.Save(machine, "9F7D72BC", "Alone in the Dark", slot: 0, progress);
+
+        machine.RunFrames(10);
+        manager.LoadWithProgress(machine, slot: 0, expectedGameId: "9F7D72BC", out byte[]? loaded);
+
+        Assert.Equal(progress, loaded);
+        Assert.Empty(machine.StateWarnings);
+    }
+
+    [Fact]
+    public void Save_WithoutRetroAchievementsProgressHasNoSection()
+    {
+        using var directory = new TempDirectory();
+        var manager = new SaveStateSlotManager(directory.Path, slotCount: 2);
+        FiveDoMachine machine = CreateMachine();
+
+        manager.Save(machine, "9F7D72BC", slot: 0);
+        manager.LoadWithProgress(machine, slot: 0, expectedGameId: "9F7D72BC", out byte[]? loaded);
+
+        Assert.Null(loaded);
+    }
+
+    [Fact]
     public void NextAndPrevious_WrapAndCanSkipEmptySlots()
     {
         using var directory = new TempDirectory();

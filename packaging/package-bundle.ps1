@@ -175,10 +175,10 @@ try {
     }
 
     $launch = if ($Rid -like 'win-*') {
-        'FiveDo.Cli.exe --help  |  FiveDo.Frontend.Avalonia.exe'
+        'FiveDo.Cli.exe --help  |  FiveDo.exe'
     }
     else {
-        './FiveDo.Cli --help  |  ./FiveDo.Frontend.Avalonia'
+        './FiveDo.Cli --help  |  ./FiveDo'
     }
 
     $manifest = @(
@@ -190,7 +190,7 @@ try {
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
         'runtime: none bundled; requires the .NET 11 runtime installed on the host'
         'runtime-download: https://dotnet.microsoft.com/download/dotnet/11.0'
-        'apps: FiveDo.Cli and FiveDo.Frontend.Avalonia (framework-dependent single-file apphosts)'
+        'apps: FiveDo.Cli and FiveDo (framework-dependent single-file apphosts)'
         "launch: $launch"
         ''
         'BIOS ROMs and game images are not included.'

@@ -11,13 +11,13 @@
 3. Start the desktop app:
 
    ```powershell
-   .\FiveDo.Frontend.Avalonia.exe
+   .\FiveDo.exe
    ```
 
    Linux/macOS:
 
    ```sh
-   ./FiveDo.Frontend.Avalonia
+   ./FiveDo
    ```
 
 4. Choose **Open BIOS** and select your legally obtained 3DO BIOS.
