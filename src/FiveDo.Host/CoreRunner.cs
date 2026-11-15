@@ -457,7 +457,7 @@ public sealed class CoreRunner : IDisposable
             Interlocked.Increment(ref _presentedFrames);
             CaptureFrameState();
             _rewind.Capture(_machine.FramesExecuted);
-            FrameCompleted?.Invoke(this, EventArgs.Empty);
+            RaiseFrameCompleted();
             SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
             _lastPresentedMachineFrame = _machine.FramesExecuted;
             _frameSkipIndex = 0;
@@ -635,7 +635,7 @@ public sealed class CoreRunner : IDisposable
                         SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
                         statusPresentedFrames++;
                         _lastPresentedMachineFrame = _machine.FramesExecuted;
-                        FrameCompleted?.Invoke(this, EventArgs.Empty);
+                        RaiseFrameCompleted();
                     }
                     else
                     {
@@ -647,7 +647,7 @@ public sealed class CoreRunner : IDisposable
                             Interlocked.Increment(ref _frames);
                             CaptureFrameState();
                             _rewind.Capture(_machine.FramesExecuted);
-                            FrameCompleted?.Invoke(this, EventArgs.Empty);
+                            RaiseFrameCompleted();
                             presentedAudioSamples += _machine.AudioSamplesProduced - audioBefore;
                             audioPacer.FrameCompleted(presentedAudioSamples);
                             if (!presentStep)
@@ -773,6 +773,31 @@ public sealed class CoreRunner : IDisposable
         finally
         {
             TimerResolution.End();
+        }
+    }
+
+    /// <summary>
+    /// Raises <see cref="FrameCompleted"/> without allowing a consumer failure to fault
+    /// the emulation loop.
+    /// </summary>
+    private void RaiseFrameCompleted()
+    {
+        EventHandler? handler = FrameCompleted;
+        if (handler is null)
+        {
+            return;
+        }
+
+        foreach (Delegate subscriber in handler.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler)subscriber).Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                Serilog.Log.Warning(exception, "A frame-completed handler failed.");
+            }
         }
     }
 

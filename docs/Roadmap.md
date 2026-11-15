@@ -6,8 +6,8 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.9.1 localization and quality-of-life release** (published on
-GitHub). The compatibility plan is complete:
+The project is at the **v1.10.0 RetroAchievements release** (published on GitHub). The
+compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
 - **375 are playable**; the other three are non-retail/add-on images with documented root
@@ -18,14 +18,15 @@ GitHub). The compatibility plan is complete:
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
-- v1.9.1 adds Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and
-  Simplified Chinese UI catalogs to English and German, fixes switching back to English,
-  and adds the two-step Escape pause/quit shortcut. The v1.9.0 feature set remains:
-  external metadata and media, physical optical-drive boot, Windows DirectInput/HID
-  gamepads, the controller preview, auto-crop, display-sleep inhibition, Lua input
-  scripting, the input timeline, and best-effort 4DO state interop.
+- v1.10.0 adds RetroAchievements: managed rcheevos evaluation, 3DO disc identification,
+  measured progress, a durable offline unlock queue, hardcore rules, rich presence,
+  hardcore-only leaderboard submission, OSD notifications, and an achievement window.
+  The v1.9.1 feature set remains: nine UI catalogs, reversible locale switching, the
+  two-step Escape pause/quit shortcut, external metadata and media, physical
+  optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
+  display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.9
+## Post-1.10
 
 **Playability depth (in progress):**
 

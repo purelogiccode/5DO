@@ -7,7 +7,7 @@ against the published [Hardcore Compliance Requirements](https://docs.retroachie
 > **Current status: not yet submitted.** `RetroAchievementsCompliance.HardcoreApproved` is
 > `false`, so the UI labels hardcore as pending. RetroAchievements injects the
 > zero-point `Warning: Unknown Emulator` achievement until the client is approved and
-> currently treats hardcore unlocks as casual. Softcore works normally.
+> currently treats hardcore unlocks as casual. Casual mode works normally.
 
 ---
 
@@ -16,7 +16,7 @@ against the published [Hardcore Compliance Requirements](https://docs.retroachie
 | Item | Value |
 |---|---|
 | Emulator name | 5DO |
-| Stable User-Agent | `5DO/1.9.1` |
+| Stable User-Agent | `5DO/1.10.0` |
 | Source repository | <https://github.com/purelogiccode/5DO> |
 | Release page | <https://github.com/purelogiccode/5DO/releases> |
 | Supported system | 3DO Interactive Multiplayer (RA console 43) |
@@ -40,11 +40,11 @@ Rules that apply to the application:
 | Requirement | 5DO implementation | Evidence |
 |---|---|---|
 | Achievement list in the UI | **Configuration > RetroAchievements...** lists title, description, points, measured progress, unlock state, unsupported state, and rarity | `RetroAchievementsWindow.axaml` |
-| Triggers evaluate correctly | Managed rcheevos condition/trigger/value/leaderboard/rich-presence port | `FiveDo.Achievements/Rcheevos`, 57+ engine tests |
+| Triggers evaluate correctly | Managed rcheevos condition/trigger/value/leaderboard/rich-presence port | `FiveDo.Achievements/Rcheevos`, focused engine vectors |
 | Measured and trigger flags | Measured values are evaluated and shown as `n/m`; Trigger conditions, pause/reset, hit targets, and primed state use the upstream state machine | `RcTrigger`, `RcCondSet`, `AchievementProgress.ProgressText` |
 | Rich Presence | Served from the game script every 30 frames and sent by the periodic ping even when local display is off | `RetroAchievementsService.Tick`, `PingAsync` |
 | Leaderboards | Start/cancel/submit triggers, live values, and score submission | `RcLeaderboard`, `SubmitLeaderboardAsync` |
-| Offline unlock queue | Durable, checksummed, atomically written queue; retries every 30 seconds and on login | `PendingUnlockQueue`, `RunUnlockQueueAsync` |
+| Offline unlock queue | Durable, checksummed, atomically written queue; retries every 30 seconds, after login, and when the matching game session starts | `PendingUnlockQueue`, `RunUnlockQueueAsync` |
 | Toolkit support | RAIntegration is not shipped; this is optional for compliance but produces the standard toolkit warning | Documented below |
 | Save-state hit storage | Hit counts are runtime-only and reset after a state load; this is recommended, not required | `ResetRuntime` |
 | Standard save files | NVRAM and memory-card data use the emulator's normal persisted formats; save states are separate | Storage docs |
@@ -72,10 +72,10 @@ scripting tools do not load RetroAchievements, so they cannot earn achievements.
 | Rule | Enforcement |
 |---|---|
 | Cheats disabled | Cheat application and the cheats window are blocked; an already-loaded set stops being applied |
-| Loading save states always blocked | Save-state load, save-slot manager, and quick-menu load are blocked. 5DO also blocks creating them in hardcore; this is stricter than the minimum. |
+| Loading save states always blocked | Quick-menu load and the save-slot manager load action are blocked. Creating states, deleting states, and the save-slot manager remain available for debugging, as RA permits. |
 | Rewind disabled | Menu, hotkey, and quick-menu rewind are blocked |
-| Fast-forward disabled | Menu, hotkey, and quick-menu fast-forward are blocked |
-| Slow motion disabled | 5DO has no slow-motion mode; the only speed control is fast-forward |
+| Slow motion disabled | 5DO has no slow-motion mode |
+| Fast-forward allowed | Menu, hotkey, and quick-menu fast-forward remain available, matching the RA FAQ exception for speed control |
 | Frame advance disabled | `FrameAdvance` hotkey is blocked |
 | TAS / recorded-input playback prohibited | Movie playback, movie recording, input recording, movie editor, and input timeline are blocked |
 | Scripting prohibited | Desktop RA path does not load Lua/input scripts; CLI scripting is outside the RA client |
@@ -84,16 +84,16 @@ scripting tools do not load RetroAchievements, so they cannot earn achievements.
 | Rich Presence cannot be disabled in hardcore | Ping always sends rich presence when hardcore is active, even if the display option is off |
 | Leaderboards cannot be disabled in hardcore | Leaderboards stay active; only local toasts can be hidden |
 | Hardcore visibly indicated | Status bar shows `RA hardcore (pending)` until approval; game identification OSD says hardcore is active |
-| Unique stable user agent | `5DO/1.9.1`, one source constant in `RetroAchievementsCompliance` |
+| Mode-specific unlocks | Casual-only unlocks stay active in a hardcore session; hardcore unlocks count for both modes |
+| Unique stable user agent | `5DO/1.10.0`, one source constant in `RetroAchievementsCompliance` |
 
 ### Mode switch behavior
 
 Enabling hardcore while a game is running:
 
 1. Stops input recording and movie/TAS playback.
-2. Cancels fast-forward.
-3. Resets the emulated machine and RA hit counts.
-4. Restarts the RA session with the hardcore flag.
+2. Resets the emulated machine and RA hit counts.
+3. Restarts the RA session with the hardcore flag.
 
 Switching hardcore → casual is allowed without a reset.
 
@@ -104,12 +104,12 @@ Switching hardcore → casual is allowed without a reset.
 | Check | Result |
 |---|---|
 | Build | 0 warnings, 0 errors |
-| Full .NET suite | 2,334 tests, including rcheevos vectors, 3DO hashing, API parsing, warning filtering, and queue round-trips |
+| Full .NET suite | 2,338 tests, including rcheevos vectors, 3DO hashing, API parsing, warning filtering, and queue round-trips |
 | 3DO hash parity | Byte-identical to RAHasher 1.8.3 on real CHDs |
 | Live login | Passed |
 | Live game data (`r=patch`) | Passed |
 | Live softcore session / ping | Passed |
-| Live softcore award | Passed: Gex 1009, achievement 579967, score 0 → 1 |
+| Live casual award | Passed: Gex 1009, achievement 579967, score 0 → 1 |
 | Live hardcore session start | Passed at the API level; hardcore credit still requires RA approval |
 | Leaderboard submission | Request shape/signature verified against rcheevos; no tested 3DO set exposed a leaderboard |
 
@@ -140,10 +140,11 @@ Suggested message:
 
 > 5DO is an open-source, non-commercial 3DO emulator written in C#. We have added a
 > managed rcheevos-compatible client, a stable `5DO/<version>` User-Agent, 3DO hashing
-> matching RAHasher, hardcore rule enforcement (no save-state load, rewind, fast-forward,
-> frame advance, cheats, TAS/movie playback, input recording, or scripting), a reset on
-> casual-to-hardcore switches, always-on rich presence/leaderboards, and a durable offline
-> unlock queue. We would like 5DO added to the recognized-client list for hardcore credit.
+> matching RAHasher, hardcore rule enforcement (no save-state load, rewind, frame advance,
+> cheats, TAS/movie playback, input recording, or scripting; fast-forward and creating
+> states remain available), a reset on casual-to-hardcore switches, always-on rich
+> presence/leaderboards, and a durable offline unlock queue. We would like 5DO added to
+> the recognized-client list for hardcore credit.
 > Repository: https://github.com/purelogiccode/5DO
 
 ---

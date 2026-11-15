@@ -48,20 +48,32 @@ The settings are also available directly in `settings.json`:
 
 While hardcore is active, 5DO blocks:
 
-- save-state loading (including the save-slot manager and quick-menu load),
+- loading save states (including the save-slot manager's load action and quick-menu load),
 - rewind,
-- fast-forward, slowdown, and frame advance,
+- slowdown and frame advance,
 - cheats and an already-loaded cheat set,
 - movie/TAS playback and recording,
 - input recording, the movie editor, and the input timeline.
 
-Rich presence is always submitted in hardcore even when the local display option is off,
-and leaderboards stay active; only local leaderboard toasts can be hidden.
+Creating save states, deleting states, fast-forward, and reset remain available. The
+save-slot manager still opens in hardcore, but its **Load** button and double-click load
+are disabled; **Save Current** and **Delete** work normally. RetroAchievements permits
+fast-forward and allows creating states for debugging while forbidding their use during
+hardcore play.
 
-Enabling hardcore while a game is running stops TAS/input tools and performs a full reset
-of the emulated machine before the new hardcore session starts. Switching hardcore →
-casual is allowed without a reset. Reset itself is always allowed. The mode is global,
-not per-game.
+Rich presence is always submitted in hardcore even when the local display option is off.
+Leaderboards remain active in both modes, but score entries are submitted only from a
+hardcore session; in casual they are tracked locally without being posted. Only local
+leaderboard toasts can be hidden.
+
+Enabling hardcore while a game is running stops TAS/input tools, resets the emulated
+machine, and then starts the new hardcore session from the reset state. Switching
+hardcore → casual is allowed without a reset. Reset itself is always allowed. The mode is
+global, not per-game.
+
+Casual and hardcore unlocks are tracked separately. An achievement unlocked only in
+casual remains active in a hardcore session so it can be earned again for hardcore credit;
+a hardcore unlock counts for both modes.
 
 ---
 
@@ -120,8 +132,10 @@ excluded so the hit counts do not double-count a replayed frame.
   periodic rich-presence pings, and score updates.
 - A durable offline unlock queue. Pending awards are checksummed, written atomically to
   `retroachievements-pending.json` in the 5DO data directory, and retried every 30
-  seconds and immediately after login. The queue never stores the API token and keeps
-  entries for up to 30 days.
+  seconds, after login, and when the matching game session starts. The queue never stores
+  the API token and keeps entries for up to 30 days.
+- Mode-specific session imports: a hardcore session only treats hardcore unlocks as
+  complete, so casual-only achievements can be earned again with hardcore credit.
 - Unlock, progress, leaderboard, game-identification, and error notifications on the
   existing OSD queue.
 - An achievements window with title, description, points, progress, unlock state,
@@ -135,11 +149,13 @@ excluded so the hit counts do not double-count a replayed frame.
 - Hardcore credit is pending RetroAchievements client approval. Casual mode is fully
   usable now.
 - Offline queueing covers achievement unlocks; leaderboard scores still require a live
-  connection when the leaderboard completes.
+  connection when the leaderboard completes and are only submitted from hardcore mode.
+- Pending unlocks for a game sync when that game's session is active again. A queue entry
+  for a game you do not reopen remains pending until it expires after 30 days.
 - The achievement window is a text list; the rich badge/overlay presentation from
   RetroArch is not implemented.
-- Leaderboards are evaluated and submitted, but there is no dedicated leaderboard
-  browser.
+- Leaderboards are evaluated and submitted in hardcore, but there is no dedicated
+  leaderboard browser.
 - The API token is stored in the plain settings file. Use a dedicated token and protect
   the data directory if other users share the machine.
 
@@ -152,8 +168,8 @@ excluded so the hit counts do not double-count a replayed frame.
 | The status bar says `RA: signed out` | Open the RetroAchievements window and sign in. |
 | `No achievements for this disc` | The hash is valid but the game has no set, or the disc revision is not registered. |
 | Login fails | Check the password/token and that the system clock is correct. The server rejects expired tokens. |
-| Unlocks stay local | The window shows `N pending sync`; the queue survives restarts and retries every 30 seconds. Check the connection and token; queued awards expire after 30 days. |
-| Cheats, save states, rewind, fast-forward, frame advance, or TAS stop working | Hardcore mode is active. Switch to casual to use them. |
+| Unlocks stay local | The window shows `N pending sync`; the queue survives restarts and retries every 30 seconds and when the matching game session starts. Check the connection and token; queued awards expire after 30 days. |
+| Cheats, save-state loading, rewind, or frame advance stop working | Hardcore mode is active. Switch to casual to use them. Fast-forward and saving states remain available. |
 | `Warning: Unknown Emulator` appears | Expected until RetroAchievements approves the `5DO` client for hardcore credit. Casual unlocks still work. |
 | Hardcore leaderboard has no score | Hardcore and softcore are separate server scores; switch modes and play again. Hardcore also requires RA client approval. |
 

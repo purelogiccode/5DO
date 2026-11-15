@@ -1,16 +1,18 @@
 # Project Status and Next Steps
 
-**2026-11-15 update:** RetroAchievements is implemented as a managed in-tree feature:
-the MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
+**2026-11-15 update:** **v1.10.0** adds RetroAchievements as a managed in-tree feature.
+The MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
 is byte-identical to RAHasher 1.8.3 on real CHD images, and the desktop shell integrates
 sign-in, game identification, achievements, hardcore rules, leaderboards, rich presence,
-and OSD notifications. Achievement unlocks now survive disconnects in a checksummed,
-atomically written offline queue, and hardcore mode blocks save-state loads, rewind,
-fast-forward, frame advance, cheats, TAS/movie playback, input recording, and input tools;
-casual → hardcore resets the game. The suite is **2,334 tests**; build, format, and
-InspectCode are clean. Live login, patch, session, ping, hardcore-session, and
-softcore-award validation passed against the real server; leaderboard submission was not
-exercised because the tested 3DO sets had no leaderboards. Hardcore credit is pending
+and OSD notifications. Achievement unlocks survive disconnects in a checksummed,
+atomically written offline queue; hardcore mode blocks save-state loads, rewind, frame
+advance, cheats, TAS/movie playback, input recording, and input tools while permitting
+fast-forward and creating save states; casual-to-hardcore switches reset the game before
+the hardcore session starts. Leaderboard entries are submitted only in hardcore, and
+casual-only unlocks remain active in hardcore. The suite is **2,338 tests**; build,
+format, and InspectCode are clean. Live login, patch, session, ping, hardcore-session,
+and casual-award validation passed against the real server; leaderboard submission was
+not exercised because the tested 3DO sets had no leaderboards. Hardcore credit is pending
 RetroAchievements client approval. See [RetroAchievements.md](RetroAchievements.md) and
 [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
 
@@ -27,7 +29,9 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-14, v1.9.1: nine UI catalogs with reversible locale switching,
+**Snapshot:** 2026-11-15, v1.10.0: RetroAchievements with a managed rcheevos engine,
+durable offline unlocks, hardcore rules, leaderboards, rich presence, and OSD
+notifications; nine UI catalogs with reversible locale switching,
 two-step Escape pause/quit, external metadata and media, physical optical-drive boot,
 Windows DirectInput/HID gamepads, controller preview, auto-crop, display-sleep
 inhibition, Lua input scripting, the input timeline, and 4DO state interop.

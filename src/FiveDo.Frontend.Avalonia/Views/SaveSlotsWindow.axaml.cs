@@ -19,6 +19,7 @@ public partial class SaveSlotsWindow : Window, IDisposable
     private readonly Func<int, SaveStateSlotInfo?> _saveCurrent;
     private readonly Action<int> _load;
     private readonly Action<int> _delete;
+    private readonly bool _allowLoad;
     private Bitmap? _thumbnail;
 
     /// <summary>Creates the dialog with the default slot directory.</summary>
@@ -36,11 +37,16 @@ public partial class SaveSlotsWindow : Window, IDisposable
     /// <param name="saveCurrent">Saves the running machine to a slot and returns its info, or null when unavailable.</param>
     /// <param name="load">Loads a slot into the running machine.</param>
     /// <param name="delete">Deletes a slot.</param>
+    /// <param name="allowLoad">
+    /// Whether load operations are permitted. Hardcore mode still allows creating and
+    /// deleting states but blocks loading them.
+    /// </param>
     public SaveSlotsWindow(
         SaveStateSlotManager manager,
         Func<int, SaveStateSlotInfo?> saveCurrent,
         Action<int> load,
-        Action<int> delete)
+        Action<int> delete,
+        bool allowLoad = true)
     {
         ArgumentNullException.ThrowIfNull(manager);
         ArgumentNullException.ThrowIfNull(saveCurrent);
@@ -51,6 +57,18 @@ public partial class SaveSlotsWindow : Window, IDisposable
         _saveCurrent = saveCurrent;
         _load = load;
         _delete = delete;
+        _allowLoad = allowLoad;
+        LoadButton.IsEnabled = allowLoad;
+        ToolTip.SetTip(
+            LoadButton,
+            allowLoad
+                ? "Load the selected save slot into the running game."
+                : "Loading save states is disabled in RetroAchievements hardcore mode.");
+        ToolTip.SetTip(
+            SlotList,
+            allowLoad
+                ? "Select a save slot. Double-click to load it."
+                : "Select a save slot. Loading is disabled in hardcore mode; saving and deleting remain available.");
         Refresh();
     }
 
@@ -149,6 +167,12 @@ public partial class SaveSlotsWindow : Window, IDisposable
 
     private void LoadSelected()
     {
+        if (!_allowLoad)
+        {
+            StatusText.Text = "Loading save states is disabled in RetroAchievements hardcore mode.";
+            return;
+        }
+
         var slot = SelectedSlot();
         if (SlotList.SelectedItem is not SaveStateSlotInfo info || !info.Exists)
         {

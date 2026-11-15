@@ -1078,7 +1078,7 @@
     "ui.retroachievements_enable": "Enable RetroAchievements",
     "ui.tip.retroachievements_enable_tip": "Load achievements and send unlocks for supported discs.",
     "ui.retroachievements_hardcore": "Hardcore",
-    "ui.tip.retroachievements_hardcore_tip": "Hardcore requires RetroAchievements client approval. Save-state loads, rewind, fast-forward, frame advance, cheats, TAS, and input playback are blocked while active.",
+    "ui.tip.retroachievements_hardcore_tip": "Hardcore requires RetroAchievements client approval. Save-state loads, rewind, frame advance, cheats, TAS, and input playback are blocked while active. Fast-forward and creating save states remain available.",
     "ui.retroachievements_unlock_toasts": "Unlock toasts",
     "ui.retroachievements_progress_toasts": "Progress toasts",
     "ui.retroachievements_leaderboard_toasts": "Leaderboard toasts",

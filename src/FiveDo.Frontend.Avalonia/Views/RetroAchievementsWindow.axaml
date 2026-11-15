@@ -49,7 +49,7 @@
                       ToolTip.Tip="Load achievements and send unlocks for supported discs." />
             <CheckBox x:Name="HardcoreCheck" Content="Hardcore" Margin="0,0,16,0"
                       IsCheckedChanged="OnOptionsChanged"
-                      ToolTip.Tip="Hardcore requires RetroAchievements client approval. Save-state loads, rewind, fast-forward, frame advance, cheats, TAS, and input playback are blocked while active." />
+                      ToolTip.Tip="Hardcore requires RetroAchievements client approval. Save-state loads, rewind, frame advance, cheats, TAS, and input playback are blocked while active. Fast-forward and creating save states remain available." />
             <CheckBox x:Name="UnlockNotificationsCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Unlock toasts" Margin="0,0,16,0"
                       IsCheckedChanged="OnOptionsChanged" />
             <CheckBox x:Name="ProgressNotificationsCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Progress toasts" Margin="0,0,16,0"

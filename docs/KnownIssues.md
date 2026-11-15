@@ -1,13 +1,15 @@
 # Known Issues
 
-**Snapshot:** 2026-11-14, v1.9.1: nine UI catalogs with reversible locale switching,
-the two-step Escape pause/quit shortcut, external metadata and manual media, physical
-optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, automatic
-blank-border crop, display-sleep inhibition, Lua input scripting, the input timeline,
-and best-effort 4DO `.4dosav` import/export, on top of the
-v1.8.0 MMPX 2x and Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9 aspect presets,
-and the .NET 11 / C# 15 toolchain. This list covers the supported local corpus and the
-current prototype state. It is not a compatibility guarantee.
+**Snapshot:** 2026-11-15, v1.10.0: RetroAchievements with a managed rcheevos
+engine, 3DO hashing, a durable offline unlock queue, hardcore rules, rich presence,
+leaderboards, and OSD notifications, on top of the v1.9.1 nine UI catalogs, reversible
+locale switching, the two-step Escape pause/quit shortcut, external metadata and manual
+media, physical optical-drive boot, Windows DirectInput/HID gamepads, the controller
+preview, automatic blank-border crop, display-sleep inhibition, Lua input scripting, the
+input timeline, and best-effort 4DO `.4dosav` import/export. The v1.8.0 MMPX 2x and
+Catmull-Rom bicubic filtering, 5:4/16:9/16:10/21:9 aspect presets, and the .NET 11 /
+C# 15 toolchain remain. This list covers the supported local corpus and the current
+prototype state. It is not a compatibility guarantee.
 
 **Release scope:** v1.0.0 ships with these known issues documented; full-race completion,
 extra title scripts, M13.5/M13.6 visual/high-resolution review, M14 research, Pi, and
@@ -46,8 +48,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   injects `Warning: Unknown Emulator` and treats hardcore unlocks as casual. Casual mode
   is fully usable. See [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
 - Achievement unlocks are queued durably when the server is unavailable and retried every
-  30 seconds. Leaderboard scores are not queued offline; they require a live connection
-  when the attempt completes.
+  30 seconds, after login, and when the matching game session starts. Leaderboard scores
+  are not queued offline; they require a live connection when the attempt completes and
+  are submitted only from hardcore mode.
+- Hardcore permits fast-forward and creating save states (the save-slot manager can save
+  and delete but not load). It blocks save-state loading, rewind, frame advance, cheats,
+  TAS/movie playback, input recording, the movie editor, and the input timeline.
 - The achievement window is a text/progress list. RetroArch-style badge overlays and a
   dedicated leaderboard browser are not implemented.
 - The API token is stored in the plain `settings.json`. Use a dedicated token and protect

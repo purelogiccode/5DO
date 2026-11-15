@@ -140,7 +140,7 @@ every serialized property in `AppSettings`.
 | `RetroAchievementsEnabled` | bool | `false` | Enable the RetroAchievements client. |
 | `RetroAchievementsUsername` | string | `""` | Account name. |
 | `RetroAchievementsToken` | string | `""` | API token returned by the login endpoint. Treat the settings file as sensitive. |
-| `RetroAchievementsHardcore` | bool | `false` | Use hardcore rules and unlocks. Blocks save-state loads, rewind, fast-forward, frame advance, cheats, TAS/movie playback, input recording, and input tools; casual → hardcore resets the game. Hardcore credit is pending RA client approval. |
+| `RetroAchievementsHardcore` | bool | `false` | Use hardcore rules and unlocks. Blocks save-state loads, rewind, frame advance, cheats, TAS/movie playback, input recording, and input tools; fast-forward and creating save states remain available. Casual-to-hardcore switches reset the game. Hardcore credit is pending RA client approval. |
 | `RetroAchievementsShowNotifications` | bool | `true` | Show unlock/game-identification OSD messages. |
 | `RetroAchievementsShowProgressNotifications` | bool | `false` | Show measured-progress OSD messages. |
 | `RetroAchievementsShowRichPresence` | bool | `true` | Show rich presence in the shell. |

@@ -29,6 +29,7 @@ public sealed class RetroAchievementsService : IDisposable
     private const uint WarningAchievementId = 101_000_000;
 
     private readonly IAchievementMemory _memory;
+    private readonly HttpClient? _httpClient;
     private readonly Lock _gate = new();
     private readonly SemaphoreSlim _awardGate = new(1, 1);
     private readonly SemaphoreSlim _queueFlushGate = new(1, 1);
@@ -71,6 +72,7 @@ public sealed class RetroAchievementsService : IDisposable
 
         _memory = memory;
         _settings = settings;
+        _httpClient = httpClient;
         _client = new RetroAchievementsClient(settings.Host, httpClient);
         _pendingUnlocks = new PendingUnlockQueue(pendingUnlockPath);
         UpdateState(state => state with
@@ -157,7 +159,7 @@ public sealed class RetroAchievementsService : IDisposable
         if (!string.Equals(oldHost, settings.Host, StringComparison.OrdinalIgnoreCase))
         {
             _client.Dispose();
-            _client = new RetroAchievementsClient(settings.Host);
+            _client = new RetroAchievementsClient(settings.Host, _httpClient);
         }
 
         UpdateState(state => state with
@@ -231,7 +233,23 @@ public sealed class RetroAchievementsService : IDisposable
                 Error = string.Empty,
             });
 
-            LoginCompleted?.Invoke(this, new RaLoginEventArgs(result));
+            EventHandler<RaLoginEventArgs>? loginHandler = LoginCompleted;
+            if (loginHandler is not null)
+            {
+                var loginArgs = new RaLoginEventArgs(result);
+                foreach (Delegate subscriber in loginHandler.GetInvocationList())
+                {
+                    try
+                    {
+                        ((EventHandler<RaLoginEventArgs>)subscriber).Invoke(this, loginArgs);
+                    }
+                    catch (Exception exception) when (exception is not OutOfMemoryException)
+                    {
+                        Log.Warning(exception, "RetroAchievements login handler failed");
+                    }
+                }
+            }
+
             ScheduleUnlockFlush();
 
             string hash;
@@ -406,13 +424,38 @@ public sealed class RetroAchievementsService : IDisposable
         });
     }
 
-    /// <summary>Resets all runtime hit counts. Call after a save-state load or rewind.</summary>
+    /// <summary>Resets all runtime hit counts and tracked progress. Call after a save-state load or rewind.</summary>
     public void ResetRuntime()
     {
         lock (_gate)
         {
-            _game?.Runtime.Reset();
+            if (_game is null)
+            {
+                return;
+            }
+
+            _game.Runtime.Reset();
+            foreach (AchievementEntry entry in _entries)
+            {
+                if (!entry.Unlocked)
+                {
+                    entry.MeasuredValue = 0;
+                }
+            }
+
+            for (int index = 0; index < _leaderboards.Count; index++)
+            {
+                _leaderboards[index] = new LeaderboardProgress
+                {
+                    Id = _leaderboards[index].Id,
+                    Title = _leaderboards[index].Title,
+                    Value = 0,
+                    IsActive = false,
+                };
+            }
         }
+
+        RaiseAchievementState(force: true);
     }
 
     /// <summary>Evaluates achievements, leaderboards, and rich presence for one frame.</summary>
@@ -478,6 +521,13 @@ public sealed class RetroAchievementsService : IDisposable
             UpdateState(state => state with
             {
                 GameLoaded = false,
+                GameId = 0,
+                Achievements = [],
+                Leaderboards = [],
+                TotalAchievements = 0,
+                UnlockedAchievements = 0,
+                TotalPoints = 0,
+                UnlockedPoints = 0,
                 Status = "RetroAchievements stopped after an evaluation error.",
                 Error = exception.Message,
             });
@@ -612,10 +662,23 @@ public sealed class RetroAchievementsService : IDisposable
                 return;
             }
 
+            // Hardcore and casual unlocks are tracked separately by RetroAchievements.
+            // A casual-only unlock must stay active in a hardcore session so the player
+            // can earn the hardcore version, while a hardcore unlock counts for both.
             var unlocked = new HashSet<uint>();
-            foreach (RaUnlock unlock in session.Unlocks.Concat(session.HardcoreUnlocks))
+            if (hardcore)
             {
-                unlocked.Add(unlock.AchievementId);
+                foreach (RaUnlock unlock in session.HardcoreUnlocks)
+                {
+                    unlocked.Add(unlock.AchievementId);
+                }
+            }
+            else
+            {
+                foreach (RaUnlock unlock in session.Unlocks.Concat(session.HardcoreUnlocks))
+                {
+                    unlocked.Add(unlock.AchievementId);
+                }
             }
 
             // A queued award may already have reached the server through another client.
@@ -664,6 +727,7 @@ public sealed class RetroAchievementsService : IDisposable
                     Definition = achievement,
                     Unlocked = isUnlocked,
                     Unsupported = unsupported,
+                    Hardcore = hardcore,
                 });
             }
 
@@ -774,6 +838,9 @@ public sealed class RetroAchievementsService : IDisposable
             Message = $"{_entries.Count(entry => entry.Definition.IsOfficial)} achievements loaded.",
             Hardcore = game.Hardcore,
         });
+
+        // A session is now active, so any queued awards for this game can be retried.
+        ScheduleUnlockFlush();
     }
 
     private void OnRuntimeEvent(RcRuntimeEvent runtimeEvent)
@@ -802,7 +869,7 @@ public sealed class RetroAchievementsService : IDisposable
 
             case RcRuntimeEventType.LeaderboardStarted:
                 UpdateLeaderboard(runtimeEvent.Id, runtimeEvent.Value, active: true);
-                if (_settings.ShowLeaderboardNotifications)
+                if (game.Hardcore && _settings.ShowLeaderboardNotifications)
                 {
                     string title = GetLeaderboardTitle(game, runtimeEvent.Id);
                     Notify(new AchievementNotification
@@ -810,7 +877,7 @@ public sealed class RetroAchievementsService : IDisposable
                         Kind = AchievementNotificationKind.LeaderboardStarted,
                         Title = title,
                         Message = "Leaderboard attempt started.",
-                        Hardcore = game.Hardcore,
+                        Hardcore = true,
                     });
                 }
 
@@ -822,14 +889,14 @@ public sealed class RetroAchievementsService : IDisposable
 
             case RcRuntimeEventType.LeaderboardCanceled:
                 UpdateLeaderboard(runtimeEvent.Id, 0, active: false);
-                if (_settings.ShowLeaderboardNotifications)
+                if (game.Hardcore && _settings.ShowLeaderboardNotifications)
                 {
                     Notify(new AchievementNotification
                     {
                         Kind = AchievementNotificationKind.LeaderboardCanceled,
                         Title = GetLeaderboardTitle(game, runtimeEvent.Id),
                         Message = "Leaderboard attempt canceled.",
-                        Hardcore = game.Hardcore,
+                        Hardcore = true,
                     });
                 }
 
@@ -837,15 +904,12 @@ public sealed class RetroAchievementsService : IDisposable
 
             case RcRuntimeEventType.LeaderboardTriggered:
                 UpdateLeaderboard(runtimeEvent.Id, 0, active: false);
-                if (_settings.ShowLeaderboardNotifications)
+
+                // RetroAchievements only accepts leaderboard entries from hardcore
+                // sessions. Keep tracking in casual mode without submitting.
+                if (!game.Hardcore)
                 {
-                    Notify(new AchievementNotification
-                    {
-                        Kind = AchievementNotificationKind.LeaderboardSubmitted,
-                        Title = GetLeaderboardTitle(game, runtimeEvent.Id),
-                        Message = $"Submitted score {runtimeEvent.Value}.",
-                        Hardcore = game.Hardcore,
-                    });
+                    break;
                 }
 
                 _ = SubmitLeaderboardAsync(game, runtimeEvent.Id, runtimeEvent.Value, _lifetime.Token);
@@ -1069,7 +1133,7 @@ public sealed class RetroAchievementsService : IDisposable
         int value,
         CancellationToken cancellationToken)
     {
-        if (!IsEnabled())
+        if (!game.Hardcore || !IsEnabled())
         {
             return;
         }
@@ -1108,6 +1172,19 @@ public sealed class RetroAchievementsService : IDisposable
                     result.BestScore,
                     result.NewRank,
                     result.NumEntries);
+
+                if (_settings.ShowLeaderboardNotifications)
+                {
+                    Notify(new AchievementNotification
+                    {
+                        Kind = AchievementNotificationKind.LeaderboardSubmitted,
+                        Title = GetLeaderboardTitle(game, leaderboardId),
+                        Message = result.NumEntries > 0
+                            ? $"Score {result.SubmittedScore} submitted (rank {result.NewRank}/{result.NumEntries})."
+                            : $"Score {result.SubmittedScore} submitted.",
+                        Hardcore = true,
+                    });
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -1237,7 +1314,7 @@ public sealed class RetroAchievementsService : IDisposable
                 MeasuredValue = entry.MeasuredValue,
                 MeasuredTarget = entry.MeasuredTarget,
                 ProgressText = progressText,
-                Rarity = entry.Definition.Rarity,
+                Rarity = entry.Hardcore ? entry.Definition.RarityHardcore : entry.Definition.Rarity,
             });
         }
 
@@ -1286,6 +1363,14 @@ public sealed class RetroAchievementsService : IDisposable
         }
     }
 
+    private string GetActiveGameHash()
+    {
+        lock (_gate)
+        {
+            return _game is null ? string.Empty : _gameHash;
+        }
+    }
+
     private string GetLeaderboardTitle(RuntimeGame game, uint leaderboardId) =>
         game.LeaderboardDefinitions.TryGetValue(leaderboardId, out RaLeaderboardDefinition? definition)
             ? definition.Title
@@ -1300,12 +1385,49 @@ public sealed class RetroAchievementsService : IDisposable
             state = _state;
         }
 
-        StateChanged?.Invoke(this, new RetroAchievementsStateEventArgs(state));
+        EventHandler<RetroAchievementsStateEventArgs>? handler = StateChanged;
+        if (handler is null)
+        {
+            return;
+        }
+
+        var args = new RetroAchievementsStateEventArgs(state);
+        foreach (Delegate subscriber in handler.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler<RetroAchievementsStateEventArgs>)subscriber).Invoke(this, args);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                // Achievement state must never fault emulation or the network loop.
+                Log.Warning(exception, "RetroAchievements state-change handler failed");
+            }
+        }
     }
 
     private void Notify(AchievementNotification notification)
     {
-        Notification?.Invoke(this, new AchievementNotificationEventArgs(notification));
+        EventHandler<AchievementNotificationEventArgs>? handler = Notification;
+        if (handler is null)
+        {
+            return;
+        }
+
+        var args = new AchievementNotificationEventArgs(notification);
+        foreach (Delegate subscriber in handler.GetInvocationList())
+        {
+            try
+            {
+                ((EventHandler<AchievementNotificationEventArgs>)subscriber).Invoke(this, args);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                // A notification handler (for example a closing UI window) must not
+                // interrupt frame evaluation.
+                Log.Debug(exception, "RetroAchievements notification handler failed");
+            }
+        }
     }
 
     private void ScheduleUnlockFlush()
@@ -1382,6 +1504,14 @@ public sealed class RetroAchievementsService : IDisposable
             return;
         }
 
+        string activeHash = GetActiveGameHash();
+        if (string.IsNullOrEmpty(activeHash))
+        {
+            // Awards require an active game session. Queued entries stay durable until
+            // the matching game is started again.
+            return;
+        }
+
         (string username, string token, _) = SnapshotCredentials();
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(token))
         {
@@ -1397,7 +1527,8 @@ public sealed class RetroAchievementsService : IDisposable
         {
             foreach (PendingUnlock pending in _pendingUnlocks.Snapshot())
             {
-                if (!string.Equals(pending.Username, username, StringComparison.Ordinal)
+                if (!string.Equals(pending.GameHash, activeHash, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(pending.Username, username, StringComparison.OrdinalIgnoreCase)
                     || !_pendingUnlocks.Contains(pending.AchievementId, pending.Username, pending.Hardcore))
                 {
                     continue;
@@ -1477,6 +1608,9 @@ public sealed class RetroAchievementsService : IDisposable
     private static bool IsTransientAwardError(string error) =>
         string.IsNullOrWhiteSpace(error)
         || error.Contains("unable to contact", StringComparison.OrdinalIgnoreCase)
+        || error.Contains("service unavailable", StringComparison.OrdinalIgnoreCase)
+        || error.Contains("server error", StringComparison.OrdinalIgnoreCase)
+        || error.Contains("bad gateway", StringComparison.OrdinalIgnoreCase)
         || error.Contains("timeout", StringComparison.OrdinalIgnoreCase)
         || error.Contains("temporar", StringComparison.OrdinalIgnoreCase)
         || error.Contains("try again", StringComparison.OrdinalIgnoreCase)
@@ -1509,6 +1643,8 @@ public sealed class RetroAchievementsService : IDisposable
         public bool Unlocked { get; set; }
 
         public bool Unsupported { get; set; }
+
+        public bool Hardcore { get; init; }
 
         public uint MeasuredValue { get; set; }
 

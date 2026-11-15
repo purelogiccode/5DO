@@ -582,6 +582,12 @@ public sealed class RetroAchievementsClient : IDisposable
         {
             return null;
         }
+        catch (JsonException)
+        {
+            // A proxy or captive portal can return HTTP 200 with HTML. Treat that as
+            // an unavailable service instead of faulting the caller.
+            return null;
+        }
     }
 
     private static List<RaUnlock> ParseUnlocks(JsonElement root, string propertyName)

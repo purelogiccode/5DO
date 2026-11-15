@@ -1009,6 +1009,7 @@ public partial class MainWindow : Window, IDisposable
             VideoRegion region = ResolveRegionForBios(path, _gameId);
             _runner!.Invoke(() =>
             {
+                _achievements?.EndGame();
                 machine.SetVideoRegion(region);
                 machine.LoadBios(bios.Bios1.Span, bios.Bios2.Span);
                 // Switching BIOS is a cold start: the previous game's RAM can leave
@@ -1453,6 +1454,9 @@ public partial class MainWindow : Window, IDisposable
                     machine.Memory.ClearRam();
                 }
 
+                // Stop evaluating the old disc before the new one is inserted. Otherwise
+                // the core thread could award old achievements against new-game memory.
+                _achievements?.EndGame();
                 _disc?.Dispose();
                 _disc = disc;
                 machine.Compatibility.FixMode = fixMode;
@@ -1818,13 +1822,6 @@ public partial class MainWindow : Window, IDisposable
 
     private void SaveStateToCurrentSlot()
     {
-        if (IsRetroAchievementsHardcore)
-        {
-            StatusText.Text = "Save states are disabled in RetroAchievements hardcore mode.";
-            ShowOsd("Save states are disabled in RetroAchievements hardcore mode.", OsdSeverity.Warning);
-            return;
-        }
-
         if (_machine is null)
         {
             StatusText.Text = "Nothing to save.";
@@ -1870,7 +1867,11 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        _runner!.Invoke(() => _slots.Load(_machine, slot, _gameId));
+        _runner!.Invoke(() =>
+        {
+            _slots.Load(_machine, slot, _gameId);
+            _achievements?.ResetRuntime();
+        });
         if (_machine.StateWarnings.Count > 0)
         {
             StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
@@ -2575,6 +2576,7 @@ public partial class MainWindow : Window, IDisposable
             {
                 using var state = new MemoryStream(movie.State);
                 _machine.LoadState(state);
+                _achievements?.ResetRuntime();
             }
 
             _moviePlayback = movie;
@@ -4607,13 +4609,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task ShowSaveSlotsAsync()
     {
-        if (IsRetroAchievementsHardcore)
-        {
-            StatusText.Text = "Save states are disabled in RetroAchievements hardcore mode.";
-            ShowOsd("Save states are disabled in RetroAchievements hardcore mode.", OsdSeverity.Warning);
-            return;
-        }
-
+        bool allowLoad = !IsRetroAchievementsHardcore;
         var window = new SaveSlotsWindow(
             _slots,
             slot =>
@@ -4629,12 +4625,17 @@ public partial class MainWindow : Window, IDisposable
             },
             slot =>
             {
-                if (_machine is not null)
+                if (_machine is not null && allowLoad)
                 {
-                    _runner!.Invoke(() => _slots.Load(_machine, slot, _gameId));
+                    _runner!.Invoke(() =>
+                    {
+                        _slots.Load(_machine, slot, _gameId);
+                        _achievements?.ResetRuntime();
+                    });
                 }
             },
-            slot => _slots.Delete(slot));
+            slot => _slots.Delete(slot),
+            allowLoad);
         await window.ShowDialog(this).ConfigureAwait(true);
         PersistSlot();
         UpdateSlotText();
@@ -4882,7 +4883,7 @@ public partial class MainWindow : Window, IDisposable
         _achievements?.Tick();
     }
 
-    private void OnRetroAchievementsLogin(RaLoginResult result)
+    private void OnRetroAchievementsLogin()
     {
         if (_achievements is null)
         {
@@ -4892,16 +4893,29 @@ public partial class MainWindow : Window, IDisposable
         _settings.ApplyRetroAchievementsSettings(_achievements.Settings);
         _ = AppSettingsStore.Save(_settings);
         _logger.ForCategory(LogCategory.Host).Information(
-            "RetroAchievements logged in as {User}.",
-            result.DisplayName);
+            "RetroAchievements login succeeded.");
 
-        if (_settings.RetroAchievementsHardcore && _machine is not null && _runner is not null)
+        if (_settings.RetroAchievementsEnabled
+            && _settings.RetroAchievementsHardcore
+            && _disc is not null
+            && _machine is not null
+            && _runner is not null)
         {
+            RetroAchievementsService achievements = _achievements;
             _runner.Invoke(() =>
             {
                 _machine.Reset();
-                _achievements?.ResetRuntime();
+                achievements.ResetRuntime();
             });
+
+            // Login may have opened a session before the reset. Restart it now so the
+            // hardcore session begins from the reset game state.
+            RetroAchievementsState state = achievements.State;
+            if (!string.IsNullOrWhiteSpace(state.GameHash))
+            {
+                achievements.BeginGame(state.GameHash, state.GameTitle);
+            }
+
             StatusText.Text = "RetroAchievements hardcore session started: game reset.";
             ShowOsd("Hardcore session started. The game was reset.", OsdSeverity.Warning);
         }
@@ -4932,14 +4946,18 @@ public partial class MainWindow : Window, IDisposable
         bool wasEffectiveHardcore = _achievements is { } service
             && service.State.Enabled
             && service.State.Hardcore;
+        bool enteringHardcore = !wasEffectiveHardcore && settings.Enabled && settings.Hardcore;
 
-        _settings.ApplyRetroAchievementsSettings(settings);
-        _achievements?.ApplySettings(settings);
-
-        if (!wasEffectiveHardcore && settings.Enabled && settings.Hardcore)
+        // Switching casual -> hardcore must reset the game before the hardcore
+        // session starts. Doing it after ApplySettings would briefly evaluate the
+        // pre-reset game as hardcore.
+        if (enteringHardcore)
         {
             EnterRetroAchievementsHardcore();
         }
+
+        _settings.ApplyRetroAchievementsSettings(settings);
+        _achievements?.ApplySettings(settings);
 
         if (save && !AppSettingsStore.Save(_settings))
         {
@@ -4955,7 +4973,7 @@ public partial class MainWindow : Window, IDisposable
         StopMovie(save: true);
         CancelFastForward();
 
-        if (_machine is not null && _runner is not null)
+        if (_disc is not null && _machine is not null && _runner is not null)
         {
             _runner.Invoke(() =>
             {
@@ -6091,8 +6109,8 @@ public partial class MainWindow : Window, IDisposable
                 Dispatcher.UIThread.Post(() => OnRetroAchievementsNotification(args.Notification));
             _achievements.StateChanged += (_, args) =>
                 Dispatcher.UIThread.Post(() => OnRetroAchievementsStateChanged(args.State));
-            _achievements.LoginCompleted += (_, args) =>
-                Dispatcher.UIThread.Post(() => OnRetroAchievementsLogin(args.Result));
+            _achievements.LoginCompleted += (_, _) =>
+                Dispatcher.UIThread.Post(() => OnRetroAchievementsLogin());
 
             _logger.ForCategory(LogCategory.Host).Information(
                 "Latency options: run-ahead {RunAhead} frame(s), frame delay {FrameDelay}, adaptive sync {Vrr}, audio sync {AudioSync} ms.",
@@ -6939,6 +6957,7 @@ public partial class MainWindow : Window, IDisposable
 
         if (_runner.Rewind(frames))
         {
+            _runner.Invoke(() => _achievements?.ResetRuntime());
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
             ShowOsd($"Rewound to frame {_machine.FramesExecuted}");
         }
@@ -6951,13 +6970,6 @@ public partial class MainWindow : Window, IDisposable
 
     private void StartFastForward()
     {
-        if (IsRetroAchievementsHardcore)
-        {
-            StatusText.Text = "Fast-forward is disabled in RetroAchievements hardcore mode.";
-            ShowOsd("Fast-forward is disabled in RetroAchievements hardcore mode.", OsdSeverity.Warning);
-            return;
-        }
-
         if (_fastForwardHeld)
         {
             return;

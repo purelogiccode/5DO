@@ -25,6 +25,11 @@ public static class ThreeDoHasher
 
         try
         {
+            if (disc.SectorSize != 2048 || disc.SectorCount <= 0)
+            {
+                return false;
+            }
+
             byte[] buffer = new byte[disc.SectorSize];
             disc.ReadSector(0, buffer);
 
@@ -38,13 +43,25 @@ public static class ThreeDoHasher
 
             int blockSize = (buffer[0x4D] << 16) | (buffer[0x4E] << 8) | buffer[0x4F];
             int blockLocation = (buffer[0x65] << 16) | (buffer[0x66] << 8) | buffer[0x67];
+            if (blockSize <= 0)
+            {
+                return false;
+            }
+
             blockLocation *= blockSize;
 
             int sector = blockLocation / disc.SectorSize;
             int size = 0;
+            int directorySectors = 0;
 
             do
             {
+                if (++directorySectors > 1024)
+                {
+                    // A malformed directory chain must not hang the UI thread.
+                    return false;
+                }
+
                 disc.ReadSector(sector, buffer);
 
                 int offset = (buffer[0x12] << 8) | buffer[0x13];
@@ -66,6 +83,11 @@ public static class ThreeDoHasher
                         blockLocation = (buffer[offset + 0x45] << 16)
                             | (buffer[offset + 0x46] << 8)
                             | buffer[offset + 0x47];
+                        if (blockSize <= 0)
+                        {
+                            return false;
+                        }
+
                         blockLocation *= blockSize;
 
                         size = (buffer[offset + 0x11] << 16)
@@ -113,7 +135,9 @@ public static class ThreeDoHasher
             hash = Convert.ToHexStringLower(md5.GetHashAndReset());
             return true;
         }
-        catch (Exception exception) when (exception is IOException or ArgumentException or InvalidOperationException or DiscImageException)
+        catch (Exception exception) when (exception is IOException or ArgumentException
+            or InvalidOperationException or NotSupportedException or InvalidDataException
+            or DiscImageException)
         {
             hash = string.Empty;
             return false;
