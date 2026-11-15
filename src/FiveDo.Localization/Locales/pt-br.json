@@ -592,6 +592,27 @@
     "ui.remove_the_selected_media_attachment": "Remover o anexo de mídia selecionado.",
     "ui.open_the_selected_media_file": "Abrir o arquivo de mídia selecionado.",
     "ui.attach_media": "Anexar mídia",
-    "ui.the_selected_media_file_could_not_be_opened": "Não foi possível abrir o arquivo de mídia selecionado."
+    "ui.the_selected_media_file_could_not_be_opened": "Não foi possível abrir o arquivo de mídia selecionado.",
+    "ui.retroachievements": "RetroAchievements",
+    "ui.retroachievements_menu": "RetroAchievements...",
+    "ui.retroachievements_not_signed_in": "Não conectado.",
+    "ui.retroachievements_status_detail": "Login, identificação do jogo, sincronização e status de erros.",
+    "ui.retroachievements_user": "Usuário",
+    "ui.retroachievements_username": "Nome de usuário do RetroAchievements",
+    "ui.retroachievements_password_token": "Senha / token",
+    "ui.retroachievements_password_token_placeholder": "Senha ou token salvo",
+    "ui.retroachievements_token": "Token",
+    "ui.retroachievements_sign_in": "Entrar",
+    "ui.retroachievements_sign_out": "Sair",
+    "ui.retroachievements_enable": "Ativar RetroAchievements",
+    "ui.retroachievements_hardcore": "Hardcore",
+    "ui.retroachievements_unlock_toasts": "Avisos de conquistas",
+    "ui.retroachievements_progress_toasts": "Avisos de progresso",
+    "ui.retroachievements_leaderboard_toasts": "Avisos de classificação",
+    "ui.retroachievements_show_rich_presence": "Mostrar rich presence",
+    "ui.retroachievements_achievement": "Conquista",
+    "ui.retroachievements_points": "Pontos",
+    "ui.retroachievements_progress": "Progresso",
+    "ui.retroachievements_status": "Status"
   }
 }

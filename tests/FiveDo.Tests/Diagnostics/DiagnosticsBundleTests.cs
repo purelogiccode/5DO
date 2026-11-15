@@ -25,6 +25,9 @@ public sealed class DiagnosticsBundleTests
                   "RecentDiscs": ["{{jsonRoot}}\\game.chd"],
                   "BiosFolder": "{{jsonRoot}}\\bios",
                   "AudioDevice": "Speakers",
+                  "RetroAchievementsUsername": "player",
+                  "RetroAchievementsToken": "super-secret-token",
+                  "RetroAchievementsHost": "https://example.invalid",
                   "Volume": 0.75,
                   "Notes": "user {{Environment.UserName}}"
                 }
@@ -68,6 +71,10 @@ public sealed class DiagnosticsBundleTests
             Assert.DoesNotContain("RecentDiscs", settings, StringComparison.Ordinal);
             Assert.DoesNotContain("BiosFolder", settings, StringComparison.Ordinal);
             Assert.DoesNotContain("AudioDevice", settings, StringComparison.Ordinal);
+            Assert.DoesNotContain("RetroAchievementsUsername", settings, StringComparison.Ordinal);
+            Assert.DoesNotContain("RetroAchievementsToken", settings, StringComparison.Ordinal);
+            Assert.DoesNotContain("super-secret-token", settings, StringComparison.Ordinal);
+            Assert.DoesNotContain("RetroAchievementsHost", settings, StringComparison.Ordinal);
             Assert.DoesNotContain(root, settings, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("0.75", settings, StringComparison.Ordinal);
 

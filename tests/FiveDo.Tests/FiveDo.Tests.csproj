@@ -44,6 +44,7 @@
     <ProjectReference Include="..\..\src\FiveDo.Scripting\FiveDo.Scripting.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Tas\FiveDo.Tas.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Diagnostics\FiveDo.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Achievements\FiveDo.Achievements.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Machine\FiveDo.Machine.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Host\FiveDo.Host.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.OpenGL\FiveDo.Video.OpenGL.csproj" />

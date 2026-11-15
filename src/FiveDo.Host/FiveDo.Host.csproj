@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FiveDo.Achievements\FiveDo.Achievements.csproj" />
     <ProjectReference Include="..\FiveDo.Cheats\FiveDo.Cheats.csproj" />
     <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
     <ProjectReference Include="..\FiveDo.Machine\FiveDo.Machine.csproj" />

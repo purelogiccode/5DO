@@ -592,6 +592,27 @@
     "ui.remove_the_selected_media_attachment": "選択したメディア添付を削除します。",
     "ui.open_the_selected_media_file": "選択したメディアファイルを開きます。",
     "ui.attach_media": "メディアを添付",
-    "ui.the_selected_media_file_could_not_be_opened": "選択したメディアファイルを開けませんでした。"
+    "ui.the_selected_media_file_could_not_be_opened": "選択したメディアファイルを開けませんでした。",
+    "ui.retroachievements": "RetroAchievements",
+    "ui.retroachievements_menu": "RetroAchievements...",
+    "ui.retroachievements_not_signed_in": "未ログイン",
+    "ui.retroachievements_status_detail": "ログイン、ゲーム識別、同期、エラーの状態",
+    "ui.retroachievements_user": "ユーザー",
+    "ui.retroachievements_username": "RetroAchievements ユーザー名",
+    "ui.retroachievements_password_token": "パスワード / トークン",
+    "ui.retroachievements_password_token_placeholder": "パスワードまたは保存済みトークン",
+    "ui.retroachievements_token": "トークン",
+    "ui.retroachievements_sign_in": "ログイン",
+    "ui.retroachievements_sign_out": "ログアウト",
+    "ui.retroachievements_enable": "RetroAchievements を有効化",
+    "ui.retroachievements_hardcore": "ハードコア",
+    "ui.retroachievements_unlock_toasts": "実績解除の通知",
+    "ui.retroachievements_progress_toasts": "進捗の通知",
+    "ui.retroachievements_leaderboard_toasts": "ランキングの通知",
+    "ui.retroachievements_show_rich_presence": "リッチプレゼンスを表示",
+    "ui.retroachievements_achievement": "実績",
+    "ui.retroachievements_points": "ポイント",
+    "ui.retroachievements_progress": "進捗",
+    "ui.retroachievements_status": "状態"
   }
 }

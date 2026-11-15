@@ -3,6 +3,38 @@
 All notable changes are recorded here. The project is at v1.9.1, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Added
+
+- **RetroAchievements (managed port).** A new `FiveDo.Achievements` project ports the
+  MIT rcheevos evaluation engine (conditions, triggers, values, leaderboards, rich
+  presence, formatting, and runtime containers) to C#. It identifies 3DO discs with the
+  `rc_hash_3do` algorithm, logs in and starts sessions, loads achievements and
+  leaderboards, evaluates them on the core thread once per emulated frame, shows OSD
+  unlock/progress/leaderboard messages, submits awards and leaderboard scores, and pings
+  rich presence. A new **Configuration > RetroAchievements...** window provides sign-in,
+  hardcore mode, notification options, progress, and the disc hash. Hardcore mode blocks
+  save-state loads, rewind, fast-forward, frame advance, cheats, TAS/movie playback,
+  input recording, the movie editor, and the input timeline. Switching casual → hardcore
+  resets the game, rich presence stays enabled, and leaderboards remain active. See
+  `docs/RetroAchievements.md` and `docs/RetroAchievementsCompliance.md`.
+- **Durable offline achievement queue.** Unlocks created while the server is unavailable
+  are checksummed, written atomically to `retroachievements-pending.json`, and retried
+  every 30 seconds and after login. The queue stores no API token and keeps entries for
+  up to 30 days.
+- The 3DO hash was verified byte-for-byte against RAHasher 1.8.3 on real CHD images.
+- Live validation passed for login, game data, session start, rich-presence ping, a
+  hardcore session, and a real softcore award on Gex (achievement 579967).
+
+### Changed
+
+- `CoreRunner` raises a `FrameCompleted` callback for each emulated frame (excluding
+  speculative run-ahead frames) so frame-accurate consumers can evaluate state on the
+  core thread.
+- Settings, localization catalogs, privacy notes, and third-party notices include the
+  RetroAchievements feature and rcheevos attribution.
+
 ## [1.9.1] - 2026-11-14
 
 ### Added

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
+using FiveDo.Achievements.Models;
 using FiveDo.Cheats;
 using FiveDo.Core;
 using FiveDo.Host.Osd;
@@ -516,6 +517,70 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the controller port (1-6) shown by the input display.</summary>
     public int InputDisplayPlayer { get; set; } = 1;
+
+    /// <summary>Gets or sets a value indicating whether RetroAchievements is enabled.</summary>
+    public bool RetroAchievementsEnabled { get; set; }
+
+    /// <summary>Gets or sets the RetroAchievements username.</summary>
+    public string RetroAchievementsUsername { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the RetroAchievements API token returned by the login endpoint.
+    /// </summary>
+    /// <remarks>
+    /// The token is stored in the local settings file. It grants API access to the
+    /// account, so treat the settings file as sensitive and do not share it.
+    /// </remarks>
+    public string RetroAchievementsToken { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether hardcore mode is active.</summary>
+    public bool RetroAchievementsHardcore { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether unlock notifications are shown on the OSD.</summary>
+    public bool RetroAchievementsShowNotifications { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether measured progress updates are shown on the OSD.</summary>
+    public bool RetroAchievementsShowProgressNotifications { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the rich-presence string is shown in the shell.</summary>
+    public bool RetroAchievementsShowRichPresence { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether leaderboard events are shown on the OSD.</summary>
+    public bool RetroAchievementsShowLeaderboardNotifications { get; set; } = true;
+
+    /// <summary>Gets or sets the RetroAchievements web host.</summary>
+    public string RetroAchievementsHost { get; set; } = "https://retroachievements.org";
+
+    /// <summary>Creates the achievement service configuration from these settings.</summary>
+    /// <returns>A detached settings record.</returns>
+    public RetroAchievementsSettings CreateRetroAchievementsSettings() => new()
+    {
+        Enabled = RetroAchievementsEnabled,
+        Username = RetroAchievementsUsername,
+        ApiToken = RetroAchievementsToken,
+        Hardcore = RetroAchievementsHardcore,
+        ShowNotifications = RetroAchievementsShowNotifications,
+        ShowProgressNotifications = RetroAchievementsShowProgressNotifications,
+        ShowRichPresence = RetroAchievementsShowRichPresence,
+        ShowLeaderboardNotifications = RetroAchievementsShowLeaderboardNotifications,
+        Host = RetroAchievementsHost,
+    };
+
+    /// <summary>Copies achievement-service settings back into the host configuration.</summary>
+    /// <param name="settings">Service settings to persist.</param>
+    public void ApplyRetroAchievementsSettings(RetroAchievementsSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        RetroAchievementsEnabled = settings.Enabled;
+        RetroAchievementsUsername = settings.Username;
+        RetroAchievementsToken = settings.ApiToken;
+        RetroAchievementsHardcore = settings.Hardcore;
+        RetroAchievementsShowNotifications = settings.ShowNotifications;
+        RetroAchievementsShowProgressNotifications = settings.ShowProgressNotifications;
+        RetroAchievementsShowRichPresence = settings.ShowRichPresence;
+        RetroAchievementsShowLeaderboardNotifications = settings.ShowLeaderboardNotifications;
+        RetroAchievementsHost = settings.Host;
+    }
 
     /// <summary>Gets or sets a value indicating whether on-screen notifications are shown.</summary>
     public bool OsdEnabled { get; set; } = true;

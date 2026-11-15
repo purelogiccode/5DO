@@ -592,6 +592,27 @@
     "ui.remove_the_selected_media_attachment": "移除所选的媒体附件。",
     "ui.open_the_selected_media_file": "打开所选的媒体文件。",
     "ui.attach_media": "附加媒体",
-    "ui.the_selected_media_file_could_not_be_opened": "无法打开所选的媒体文件。"
+    "ui.the_selected_media_file_could_not_be_opened": "无法打开所选的媒体文件。",
+    "ui.retroachievements": "RetroAchievements",
+    "ui.retroachievements_menu": "RetroAchievements...",
+    "ui.retroachievements_not_signed_in": "未登录。",
+    "ui.retroachievements_status_detail": "登录、游戏识别、同步和错误状态。",
+    "ui.retroachievements_user": "用户",
+    "ui.retroachievements_username": "RetroAchievements 用户名",
+    "ui.retroachievements_password_token": "密码 / 令牌",
+    "ui.retroachievements_password_token_placeholder": "密码或已保存的令牌",
+    "ui.retroachievements_token": "令牌",
+    "ui.retroachievements_sign_in": "登录",
+    "ui.retroachievements_sign_out": "退出登录",
+    "ui.retroachievements_enable": "启用 RetroAchievements",
+    "ui.retroachievements_hardcore": "硬核",
+    "ui.retroachievements_unlock_toasts": "成就提示",
+    "ui.retroachievements_progress_toasts": "进度提示",
+    "ui.retroachievements_leaderboard_toasts": "排行榜提示",
+    "ui.retroachievements_show_rich_presence": "显示丰富状态",
+    "ui.retroachievements_achievement": "成就",
+    "ui.retroachievements_points": "点数",
+    "ui.retroachievements_progress": "进度",
+    "ui.retroachievements_status": "状态"
   }
 }

@@ -592,6 +592,27 @@
     "ui.remove_the_selected_media_attachment": "Rimuovi l'allegato multimediale selezionato.",
     "ui.open_the_selected_media_file": "Apri il file multimediale selezionato.",
     "ui.attach_media": "Allega media",
-    "ui.the_selected_media_file_could_not_be_opened": "Impossibile aprire il file multimediale selezionato."
+    "ui.the_selected_media_file_could_not_be_opened": "Impossibile aprire il file multimediale selezionato.",
+    "ui.retroachievements": "RetroAchievements",
+    "ui.retroachievements_menu": "RetroAchievements...",
+    "ui.retroachievements_not_signed_in": "Non connesso.",
+    "ui.retroachievements_status_detail": "Accesso, identificazione del gioco, sincronizzazione e stato degli errori.",
+    "ui.retroachievements_user": "Utente",
+    "ui.retroachievements_username": "Nome utente RetroAchievements",
+    "ui.retroachievements_password_token": "Password / token",
+    "ui.retroachievements_password_token_placeholder": "Password o token salvato",
+    "ui.retroachievements_token": "Token",
+    "ui.retroachievements_sign_in": "Accedi",
+    "ui.retroachievements_sign_out": "Esci",
+    "ui.retroachievements_enable": "Abilita RetroAchievements",
+    "ui.retroachievements_hardcore": "Hardcore",
+    "ui.retroachievements_unlock_toasts": "Notifiche obiettivi",
+    "ui.retroachievements_progress_toasts": "Notifiche progressi",
+    "ui.retroachievements_leaderboard_toasts": "Notifiche classifica",
+    "ui.retroachievements_show_rich_presence": "Mostra rich presence",
+    "ui.retroachievements_achievement": "Obiettivo",
+    "ui.retroachievements_points": "Punti",
+    "ui.retroachievements_progress": "Progresso",
+    "ui.retroachievements_status": "Stato"
   }
 }

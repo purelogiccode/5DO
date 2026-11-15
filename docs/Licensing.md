@@ -82,6 +82,9 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - Silk.NET (MIT), including Silk.NET.OpenGL, Silk.NET.OpenAL, and Silk.NET.Vulkan
 - XenoAtom.ShaderCompiler.Build (BSD-2-Clause; build-time GLSL-to-SPIR-V compiler,
   not distributed at runtime)
+- rcheevos (MIT; the managed RetroAchievements evaluation engine and 3DO hash are C#
+  ports; attribution and the original notice are preserved in `THIRD-PARTY-NOTICES.md`
+  and `docs/RetroAchievements.md`)
 - xBR-lv2 shader algorithm by Hyllian (MIT; attribution preserved in the shader and
   `THIRD-PARTY-NOTICES.md`)
 - MMPX 2x filter by Morgan McGuire and Mara Gagiu (MIT; attribution preserved in the

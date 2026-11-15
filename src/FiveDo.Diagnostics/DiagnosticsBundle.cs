@@ -80,6 +80,9 @@ public static class DiagnosticsBundle
         "NvramDirectory",
         "AudioDevice",
         "BiosOverrides",
+        "RetroAchievementsUsername",
+        "RetroAchievementsToken",
+        "RetroAchievementsHost",
     ];
 
     /// <summary>Writes a diagnostics bundle.</summary>

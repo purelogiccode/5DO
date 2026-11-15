@@ -137,6 +137,15 @@ every serialized property in `AppSettings`.
 | `OsdPosition` | enum string | `"TopRight"` | Notification anchor: `TopLeft`, `TopCenter`, `TopRight`, `BottomLeft`, `BottomCenter`, or `BottomRight`. |
 | `OsdOpacity` | double | `0.9` | Notification opacity, 0.1..1. |
 | `OsdDurationMilliseconds` | int | `2200` | Notification lifetime, 500..10000 ms. |
+| `RetroAchievementsEnabled` | bool | `false` | Enable the RetroAchievements client. |
+| `RetroAchievementsUsername` | string | `""` | Account name. |
+| `RetroAchievementsToken` | string | `""` | API token returned by the login endpoint. Treat the settings file as sensitive. |
+| `RetroAchievementsHardcore` | bool | `false` | Use hardcore rules and unlocks. Blocks save-state loads, rewind, fast-forward, frame advance, cheats, TAS/movie playback, input recording, and input tools; casual → hardcore resets the game. Hardcore credit is pending RA client approval. |
+| `RetroAchievementsShowNotifications` | bool | `true` | Show unlock/game-identification OSD messages. |
+| `RetroAchievementsShowProgressNotifications` | bool | `false` | Show measured-progress OSD messages. |
+| `RetroAchievementsShowRichPresence` | bool | `true` | Show rich presence in the shell. |
+| `RetroAchievementsShowLeaderboardNotifications` | bool | `true` | Show leaderboard start/cancel/submit OSD messages. |
+| `RetroAchievementsHost` | string | `"https://retroachievements.org"` | Web API host. |
 | `QuickMenuEnabled` | bool | `true` | Enable the F4/Select+Start in-game quick menu. |
 | `SaveNativeScreenshot` | bool | `false` | Also write a `-native.png` CPU frame with each screenshot. |
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
@@ -313,6 +322,15 @@ player-1 defaults. See section 3 for the full input structure.
   "OsdPosition": "TopRight",
   "OsdOpacity": 0.9,
   "OsdDurationMilliseconds": 2200,
+  "RetroAchievementsEnabled": false,
+  "RetroAchievementsUsername": "",
+  "RetroAchievementsToken": "",
+  "RetroAchievementsHardcore": false,
+  "RetroAchievementsShowNotifications": true,
+  "RetroAchievementsShowProgressNotifications": false,
+  "RetroAchievementsShowRichPresence": true,
+  "RetroAchievementsShowLeaderboardNotifications": true,
+  "RetroAchievementsHost": "https://retroachievements.org",
   "QuickMenuEnabled": true,
   "SaveNativeScreenshot": false,
   "Bloom": 0.35,

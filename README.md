@@ -53,8 +53,8 @@ test harness designed for reproducible compatibility evidence.
   movies reproducible.
 - **A real desktop emulator.** Avalonia shell with a game library, cover art, BIOS and
   NVRAM managers, save slots with thumbnails, rewind/fast-forward, cheats, TAS
-  recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, and a
-  diagnostics bundle.
+  recording, screenshots, GIF/WAV capture, a disc browser, controller mapping,
+  RetroAchievements, and a diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
   sharp-bilinear, bicubic, CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
   MMPX 2x filters, plus
@@ -78,7 +78,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.9.1` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,259 tests** in the current test assembly |
+| Automated tests | **2,334 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -152,6 +152,12 @@ or `5do-1.9.1-osx-arm64.dmg`.
 - Latency controls: 0-2 frame run-ahead, 0-8 frame presentation delay, VRR/adaptive-sync
   presentation, a -250..250 ms audio sync offset, and software input-to-present telemetry.
 - Per-game cheats with raw/typed/conditional/button codes and a desktop manager.
+- RetroAchievements: managed rcheevos-compatible achievement evaluation, 3DO disc
+  identification, a durable offline unlock queue, hardcore rule enforcement, leaderboards,
+  rich presence, OSD notifications, and an achievement progress window. Hardcore credit
+  is pending RetroAchievements client approval. See
+  [RetroAchievements](RetroAchievements.md) and
+  [the compliance package](RetroAchievementsCompliance.md).
 - Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
   per-frame movie editor. Lua input scripts (`--input-lua`) and **Emulation > Input
   Timeline...** add scripted and editable timeline authoring.
@@ -285,6 +291,7 @@ players in **Input**.
 | [FAQ](https://purelogiccode.github.io/5DO/FAQ.html) | BIOS, discs, releases, performance, platforms, saves, and licensing |
 | [CLI reference](https://purelogiccode.github.io/5DO/CliReference.html) | Every command, option, exit code, and JSON response |
 | [Configuration](https://purelogiccode.github.io/5DO/Configuration.html) | `settings.json`, profiles, paths, input, NVRAM, environment variables |
+| [RetroAchievements](https://purelogiccode.github.io/5DO/RetroAchievements.html) | Sign-in, 3DO hashing, achievements, hardcore, leaderboards, rich presence |
 | [Localization](https://purelogiccode.github.io/5DO/Localization.html) | UI catalogs, `--locale`, translated smoke evidence, adding a locale |
 | [Library metadata](https://purelogiccode.github.io/5DO/Metadata.html) | External metadata lookup, deterministic cache, manual media |
 | [Cover art](https://purelogiccode.github.io/5DO/CoverArt.html) | Online catalog, WebP pack, matching, R2 hosting, and takedown |

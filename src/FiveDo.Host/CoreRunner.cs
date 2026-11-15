@@ -92,6 +92,17 @@ public sealed class CoreRunner : IDisposable
     public event EventHandler<CoreFaultedEventArgs>? Faulted;
 
     /// <summary>
+    /// Raised on the core thread after each emulated frame, including hidden
+    /// fast-forward frames but excluding speculative run-ahead frames.
+    /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously inside the frame loop, so they must be short and
+    /// must not block. RetroAchievements uses this callback to evaluate definitions
+    /// against the machine's RAM on the same thread that mutates it.
+    /// </remarks>
+    public event EventHandler? FrameCompleted;
+
+    /// <summary>
     /// Raised on the core thread when the guest issues a CD eject command.
     /// </summary>
     /// <remarks>
@@ -446,6 +457,7 @@ public sealed class CoreRunner : IDisposable
             Interlocked.Increment(ref _presentedFrames);
             CaptureFrameState();
             _rewind.Capture(_machine.FramesExecuted);
+            FrameCompleted?.Invoke(this, EventArgs.Empty);
             SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
             _lastPresentedMachineFrame = _machine.FramesExecuted;
             _frameSkipIndex = 0;
@@ -623,6 +635,7 @@ public sealed class CoreRunner : IDisposable
                         SubmitPresentedFrame(_machine.Frame, bypassDelay: false);
                         statusPresentedFrames++;
                         _lastPresentedMachineFrame = _machine.FramesExecuted;
+                        FrameCompleted?.Invoke(this, EventArgs.Empty);
                     }
                     else
                     {
@@ -634,6 +647,7 @@ public sealed class CoreRunner : IDisposable
                             Interlocked.Increment(ref _frames);
                             CaptureFrameState();
                             _rewind.Capture(_machine.FramesExecuted);
+                            FrameCompleted?.Invoke(this, EventArgs.Empty);
                             presentedAudioSamples += _machine.AudioSamplesProduced - audioBefore;
                             audioPacer.FrameCompleted(presentedAudioSamples);
                             if (!presentStep)

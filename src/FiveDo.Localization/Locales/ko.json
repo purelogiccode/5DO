@@ -592,6 +592,27 @@
     "ui.remove_the_selected_media_attachment": "선택한 미디어 첨부 파일을 제거합니다.",
     "ui.open_the_selected_media_file": "선택한 미디어 파일을 엽니다.",
     "ui.attach_media": "미디어 첨부",
-    "ui.the_selected_media_file_could_not_be_opened": "선택한 미디어 파일을 열 수 없습니다."
+    "ui.the_selected_media_file_could_not_be_opened": "선택한 미디어 파일을 열 수 없습니다.",
+    "ui.retroachievements": "RetroAchievements",
+    "ui.retroachievements_menu": "RetroAchievements...",
+    "ui.retroachievements_not_signed_in": "로그인하지 않음.",
+    "ui.retroachievements_status_detail": "로그인, 게임 식별, 동기화 및 오류 상태.",
+    "ui.retroachievements_user": "사용자",
+    "ui.retroachievements_username": "RetroAchievements 사용자 이름",
+    "ui.retroachievements_password_token": "비밀번호 / 토큰",
+    "ui.retroachievements_password_token_placeholder": "비밀번호 또는 저장된 토큰",
+    "ui.retroachievements_token": "토큰",
+    "ui.retroachievements_sign_in": "로그인",
+    "ui.retroachievements_sign_out": "로그아웃",
+    "ui.retroachievements_enable": "RetroAchievements 활성화",
+    "ui.retroachievements_hardcore": "하드코어",
+    "ui.retroachievements_unlock_toasts": "업적 알림",
+    "ui.retroachievements_progress_toasts": "진행 상황 알림",
+    "ui.retroachievements_leaderboard_toasts": "순위표 알림",
+    "ui.retroachievements_show_rich_presence": "리치 프레즌스 표시",
+    "ui.retroachievements_achievement": "업적",
+    "ui.retroachievements_points": "포인트",
+    "ui.retroachievements_progress": "진행 상황",
+    "ui.retroachievements_status": "상태"
   }
 }

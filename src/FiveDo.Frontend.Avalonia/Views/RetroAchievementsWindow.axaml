@@ -1,0 +1,113 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:FiveDo.Achievements.Models"
+        x:Class="FiveDo.Frontend.Avalonia.Views.RetroAchievementsWindow"
+        Title="RetroAchievements"
+        Width="860" Height="640"
+        MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="14">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <StackPanel Grid.Column="0" Spacing="3">
+                <TextBlock Text="RetroAchievements" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock x:Name="StatusText" Text="Not signed in." Opacity="0.8"
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="Login, game identification, sync, and error status." />
+            </StackPanel>
+            <TextBlock x:Name="TotalsText" Grid.Column="1" VerticalAlignment="Top"
+                       FontWeight="SemiBold" TextAlignment="Right" />
+        </Grid>
+
+        <Border Grid.Row="1" Padding="10" Margin="0,0,0,10"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="4">
+            <Grid ColumnDefinitions="Auto,180,Auto,220,Auto,Auto,Auto" RowDefinitions="Auto" >
+                <TextBlock Grid.Column="0" Text="User" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBox x:Name="UsernameBox" Grid.Column="1" Margin="0,0,12,0"
+                         PlaceholderText="RetroAchievements username"
+                         ToolTip.Tip="Your RetroAchievements account name." />
+                <TextBlock Grid.Column="2" Text="Password / token" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBox x:Name="SecretBox" Grid.Column="3" PasswordChar="●" Margin="0,0,8,0"
+                         PlaceholderText="Password or saved token"
+                         ToolTip.Tip="Password or API token. The token is stored in the settings file." />
+                <CheckBox x:Name="UseTokenCheck" Grid.Column="4" Content="Token" VerticalAlignment="Center"
+                          Margin="0,0,10,0"
+                          ToolTip.Tip="Treat the value as an API token instead of a password." />
+                <Button x:Name="LoginButton" Grid.Column="5" Content="Sign in" Click="OnLogin"
+                        Margin="0,0,6,0"
+                        ToolTip.Tip="Sign in to RetroAchievements." />
+                <Button x:Name="LogoutButton" Grid.Column="6" Content="Sign out" Click="OnLogout"
+                        ToolTip.Tip="Sign out and clear the stored token." />
+            </Grid>
+        </Border>
+
+        <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+            <CheckBox x:Name="EnabledCheck" Content="Enable RetroAchievements" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged"
+                      ToolTip.Tip="Load achievements and send unlocks for supported discs." />
+            <CheckBox x:Name="HardcoreCheck" Content="Hardcore" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged"
+                      ToolTip.Tip="Hardcore requires RetroAchievements client approval. Save-state loads, rewind, fast-forward, frame advance, cheats, TAS, and input playback are blocked while active." />
+            <CheckBox x:Name="UnlockNotificationsCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Unlock toasts" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged" />
+            <CheckBox x:Name="ProgressNotificationsCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Progress toasts" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged" />
+            <CheckBox x:Name="LeaderboardNotificationsCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Leaderboard toasts" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged" />
+            <CheckBox x:Name="RichPresenceCheck" ToolTip.Tip="Toggle this RetroAchievements option." Content="Show rich presence" Margin="0,0,16,0"
+                      IsCheckedChanged="OnOptionsChanged" />
+        </WrapPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,0,0,8" Spacing="3">
+            <TextBlock x:Name="HardcoreNote" IsVisible="False" TextWrapping="Wrap"
+                       Opacity="0.85"
+                       ToolTip.Tip="RetroAchievements must recognize 5DO before hardcore unlocks count." />
+            <TextBlock x:Name="RichPresenceText"
+                       TextWrapping="Wrap" Opacity="0.85"
+                       ToolTip.Tip="Rich presence reported to RetroAchievements." />
+        </StackPanel>
+
+        <Border Grid.Row="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="4">
+            <Grid RowDefinitions="Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="*,70,90,90" Margin="10,7"
+                      Background="{DynamicResource SurfaceAltBrush}">
+                    <TextBlock Grid.Column="0" Text="Achievement" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="Points" FontWeight="SemiBold" TextAlignment="Right" />
+                    <TextBlock Grid.Column="2" Text="Progress" FontWeight="SemiBold" TextAlignment="Right" />
+                    <TextBlock Grid.Column="3" Text="Status" FontWeight="SemiBold" TextAlignment="Right" />
+                </Grid>
+                <ListBox x:Name="AchievementsList" Grid.Row="1" ToolTip.Tip="Achievements for the current disc."
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:AchievementProgress">
+                            <Grid ColumnDefinitions="*,70,90,90" Margin="4,2">
+                                <StackPanel Grid.Column="0" Spacing="1">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Description}" Opacity="0.7"
+                                               FontSize="11" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding Points}" TextAlignment="Right"
+                                           VerticalAlignment="Top" />
+                                <TextBlock Grid.Column="2" Text="{Binding ProgressText}" TextAlignment="Right"
+                                           VerticalAlignment="Top" />
+                                <TextBlock Grid.Column="3" Text="{Binding StatusText}" TextAlignment="Right"
+                                           VerticalAlignment="Top" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,10,0,0">
+            <TextBlock x:Name="FooterText" Grid.Column="0" VerticalAlignment="Center" Opacity="0.7"
+                       TextWrapping="Wrap"
+                       ToolTip.Tip="The disc hash and RetroAchievements game ID appear here after identification." />
+            <Button Grid.Column="1" Content="Close" Click="OnClose" ToolTip.Tip="Close the RetroAchievements window." />
+        </Grid>
+    </Grid>
+</Window>

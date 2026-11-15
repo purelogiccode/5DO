@@ -80,9 +80,11 @@
 
 ## Current snapshot
 
-**2026-11-14, v1.9.1 release (GitHub Releases).**
+**2026-11-15, v1.9.1 release (GitHub Releases) plus unreleased work.**
 
-- **2,259 tests** are present in the current test assembly.
+- **2,334 tests** are present in the current test assembly.
+- RetroAchievements: managed rcheevos evaluation, 3DO disc identification, hardcore
+  rules, leaderboards, rich presence, OSD notifications, and a progress window.
 - Localization (English, German, Brazilian Portuguese, French, Spanish, Italian,
   Japanese, Korean, and Simplified Chinese), external metadata and manual media, physical
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview,

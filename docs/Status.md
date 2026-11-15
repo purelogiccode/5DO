@@ -1,5 +1,19 @@
 # Project Status and Next Steps
 
+**2026-11-15 update:** RetroAchievements is implemented as a managed in-tree feature:
+the MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
+is byte-identical to RAHasher 1.8.3 on real CHD images, and the desktop shell integrates
+sign-in, game identification, achievements, hardcore rules, leaderboards, rich presence,
+and OSD notifications. Achievement unlocks now survive disconnects in a checksummed,
+atomically written offline queue, and hardcore mode blocks save-state loads, rewind,
+fast-forward, frame advance, cheats, TAS/movie playback, input recording, and input tools;
+casual → hardcore resets the game. The suite is **2,334 tests**; build, format, and
+InspectCode are clean. Live login, patch, session, ping, hardcore-session, and
+softcore-award validation passed against the real server; leaderboard submission was not
+exercised because the tested 3DO sets had no leaderboards. Hardcore credit is pending
+RetroAchievements client approval. See [RetroAchievements.md](RetroAchievements.md) and
+[RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
+
 **2026-11-14 update:** **v1.9.1** is a localization and quality-of-life release. It adds
 Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, and Simplified Chinese
 to the English/German UI catalogs (`--locale`, `--list-locales`, Settings > General > UI

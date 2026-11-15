@@ -24,6 +24,25 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   remains FreeDO/4DO-based; Opera is used to trace structure, comments, and hardware
   behavior for fixes added after the initial port.
 
+## RetroAchievements
+
+### rcheevos
+
+- Source: <https://github.com/RetroAchievements/rcheevos> (pinned reference
+  `rcheevos` 12.4.0 in `..\CSharp_RetroAchievementsSharp\References\rcheevos-12.4.0`).
+- License: MIT.
+- Use: `FiveDo.Achievements/Rcheevos` is a C# port of the condition, trigger, value,
+  leaderboard, rich-presence, formatting, and runtime containers; `ThreeDoHasher` is a
+  port of `src/rhash/hash_disc.c` (`rc_hash_3do`). The port keeps the upstream state
+  machine, constants, and evaluation order so achievement definitions behave like the
+  original engine. The API request shapes in `RetroAchievementsClient` follow rcheevos'
+  `rc_api_*` helpers.
+- The GPL-2.0-or-later `RetroAchievementsSharp` hashing package was used only as an
+  external parity oracle. It is not linked into 5DO; the in-tree 3DO hash comes from the
+  MIT rcheevos source so it remains compatible with the project's FreeDO modified LGPL.
+- RetroAchievements is a separate service with its own terms. 5DO is not affiliated with
+  or endorsed by RetroAchievements.org.
+
 ## Shader algorithms
 
 ### xBR-lv2 (Hyllian)

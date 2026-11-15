@@ -38,6 +38,25 @@ checksums are attached, and legal/attribution sign-off is recorded.
   text relies on the host's system font fallback; a minimal Linux image without a CJK
   font may show missing-glyph boxes even though the catalog is selected correctly.
 
+## RetroAchievements (2026-11-15)
+
+- The client uses the core achievement set and does not select bonus, specialty, or
+  exclusive subsets. Unofficial achievements are listed but never activated or awarded.
+- **Hardcore credit is pending RetroAchievements client approval.** The server currently
+  injects `Warning: Unknown Emulator` and treats hardcore unlocks as casual. Casual mode
+  is fully usable. See [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
+- Achievement unlocks are queued durably when the server is unavailable and retried every
+  30 seconds. Leaderboard scores are not queued offline; they require a live connection
+  when the attempt completes.
+- The achievement window is a text/progress list. RetroArch-style badge overlays and a
+  dedicated leaderboard browser are not implemented.
+- The API token is stored in the plain `settings.json`. Use a dedicated token and protect
+  the data directory if other users share the machine.
+- Live validation passed for login, game identification, game data, session start,
+  rich-presence ping, hardcore session start, and a real softcore award on Gex
+  (achievement 579967). Leaderboard submission was not exercised because the tested 3DO
+  sets had no leaderboards.
+
 ## Physical optical drives (2026-11-13)
 
 - **File > Boot Optical Drive...** and drive-root CLI arguments read the host's cooked
