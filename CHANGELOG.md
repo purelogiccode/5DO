@@ -37,6 +37,8 @@ release.
   core thread. Consumer failures are isolated from the emulation loop.
 - Save-state loads, rewind, and movie state restoration reset achievement hit counts and
   measured progress in casual mode.
+- Release bundles now include the exact `docs/ReleaseNotes-<version>.md` for the build
+  version instead of selecting the lexicographically latest release-notes file.
 - Settings, localization catalogs, privacy notes, and third-party notices include the
   RetroAchievements feature and rcheevos attribution.
 

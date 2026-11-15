@@ -126,13 +126,13 @@ try {
         Copy-Item -LiteralPath $openAlLicense -Destination $docsStaging -Force
     }
 
-    $releaseNotes = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'docs') `
-        -Filter 'ReleaseNotes-*.md' -File -ErrorAction SilentlyContinue |
-        Sort-Object Name -Descending |
-        Select-Object -First 1
-    if ($releaseNotes) {
+    $releaseNotes = Join-Path $repoRoot "docs/ReleaseNotes-$Version.md"
+    if (Test-Path -LiteralPath $releaseNotes) {
         New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
-        Copy-Item -LiteralPath $releaseNotes.FullName -Destination $docsStaging -Force
+        Copy-Item -LiteralPath $releaseNotes -Destination $docsStaging -Force
+    }
+    else {
+        Write-Warning "No release notes found for version $Version ($releaseNotes)."
     }
 
     if ($Rid -like 'linux-*') {

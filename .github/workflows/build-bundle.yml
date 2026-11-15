@@ -114,6 +114,28 @@ jobs:
             tar -xzf '${{ steps.bundle.outputs.archive }}' -C artifacts/bundle-smoke
           }
 
+      - name: Verify bundle documentation
+        shell: pwsh
+        run: |
+          $package = Get-Content 'artifacts/bundle-smoke/PACKAGE.txt' -Raw
+          if ($package -notmatch 'version:\s*(\S+)') {
+            throw 'PACKAGE.txt is missing the bundle version.'
+          }
+          $version = $Matches[1]
+          $required = @(
+            'README.md',
+            'LICENSE',
+            'THIRD-PARTY-NOTICES.md',
+            'whatsnew.md',
+            "docs/ReleaseNotes-$version.md"
+          )
+          foreach ($relative in $required) {
+            $path = Join-Path 'artifacts/bundle-smoke' $relative
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "The bundle is missing $relative."
+            }
+          }
+
       - name: Verify bundle has no runtime or XML docs
         shell: pwsh
         run: |
