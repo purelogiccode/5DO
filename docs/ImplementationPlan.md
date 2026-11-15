@@ -1,9 +1,9 @@
 # 5DO — Consolidated Implementation Plan
 
 **Snapshot:** 2026-11-15
-**Release:** v1.11.0
+**Release:** v1.10.1
 **Status:** the compatibility program is complete. This file is the single actionable plan;
-it tracks only **achievable post-1.11 work**.
+it tracks only **achievable post-1.10.1 work**.
 **Merged from:** the former active plan and
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md). The archive remains the raw
 evidence store, completed log, stable-ID index, and appendices.
@@ -44,7 +44,7 @@ loadability and duplicate coverage.
 | Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom) | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
-| Release | **v1.11.0** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt`; RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, and deferred/ReadyToRun startup; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0) |
+| Release | **v1.10.1** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt`; RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
 | Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux GPU presentation remains preview/best-effort | [Compatibility.md](Compatibility.md) §10.3, [KnownIssues.md](KnownIssues.md) |

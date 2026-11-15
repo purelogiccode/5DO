@@ -16,8 +16,8 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.11 documented compatibility"
-    5DO is at the v1.11 documented-compatibility release stage. Windows x64 is the
+!!! important "v1.10.1 documented compatibility"
+    5DO is at the v1.10.1 documented-compatibility release stage. Windows x64 is the
     validated platform; Linux x64 full suite passed (GPU presentation is
     preview/best-effort), and macOS/arm64 pass the native runtime smoke. No BIOS ROMs,
     game images, or extracted game assets are distributed here; supply legally obtained
@@ -75,12 +75,12 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.11.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.10.1.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-15, v1.11.0 release (GitHub Releases).**
+**2026-11-15, v1.10.1 release (GitHub Releases).**
 
 - **2,344 tests** are present in the current test assembly.
 - RetroAchievements: managed rcheevos evaluation, 3DO disc identification, measured
@@ -122,7 +122,7 @@
 - Windows x64 is the validated GPU target. Linux x64 full suite passed; GPU
   presentation is preview/best-effort. macOS x64/arm64, Linux arm64, and Windows
   arm64 pass the native CLI/frontend runtime smoke (2026-11-10).
-- v1.11.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0)
+- v1.10.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
   desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 11 runtime
   is required on the host and is not bundled. The release adds RetroAchievements save-state

@@ -1,8 +1,8 @@
-# 5DO 1.11.0
+# 5DO 1.10.1
 
 **Released:** 2026-11-15
 
-5DO 1.11.0 is a **RetroAchievements continuity and startup** update. Achievement hit
+5DO 1.10.1 is a **RetroAchievements continuity and startup** update. Achievement hit
 counts and leaderboard attempts now survive save-state loads, the desktop app is renamed
 to `FiveDo.exe` / `FiveDo`, and the main window appears faster.
 
@@ -47,19 +47,19 @@ to `FiveDo.exe` / `FiveDo`, and the main window appears faster.
 - Full suite **2,344/2,344** passes in Debug.
 - Build, locked restore, `dotnet format --verify-no-changes`, and
   `jb inspectcode --severity=WARNING` are clean.
-- The packaged `FiveDo.exe` smoke test writes `FRONTEND SMOKE OK 1.11.0`.
+- The packaged `FiveDo.exe` smoke test writes `FRONTEND SMOKE OK 1.10.1`.
 
 ## Download
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.11.0-win-x64.zip` |
-| Windows arm64 | `5do-1.11.0-win-arm64.zip` |
-| Linux x64 | `5do-1.11.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.11.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.11.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.11.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.10.1-win-x64.zip` |
+| Windows arm64 | `5do-1.10.1-win-arm64.zip` |
+| Linux x64 | `5do-1.10.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.10.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.10.1-osx-x64.dmg` |
+| macOS arm64 | `5do-1.10.1-osx-arm64.dmg` |
 
 Install the **.NET 11 Runtime** first; the bundles do not include it. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0) for
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1) for
 `SHA256SUMS.txt`.

@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**2026-11-15 update:** **v1.11.0** adds RetroAchievements save-state progress
+**2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
 cuts time to the first window with lazy audio, deferred BIOS/disc loading, background
 cache loads, and ReadyToRun release bundles. Achievement hit counts, measured values,
@@ -9,8 +9,8 @@ delta/prior memory references, and active leaderboard attempts now live in a ded
 game hash and every definition match; otherwise the runtime resets normally. The suite
 is **2,344 tests**; build, format, and InspectCode are clean. The validation host reached
 the first window in about **0.62 s** with the ReadyToRun bundle versus **1.09 s** with
-the debug build. See [WhatsNew.md](WhatsNew.md) and
-[ReleaseNotes-1.11.0.md](ReleaseNotes-1.11.0.md).
+the debug build. The shell also shows a localized **Loading game...** overlay until the first visible frame, and the first Escape in a running fullscreen game now leaves fullscreen and pauses in one step. See [WhatsNew.md](WhatsNew.md) and
+[ReleaseNotes-1.10.1.md](ReleaseNotes-1.10.1.md).
 
 **1.10.0 update:** **v1.10.0** adds RetroAchievements as a managed in-tree feature.
 The MIT rcheevos evaluation engine is ported to `FiveDo.Achievements`, 3DO disc hashing
@@ -48,7 +48,7 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-15, v1.11.0: RetroAchievements with a managed rcheevos engine,
+**Snapshot:** 2026-11-15, v1.10.1: RetroAchievements with a managed rcheevos engine,
 save-state hit persistence, durable offline unlocks, hardcore rules, leaderboards, rich
 presence, and OSD notifications; the `FiveDo` desktop apphost; deferred startup work and
 ReadyToRun release bundles; nine UI catalogs with reversible locale switching,

@@ -3839,7 +3839,7 @@ with the exact `docs/ReleaseNotes-1.10.0.md` after the release-note selection fi
 six refreshed checksums verify; the assets are copied into
 `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
-### 1.1cf Fullscreen Escape behavior (2026-11-15)
+### 1.1cf Fullscreen Escape and loading overlay behavior (2026-11-15)
 
 **Behavior.** While a game is running in fullscreen, the first Escape now leaves
 fullscreen and pauses emulation in one step, and the second Escape closes 5DO. The
@@ -3848,7 +3848,7 @@ toggle, and the quick menu, library, and text-entry focus keep priority.
 
 **Implementation.** `MainWindow.OnKeyDown` exits fullscreen before the two-step
 `EscapeQuitPolicy` runs, so the same press both restores the window and arms the quit
-step. `docs/UserGuide.md`, `WhatsNew.md`, `ReleaseNotes-1.11.0.md`, the wiki release page,
+step. `docs/UserGuide.md`, `WhatsNew.md`, `ReleaseNotes-1.10.1.md`, the wiki release page,
 `CHANGELOG.md`, and the release checklist record the behavior.
 
 **Validation.** Real fullscreen Road Rash (EU CHD, `panafz1.bin`) run: first Escape

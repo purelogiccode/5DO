@@ -1,6 +1,6 @@
 # Known Issues
 
-**Snapshot:** 2026-11-15, v1.11.0: RetroAchievements with a managed rcheevos
+**Snapshot:** 2026-11-15, v1.10.1: RetroAchievements with a managed rcheevos
 engine, save-state hit persistence, 3DO hashing, a durable offline unlock queue,
 hardcore rules, rich presence, leaderboards, and OSD notifications, the `FiveDo`
 apphost rename, and deferred/ReadyToRun startup, on top of the v1.9.1 nine UI catalogs, reversible

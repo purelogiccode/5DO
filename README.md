@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.11.0-orange" alt="Version 1.11.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.10.1-orange" alt="Version 1.10.1"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.11.0**, a documented-compatibility release with RetroAchievements, UI catalogs for
+> 5DO is at **v1.10.1**, a documented-compatibility release with RetroAchievements, UI catalogs for
 > English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean,
 > and Simplified Chinese, external metadata and media, physical optical-drive boot, Windows
 > DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, an
@@ -53,7 +53,7 @@ test harness designed for reproducible compatibility evidence.
   movies reproducible.
 - **A real desktop emulator.** Avalonia shell with a game library, cover art, BIOS and
   NVRAM managers, save slots with thumbnails, rewind/fast-forward, cheats, TAS
-  recording, screenshots, GIF/WAV capture, a disc browser, controller mapping,
+  recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, a loading overlay,
   RetroAchievements, and a diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
   sharp-bilinear, bicubic, CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
@@ -75,7 +75,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.11.0` release (GitHub Releases) |
+| Version | `1.10.1` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
 | Automated tests | **2,344 tests** in the current test assembly |
@@ -99,20 +99,20 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.11.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.11.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.11.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.11.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.11.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.11.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.10.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-win-x64.zip) |
+| Windows arm64 | [`5do-1.10.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-win-arm64.zip) |
+| Linux x64 | [`5do-1.10.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.10.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.10.1-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.10.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.1/5do-1.10.1-osx-arm64.dmg) |
 
 The apps are single-file executables. **Install the .NET 11 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.11.0-win-arm64.zip`
-or `5do-1.11.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.10.1-win-arm64.zip`
+or `5do-1.10.1-osx-arm64.dmg`.
 
 ## Features
 
@@ -210,7 +210,7 @@ or `5do-1.11.0-osx-arm64.dmg`.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.11.0 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
+> v1.10.1 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is required on the host and is not bundled. Build from source below if you
 > prefer.

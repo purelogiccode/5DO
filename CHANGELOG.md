@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.11.0, a documented-compatibility
+All notable changes are recorded here. The project is at v1.10.1, a documented-compatibility
 release.
 
-## [1.11.0] - 2026-11-15
+## [1.10.1] - 2026-11-15
 
 ### Added
 

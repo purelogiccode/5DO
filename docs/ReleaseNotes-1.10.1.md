@@ -1,8 +1,8 @@
-# 5DO 1.11.0
+# 5DO 1.10.1
 
 **Released:** 2026-11-15
 
-5DO 1.11.0 is a **RetroAchievements continuity and startup** release. Achievement hit
+5DO 1.10.1 is a **RetroAchievements continuity and startup** release. Achievement hit
 counts and leaderboard attempts now survive save-state loads, the desktop apphost is
 renamed to **`FiveDo.exe`** / **`FiveDo`**, and the shell reaches its first window faster
 by deferring non-essential startup work and precompiling the bundled frontend. Emulation
@@ -10,10 +10,10 @@ accuracy, deterministic frame/state hashes, and the documented compatibility mod
 unchanged.
 
 > **Hardcore credit is still pending RetroAchievements client approval.** The
-> `5DO/1.11.0` User-Agent is the new stable identifier; until RA recognizes the client,
+> `5DO/1.10.1` User-Agent is the new stable identifier; until RA recognizes the client,
 > the server injects the zero-point `Warning: Unknown Emulator` achievement and treats
 > hardcore unlocks as casual. Casual unlocks work normally. See
-> [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.11.0/docs/RetroAchievementsCompliance.md).
+> [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.10.1/docs/RetroAchievementsCompliance.md).
 
 ## Highlights
 
@@ -104,25 +104,25 @@ unchanged.
 ## Known issues
 
 - Hardcore credit awaits RetroAchievements client approval and the six-month
-  public-availability window. See [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.11.0/docs/RetroAchievementsCompliance.md).
+  public-availability window. See [RetroAchievementsCompliance.md](https://github.com/purelogiccode/5DO/blob/v1.10.1/docs/RetroAchievementsCompliance.md).
 - Bonus, specialty, and exclusive RA subsets are not selected. Unofficial achievements
   are listed but not activated.
 - The achievement window is a text/progress list; badge overlays and a leaderboard
   browser are not implemented.
 - The API token is stored in plain `settings.json`; protect the data directory.
 - Full compatibility remains documented, not exhaustive. See
-  [KnownIssues.md](https://github.com/purelogiccode/5DO/blob/v1.11.0/docs/KnownIssues.md) and [Compatibility.md](https://github.com/purelogiccode/5DO/blob/v1.11.0/docs/Compatibility.md).
+  [KnownIssues.md](https://github.com/purelogiccode/5DO/blob/v1.10.1/docs/KnownIssues.md) and [Compatibility.md](https://github.com/purelogiccode/5DO/blob/v1.10.1/docs/Compatibility.md).
 
 ## Download
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.11.0-win-x64.zip` |
-| Windows arm64 | `5do-1.11.0-win-arm64.zip` |
-| Linux x64 | `5do-1.11.0-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.11.0-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.11.0-osx-x64.dmg` |
-| macOS arm64 | `5do-1.11.0-osx-arm64.dmg` |
+| Windows x64 | `5do-1.10.1-win-x64.zip` |
+| Windows arm64 | `5do-1.10.1-win-arm64.zip` |
+| Linux x64 | `5do-1.10.1-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.10.1-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.10.1-osx-x64.dmg` |
+| macOS arm64 | `5do-1.10.1-osx-arm64.dmg` |
 
 SHA-256 checksums are published as `SHA256SUMS.txt` on the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0).
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.1).

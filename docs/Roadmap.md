@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.11.0 RetroAchievements continuity release** (published on GitHub). The
+The project is at the **v1.10.1 RetroAchievements continuity release** (published on GitHub). The
 compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
@@ -18,7 +18,7 @@ compatibility plan is complete:
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
-- v1.11.0 adds RetroAchievements save-state hit persistence, renames the desktop
+- v1.10.1 adds RetroAchievements save-state hit persistence, renames the desktop
   apphost to `FiveDo`, and cuts time to the first window with deferred startup work
   and ReadyToRun bundles. The v1.10.0 feature set remains: managed rcheevos
   evaluation, 3DO disc identification, measured progress, a durable offline unlock
@@ -29,7 +29,7 @@ compatibility plan is complete:
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
   display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.11
+## Post-1.10.1
 
 **Playability depth (in progress):**
 
