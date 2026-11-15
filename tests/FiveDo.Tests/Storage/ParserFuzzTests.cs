@@ -44,6 +44,8 @@ public sealed class ParserFuzzTests
         var random = new Random(9876);
         var isoPath = Path.Combine(Path.GetTempPath(), $"fivedo-fuzz-{Guid.NewGuid():N}.iso");
         var chdPath = Path.Combine(Path.GetTempPath(), $"fivedo-fuzz-{Guid.NewGuid():N}.chd");
+        var cdiPath = Path.Combine(Path.GetTempPath(), $"fivedo-fuzz-{Guid.NewGuid():N}.cdi");
+        var nrgPath = Path.Combine(Path.GetTempPath(), $"fivedo-fuzz-{Guid.NewGuid():N}.nrg");
         try
         {
             for (var iteration = 0; iteration < 20; iteration++)
@@ -53,12 +55,20 @@ public sealed class ParserFuzzTests
 
                 File.WriteAllBytes(chdPath, RandomBytes(random, 8192));
                 AssertTypedOpenFailure(chdPath);
+
+                File.WriteAllBytes(cdiPath, RandomBytes(random, 8192));
+                AssertTypedOpenFailure(cdiPath);
+
+                File.WriteAllBytes(nrgPath, RandomBytes(random, 8192));
+                AssertTypedOpenFailure(nrgPath);
             }
         }
         finally
         {
             File.Delete(isoPath);
             File.Delete(chdPath);
+            File.Delete(cdiPath);
+            File.Delete(nrgPath);
         }
     }
 

@@ -21,6 +21,21 @@ after 1.0 (2026-11-10). See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
+## Disc containers (2026-11-15)
+
+- CDI and NRG are **read-only** container readers. `disc convert` still writes
+  ISO/BIN/CUE/flat CHD; it does not emit CDI or NRG.
+- CDI parsing requires a valid trailing DiscJuggler descriptor. NRG parsing requires a
+  valid NERO/NER5 footer and a known first metadata chunk. Files with the right
+  extension but without those signatures fail with a typed `DiscImageException`.
+- The readers normalize 2353/2368/2448/2449-byte raw sectors to 2048-byte user data by
+  skipping the trailing error byte and/or subchannel. They do not expose the raw
+  subchannel through `IDiscSource`; the CD-ROM device synthesizes Q subcode for
+  READ_DATA as it does for the other containers.
+- Audio-only CDI/NRG images are rejected for 3DO boot because 3DO software is CD-ROM
+  based. Multi-session CDI images are parsed, but 3DO boot still begins at the first
+  data track.
+
 ## Localization (2026-11-14)
 
 - The English baseline externalizes every static view string and the CLI usage text.

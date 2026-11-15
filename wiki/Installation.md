@@ -26,7 +26,7 @@ Extract the bundle and run the executables.
 - The **.NET 11 Runtime** installed on the host. The .NET 11 SDK is only needed for
   source builds.
 - A legally obtained 3DO BIOS (1 MB; optional second 1 MB ROM for BIOS2/Kanji).
-- A legally obtained disc image: ISO, BIN, CUE+BIN, or CHD.
+- A legally obtained disc image: ISO, BIN, CUE+BIN, CHD, CDI, or NRG.
 - Windows 10+, a current Linux desktop, or macOS 12+.
 - OpenGL 3.3 or GLES 3.0/3.1 for GPU presentation; a CPU fallback exists.
 - No system OpenAL install is required; OpenAL Soft 1.23.1 is bundled.

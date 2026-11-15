@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using CDISharp;
 using FiveDo.Core;
 using FiveDo.Storage.Chd;
+using NRGSharp;
 
 namespace FiveDo.Storage;
 
@@ -11,7 +13,7 @@ namespace FiveDo.Storage;
 public static class DiscImageFactory
 {
     /// <summary>Opens a disc image by path and detected container format.</summary>
-    /// <param name="path">Path to an ISO, BIN, CUE, or CHD image.</param>
+    /// <param name="path">Path to an ISO, BIN, CUE, CHD, CDI, or NRG image.</param>
     /// <param name="chdParentPath">Optional parent CHD path for a differential CHD.</param>
     /// <param name="prefetch">
     /// Whether to add a host-side read-ahead cache for uncompressed image readers.
@@ -53,6 +55,8 @@ public static class DiscImageFactory
             ".chd" => ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks),
             ".iso" => OpenIso(path),
             ".bin" => OpenBin(path),
+            ".cdi" => CdiDiscImage.Open(path),
+            ".nrg" => NrgDiscImage.Open(path),
             _ => OpenByHeader(path, chdParentPath, chdReadAheadHunks),
         };
 
@@ -133,6 +137,16 @@ public static class DiscImageFactory
 
     private static IDiscSource OpenBin(string path)
     {
+        if (NrgImage.HasSignature(path))
+        {
+            return NrgDiscImage.Open(path);
+        }
+
+        if (CdiImage.HasSignature(path))
+        {
+            return CdiDiscImage.Open(path);
+        }
+
         if (!HasCdSyncHeader(path))
         {
             var length = new FileInfo(path).Length;
@@ -165,6 +179,16 @@ public static class DiscImageFactory
             return ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks);
         }
 
+        if (NrgImage.HasSignature(path))
+        {
+            return NrgDiscImage.Open(path);
+        }
+
+        if (CdiImage.HasSignature(path))
+        {
+            return CdiDiscImage.Open(path);
+        }
+
         if (HasCdSyncHeader(path))
         {
             return OpenBin(path);
@@ -176,7 +200,7 @@ public static class DiscImageFactory
             return new IsoImage(path);
         }
 
-        throw new DiscImageException($"Cannot determine the disc image format of '{path}'.");
+        throw new DiscImageException($"Cannot determine the disc image format of '{path}'. Supported formats are ISO, BIN, CUE, CHD, CDI, and NRG.");
     }
 
     private static int ReadModeByte(string path)

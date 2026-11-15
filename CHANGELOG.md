@@ -3,6 +3,17 @@
 All notable changes are recorded here. The project is at v1.10.1, a documented-compatibility
 release.
 
+## [Unreleased]
+
+### Added
+
+- **DiscJuggler `.cdi` and Nero `.nrg` disc images.** New standalone `CDISharp` and
+  `NRGSharp` readers parse the trailing CDI descriptor and the NERO/NER5 chunk chain.
+  `CdiDiscImage` and `NrgDiscImage` normalize cooked 2048-byte, 2324/2336-byte Mode 2,
+  raw 2352-byte, and the 2353/2368/2448/2449-byte variants to `ITrackedDiscSource`.
+  The game library, File > Open Disc, the CLI, and installer associations accept both
+  formats. Malformed images fail with typed errors.
+
 ## [1.10.1] - 2026-11-15
 
 ### Added

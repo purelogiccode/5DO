@@ -15,7 +15,7 @@ performance testing. None of these files may be committed, packaged, or uploaded
     `E:\Panasonic 3DO`
 
 All locations are outside version control. `bios/` is already ignored by
-`.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue` are ignored as a second guard.
+`.gitignore`, and `*.chd`/`*.iso`/`*.bin`/`*.cue`/`*.cdi`/`*.nrg` are ignored as a second guard.
 The full-collection sweep uses both roots explicitly; see
 [`CompatibilitySweep.md`](CompatibilitySweep.md) and
 [`GameCompatibilityList.md`](GameCompatibilityList.md). The corpus root is never
@@ -68,8 +68,9 @@ The full local collection is inventoried in section 1.1bh: **1,371 images collap
 5DO/4DO/Phoenix comparison. Use `artifacts/corpus/unique-testset.txt` for compatibility
 runs; the five-title list above remains the differential corpus.
 
-ISO/BIN/CUE parity testing still needs a legally obtained image in one of those
-formats, or a locally generated fixture. Do not convert and commit a retail disc.
+ISO/BIN/CUE/CHD/CDI/NRG parity testing uses locally generated fixtures in the unit
+suite; a legally obtained retail image in each container can extend the manual corpus.
+Do not convert and commit a retail disc.
 
 ### 1.1 Current boot baseline
 
@@ -3862,6 +3863,29 @@ frame submitted while loading.` followed by `Loading overlay hidden.` when the f
 non-black frame was presented (13.2 s on the validation host). The overlay is localized
 in all nine catalogs and has a 30-second safety timeout. `Loading game...` and
 `Please wait...` are covered by `LocalizationCoverageTests`.
+
+### 1.1ch CDI and NRG container support (2026-11-15)
+
+**Implementation.** `src/CDISharp` parses the trailing DiscJuggler descriptor, session
+and track table, index lengths, CD-Text/ISRC fields, and the 2048/2336/2352-byte sector
+layouts including 16-byte PQ (2368-byte stride) and 96-byte P-W (2448-byte stride)
+subchannel variants. `src/NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and
+TINF/ETNF/ETN2 chunks, per-track offsets, and sector sizes 2048, 2324, 2336, 2352,
+2353, 2368, 2448, and 2449. `CdiDiscImage`/`NrgDiscImage` adapt both to
+`ITrackedDiscSource`; `DiscImageFactory`, the game library, the file pickers, and the
+CLI accept `.cdi` and `.nrg`.
+
+**Coverage.** `CdiNrgDiscImageTests` adds 21 tests: cooked/raw Mode 1 and Mode 2,
+CDI 2368/2448, NRG 2353/2368/2448/2449, TAO ETNF, game-ID parity with the same ISO
+sectors, header detection for renamed files, and malformed-footer/descriptor failures.
+`ParserFuzzTests` now feeds random `.cdi`/`.nrg` bytes through the factory and requires
+typed failures. Full suite **2,365/2,365** passes in Debug; build, locked restore,
+`dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` are clean.
+
+**Real-format check.** The libcdio reference images `p1.nrg` (NER5, two audio tracks,
+2352-byte sectors) and `videocd.nrg` (NERO, five TAO tracks, 2336-byte Mode 2 sectors)
+open through `NrgSharp`; `disc tracks` reports five data tracks and 1,126 sectors for
+`videocd.nrg`, and `p1.nrg` parses as two 2352-byte audio tracks.
 
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 

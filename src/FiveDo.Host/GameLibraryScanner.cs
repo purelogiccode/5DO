@@ -22,11 +22,11 @@ public sealed record GameLibraryScanResult(
     int ImageCount = 0);
 
 /// <summary>
-/// Scans folders for ISO/BIN/CUE/CHD images and resolves titles through the 4DO game database.
+/// Scans folders for ISO/BIN/CUE/CHD/CDI/NRG images and resolves titles through the 4DO game database.
 /// </summary>
 public static class GameLibraryScanner
 {
-    private static readonly string[] Extensions = [".iso", ".bin", ".cue", ".chd"];
+    private static readonly string[] Extensions = [".iso", ".bin", ".cue", ".chd", ".cdi", ".nrg"];
 
     private static readonly string[] CoverExtensions = [".png", ".jpg", ".jpeg", ".webp"];
 

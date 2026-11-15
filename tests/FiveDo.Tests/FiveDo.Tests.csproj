@@ -28,6 +28,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\..\src\CDISharp\CDISharp.csproj" />
+    <ProjectReference Include="..\..\src\NRGSharp\NRGSharp.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Cpu\FiveDo.Cpu.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Memory\FiveDo.Memory.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Madam\FiveDo.Madam.csproj" />

@@ -61,6 +61,8 @@
           <string>iso</string>
           <string>cue</string>
           <string>chd</string>
+          <string>cdi</string>
+          <string>nrg</string>
           <string>bin</string>
           <string>m3u</string>
         </array>

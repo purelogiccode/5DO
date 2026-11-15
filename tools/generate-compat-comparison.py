@@ -51,7 +51,7 @@ DEFAULT_OUT = "docs/CompatibilityComparison.md"
 DEFAULT_UNIQUE = "docs/data/unique-corpus.csv"
 DEFAULT_JSON = "docs/data/compatibility-comparison.json"
 
-DISC_EXTENSIONS = (".chd", ".iso", ".cue")
+DISC_EXTENSIONS = (".chd", ".iso", ".cue", ".cdi", ".nrg")
 
 # Peer titles that are the same game under a different regional name.
 # Keys and values are already normalised by ``normalize_title``.

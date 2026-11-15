@@ -6282,7 +6282,7 @@ internal static class Program
         Console.WriteLine("  gamedb merge <path> --out path       Merge a fragment into the embedded database.");
         Console.WriteLine("  disc convert <disc> --out path [--format iso|bin|cue|chd]");
         Console.WriteLine("                                       Convert a data-only image and verify the game ID.");
-        Console.WriteLine("  disc tracks <disc> [--json]          List every CUE/CHD track (data and audio).");
+        Console.WriteLine("  disc tracks <disc> [--json]          List every ISO/BIN/CUE/CHD/CDI/NRG track.");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");

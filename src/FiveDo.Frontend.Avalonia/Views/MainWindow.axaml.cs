@@ -921,7 +921,7 @@ public partial class MainWindow : Window, IDisposable
             [
                 new FilePickerFileType("3DO disc")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.m3u", "*.m3u8"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);
@@ -1241,6 +1241,8 @@ public partial class MainWindow : Window, IDisposable
             || extension.Equals(".bin", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".cue", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".chd", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".cdi", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".nrg", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".m3u", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".m3u8", StringComparison.OrdinalIgnoreCase);
     }
@@ -1274,7 +1276,7 @@ public partial class MainWindow : Window, IDisposable
             [
                 new FilePickerFileType("3DO disc or playlist")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.m3u", "*.m3u8"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);

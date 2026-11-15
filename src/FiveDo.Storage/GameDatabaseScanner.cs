@@ -67,7 +67,7 @@ public sealed record GameDatabaseScanResult(
 /// <summary>Scans disc images and derives database records.</summary>
 public static class GameDatabaseScanner
 {
-    private static readonly string[] Extensions = [".chd", ".cue", ".iso"];
+    private static readonly string[] Extensions = [".chd", ".cue", ".iso", ".cdi", ".nrg"];
 
     /// <summary>Enumerates supported disc images below a folder.</summary>
     /// <param name="folder">Folder to scan.</param>

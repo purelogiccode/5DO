@@ -20,11 +20,11 @@ The authoritative build instructions and script arguments are in
 The installed desktop app accepts a positional disc path or `--disc <path>`, which is
 the same path the shell passes from a file association.
 
-- **Windows:** Inno Setup registers `5DO.Disc` for `.iso`, `.cue`, `.chd`, and `.bin`
+- **Windows:** Inno Setup registers `5DO.Disc` for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`
   and `5DO.Playlist` for `.m3u`. The association is per-user when the installer is not
   elevated and machine-wide when it is.
 - **Linux:** the package installs `/usr/share/mime/packages/5do.xml` with the
-  `application/x-3do-disc` MIME type for `.iso`, `.cue`, `.chd`, and `.bin`, plus the
+  `application/x-3do-disc` MIME type for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`, plus the
   `5do.desktop` entry and `5do` SVG icon. `postinst` refreshes the desktop and MIME
   databases.
 - **macOS:** the `.app` declares `com.5do.disc-image` as an exported UTI plus a
@@ -54,7 +54,7 @@ Windows x64, Inno Setup 6.7.1, unsigned 1.6.0 bundle:
   `FiveDo.Cli.exe --version` reported `5DO 1.6.0` and the frontend
   `--smoke-test` wrote `FRONTEND SMOKE OK 1.6.0` (`windowState=Normal`). Both
   processes exited 0.
-- `HKCU\Software\Classes\.iso`, `.cue`, `.chd`, and `.bin` resolved to `5DO.Disc`;
+- `HKCU\Software\Classes\.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg` resolved to `5DO.Disc`;
   `.m3u` resolved to `5DO.Playlist`; the open command launched the installed frontend
   with `"%1"`.
 - Silent uninstall exited 0 and removed the ProgIDs and default extension values.
@@ -69,7 +69,7 @@ Linux x64 (WSL Ubuntu 22.04):
 - `5do-1.6.0-1.x86_64.rpm` built with `rpmbuild`; `rpm -qip` reports the expected
   name/version/license and `rpm -qlp` lists the same payload.
 - `desktop-file-validate` exits 0, and `update-mime-database` produces
-  `application/x-3do-disc` globs for `*.iso`, `*.cue`, and `*.chd`.
+  `application/x-3do-disc` globs for `*.iso`, `*.cue`, `*.chd`, `*.bin`, `*.cdi`, and `*.nrg`.
 
 macOS x64/arm64 (native CI, 2026-11-10):
 

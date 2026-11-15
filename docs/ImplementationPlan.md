@@ -181,7 +181,7 @@ reproducible on the local dump; it must end in either evidence or a documented b
 |---|---|---|---|---|
 | **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. **Implemented 2026-11-13** in `PhysicalDiscSource`, `File > Boot Optical Drive...`, and the CLI drive-root path. The remaining check is hardware evidence on a machine with an attached drive and a 3DO disc. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
 | **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **SYS-24** | M | **CDI/NRG disc image support**: add DiscJuggler `.cdi` and Nero `.nrg` readers, including the 2353/2368/2448/2449-byte sector variants Phoenix accepts. Reuse `IDiscSource`, TOC/game-ID hashing, and the existing sector normalization; accept the formats only when their signatures match. | Phoenix documents these formats, and 5DO already has ISO/BIN/CUE/CHD readers, header sniffing, sector normalization, and unattended disc tests. This is format parsing and validation, not new emulation. | A CDI and an NRG image open through the CLI and File > Open Disc, report sector/TOC metadata, and produce the same game ID and a matching 600-frame checkpoint as a known-good ISO/CHD equivalent; malformed images fail cleanly. Evidence: TestCorpus and Compatibility. |
+| **SYS-24 — Done** | M | **CDI/NRG disc image support**: DiscJuggler `.cdi` and Nero `.nrg` readers, including the 2353/2368/2448/2449-byte sector variants. **Implemented 2026-11-15** in the standalone `CDISharp` and `NRGSharp` libraries plus `CdiDiscImage`/`NrgDiscImage`; `DiscImageFactory`, the game library, File > Open Disc, and the CLI accept both formats. | Phoenix documents these formats, and 5DO already has ISO/BIN/CUE/CHD readers, header sniffing, sector normalization, and unattended disc tests. This is format parsing and validation, not new emulation. | A CDI and an NRG image open through the CLI and File > Open Disc, report sector/TOC metadata, and produce the same game ID as the equivalent ISO; malformed images fail cleanly. Evidence: `CdiNrgDiscImageTests` (21 tests, including 2353/2368/2448/2449 and raw Mode 1/2 variants), `ParserFuzzTests`, [TestCorpus.md](TestCorpus.md) 1.1ch, [Compatibility.md](Compatibility.md) §10.3. |
 | **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13; expanded 2026-11-14 to nine catalogs), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
 | **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
@@ -198,9 +198,10 @@ reproducible on the local dump; it must end in either evidence or a documented b
 | **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 **Reference audit (2026-11-15).** 4DO, FreeDO, opera-libretro, and Phoenix were
-re-read for player-visible gaps. The remaining candidates are `SYS-24` (CDI/NRG),
-`VID-19` (true 2× CEL spike), `UX-33` (minor presentation options), `ACC-04` (Jurassic
-Park Interactive CEL timing), and `SYS-25` (live CPU clock, candidate). Everything else
+re-read for player-visible gaps. The remaining candidates are `VID-19` (true 2× CEL
+spike), `UX-33` (minor presentation options), `ACC-04` (Jurassic Park Interactive CEL
+timing), and `SYS-25` (live CPU clock, candidate). `SYS-24` (CDI/NRG) closed on
+2026-11-15. Everything else
 in those references is already implemented, intentionally out of scope, or blocked:
 embedded boot ROM (licensing), GUI debugger (developer tooling), netplay (out of
 scope), multi-system/Android support (out of scope), and additional physical-hardware
@@ -293,12 +294,13 @@ documented limitation, not that it is unachievable.
    next bounded investigation. `SYS-01` moved to §4 after the BIOS CD player listed the
    TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until their
    revisit conditions are met.
-6. **P3 product:** `SYS-22`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`, `UX-31`,
-   `VID-16`, `VID-17`, `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23` are implemented and tested but keep
+6. **P3 product:** `SYS-22`, `SYS-24`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`,
+   `UX-31`, `VID-16`, `VID-17`, `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23`
+   are implemented and tested but keep
    their `Done when` lines open until a physical optical drive and a physical
    DirectInput-only pad are available. The requested 4DO parity order `UX-09` →
    `SYS-21` → `SYS-23` is complete in code (see §3.7). After those hardware checks,
-   prioritize the reference-audit candidates: `SYS-24` (CDI/NRG), `VID-19` (true 2× CEL
+   prioritize the reference-audit candidates: `VID-19` (true 2× CEL
    spike), `UX-33` (minor presentation options), and the `SYS-25` live-clock probe
    (candidate only).
 

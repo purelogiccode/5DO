@@ -6,7 +6,7 @@ using FiveDo.Storage;
 
 namespace FiveDo.Fuzz;
 
-/// <summary>Exercises ISO and CHD container openers and sector reads.</summary>
+/// <summary>Exercises ISO, CHD, CDI, and NRG container openers and sector reads.</summary>
 internal sealed class DiscFuzzTarget : IFuzzTarget
 {
     /// <inheritdoc />
@@ -16,11 +16,17 @@ internal sealed class DiscFuzzTarget : IFuzzTarget
     public FuzzCase CreateCase(FuzzContext context, int iteration)
     {
         ArgumentNullException.ThrowIfNull(context);
-        var isIso = context.Random.Next(2) == 0;
-        var extension = isIso ? ".iso" : ".chd";
+        int kind = context.Random.Next(4);
+        string extension = kind switch
+        {
+            0 => ".iso",
+            1 => ".chd",
+            2 => ".cdi",
+            _ => ".nrg",
+        };
         byte[] payload;
         string description;
-        if (isIso)
+        if (kind == 0)
         {
             var baseline = new byte[2048 * Mutation.RandomLength(context.Random, 1, 32)];
             payload = Mutation.Mutate(context.Random, baseline, 1, 16);
@@ -29,7 +35,12 @@ internal sealed class DiscFuzzTarget : IFuzzTarget
         else
         {
             payload = Mutation.RandomBytes(context.Random, Mutation.RandomLength(context.Random, 0, 16384));
-            description = "random CHD bytes";
+            description = extension switch
+            {
+                ".chd" => "random CHD bytes",
+                ".cdi" => "random CDI bytes",
+                _ => "random NRG bytes",
+            };
         }
 
         return new FuzzCase(

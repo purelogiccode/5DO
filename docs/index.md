@@ -82,7 +82,11 @@
 
 **2026-11-15, v1.10.1 release (GitHub Releases).**
 
-- **2,344 tests** are present in the current test assembly.
+- **2,365 tests** are present in the current test assembly.
+- Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI, and
+  Nero NRG. The CDI and NRG readers accept cooked 2048-byte, 2336-byte Mode 2, raw
+  2352-byte, and the 2353/2368/2448/2449-byte raw variants, and expose the same track
+  table and game ID as the equivalent ISO/CHD.
 - RetroAchievements: managed rcheevos evaluation, 3DO disc identification, measured
   progress, a durable offline unlock queue, hardcore rules, rich presence,
   hardcore-only leaderboard submission, OSD notifications, and a progress window.

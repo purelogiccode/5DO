@@ -83,7 +83,9 @@
 | `FiveDo.Video.Vulkan` | **Optional Vulkan 1.0 renderer**: build-time SPIR-V palette/scale/HQx/MMPX/xBR/FSR shaders, sampled source textures, accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX filters, timestamp queries, host readback, and a Win32 swapchain surface for the desktop child window | `VulkanOffscreenRenderer`, `VulkanShaders` (generated) | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device selection, poll/status/data FIFOs, device interface | `Xbus` | Core |
 | `FiveDo.Cdrom` | Mitsumi/MEI CD-ROM device, command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
-| `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `BiosCatalog`, `BiosLibrary`, `BiosProfile`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameDatabaseScanner`, `GameId` | Core, CHDSharp |
+| `FiveDo.Storage` | Disc image readers (ISO/BIN/CUE/CHD/CDI/NRG), bounded host prefetch, BIOS validation, NVRAM file format, game database, game ID | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `CdiDiscImage`, `NrgDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `BiosCatalog`, `BiosLibrary`, `BiosProfile`, `NvramImage`, `VolumeHeader`, `GameDatabase`, `GameDatabaseScanner`, `GameId` | Core, CHDSharp, CDISharp, NRGSharp |
+| `CDISharp` | DiscJuggler `.cdi` descriptor, session/track table, 2048/2336/2352 native sectors, 16-byte PQ and 96-byte P-W subchannel strides | `CdiImage`, `CdiTrack`, `CdiSession`, `CdiTrackMode`, `CdiReadMode` | none |
+| `NRGSharp` | Nero `.nrg` NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, 2048-2449-byte sector layouts | `NrgImage`, `NrgTrack`, `NrgTrackMode`, `NrgVersion` | none |
 | `FiveDo.Audio` | Sample format conversion, ring buffer, null/WAV/live sinks, soft limiter, PCM tap, statistics, WAV analysis | `AudioRingBuffer`, `AudioPipeline`, `NullAudioSink`, `WavAudioSink`, `AudioSoftLimiter`, `AudioTap`, `AudioStatistics`, `AudioAnalyzer`, `OpenAlAudioOutput` | Core, Silk.NET.OpenAL |
 | `FiveDo.Input` | Controller state, PBUS encoding/decoding, input profiles, keyboard/gamepad abstractions, scripts, input recording | `ControllerState`, `ControllerButton`, `PbusEncoder`, `PbusDecoder`, `PbusSource`, `InputProfile`, `PlayerProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
 | `FiveDo.Diagnostics` | Serilog configuration, in-memory log viewer sink, bug reporting, launch statistics, donation verification, tracing, disassembly helpers, frame timing statistics, memory/frame dumpers, benchmark gates | `LoggingSetup`, `AppLogging`, `InMemorySerilogSink`, `BugReportSink`, `BugReportFormatter`, `ApplicationStatsClient`, `ApplicationStatsOptions`, `DonationVerificationClient`, `DonationVerificationOptions`, `CpuTracer`, `MemoryDumper`, `FrameDumper`, `PngDumper`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core, Serilog |
@@ -203,7 +205,7 @@ CHD details:
 - `ConfigureReadAhead(n)` is enabled by default (4 hunks) because 3DO games stream data sequentially. The core reads on one thread; the CHD reader is not shared across threads.
 - Flat CHDs with 2048-byte units (cooked ISOs converted with `chdman createdvd`, or `createhd` with 2048-byte units) have no track table; they are exposed as a single data track. DVD/HDD/raw CHDs with other unit sizes are rejected with a clear `InvalidDataException`; audio-only CHDs open with a TOC-derived ID and a track table but no 3DO data track.
 - `DiscImageWriter` writes ISO, cooked BIN, CUE, and flat 2048-unit CHD output; `disc convert` verifies the game ID after conversion.
-- CHD is a **first-class v1 format**, not a later optional add-on. The game library scans `.chd` alongside `.iso`, `.bin`, and `.cue`.
+- CHD is a **first-class v1 format**, not a later optional add-on. The game library scans `.chd`, `.cdi`, and `.nrg` alongside `.iso`, `.bin`, and `.cue`. CDI and NRG are read-only container readers; `DiscImageWriter` and `disc convert` still emit ISO/BIN/CUE/flat CHD.
 
 ---
 
@@ -534,10 +536,10 @@ v4 records the expanded buffer.
 - **`AudioFramePacer`** - derives the frame period from DSP samples and falls back to 60 Hz; `CoreRunner` has a private `FramePacer` for sleep/spin deadlines.
 - **`BiosImage`** (`FiveDo.Storage`) - validates 1 MB BIOS1 and optional <=1 MB BIOS2; computes MD5; detects Anvil BIOS (`byte[28] == 234`).
 - **`BiosCatalog` / `BiosLibrary`** (`FiveDo.Storage`) - known BIOS MD5 metadata and folder scanning/classification. **`BiosResolver`** (`FiveDo.Host`) applies per-game overrides, known title requirements, region matching, and the configured fallback. **`BiosInventory`** validates and imports a ROM into the library without overwriting a different image. **`NvramInventory`** validates, backs up, imports, resets, and deletes the shared/per-game NVRAM layout with atomic writes.
-- **`DiscImageFactory`** (`FiveDo.Storage`) - opens ISO/BIN/CUE/CHD, detects sector size, validates geometry.
+- **`DiscImageFactory`** (`FiveDo.Storage`) - opens ISO/BIN/CUE/CHD/CDI/NRG, detects sector size, validates geometry.
 - **`NvramStore`** - 32 KB NVRAM file, atomic write, 250 ms debounce, `.bad` recovery.
 - **`GameDatabase`** / **`GameDatabaseScanner`** / **`GameCompatibility`** - MD5-of-first-two-sectors game ID, metadata, filename-derived records, and fix-mode mapping.
-- **`DiscBrowser`** - read-only Opera file-system browser and extractor. `Open` owns the ISO/BIN/CUE/CHD source, `Create` borrows it, and extraction sanitizes names and checks that every target stays below the chosen destination. `DiscInfo` carries the volume and game-database metadata for the info dialog.
+- **`DiscBrowser`** - read-only Opera file-system browser and extractor. `Open` owns the ISO/BIN/CUE/CHD/CDI/NRG source, `Create` borrows it, and extraction sanitizes names and checks that every target stays below the chosen destination. `DiscInfo` carries the volume and game-database metadata for the info dialog.
 - **`AudioPipeline`** (`FiveDo.Audio`) - reusable ring sink; the live path uses `OpenAlAudioOutput`/`WavAudioSink` directly.
 - **`InputManager`** / **`KeyboardInputMapper`** / **`PlatformGamepadBackend`** - keyboard/gamepad mapping and PBUS encoding. `InputRecorder` optionally captures player-1 states as an `InputScript` document for replay.
 - **`SaveStateSlotManager`** - slots, metadata, thumbnails, atomic writes; **`StateInspector`** reads headers/sections.
@@ -621,7 +623,7 @@ A `VdlFrameMailbox` holds the most recent completed `VdlFrame`. If the renderer 
 | Video presenter | `IFrameSink` / `IVideoRenderer` | OpenGL (required), CPU BGRA fallback, null/hash sink |
 | Audio output | `IAudioSink` | null, WAV, OpenAL |
 | Input backend | `IPbusSource` / `IGamepadBackend` | keyboard, XInput, evdev, IOKit HID, scripted replay |
-| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, prefetch wrapper |
+| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, CDI, NRG, prefetch wrapper |
 | Save state format | `IStateReader/Writer`, `IStateSection` | native `.tdos` sections (no 4DO import in this release) |
 | Renderer/filter | `IVideoRenderer` / shader variants | nearest, sharp-bilinear, bicubic, CRT, xBR, HQx 2x/3x/4x, MMPX, FSR |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |

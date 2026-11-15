@@ -142,6 +142,9 @@
           "System.CodeDom": "9.0.5"
         }
       },
+      "cdisharp": {
+        "type": "Project"
+      },
       "fivedo.cdrom": {
         "type": "Project",
         "dependencies": {
@@ -216,8 +219,10 @@
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
+          "CDISharp": "[1.10.1, )",
           "CHDSharp": "[1.7.0, )",
           "FiveDo.Core": "[1.10.1, )",
+          "NRGSharp": "[1.10.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
@@ -232,6 +237,9 @@
         "dependencies": {
           "FiveDo.Core": "[1.10.1, )"
         }
+      },
+      "nrgsharp": {
+        "type": "Project"
       },
       "CHDSharp": {
         "type": "CentralTransitive",

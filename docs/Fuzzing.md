@@ -1,6 +1,6 @@
 # Fuzzing and parser security
 
-5DO reads several untrusted formats: save states, ISO/BIN/CUE/CHD images, the Opera
+5DO reads several untrusted formats: save states, ISO/BIN/CUE/CHD/CDI/NRG images, the Opera
 file system, and guest-driven CD-ROM command streams. The standalone
 `tools/FiveDo.Fuzz` harness mutates those inputs deterministically and reports any
 exception that is not a documented, typed rejection.
@@ -14,7 +14,7 @@ normal .NET SDK and no native toolchain.
 | Target | Input | What it exercises |
 |---|---|---|
 | `state` | Valid save state plus random bytes | Versioned state header, section table, CRC, decompression, every section loader, and one frame after a successful load |
-| `disc` | Zero-filled ISO and random CHD bytes | ISO/CHD openers, sector reads, and container validation |
+| `disc` | Zero-filled ISO plus random CHD, CDI, and NRG bytes | ISO/CHD/CDI/NRG openers, sector reads, and container validation |
 | `cue` | Valid CUE+BIN plus mutated text | CUE parser, file resolution, track/index parsing, and sector reads |
 | `opera-fs` | Synthetic Opera volume plus mutations | Volume header, directory chain, entry names/copies, cycle/depth limits, and file reads |
 | `cd-command` | Random command/poll/tick/read stream | `CdromDevice` command state machine in both FreeDO and Opera timing modes, including eject, inject, reset, and data/status drains |

@@ -66,7 +66,7 @@ BIOS ROMs are not included. Use a legally obtained image.
 | CUE fails | Only the first data track is used; multi-file/multi-track CUEs may not match. Try extracting the data track to ISO/CHD. |
 | Wrong game title/ID | Check `info game.chd --json`; the ID is the MD5 of the first two sectors. A modified/patched disc has a different ID and may not match the database. |
 | `fs` fails | The image is not a 3DO Opera volume, or its volume/directory records are malformed. Try `info` and `disc dump` to inspect the container. |
-| `disc tracks` fails | The image is not ISO/BIN/CUE/CHD or its track table is malformed. |
+| `disc tracks` fails | The image is not ISO/BIN/CUE/CHD/CDI/NRG or its track table is malformed. |
 
 Disc images are not included.
 
@@ -176,7 +176,7 @@ See [`Audio.md`](Audio.md) for metric definitions and the tap workflow.
 
 | Symptom | Cause / action |
 |---|---|
-| "No games found" | Add a folder containing `.iso`, `.bin`, `.cue`, or `.chd`; scanning is recursive to depth 4. |
+| "No games found" | Add a folder containing `.iso`, `.bin`, `.cue`, `.chd`, `.cdi`, or `.nrg`; scanning is recursive to depth 4. |
 | Game shown as Unknown | The 4DO database does not recognize the ID; the file still boots. |
 | Cover art missing | Put a sibling image with the same base name: `game.png`, `.jpg`, `.jpeg`, or `.webp`. |
 | Duplicate entries | A CUE and its BIN may both be scanned; use the CUE or remove the duplicate. |

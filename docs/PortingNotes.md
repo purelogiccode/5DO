@@ -445,7 +445,7 @@ FreeDOCore only knows about a flat 2048-byte-sector image supplied by the host. 
 - Enable `ConfigureReadAhead(4)` for sequential streaming.
 - Support parent/child CHDs via `ChdFile.Open(path, parentPath, ...)`.
 - CHDSharp is pure C#; no native dependency. Do not expose CHD types to the emulation core; the core only sees `IDiscSource`.
-- Add ISO/BIN/CUE/CHD parity tests. CHD is a required v1 format, not an optional extra.
+- Add ISO/BIN/CUE/CHD/CDI/NRG parity tests. CHD is a required v1 format, not an optional extra.
 
 ### 8.13 `Worker.cpp`
 
@@ -637,7 +637,7 @@ M1 implements the section primitive used by all later chips:
 - `IsoImage` reads 2048-byte sectors; `BinImage` strips the 2352-byte sync/header at offset 16 (Mode 1) or 24 (Mode 2 Form 1); `CueSheet` supports the first MODE1/MODE2 data track (single file); `DiscImageFactory` also sniffs CHD/ISO/BIN headers.
 - `ChdDiscImage` uses CHDSharp 1.6.0, rejects non-CD images, maps the first data track's LBA space, enables 4-hunk read-ahead, and supports an optional parent CHD for differential images.
 - `VolumeHeader` parses the big-endian 132-byte record (blockCount at offset 80); `GameId` is the lowercase MD5 of sectors 0 and 1. Game database lookup is M7.6.
-- Tests generate synthetic ISO/BIN/CUE/CHD fixtures with CHDSharp's encoder and verify identical sector streams, parent/child opening, non-CD rejection, command transcripts, and CD state roundtrip.
+- Tests generate synthetic ISO/BIN/CUE/CHD/CDI/NRG fixtures with CHDSharp's encoder and verify identical sector streams, parent/child opening, non-CD rejection, command transcripts, and CD state roundtrip.
 
 ### 12.10 M7 implementation notes
 

@@ -52,7 +52,9 @@ src/
   FiveDo.Video.Direct3D/     # optional Direct3D 11 presenter (Windows)
   FiveDo.Xbus/               # XBUS controller and devices
   FiveDo.Cdrom/              # MEI CD-ROM device
-  FiveDo.Storage/            # ISO/BIN/CUE/CHD, BIOS/NVRAM, game database
+  FiveDo.Storage/            # ISO/BIN/CUE/CHD/CDI/NRG, BIOS/NVRAM, game database
+  CDISharp/                  # DiscJuggler CDI container reader
+  NRGSharp/                  # Nero NRG container reader
   FiveDo.Audio/              # WAV/OpenAL/audio analysis/tap
   FiveDo.Input/              # controller state, PBUS, profiles, scripts
   FiveDo.Tas/                # TAS movie container, record/replay, branching
@@ -85,7 +87,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **2,344 tests** (verified 2026-11-15) and completes in a few seconds
+The current suite is **2,365 tests** (verified 2026-11-15) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -142,7 +144,9 @@ The suite is one xUnit project with subsystem folders:
 | `Video/` | VDLP parsing, frame assembly, viewport, uploader, mailbox, HQx, shaders, swap interval, capabilities, allocations |
 | `Xbus/` | device selection, FIFOs, polling |
 | `Cdrom/` | command state machine, status/data, TOC, READ_ID pulse |
-| `Storage/` | ISO/BIN/CUE/CHD, BIOS, NVRAM, volume header, game database, prefetch |
+| `Storage/` | ISO/BIN/CUE/CHD/CDI/NRG, BIOS, NVRAM, volume header, game database, prefetch |
+| `CDISharp/` | DiscJuggler descriptor, session/track table, 2048/2336/2352 sectors, 16/96-byte PQ/PW variants |
+| `NRGSharp/` | Nero NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, 2048-2449-byte sector layouts |
 | `Audio/` | ring buffer, WAV writer/analyzer, statistics, limiter, tap, OpenAL (opt-in) |
 | `Input/` | PBUS encoding/decoding, profiles, binding editor, scripts, gamepad mapper |
 | `Tas/` | movie container, recorder/playback, branch/trim, verification, zero-allocation playback |

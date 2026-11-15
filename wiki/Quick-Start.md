@@ -21,7 +21,7 @@
    ```
 
 4. Choose **Open BIOS** and select your legally obtained 3DO BIOS.
-5. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD.
+5. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, or NRG.
 6. Press **Play**.
 
 ## From source

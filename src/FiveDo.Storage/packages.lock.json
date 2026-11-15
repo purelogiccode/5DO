@@ -34,7 +34,13 @@
         "resolved": "11.0.0",
         "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
       },
+      "cdisharp": {
+        "type": "Project"
+      },
       "fivedo.core": {
+        "type": "Project"
+      },
+      "nrgsharp": {
         "type": "Project"
       }
     }

@@ -1,5 +1,13 @@
 # Project Status and Next Steps
 
+**2026-11-15 post-1.10.1 development:** **`SYS-24` is complete.** DiscJuggler `.cdi`
+and Nero `.nrg` images now open through the CLI, File > Open Disc, and the game library.
+Two standalone readers, `CDISharp` and `NRGSharp`, parse the trailing CDI descriptor and
+the NERO/NER5 chunk chain; `CdiDiscImage` and `NrgDiscImage` normalize cooked 2048-byte,
+2336-byte Mode 2, raw 2352-byte, and the 2353/2368/2448/2449-byte variants to the shared
+`IDiscSource`/`ITrackedDiscSource` contract. Malformed images fail with typed errors.
+The current suite is **2,365 tests**; build, format, and InspectCode are clean.
+
 **2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
 cuts time to the first window with lazy audio, deferred BIOS/disc loading, background
@@ -803,7 +811,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
 
 - **Core:** ARM60 interpreter, configurable 2-15 MB DRAM / 1-2 MB VRAM (stock 3 MB total) with 2 MB ROM, shared/per-game NVRAM, CLIO timers/FIQ/FIFO/DMA,
   MADAM CEL/pixel/matrix engines, VDLP, SPORT, DSP, Quartz scheduler, XBUS, CD-ROM,
-  ISO/BIN/CUE/CHD storage, input/PBUS, game database, deterministic save states.
+  ISO/BIN/CUE/CHD/CDI/NRG storage, input/PBUS, game database, deterministic save states.
 - **Save states:** state format version 2 compresses large section payloads with Brotli
   while keeping the CRC over the uncompressed data. Version-1 states still load. A
   24,902,592-byte local state becomes 647,647 bytes (300-frame Gex) or 2,001,229 bytes
@@ -918,8 +926,8 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   automatically; the current 3,000-frame boot keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1 after the audio-clock rebaseline.
 - **Tooling:** CLI `run`, `trace`, `bench`, `selftest`, `info`, `disc dump/tracks`
-  (`disc tracks` covers ISO/BIN/CUE as well as CHD), `fs list/extract` (the
-  first-party Opera parser covers ISO/BIN/CUE/CHD),
+  (`disc tracks` covers ISO/BIN/CUE/CHD/CDI/NRG), `fs list/extract` (the
+  first-party Opera parser covers ISO/BIN/CUE/CHD/CDI/NRG),
   `disasm`, plus KPRINT, CD, CLIO, FIQ, RAM-write watchpoints,
   RAM/DSP dumps, DSP-instruction rings, CEL command/geometry traces, PBUS packet
   traces, CPU instruction-ring diagnostics, scripted input, NVRAM load/save, periodic

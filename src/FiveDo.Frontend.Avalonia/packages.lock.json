@@ -266,6 +266,9 @@
         "resolved": "2.1.0",
         "contentHash": "KK+SjNSuKdP+zbavekubi+vaeb1Jo4k87ZF6CMkVWjr6RjJwc8peVtmgzXXDIMy4ZC3ZISyk3llY3q65ISOkBQ=="
       },
+      "cdisharp": {
+        "type": "Project"
+      },
       "fivedo.achievements": {
         "type": "Project",
         "dependencies": {
@@ -388,8 +391,10 @@
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
+          "CDISharp": "[1.10.1, )",
           "CHDSharp": "[1.7.0, )",
           "FiveDo.Core": "[1.10.1, )",
+          "NRGSharp": "[1.10.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
@@ -439,6 +444,9 @@
         "dependencies": {
           "FiveDo.Core": "[1.10.1, )"
         }
+      },
+      "nrgsharp": {
+        "type": "Project"
       },
       "CHDSharp": {
         "type": "CentralTransitive",

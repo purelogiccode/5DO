@@ -7,6 +7,8 @@
     <glob pattern="*.iso" weight="10"/>
     <glob pattern="*.cue" weight="10"/>
     <glob pattern="*.chd" weight="10"/>
+    <glob pattern="*.cdi" weight="10"/>
+    <glob pattern="*.nrg" weight="10"/>
     <glob pattern="*.bin" weight="5"/>
     <magic priority="50">
       <match value="CD001" type="string" offset="32769"/>

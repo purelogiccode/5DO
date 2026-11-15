@@ -124,10 +124,12 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | BIN, 2352-byte sectors | v1 | Payload starts at offset `0x10` |
 | CUE + BIN | v1 | Multi-file/multi-track CUE, MODE1/2048, MODE1/2352, audio tracks, `INDEX`/`PREGAP`/`POSTGAP` |
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
+| **DiscJuggler CDI** | **Current (2026-11-15)** | `CDISharp` parses the trailing descriptor, session/track table, and 2048/2336/2352-byte layouts, including 16-byte PQ and 96-byte P-W subchannel strides (2368/2448). The 150-sector lead-in is skipped when present. |
+| **Nero NRG** | **Current (2026-11-15)** | `NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, and per-track sector sizes 2048, 2324, 2336, 2352, 2353, 2368, 2448, and 2449. The extra error byte and subchannel tails are ignored when extracting user data. |
 | Multi-track / CD-DA | Partial (2026-11-10) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and M3U multi-disc swap are implemented; audio-only BIOS playback and known-title disc audio evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
-Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN or the CHD data track's frame count.
+Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG track table.
 
 CHD specifics:
 
@@ -345,6 +347,8 @@ does not need a separate high-resolution input path.
 - The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
 - CHD is supported for CD/GD-ROM images and for flat 2048-byte-unit CHDs made from cooked ISOs; DVD/HDD/raw CHDs with other unit sizes are not 3DO discs.
 - CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
+- CDI images are accepted only when the trailing descriptor passes the DiscJuggler signature checks; NRG images require a valid NERO/NER5 footer and a known first metadata chunk. Both readers are format parsers, not burners, and do not write CDI/NRG output.
+- Audio-only CDI/NRG images open at the library layer but are rejected for 3DO boot, matching the CUE/CHD data-track requirement.
 
 ---
 
@@ -720,7 +724,7 @@ Include:
 
 - Emulator version/commit.
 - BIOS MD5 and region.
-- Disc ID (first 8 hex of the 2-sector MD5) and format (ISO/BIN/CUE).
+- Disc ID (first 8 hex of the 2-sector MD5) and format (ISO/BIN/CUE/CHD/CDI/NRG).
 - Fix mode flags and settings.
 - Steps to reproduce.
 - Save state and a short input recording if possible.

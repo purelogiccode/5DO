@@ -125,7 +125,7 @@ available.
 ### Windows (Inno Setup)
 
 `packaging/windows/5do.iss` installs both apphosts, creates Start Menu/desktop
-shortcuts, and registers a `5DO.Disc` ProgID for `.iso`, `.cue`, `.chd`, and `.bin`
+shortcuts, and registers a `5DO.Disc` ProgID for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`
 plus `5DO.Playlist` for `.m3u`. Associations use `HKA`, so an unelevated install writes
 to `HKCU` and an elevated install writes to `HKLM`.
 
@@ -150,7 +150,7 @@ Requires Inno Setup 6 (`ISCC.exe`). The output is
 
 The Linux packages install the apphosts under `/opt/5do`, add `/usr/bin/5do` and
 `/usr/bin/5do-cli`, install the desktop entry and SVG icon, and register the
-`application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`, and `*.bin` globs.
+`application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`, `*.bin`, `*.cdi`, and `*.nrg` globs.
 
 ```sh
 bash packaging/linux/build-deb.sh \
@@ -163,7 +163,7 @@ bash packaging/linux/build-rpm.sh \
 ```
 
 The scripts require `dpkg-deb` or `rpmbuild`. Open the installed `5do` entry or a
-`.iso`/`.cue`/`.chd` file to launch the frontend with the disc path.
+`.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch the frontend with the disc path.
 
 ### macOS (.app, .dmg, .pkg)
 

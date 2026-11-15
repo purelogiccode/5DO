@@ -24,7 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CDISharp\CDISharp.csproj" />
     <ProjectReference Include="..\FiveDo.Core\FiveDo.Core.csproj" />
+    <ProjectReference Include="..\NRGSharp\NRGSharp.csproj" />
   </ItemGroup>
 
 </Project>

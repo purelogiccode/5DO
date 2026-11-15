@@ -8,7 +8,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 | Requirement | Details |
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
-| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, or CHD. |
+| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, or Nero NRG. |
 | .NET | The **.NET 11 Runtime** must be installed on the host; the published bundles are framework-dependent and do **not** include the runtime. The .NET 11 SDK is only needed for source builds. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
@@ -42,7 +42,8 @@ Bundles are versioned, for example `5do-1.10.1-win-arm64.zip` or
 Optional unsigned installers can be built from the bundles; see
 [Installers and file associations](Installers.md) and
 [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
-The Windows installer registers `.iso`/`.cue`/`.chd`/`.bin` file associations. The Linux
+The Windows installer registers `.iso`/`.cue`/`.chd`/`.bin`/`.cdi`/`.nrg` file
+associations. The Linux
 packages install a desktop entry, icon, and `application/x-3do-disc` MIME type. The
 macOS `.app` declares its document UTI. Signing and notarization run only when the
 appropriate certificate or Apple account is supplied.
@@ -72,7 +73,7 @@ dotnet run --project src/FiveDo.Cli -- --help
 
 1. Start the desktop app.
 2. Choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
-3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, or CHD image.
+3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, or NRG image.
 4. Press **Play**.
 5. Configure controllers in **Input** and video/audio in **Settings** if needed.
 

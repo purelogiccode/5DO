@@ -29,7 +29,8 @@
 > [!IMPORTANT]
 > 5DO is at **v1.10.1**, a documented-compatibility release with RetroAchievements, UI catalogs for
 > English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean,
-> and Simplified Chinese, external metadata and media, physical optical-drive boot, Windows
+> and Simplified Chinese, external metadata and media, physical optical-drive boot,
+> DiscJuggler `.cdi` and Nero `.nrg` images, Windows
 > DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, an
 > editable input timeline, and best-effort 4DO state interop. Windows x64 is the
 > validated GPU target; Linux x64 full suite passed (GPU presentation is
@@ -68,7 +69,7 @@ test harness designed for reproducible compatibility evidence.
   the docs/notices. macOS ships as a drag-to-Applications `.dmg`. The .NET 11 runtime is
   a prerequisite and is **not** bundled. Optional NativeAOT CLI builds remain available
   for developers. Unsigned Windows/Linux installers and macOS `.dmg`/`.pkg` scaffolding
-  register `.iso`/`.cue`/`.chd` file associations; signing/notarization stays conditional
+  register `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file associations; signing/notarization stays conditional
   on certificates.
 
 ## Status at a glance
@@ -78,7 +79,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.10.1` release (GitHub Releases) |
 | Validated platform | **Windows x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,344 tests** in the current test assembly |
+| Automated tests | **2,365 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -130,7 +131,7 @@ or `5do-1.10.1-osx-arm64.dmg`.
 - SPORT VRAM fill/copy, VDLP display-list parsing, and CPU frame assembly.
 - Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, READ_DATA subcode/Q
   packing, multi-track CUE/CHD, M3U playlists, and ODE-style disc swapping.
-- ISO, BIN, CUE+BIN, and CHD images, including parent/child CHDs, bounded read-ahead
+- ISO, BIN, CUE+BIN, CHD, DiscJuggler CDI, and Nero NRG images, including parent/child CHDs, bounded read-ahead
   prefetch, and `disc convert` between ISO/BIN/CUE/flat CHD.
 
 ### Desktop experience
@@ -204,7 +205,7 @@ or `5do-1.10.1-osx-arm64.dmg`.
 
 - **.NET SDK 11.0.100** (pinned by `global.json`).
 - A legally obtained 3DO BIOS ROM (1 MB; an optional second ROM for BIOS2/Kanji).
-- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, or CHD format.
+- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, CHD, CDI, or NRG format.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
 - OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation; the CPU fallback needs no GPU.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
