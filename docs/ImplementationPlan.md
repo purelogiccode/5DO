@@ -167,10 +167,13 @@ item stays in §4 until the credentials exist. Evidence: [Installers.md](Install
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **ACC-03 — Done** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test. | The CD sector path already existed; the 2352+96 wire size and Q packing are now implemented. | A synthetic subcode test passes and the Q payload decodes to the same control/track/index/MSF values. Evidence: `CdromMultiTrackTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
+| **ACC-04** | M | **Jurassic Park Interactive CEL-timing investigation**: compare 5DO, Phoenix, and Opera through the Operations hub into an in-park terminal or gameplay scene. Determine whether the remaining gap is input scripting, CEL cycle accounting, or rendering. | 5DO already reaches the hub and Security Tracking, the CEL timing model and scripted input exist, and Phoenix's compatibility list reports 100%. | A dated side-by-side capture identifies the first 5DO/reference divergence, or proves the reference does not reach gameplay; the result is either a tested fix/promotion or a documented limitation. If a runnable Phoenix build/reference capture is unavailable, record the exact capture request and move the item to §4. |
 
 `SYS-01` is now in §4: the FZ-10 BIOS CD player lists the audio-only TOC after the
 subcode fix, but its transport controls remain inert and the 4DO reference documents
 the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode.
+`ACC-04` is a bounded investigation, not a promise that the Phoenix 100% claim is
+reproducible on the local dump; it must end in either evidence or a documented block.
 
 ### 3.6 P3 — Product features
 
@@ -178,6 +181,7 @@ the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode
 |---|---|---|---|---|
 | **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. **Implemented 2026-11-13** in `PhysicalDiscSource`, `File > Boot Optical Drive...`, and the CLI drive-root path. The remaining check is hardware evidence on a machine with an attached drive and a 3DO disc. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
 | **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
+| **SYS-24** | M | **CDI/NRG disc image support**: add DiscJuggler `.cdi` and Nero `.nrg` readers, including the 2353/2368/2448/2449-byte sector variants Phoenix accepts. Reuse `IDiscSource`, TOC/game-ID hashing, and the existing sector normalization; accept the formats only when their signatures match. | Phoenix documents these formats, and 5DO already has ISO/BIN/CUE/CHD readers, header sniffing, sector normalization, and unattended disc tests. This is format parsing and validation, not new emulation. | A CDI and an NRG image open through the CLI and File > Open Disc, report sector/TOC metadata, and produce the same game ID and a matching 600-frame checkpoint as a known-good ISO/CHD equivalent; malformed images fail cleanly. Evidence: TestCorpus and Compatibility. |
 | **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13; expanded 2026-11-14 to nine catalogs), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
 | **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
 | **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
@@ -188,7 +192,20 @@ the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode
 | **UX-31 — Done** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. Evidence: `ControllerPadPreview` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bu. |
 | **UX-32 — Done** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. Evidence: `DisplaySleepPolicy` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
 | **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
+| **VID-19** | L | **True 2× CEL high-resolution spike**: prototype a 640×480 CEL path behind a non-default option, following Opera's four-plane high-resolution approach and Phoenix's hardware-renderer behavior. Keep the current line-doubled mode as the fallback. | Opera's `opera_high_resolution` and Phoenix's hardware renderer provide a concrete reference; 5DO already has high-resolution VRAM planes, CEL parsing, and renderer settings. This is a bounded spike, not the full production feature. | A prototype produces 640×480 CEL output on a named CEL-heavy title with a documented visual/performance comparison and no default hash changes; either it becomes a tested opt-in feature or the spike closes into §4 with the measured blocker. |
+| **UX-33** | S | **Minor Phoenix/4DO presentation options**: audio channel swap, background expansion/scanout borders, named void patterns (4DO/Bumps/Metal) alongside the existing solid/checker/grid/scanline set, and an emulation-health badge for frame pacing/underrun state. Land each option as its own change. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | Each option has a settings round-trip test; audio swap changes left/right output without changing frame/state/audio hashes; borders/patterns render across the presenters; the health badge reflects existing counters and is documented in the UserGuide. |
+| **SYS-25** | M | **Live CPU-clock changes (candidate)**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×-4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
 | **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
+
+**Reference audit (2026-11-15).** 4DO, FreeDO, opera-libretro, and Phoenix were
+re-read for player-visible gaps. The remaining candidates are `SYS-24` (CDI/NRG),
+`VID-19` (true 2× CEL spike), `UX-33` (minor presentation options), `ACC-04` (Jurassic
+Park Interactive CEL timing), and `SYS-25` (live CPU clock, candidate). Everything else
+in those references is already implemented, intentionally out of scope, or blocked:
+embedded boot ROM (licensing), GUI debugger (developer tooling), netplay (out of
+scope), multi-system/Android support (out of scope), and additional physical-hardware
+evidence. Phoenix is closed source; its claims are compared through the local
+compatibility list and public package behavior, not source.
 
 `UX-30` is explicitly best-effort; native 4DO state compatibility is **not** a goal.
 `UX-28` uses the existing `library-metadata.json` schema as its provider format, writes a
@@ -240,7 +257,7 @@ documented limitation, not that it is unachievable.
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
 | **CORE-05 threaded DSP** | Closed: DSP is ~14% of frame time; handoff/validation cost exceeds the work. | A title spends >30% of frame time in DSP. |
 | **PERF-08 managed JIT** | Closed: the interpreter remains faster on real titles and is the accuracy oracle. | A measured 1.5× end-to-end win on a real title. |
-| **VID-01 true 640×480 / 4K internal CEL** | Open-ended research; no target title and no bounded implementation path. 4K output upscaling already ships. | A bounded prototype shows a compatibility or visual win on a matrix title. |
+| **VID-01 true 640×480 / 4K internal CEL** | Open-ended production research; no target title or bounded path has been proven. 4K output upscaling already ships. Opera's `opera_high_resolution` and Phoenix's hardware renderer provide the reference behavior; `VID-19` is the bounded P3 spike, while this row remains the full feature. | A `VID-19` prototype shows a compatibility or visual win on a named title, or a hardware/reference capture proves the production path is bounded. |
 | **Full 594/1,371-image differential** | Replaced by the 378-title unique corpus; regional copies add noise, not signal. | A region-specific defect is suspected. |
 | **Top-100 audit** | Replaced by Tier A (378) + Tier B (~100) + Tier C (50). | The matrix shows a blind spot outside Tier B. |
 | **Hardware test ROM suite** | Dropped; the differential oracle, 2,000+ tests, and fuzz targets already catch the regressions a ROM suite would. | A hardware-only defect appears that the oracle cannot reproduce. |
@@ -272,14 +289,18 @@ documented limitation, not that it is unachievable.
    `PLAT-07` and `PLAT-09` are **done**; `PLAT-08` remains the Vulkan surface work.
 4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
    stay blocked in §4 until certificates/accounts exist.
-5. **P2 accuracy:** `ACC-03` is **done**; `SYS-01` moved to §4 after the BIOS CD player
-   listed the TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until
-   their revisit conditions are met.
+5. **P2 accuracy:** `ACC-03` is **done**; `ACC-04` (Jurassic Park CEL timing) is the
+   next bounded investigation. `SYS-01` moved to §4 after the BIOS CD player listed the
+   TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until their
+   revisit conditions are met.
 6. **P3 product:** `SYS-22`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`, `UX-31`,
    `VID-16`, `VID-17`, `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23` are implemented and tested but keep
    their `Done when` lines open until a physical optical drive and a physical
    DirectInput-only pad are available. The requested 4DO parity order `UX-09` →
-   `SYS-21` → `SYS-23` is complete in code (see §3.7).
+   `SYS-21` → `SYS-23` is complete in code (see §3.7). After those hardware checks,
+   prioritize the reference-audit candidates: `SYS-24` (CDI/NRG), `VID-19` (true 2× CEL
+   spike), `UX-33` (minor presentation options), and the `SYS-25` live-clock probe
+   (candidate only).
 
 **Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
 P1 platform smoke is failing.
