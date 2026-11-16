@@ -10,9 +10,12 @@ corridor and raptor encounter (38.41% of pixels differ from a 2x nearest upscale
 Family Feud is a clean 2x scale (0.00% difference). Native hashes are unchanged
 (`0xD5D6A993` at 63,000), the full suite passes (2,367 tests), and true 2× costs about 30%
 more emulation time (177 fps versus 232 fps, two-run average), still more
-than 3x real time. The legacy `--high-res` line-doubled mode remains the fallback. Remaining
-production work is bitmap/SPORT sampling, framebuffer-read semantics, and a full-collection
-sweep under VID-01. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`,
+than 3x real time. **Road Rash shows stale/rainbow rows at the bottom of the presented
+frame during scene transitions**, so the mode is now gated to Jurassic Park Interactive
+and Family Feud; every other title falls back to native 320x240 with a warning. The legacy
+`--high-res` line-doubled mode remains available. Remaining production work is
+bitmap/SPORT sampling, framebuffer-read semantics, and a full-collection sweep under
+VID-01. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`,
 [TestCorpus.md](TestCorpus.md) 1.1cl, and
 [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1.
 

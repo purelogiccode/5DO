@@ -297,8 +297,8 @@
                                   Content="High-resolution CEL mode (640x480, opt-in)"
                                   ToolTip.Tip="Render CELs and bitmap lines at 640x480. Only enable for titles that support it." />
                         <CheckBox x:Name="TrueHighResCheck" Margin="0,6,0,0"
-                                  Content="True 2x CEL fields (experimental)"
-                                  ToolTip.Tip="Render CELs into independent 480-line fields instead of line-doubling each field. Requires high-resolution mode; bitmap and SPORT content remains line-doubled." />
+                                  Content="True 2x CEL fields (experimental, validated titles only)"
+                                  ToolTip.Tip="Render CELs into independent 480-line fields for Jurassic Park Interactive and Family Feud. Other titles fall back to native 320x240; bitmap and SPORT content remains line-doubled." />
                     </StackPanel>
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="ARM timing" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Select the ARM60 N-cycle length used by the interpreter." />

@@ -392,7 +392,9 @@ Append new entries here; do not delete history. Each entry is a completed canoni
   Family Feud matches a clean 2x scale (0.00%). Native hashes are unchanged
   (`0xD5D6A993` at 63,000), the suite passes (2,367 tests), and true 2× costs about 30%
   more emulation time (177 fps versus 232 fps, two-run average). Bitmap/SPORT content
-  remains line-doubled; the legacy `--high-res` mode remains the fallback. Evidence:
+  remains line-doubled. Road Rash shows stale/rainbow rows at the bottom of the presented
+  frame during scene transitions, so the host gates the mode to Jurassic Park and Family
+  Feud and falls back to native 320x240 elsewhere. Evidence:
   `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`,
   [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md).
 

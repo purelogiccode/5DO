@@ -77,9 +77,9 @@ planes 0/1 for even output lines and planes 2/3 for odd output lines. Arbitrary 
 CEL geometry is evaluated in 640x480 space, while packed and scaled 2D CELs expand
 each source pixel to a 2x2 block. VDLP reads the independent fields without changes.
 Bitmap and SPORT-drawn content remains line-doubled, and titles that read the
-framebuffer may still need the native path. Jurassic Park Interactive's Raptor Maze
-and Family Feud are the first validated titles; default 320x240 output and the legacy
-line-doubled mode are unchanged.
+framebuffer may still need the native path. The host gates the mode to Jurassic Park
+Interactive's Raptor Maze and Family Feud; other titles, including Road Rash, fall back
+to native 320x240. Default 320x240 output and the legacy line-doubled mode are unchanged.
 
 The legacy mode is line doubling, not true internal 640x480 rendering. The true 2×
 prototype adds vertical detail for CEL geometry but is not the full production

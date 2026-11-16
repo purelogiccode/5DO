@@ -280,9 +280,9 @@ Arbitrary CEL geometry evaluates at 640x480 and packed/scaled 2D CELs expand to 
 blocks, so the VDLP presents independent 480-line CEL fields. Bitmap and SPORT content
 still follows the line-doubled layout. The mode is validated on Jurassic Park
 Interactive's Raptor Maze (38.41% of pixels differ from a 2x nearest upscale) and Family
-Feud (0.00% difference, a clean 2x scale); native output and the legacy mode are
-unchanged. True 2× costs about 30% more emulation time on the Raptor Maze and remains
-opt-in.
+Feud (0.00% difference, a clean 2x scale); every unvalidated title, including Road Rash,
+falls back to native 320x240. Native output and the legacy mode are unchanged. True 2×
+costs about 30% more emulation time on the Raptor Maze and remains opt-in.
 See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the remaining
 VID-01 production work (bitmap/SPORT sampling, framebuffer-read semantics, and a
 full-collection sweep).

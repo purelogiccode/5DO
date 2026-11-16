@@ -6139,10 +6139,23 @@ public partial class MainWindow : Window, IDisposable
         {
             AppSettings effective = _settings.CreateEffectiveForGame(gameId);
             EnsureAudioInitialized(effective);
-            _machine = new FiveDoMachine(effective.CreateEmulatorTuning() with
+            EmulatorTuning tuning = effective.CreateEmulatorTuning() with
             {
                 FixMode = effective.ResolveFixMode(gameId),
-            })
+            };
+            if (tuning.TrueHighResolution && !TrueHighResolutionCompatibility.IsValidated(gameId))
+            {
+                tuning = tuning with
+                {
+                    TrueHighResolution = false,
+                    HighResolution = false,
+                };
+                _logger.ForCategory(LogCategory.Video).Warning(
+                    "True 2x CEL mode is only validated for {Titles}; using native 320x240 for this title.",
+                    string.Join(", ", TrueHighResolutionCompatibility.ValidatedTitles));
+            }
+
+            _machine = new FiveDoMachine(tuning)
             {
                 PbusSource = _input,
                 AudioSink = _audio,

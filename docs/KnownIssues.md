@@ -485,8 +485,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - High-resolution mode is opt-in. The legacy `--high-res` path line-doubles 240 lines to
   480; the newer `--true-2x` path renders independent 480-line CEL fields but leaves
   bitmap/SPORT content line-doubled. It is validated on Jurassic Park Interactive's Raptor
-  Maze (3D) and Family Feud (2D), not the full collection. A true 640x240 non-interlaced
-  mode has not been identified. Research options are in
+  Maze (3D) and Family Feud (2D), not the full collection. **Road Rash shows stale/rainbow
+  rows at the bottom of the presented frame during scene transitions**, so the host gates
+  true 2× to those two game IDs and falls back to native 320x240 for everything else. A
+  true 640x240 non-interlaced mode has not been identified. Research options are in
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - 480i field handling is a presentation feature, not a new VDLP field model. `auto`
   detects complementary fields by content (12-field confirm, 30-field release) and can

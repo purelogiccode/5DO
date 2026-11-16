@@ -94,7 +94,7 @@ public sealed class GameProfile
 
     /// <summary>
     /// Gets or sets the per-game true 2x CEL mode, or <see langword="null"/> for the global mode.
-    /// Requires <see cref="HighResolution"/>.
+    /// The host enables it only for validated titles.
     /// </summary>
     public bool? TrueHighResolution { get; set; }
 

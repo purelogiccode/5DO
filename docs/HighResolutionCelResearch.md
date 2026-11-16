@@ -102,6 +102,13 @@ path is faster because it writes the same pixel to both fields.
 ACC-04 reference checkpoint, and the full suite passes (2,367 tests). The option is
 disabled by default; enabling it changes frame hashes and costs performance, as expected.
 
+**Validation gate (2026-11-16).** Road Rash (`d7672550`) shows stale/rainbow rows at the
+bottom of the presented frame during scene transitions, even though its CPU frame is
+clean. The host therefore enables `--true-2x` only for game IDs `18036597` (Jurassic Park
+Interactive) and `55f8ccf1` (Family Feud); every other title falls back to native 320x240
+with a warning. The residual is tracked in [ImplementationPlan.md](ImplementationPlan.md)
+§4. The mode remains experimental.
+
 **Remaining production work (VID-01).** The prototype does not make high-resolution the
 default and does not solve bitmap/SPORT detail, framebuffer-read semantics, per-title
 validation, or a full-collection sweep. Those remain the production research items.

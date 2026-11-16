@@ -151,7 +151,7 @@ every serialized property in `AppSettings`.
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
-| `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields. Requires `HighResolution`. |
+| `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields, applied only to validated titles. |
 | `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
 | `Region` | enum string | `"Ntsc"` | Video region used when `AutoRegion` is off: `Ntsc` (320x240, 60 Hz), `Pal1` (320x288, 50 Hz), or `Pal2` (384x288, 50 Hz). |
 | `AutoRegion` | bool | `true` | Follow the resolved BIOS video standard: PAL BIOS selects PAL1, NTSC selects NTSC. Disable to force `Region`. |
@@ -593,7 +593,8 @@ The Settings dialog's **Emulation** page edits:
 - `HighResolution` checkbox (restarts the machine when changed).
 - `TrueHighResolution` checkbox: the experimental true 2× CEL path. It requires
   high-resolution mode, leaves bitmap/SPORT content line-doubled, and restarts the machine
-  when changed.
+  when changed. It is applied only to Jurassic Park Interactive and Family Feud; other
+  titles fall back to native 320x240.
 - `Region` combo: NTSC, PAL1, or PAL2. PAL runs at 50 Hz with 288 visible lines and
   needs a PAL BIOS. **Choose PAL/NTSC automatically from the BIOS** is enabled by
   default and switches the running machine between frames when a newly resolved BIOS

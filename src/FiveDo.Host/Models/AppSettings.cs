@@ -627,7 +627,7 @@ public sealed class AppSettings
 
     /// <summary>
     /// Gets or sets a value indicating whether the experimental true 2x CEL path is used.
-    /// Requires <see cref="HighResolution"/>.
+    /// The host enables it only for validated titles.
     /// </summary>
     public bool TrueHighResolution { get; set; }
 
