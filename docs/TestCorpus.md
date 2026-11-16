@@ -3924,8 +3924,13 @@ InspectCode clean. The local win-x64 bundle reports `5DO 1.10.2`, contains both
 `OpenAL32.dll` and `soft_oal.dll`, loads OpenAL Soft `1.23.1`, lists the
 `OpenAL Soft on ...` endpoints, and writes `FRONTEND SMOKE OK 1.10.2`.
 
-**CI and release.** Pending tag `v1.10.2`; record the six bundle jobs, release run,
-checksums, and local copies after publication.
+**CI and release.** Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43776600683> passed all six bundle
+jobs and the publish job; the six bundles and `SHA256SUMS.txt` are published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.10.2>, every hash verifies, and
+the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed after a
+transient win-x64 artifact-upload retry. See [Installers.md](Installers.md) §1.10.2.
 
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 

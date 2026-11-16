@@ -40,4 +40,5 @@ being submitted as bug reports. If you are on 1.10.1 or older, copy `soft_oal.dl
 - `packaging/package-bundle.ps1` rejects a publish tree without `OpenAL32.dll`.
 
 See [ReleaseNotes-1.10.2.md](ReleaseNotes-1.10.2.md),
-[OpenALSoft.md](OpenALSoft.md), and [CHANGELOG.md](../CHANGELOG.md).
+[OpenALSoft.md](OpenALSoft.md), and
+[CHANGELOG.md](https://github.com/purelogiccode/5DO/blob/v1.10.2/CHANGELOG.md).

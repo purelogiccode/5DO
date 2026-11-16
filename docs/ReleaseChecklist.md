@@ -431,9 +431,14 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       includes both DLLs in the local `5do-1.10.2-win-x64.zip`.
 - [x] Run the published frontend `--smoke-test`; the marker reports
       `FRONTEND SMOKE OK 1.10.2`.
-- [ ] Push tag `v1.10.2`; verify the six bundle jobs, the published assets,
-      `SHA256SUMS.txt`, and local copies in
-      `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] Push tag `v1.10.2`; release run
+      <https://github.com/purelogiccode/5DO/actions/runs/43776600683> built and
+      published the six bundles and `SHA256SUMS.txt`. All six published hashes verify,
+      and the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed
+      after the transient win-x64 artifact-upload retry.
+- [ ] Docs run deploys `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and
+      `wiki/Release-1.10.2` after the `WhatsNew.md` link fix.
 
 ## 1.10.1 RetroAchievements continuity and startup gate
 

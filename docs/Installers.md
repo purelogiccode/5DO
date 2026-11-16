@@ -94,7 +94,19 @@ macOS x64/arm64 (native CI, 2026-11-10):
 - `package-bundle.ps1` rejects a publish tree missing `OpenAL32.dll` and includes both
   DLLs in the win-x64 bundle.
 - Full suite **2,365/2,365**; build, locked restore, format, and InspectCode clean.
-- CI/release run links and the six asset hashes are recorded after the tag build.
+- Release run <https://github.com/purelogiccode/5DO/actions/runs/43776600683> passed
+  all six bundle jobs and the publish job. Each bundle job verified the documentation,
+  the absence of PDB/XML/runtime folders, the apphost architecture, the loader-named
+  OpenAL runtime, CLI `selftest`, and the frontend smoke marker.
+- The six bundles and `SHA256SUMS.txt` are published at
+  <https://github.com/purelogiccode/5DO/releases/tag/v1.10.2>; every published hash
+  verifies and the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`:
+  - `5do-1.10.2-win-arm64.zip` `d9a52b8afbb855ff4632c3cd3dd50c68d7ef849f1e0763e379dd3c86ca7f0db8`
+  - `5do-1.10.2-win-x64.zip` `3ac67c5ed06f52a50584f0f5c0f80249e3fe3dec0ea59f1369e74c2986671042`
+  - `5do-1.10.2-linux-arm64.tar.gz` `3c36ab2454615cfc7f9a55e770fe1c97f09de276db0ddd49c5f769f1197f6529`
+  - `5do-1.10.2-linux-x64.tar.gz` `f90e930a05f5d533a922492c2c8ee469797378b456651a8ac8187497add56563`
+  - `5do-1.10.2-osx-arm64.dmg` `97d7202bbef7c40009fcd3e5eede201d691164fd8db4184d02db6e881971dc27`
+  - `5do-1.10.2-osx-x64.dmg` `a91cfbd42e6f0b7a4f7d05437d0e8754e9faf3f8ca65ebe1f96ddd0abd28d700`
 
 ## 1.10.1 bundle validation (2026-11-15)
 

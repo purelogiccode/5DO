@@ -17,6 +17,15 @@ without being submitted as bug reports. The suite is **2,365 tests**; build, for
 and InspectCode are clean. Existing 1.9.x and 1.10.0/1.10.1 copies can copy `soft_oal.dll` to
 `OpenAL32.dll` as a workaround.
 
+**v1.10.2 release evidence:** the six bundles and `SHA256SUMS.txt` are published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.10.2>. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/43776600683> passed all six bundle
+jobs and the publish job; all six hashes verify, and the assets are copied into
+`src/FiveDo.Frontend.Avalonia/bin/Release`. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed after a
+transient win-x64 artifact-upload retry. The docs run is rerun after the `WhatsNew.md`
+link fix.
+
 **2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
 cuts time to the first window with lazy audio, deferred BIOS/disc loading, background
