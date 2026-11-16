@@ -9,6 +9,7 @@
 - [[Building-from-Source]]
 - [[Contributing]]
 - [[Legal]]
+- [[Release-1.10.2]]
 - [[Release-1.10.1]]
 - [[Release-1.9.1]]
 - [[Release-1.8.0]]
