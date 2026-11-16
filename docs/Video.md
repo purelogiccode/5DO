@@ -63,17 +63,29 @@ another thread (`VdlFrameMailbox` does this).
 - The line's CLUT is copied into the `VdlLine`.
 - At the V1 line, the machine sets the frame source dimensions and presents.
 
-High-resolution mode uses four 1 MB VRAM planes. A low-resolution bitmap line supplies
-the even/odd columns of two adjacent high-resolution lines; planes 0/1 form the even
-line and planes 2/3 form the odd line. CEL rasterization, SPORT copies, and VDLP line
-copying all honor the same plane layout. Lemmings' 640x480 title is the primary
-validation case.
+High-resolution mode uses four 1 MB VRAM planes. The legacy `--high-res` path
+(`EmulatorTuning.HighResolution`) line-doubles the 240-line source: a low-resolution
+bitmap line supplies the even/odd columns of two adjacent high-resolution lines;
+planes 0/1 form the even line and planes 2/3 form the odd line, and CELs write the
+same pixel to both fields. SPORT copies and VDLP line copying honor the same plane
+layout. Lemmings' 640x480 title is the primary validation case.
 
-**This is line doubling, not true internal 640x480 rendering.** The 240-line source is
-written to both interlace fields, so horizontal CEL sampling improves but vertical
-detail remains 240 lines. True 640x480, 2x supersampling, and GPU CEL compositing are
-research topics in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md); the
-compatibility-safe default remains 320x240 plus output filtering.
+The opt-in **true 2×** mode (`--true-2x`, Settings > Emulation > True 2x CEL fields,
+`EmulatorTuning.TrueHighResolution`, or the per-game **TrueHighResolution** setting)
+keeps the four-plane layout but gives the odd field real content: CEL writes select
+planes 0/1 for even output lines and planes 2/3 for odd output lines. Arbitrary (3D)
+CEL geometry is evaluated in 640x480 space, while packed and scaled 2D CELs expand
+each source pixel to a 2x2 block. VDLP reads the independent fields without changes.
+Bitmap and SPORT-drawn content remains line-doubled, and titles that read the
+framebuffer may still need the native path. Jurassic Park Interactive's Raptor Maze
+and Family Feud are the first validated titles; default 320x240 output and the legacy
+line-doubled mode are unchanged.
+
+The legacy mode is line doubling, not true internal 640x480 rendering. The true 2×
+prototype adds vertical detail for CEL geometry but is not the full production
+feature: bitmap/SPORT planes, framebuffer-read semantics, and a full-collection
+visual sweep remain in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+The compatibility-safe default remains 320x240 plus output filtering.
 
 ### 480i/240p field handling
 
@@ -630,8 +642,11 @@ These are development-machine numbers, not a hardware guarantee. Tier B desktop,
 
 - Core cost is independent of output resolution: palette expansion is at native
   resolution, and the output pass is one/few fullscreen quads.
-- 4K output is upscaling, not 4K internal CEL rendering. `--high-res` is 640x480
-  internal, not 4K.
+- 4K output is upscaling, not 4K internal CEL rendering. `--high-res` and
+  `--true-2x` are 640x480 internal, not 4K. On the Jurassic Park Raptor Maze,
+  true 2× measured about 30% more emulation time than the native path (177 fps
+  versus 232 fps, two-run average over the same 10,000-frame segment), still more
+  than 3x real time.
 - The CPU side currently runs at ~1.25-1.6 ms/frame for the synthetic benchmark;
   Road Rash's 3D race measured 5.46 ms/frame total (p50 2.91, p95 10.60, p99 13.14)
   with 0 bytes/frame.

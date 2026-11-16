@@ -155,7 +155,9 @@ timings/capabilities/parity JSON.
 ## H
 
 **High-resolution mode** - The opt-in 640x480 CEL/VDLP mode (`--high-res`), using four
-1 MB VRAM planes. It is not the default and not 4K internal rendering.
+1 MB VRAM planes. The legacy path line-doubles the 240-line source; the opt-in
+`--true-2x` path (`TrueHighResolution`) writes independent 480-line CEL fields while
+bitmap/SPORT content remains line-doubled. It is not the default and not 4K internal rendering.
 
 **HQx** - hq2x/hq3x/hq4x pixel-art smoothing (Maxim Stepin/Cameron Zemek), implemented
 as an opt-in GPU rule-table pass before sharp-bilinear finishing. The CPU `HqxFilter`

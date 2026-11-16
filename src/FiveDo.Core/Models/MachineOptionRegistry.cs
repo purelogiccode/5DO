@@ -173,6 +173,18 @@ public static class MachineOptionRegistry
             MachineOptionKind.Boolean,
             comparisonLabel: "mode"),
         new(
+            "trueHighResolution",
+            "true 2x CEL mode",
+            "Experimental 640x480 CEL path with independent 480-line fields; requires high-resolution mode.",
+            "disabled",
+            "enabled, disabled",
+            "--true-2x",
+            "TrueHighResolution",
+            "TrueHighResolution",
+            nameof(EmulatorTuning.TrueHighResolution),
+            MachineOptionKind.Boolean,
+            comparisonLabel: "mode"),
+        new(
             "operaDipir",
             "Opera DIPIR",
             "CLIO DIPIR latches and XBUS access aborts.",
@@ -276,6 +288,7 @@ public static class MachineOptionRegistry
             "fixMode" => FormatFixMode(tuning.FixMode),
             "cpuBackend" => tuning.CpuBackend.ToString(),
             "highResolution" => FormatFlag(tuning.HighResolution),
+            "trueHighResolution" => FormatFlag(tuning.TrueHighResolution),
             "operaDipir" => FormatFlag(tuning.OperaDipir),
             "operaSoftReset" => FormatFlag(tuning.OperaSoftReset),
             "swiHle" => FormatFlag(tuning.SwiHle),
@@ -393,6 +406,9 @@ public static class MachineOptionRegistry
             "cpuBackend" => snapshot.CpuBackend?.ToString(),
             "highResolution" => snapshot.HighResolution is { } highResolution
                 ? FormatFlag(highResolution)
+                : null,
+            "trueHighResolution" => snapshot.TrueHighResolution is { } trueHighResolution
+                ? FormatFlag(trueHighResolution)
                 : null,
             "operaDipir" => snapshot.OperaDipir is { } operaDipir ? FormatFlag(operaDipir) : null,
             "operaSoftReset" => snapshot.OperaSoftReset is { } softReset ? FormatFlag(softReset) : null,

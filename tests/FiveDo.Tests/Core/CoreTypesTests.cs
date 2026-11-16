@@ -14,6 +14,7 @@ public sealed class CoreTypesTests
         Assert.Equal(FixMode.None, tuning.FixMode);
         Assert.Equal(CpuBackendKind.Interpreter, tuning.CpuBackend);
         Assert.False(tuning.HighResolution);
+        Assert.False(tuning.TrueHighResolution);
         Assert.Equal(ArmTimingMode.FreeDoCompatible, tuning.ArmTiming);
         Assert.Equal(ClioTimerMode.FreeDoCompatible, tuning.ClioTimers);
         Assert.Equal(CelTimingMode.FreeDoCompatible, tuning.CelTiming);
@@ -151,6 +152,7 @@ public sealed class CoreTypesTests
             Jw = 3,
             Cnbfix = true,
             HighResolution = true,
+            TrueHighResolution = true,
         };
 
         state.Reset();
@@ -165,6 +167,7 @@ public sealed class CoreTypesTests
         Assert.Equal(0, state.Jw);
         Assert.False(state.Cnbfix);
         Assert.False(state.HighResolution);
+        Assert.False(state.TrueHighResolution);
     }
 
     [Fact]

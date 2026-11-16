@@ -76,6 +76,45 @@ public sealed class CelGoldenSceneTests
     }
 
     [Fact]
+    public void LiteralScale_TrueHighResolutionWritesIndependentFieldsAtDoubleScale()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 319, clipY: 239);
+        madam.Compatibility.HighResolution = true;
+        madam.Compatibility.TrueHighResolution = true;
+        WriteLiteralCcb(
+            memory,
+            Ccb3,
+            Source3,
+            position: (0, 0),
+            hdx: 0x20000,
+            vdy: 0x20000,
+            pre0: 6 | 0x10,
+            pre1: 0,
+            last: true);
+        WriteBytes(memory, Source3 + 8, 0x7f, 0xfe);
+
+        _ = RunCel(madam, Ccb3);
+
+        // The 2x2 low-resolution rectangle becomes a 4x4 high-resolution block.
+        for (var y = 0; y < 4; y++)
+        {
+            for (var x = 0; x < 4; x++)
+            {
+                Assert.Equal(0x7ffe, ReadHighResolutionPixel(memory, x, y));
+            }
+        }
+
+        Assert.Equal(0, ReadHighResolutionPixel(memory, 4, 0));
+        Assert.Equal(0, ReadHighResolutionPixel(memory, 0, 4));
+
+        // Even and odd output lines carry independent plane pairs.
+        Assert.Equal(0x7ffe, ReadPlanePixel(memory, plane: 0, x: 0, y: 0));
+        Assert.Equal(0x7ffe, ReadPlanePixel(memory, plane: 1, x: 1, y: 0));
+        Assert.Equal(0x7ffe, ReadPlanePixel(memory, plane: 2, x: 0, y: 1));
+        Assert.Equal(0x7ffe, ReadPlanePixel(memory, plane: 3, x: 1, y: 1));
+    }
+
+    [Fact]
     public void LiteralScale_ClipsAtBottomRightCorner()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 7, clipY: 7);
@@ -247,6 +286,23 @@ public sealed class CelGoldenSceneTests
     {
         var offset = ((y >> 1) * WriteModulo) + ((y & 1) << 1) + (x << 2);
         return memory.Ram.Read16((FrameBuffer + (uint)offset) ^ 2);
+    }
+
+    private static ushort ReadHighResolutionPixel(FiveDoMemory memory, int x, int y)
+    {
+        var lowRow = y >> 1;
+        var offset = ((lowRow >> 1) * WriteModulo) + ((lowRow & 1) << 1) + ((x >> 1) << 2);
+        var plane = (x & 1) + ((y & 1) << 1);
+        return memory.Ram.Read16(
+            ((FrameBuffer + (uint)offset) ^ 2) + (uint)(plane * EmulatorConstants.VramSize));
+    }
+
+    private static ushort ReadPlanePixel(FiveDoMemory memory, int plane, int x, int y)
+    {
+        var lowRow = y >> 1;
+        var offset = ((lowRow >> 1) * WriteModulo) + ((lowRow & 1) << 1) + ((x >> 1) << 2);
+        return memory.Ram.Read16(
+            ((FrameBuffer + (uint)offset) ^ 2) + (uint)(plane * EmulatorConstants.VramSize));
     }
 
     private static uint HashRegion(FiveDoMemory memory, int width, int height)

@@ -43,6 +43,7 @@ internal sealed class CelRasterizer
     private uint _flagsRaw;
     private ushort[] _plut = null!;
     private bool _resScale;
+    private bool _trueScale;
     private bool _trackWork;
 
     internal CelRasterizer(CelEngine engine)
@@ -70,6 +71,7 @@ internal sealed class CelRasterizer
         _flagsRaw = (uint)_engine.Flags;
         _plut = _engine.Madam.PlutEntries;
         _resScale = ResScale != 0;
+        _trueScale = _resScale && _engine.Compatibility.TrueHighResolution;
         _trackWork = _engine.TrackWork;
     }
 
@@ -926,7 +928,7 @@ internal sealed class CelRasterizer
         for (var i = 0; i < count; i++, xcur = unchecked(xcur + (geometry.Hdx1616 >> 16)), ycur = unchecked(ycur + (geometry.Hdy1616 >> 16)))
         {
             var next = _resScale
-                ? ReadPixel(_pixelSource, xcur, ycur, _readModulo)
+                ? ReadPixelLowRes(_pixelSource, xcur, ycur, _readModulo)
                 : _engine.Memory.ReadHalfword(Address(
                     _pixelSource,
                     Xy2Off(unchecked(xcur << 2), ycur, _readModulo)));
@@ -947,7 +949,7 @@ internal sealed class CelRasterizer
 
             if (_resScale)
             {
-                WritePixel(_frameBufferTarget, xcur, ycur, (ushort)pixel, _writeModulo);
+                WritePixelLowRes(_frameBufferTarget, xcur, ycur, (ushort)pixel, _writeModulo);
             }
             else
             {
@@ -1054,7 +1056,7 @@ internal sealed class CelRasterizer
                     continue;
                 }
 
-                var framePixel = ReadPixel(_pixelSource, j >> 2, i, _readModulo);
+                var framePixel = ReadPixelLowRes(_pixelSource, j >> 2, i, _readModulo);
                 var pixel = ProcessPixel(curPix, lamv, framePixel);
                 pixel = Projector.Apply(
                     rawVhBits,
@@ -1064,7 +1066,7 @@ internal sealed class CelRasterizer
                     _control0,
                     _pre1,
                     _celOriginVh);
-                WritePixel(_frameBufferTarget, j >> 2, i, pixel, _writeModulo);
+                WritePixelLowRes(_frameBufferTarget, j >> 2, i, pixel, _writeModulo);
                 if ((_ccbFlags & CcbControl.Maria) != CcbControl.None)
                 {
                     return 0;
@@ -1489,7 +1491,7 @@ internal sealed class CelRasterizer
         ushort framePixel;
         if (_resScale)
         {
-            framePixel = ReadPixel(_pixelSource, x, readY, _readModulo);
+            framePixel = ReadPixelLowRes(_pixelSource, x, readY, _readModulo);
         }
         else
         {
@@ -1510,7 +1512,7 @@ internal sealed class CelRasterizer
 
         if (_resScale)
         {
-            WritePixel(_frameBufferTarget, x, writeY, pixel, _writeModulo);
+            WritePixelLowRes(_frameBufferTarget, x, writeY, pixel, _writeModulo);
         }
         else
         {
@@ -1530,15 +1532,33 @@ internal sealed class CelRasterizer
 
     private ushort ReadPixel(uint source, int x, int y, int modulo)
     {
-        var offset = Xy2Off((x >> ResScale) << 2, y, modulo);
+        if (_trueScale)
+        {
+            // x/y are in 640x480 space. Even output lines live in planes 0/1 and
+            // odd output lines in planes 2/3; each plane pair uses the normal
+            // 3DO word layout with the two 240-line rows in opposite halfwords.
+            var offset = Xy2Off((x >> 1) << 2, y >> 1, modulo);
+            var plane = (x & 1) + ((y & 1) << 1);
+            return _ram.Read16(
+                unchecked((source + (uint)offset) ^ 2)
+                + (uint)(plane * _ram.Layout.VramSize));
+        }
+
+        var lowOffset = Xy2Off((x >> ResScale) << 2, y, modulo);
         if (_resScale)
         {
             // Field 0 uses planes 0/1; the odd X column is in plane 1.
-            var address = unchecked((source + (uint)offset) ^ 2);
+            var address = unchecked((source + (uint)lowOffset) ^ 2);
             return _ram.Read16(address + (uint)((x & 1) * _ram.Layout.VramSize));
         }
 
-        return _ram.Read16(unchecked(source + (uint)offset) ^ 2);
+        return _ram.Read16(unchecked(source + (uint)lowOffset) ^ 2);
+    }
+
+    /// <summary>Reads the source pixel for a low-resolution (240-line) CEL span.</summary>
+    private ushort ReadPixelLowRes(uint source, int x, int y, int modulo)
+    {
+        return _trueScale ? ReadPixel(source, x << 1, y << 1, modulo) : ReadPixel(source, x, y, modulo);
     }
 
     private void WritePixel(uint target, int x, int y, ushort value)
@@ -1553,19 +1573,53 @@ internal sealed class CelRasterizer
             _engine.AddPixels(1);
         }
 
-        var offset = Xy2Off((x >> ResScale) << 2, y, modulo);
+        if (_trueScale)
+        {
+            // x/y are in 640x480 space. The output line parity selects the plane
+            // pair, so planes 2/3 carry real odd-line content rather than a copy.
+            var offset = Xy2Off((x >> 1) << 2, y >> 1, modulo);
+            var plane = (x & 1) + ((y & 1) << 1);
+            _ram.Write16(
+                unchecked((target + (uint)offset) ^ 2)
+                + (uint)(plane * _ram.Layout.VramSize),
+                value);
+            return;
+        }
+
+        var lowOffset = Xy2Off((x >> ResScale) << 2, y, modulo);
         if (_resScale)
         {
             // X is already in 640-wide space; Y is a 240-line scanline that the VDLP
             // line-doubles. Write both interlace fields so both output lines match.
             var plane = x & 1;
-            var address = unchecked((target + (uint)offset) ^ 2);
+            var address = unchecked((target + (uint)lowOffset) ^ 2);
             _ram.Write16(address + (uint)(plane * _ram.Layout.VramSize), value);
             _ram.Write16(address + (uint)((plane + 2) * _ram.Layout.VramSize), value);
             return;
         }
 
-        _ram.Write16(unchecked(target + (uint)offset) ^ 2, value);
+        _ram.Write16(unchecked(target + (uint)lowOffset) ^ 2, value);
+    }
+
+    /// <summary>
+    /// Writes a low-resolution (240-line) CEL pixel. The true 2x path expands it to a
+    /// 2x2 block so packed and scaled sprites keep their original geometry and stay
+    /// aligned with the 640x480 frame.
+    /// </summary>
+    private void WritePixelLowRes(uint target, int x, int y, ushort value, int modulo)
+    {
+        if (!_trueScale)
+        {
+            WritePixel(target, x, y, value, modulo);
+            return;
+        }
+
+        var highX = x << 1;
+        var highY = y << 1;
+        WritePixel(target, highX, highY, value, modulo);
+        WritePixel(target, highX + 1, highY, value, modulo);
+        WritePixel(target, highX, highY + 1, value, modulo);
+        WritePixel(target, highX + 1, highY + 1, value, modulo);
     }
 
     private bool TestClip(int clipX, int clipY)

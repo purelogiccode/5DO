@@ -42,6 +42,9 @@ public sealed class MachineOptionSnapshot
     /// <summary>Gets a value indicating whether high-resolution mode was enabled, or <see langword="null"/> when absent.</summary>
     public bool? HighResolution { get; init; }
 
+    /// <summary>Gets a value indicating whether true 2x CEL mode was enabled, or <see langword="null"/> when absent.</summary>
+    public bool? TrueHighResolution { get; init; }
+
     /// <summary>Gets a value indicating whether Opera DIPIR semantics were enabled, or <see langword="null"/> when absent.</summary>
     public bool? OperaDipir { get; init; }
 

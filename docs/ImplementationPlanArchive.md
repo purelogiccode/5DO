@@ -382,6 +382,20 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-16 - VID-19 true 2× CEL high-resolution prototype.** Added the opt-in
+  `--true-2x` machine option (Settings > Emulation, per-game `TrueHighResolution`, and
+  save-state field) without changing the default path. The four-plane VRAM layout now
+  carries independent 480-line fields: even output lines use planes 0/1, odd output lines
+  use planes 2/3, arbitrary CEL geometry evaluates at 640x480, and packed/scaled 2D CELs
+  expand to 2x2 blocks. Jurassic Park Interactive's Raptor Maze renders the full corridor
+  and raptor at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale), while
+  Family Feud matches a clean 2x scale (0.00%). Native hashes are unchanged
+  (`0xD5D6A993` at 63,000), the suite passes (2,367 tests), and true 2× costs about 30%
+  more emulation time (177 fps versus 232 fps, two-run average). Bitmap/SPORT content
+  remains line-doubled; the legacy `--high-res` mode remains the fallback. Evidence:
+  `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`,
+  [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md).
+
 - **2026-11-16 - ACC-04 Jurassic Park Interactive CEL timing.** Closed the investigation
   with a working in-park script. The old terminal script stopped on the Security
   Tracking map because it never moved the Operations pointer hand onto a guest; the new

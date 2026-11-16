@@ -295,7 +295,7 @@ The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame
 
 - Base output is **320x240, 4:3**, 60 Hz NTSC.
 - Wider VDLP modes are parsed as 384/512/640/1024 pixels per line. The `VdlLine` capacity is 1280 pixels so all modes fit without changing the data model.
-- High-resolution (`RESSCALE`) is implemented as an opt-in 640x480 mode. It changes VRAM mirroring (four 1 MB planes), VDLP line duplication, CEL stepping, SPORT copies, and frame extraction, so it is a coherent feature with its own tests rather than isolated conditionals.
+- High-resolution (`RESSCALE`) is implemented as an opt-in 640x480 mode. It changes VRAM mirroring (four 1 MB planes), VDLP line duplication, CEL stepping, SPORT copies, and frame extraction, so it is a coherent feature with its own tests rather than isolated conditionals. The legacy `--high-res` path line-doubles the 240-line source; the opt-in `--true-2x` path writes independent 480-line CEL fields (even lines in planes 0/1, odd lines in planes 2/3) while bitmap/SPORT content stays line-doubled.
 - **OpenGL "Accurate" mode must match the CPU `FrameAssembler` pixel-for-pixel.** Enhanced filters are opt-in and never affect emulated state.
 - The renderer receives indexed 16-bit pixels and per-line palette/control data, not a pre-expanded BGRA image. Palette expansion happens on the GPU, which cuts CPU work and enables high-quality upscaling at 1080p/1440p/4K.
 

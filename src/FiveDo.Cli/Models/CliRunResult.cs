@@ -102,6 +102,7 @@ internal sealed record CliRunResult(
     string CpuBackend = "Interpreter",
     uint? RandomSeed = null,
     bool HighResolution = false,
+    bool TrueHighResolution = false,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     IReadOnlyList<CliCycleClassResult>? CycleClasses = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

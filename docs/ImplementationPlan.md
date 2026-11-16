@@ -43,6 +43,7 @@ loadability and duplicate coverage.
 | Peer comparison | **0 `Behind`**, **0 `Regression`**; strict superset of the **252-title** peer union (4DO **167**, Phoenix **233**) | [CompatibilityComparison.md](CompatibilityComparison.md) |
 | Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom). Jurassic Park now reaches in-park gameplay; its remaining item is default CEL pacing, recorded in §4. | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
+| High-resolution CEL | Opt-in `--true-2x` prototype: independent 480-line CEL fields, validated on Jurassic Park's Raptor Maze and Family Feud; native hashes unchanged | [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
 | Release | **v1.10.2** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt` with CDI/NRG disc images and the Windows OpenAL runtime fix; **v1.10.1** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
@@ -64,12 +65,13 @@ REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **ACC-04*
 **PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-09**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
 **SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-29**,
-**UX-30**, **UX-31**, **UX-32**, **VID-04/12/16/17/18** items. `SYS-21` and `SYS-23` are code-complete but remain open
+**UX-30**, **UX-31**, **UX-32**, **VID-04/12/16/17/18**, **VID-19** items. `SYS-21` and `SYS-23` are code-complete but remain open
 for their named hardware evidence.
 
 `ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
 §4. `ACC-04` is closed with the new in-park gameplay script and a default-CEL-pacing
-residual in §4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
+residual in §4. `VID-19` is closed as the tested opt-in `--true-2x` path; its remaining
+production items stay in §4 under VID-01. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
 `QUAL-03A`…`QUAL-03D` and `QUAL-05A` are now complete; `QUAL-05B` (the full Road Rash
 race) is blocked in §4. The full completed-ID index, milestone aliases, old gates, and
 dated evidence entries are in
@@ -195,14 +197,15 @@ per-game Opera-busy profile, not on reachability.
 | **UX-31 — Done** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. Evidence: `ControllerPadPreview` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bu. |
 | **UX-32 — Done** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. Evidence: `DisplaySleepPolicy` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
 | **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
-| **VID-19** | L | **True 2× CEL high-resolution spike**: prototype a 640×480 CEL path behind a non-default option, following Opera's four-plane high-resolution approach and Phoenix's hardware-renderer behavior. Keep the current line-doubled mode as the fallback. | Opera's `opera_high_resolution` and Phoenix's hardware renderer provide a concrete reference; 5DO already has high-resolution VRAM planes, CEL parsing, and renderer settings. This is a bounded spike, not the full production feature. | A prototype produces 640×480 CEL output on a named CEL-heavy title with a documented visual/performance comparison and no default hash changes; either it becomes a tested opt-in feature or the spike closes into §4 with the measured blocker. |
+| **VID-19 — Done** | L | **True 2× CEL high-resolution spike**: prototype a 640×480 CEL path behind a non-default option, following Opera's four-plane high-resolution approach and Phoenix's hardware-renderer behavior. Keep the current line-doubled mode as the fallback. | Opera's `opera_high_resolution` and Phoenix's hardware renderer provide a concrete reference; 5DO already has high-resolution VRAM planes, CEL parsing, and renderer settings. This is a bounded spike, not the full production feature. | **Result (2026-11-16): implemented as the opt-in `--true-2x` machine option.** The four-plane layout now carries independent 480-line fields: CEL writes select planes 0/1 for even lines and 2/3 for odd lines, arbitrary CEL geometry evaluates at 640x480, and packed/scaled 2D CELs expand to 2x2 blocks. Jurassic Park's Raptor Maze renders the full corridor at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale), while Family Feud matches a clean 2x scale exactly (0.00%). Native hashes are unchanged (`0xD5D6A993` at 63,000), the full suite passes, and true 2× costs about 30% more emulation time (177 fps versus 232 fps, two-run average) over the same 10,000-frame segment. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`, [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1. |
 | **UX-33** | S | **Minor Phoenix/4DO presentation options**: audio channel swap, background expansion/scanout borders, named void patterns (4DO/Bumps/Metal) alongside the existing solid/checker/grid/scanline set, and an emulation-health badge for frame pacing/underrun state. Land each option as its own change. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | Each option has a settings round-trip test; audio swap changes left/right output without changing frame/state/audio hashes; borders/patterns render across the presenters; the health badge reflects existing counters and is documented in the UserGuide. |
 | **SYS-25** | M | **Live CPU-clock changes (candidate)**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×-4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
 | **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 **Reference audit (2026-11-15).** 4DO, FreeDO, opera-libretro, and Phoenix were
-re-read for player-visible gaps. The remaining candidates are `VID-19` (true 2× CEL
-spike), `UX-33` (minor presentation options), and `SYS-25` (live CPU clock, candidate).
+re-read for player-visible gaps. `VID-19` (true 2× CEL spike) closed on 2026-11-16 as the
+opt-in `--true-2x` path; the remaining candidates are `UX-33` (minor presentation
+options) and `SYS-25` (live CPU clock, candidate).
 `ACC-04` (Jurassic Park Interactive CEL timing) closed on 2026-11-16 with the in-park
 Raptor Maze script and a default-CEL-pacing residual; `SYS-24` (CDI/NRG) closed on
 2026-11-15. Everything else
@@ -262,7 +265,7 @@ documented limitation, not that it is unachievable.
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
 | **CORE-05 threaded DSP** | Closed: DSP is ~14% of frame time; handoff/validation cost exceeds the work. | A title spends >30% of frame time in DSP. |
 | **PERF-08 managed JIT** | Closed: the interpreter remains faster on real titles and is the accuracy oracle. | A measured 1.5× end-to-end win on a real title. |
-| **VID-01 true 640×480 / 4K internal CEL** | Open-ended production research; no target title or bounded path has been proven. 4K output upscaling already ships. Opera's `opera_high_resolution` and Phoenix's hardware renderer provide the reference behavior; `VID-19` is the bounded P3 spike, while this row remains the full feature. | A `VID-19` prototype shows a compatibility or visual win on a named title, or a hardware/reference capture proves the production path is bounded. |
+| **VID-01 true 640×480 / 4K internal CEL** | Open-ended production research. **VID-19 delivered the bounded opt-in CEL path** (`--true-2x`): independent 480-line fields, 2x2 packed/scaled sprites, and a validated 3D/2D pair. Remaining production work is bitmap/SPORT high-resolution sampling, framebuffer-read semantics, per-title validation, and a full-collection sweep; 4K output upscaling already ships. | A `VID-19` prototype shows a compatibility or visual win on a named title (met 2026-11-16), or a hardware/reference capture proves the production path is bounded. |
 | **Full 594/1,371-image differential** | Replaced by the 378-title unique corpus; regional copies add noise, not signal. | A region-specific defect is suspected. |
 | **Top-100 audit** | Replaced by Tier A (378) + Tier B (~100) + Tier C (50). | The matrix shows a blind spot outside Tier B. |
 | **Hardware test ROM suite** | Dropped; the differential oracle, 2,000+ tests, and fuzz targets already catch the regressions a ROM suite would. | A hardware-only defect appears that the oracle cannot reproduce. |
@@ -300,14 +303,13 @@ documented limitation, not that it is unachievable.
    the BIOS CD player listed the TOC but stayed inert. The `ACC-01` and `CORE-04`
    residuals stay in §4 until their revisit conditions are met.
 6. **P3 product:** `SYS-22`, `SYS-24`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`,
-   `UX-31`, `VID-16`, `VID-17`, `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23`
-   are implemented and tested but keep
+   `UX-31`, `VID-16`, `VID-17`, `VID-18`, `VID-19`, and `UX-32` are **done**. `SYS-21` and
+   `SYS-23` are implemented and tested but keep
    their `Done when` lines open until a physical optical drive and a physical
    DirectInput-only pad are available. The requested 4DO parity order `UX-09` →
    `SYS-21` → `SYS-23` is complete in code (see §3.7). After those hardware checks,
-   prioritize the reference-audit candidates: `VID-19` (true 2× CEL
-   spike), `UX-33` (minor presentation options), and the `SYS-25` live-clock probe
-   (candidate only).
+   prioritize the remaining reference-audit candidates: `UX-33` (minor presentation
+   options) and the `SYS-25` live-clock probe (candidate only).
 
 **Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
 P1 platform smoke is failing.

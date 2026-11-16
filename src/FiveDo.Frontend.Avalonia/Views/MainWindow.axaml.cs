@@ -2771,6 +2771,7 @@ public partial class MainWindow : Window, IDisposable
             ["randomSeed"] = tuning.RandomSeed?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "default",
             ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
             ["highResolution"] = tuning.HighResolution.ToString(),
+            ["trueHighResolution"] = tuning.TrueHighResolution.ToString(),
             ["operaDipir"] = tuning.OperaDipir.ToString(),
             ["operaSoftReset"] = tuning.OperaSoftReset.ToString(),
         };
@@ -4541,6 +4542,7 @@ public partial class MainWindow : Window, IDisposable
                 || nvramSettingsChanged
                 || effective.ResolveFixMode(_gameId) != _machine.Compatibility.FixMode
                 || effective.HighResolution != _machine.Tuning.HighResolution
+                || effective.TrueHighResolution != _machine.Tuning.TrueHighResolution
                 || effective.ArmTiming != _machine.Tuning.ArmTiming
                 || effective.ClioTimers != _machine.Tuning.ClioTimers
                 || effective.CelTiming != _machine.Tuning.CelTiming
@@ -4838,6 +4840,11 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _settings.HighResolution = enabled;
+        if (!enabled)
+        {
+            _settings.TrueHighResolution = false;
+        }
+
         AppSettingsStore.Save(_settings);
         if (enabled)
         {

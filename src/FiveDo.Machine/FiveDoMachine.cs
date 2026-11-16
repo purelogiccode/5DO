@@ -56,8 +56,14 @@ public sealed class FiveDoMachine
         {
             FixMode = Tuning.FixMode,
             HighResolution = Tuning.HighResolution,
+            TrueHighResolution = Tuning.TrueHighResolution,
         };
         Compatibility.HighResolution |= Tuning.HighResolution;
+        Compatibility.TrueHighResolution |= Tuning.TrueHighResolution;
+        if (Compatibility.TrueHighResolution)
+        {
+            Compatibility.HighResolution = true;
+        }
 
         Memory = new FiveDoMemory(Tuning);
         Clio = new ClioChip(Tuning);
@@ -726,8 +732,8 @@ public sealed class FiveDoMachine
                 || (section.Id == StateSectionIds.Clio && section.Version <= 3)
                 || (section.Id == StateSectionIds.Madam && section.Version <= 4)
                 || (section.Id == StateSectionIds.Vdlp && section.Version <= 4)
-                || (section.Id == StateSectionIds.Machine && section.Version <= 3)
-                || (section.Id == StateSectionIds.Options && section.Version <= 9);
+                || (section.Id == StateSectionIds.Machine && section.Version <= 4)
+                || (section.Id == StateSectionIds.Options && section.Version <= 10);
             if (!supportedVersion)
             {
                 throw new InvalidStateException($"Unsupported section {section.Id} version {section.Version}.");
@@ -861,6 +867,11 @@ public sealed class FiveDoMachine
         // A command-line/front-end override survives loads of states written before the
         // high-resolution flag was recorded as enabled.
         Compatibility.HighResolution |= Tuning.HighResolution;
+        Compatibility.TrueHighResolution |= Tuning.TrueHighResolution;
+        if (Compatibility.TrueHighResolution)
+        {
+            Compatibility.HighResolution = true;
+        }
 
         _framesExecuted = frames;
         _lastFrameCycles = 0;
@@ -1135,7 +1146,7 @@ public sealed class FiveDoMachine
 
         public uint Id => StateSectionIds.Machine;
 
-        public ushort Version => 3;
+        public ushort Version => 4;
 
         public void Save(IStateWriter writer)
         {
@@ -1149,6 +1160,7 @@ public sealed class FiveDoMachine
             writer.WriteInt32(_compatibility.Jw);
             writer.WriteBoolean(_compatibility.Cnbfix);
             writer.WriteBoolean(_compatibility.HighResolution);
+            writer.WriteBoolean(_compatibility.TrueHighResolution);
             writer.WriteInt32(_frame.SourceWidth);
             writer.WriteInt32(_frame.SourceHeight);
             writer.WriteDouble(_frame.PixelAspect);
@@ -1175,6 +1187,7 @@ public sealed class FiveDoMachine
 
         public void Load(IStateReader reader)
         {
+            var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 1;
             _compatibility.FixMode = (FixMode)reader.ReadUInt32();
             _compatibility.IsAnvil = reader.ReadInt32();
             _compatibility.BiosAnvil = reader.ReadBoolean();
@@ -1185,6 +1198,11 @@ public sealed class FiveDoMachine
             _compatibility.Jw = reader.ReadInt32();
             _compatibility.Cnbfix = reader.ReadBoolean();
             _compatibility.HighResolution = reader.ReadBoolean();
+            if (version >= 4)
+            {
+                _compatibility.TrueHighResolution = reader.ReadBoolean();
+            }
+
             var sourceWidth = reader.ReadInt32();
             var sourceHeight = reader.ReadInt32();
             if (sourceWidth < 0 || sourceWidth > VdlLine.MaxPixels)
@@ -1199,7 +1217,6 @@ public sealed class FiveDoMachine
 
             _frame.SourceWidth = sourceWidth;
             _frame.SourceHeight = sourceHeight;
-            var version = reader is StateSectionReader sectionReader ? sectionReader.Version : 1;
             if (version >= 2)
             {
                 var pixelAspect = reader.ReadDouble();

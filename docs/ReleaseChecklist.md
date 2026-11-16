@@ -797,7 +797,9 @@ stays 320x240 + output filtering. Track the research in
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 - [ ] Current `--high-res` mode is measured per tested title (post-1.0).
-- [ ] True 640x480 prototype is validated or rejected with evidence (post-1.0).
+- [x] True 640x480 prototype is validated or rejected with evidence (post-1.0).
+  VID-19 delivered the opt-in `--true-2x` CEL path on 2026-11-16; see
+  [`TestCorpus.md`](TestCorpus.md) 1.1cl.
 - [ ] 2x supersampling prototype has frame-time/allocations data (post-1.0).
 - [ ] GPU CEL feasibility note has a parity/performance estimate (post-1.0).
 - [ ] The default remains compatibility-safe 320x240 + output filtering unless a title

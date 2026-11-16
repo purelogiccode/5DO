@@ -46,6 +46,10 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
 - Full-race Road Rash evidence and a longer Alone inventory/exploration sequence.
   Alone now reaches the room and the Actions menu; Road Rash still cycles through
   wrecks under the autopilot.
+- The opt-in **true 2× CEL** path (`--true-2x`) renders independent 480-line CEL fields;
+  it is validated on Jurassic Park Interactive's Raptor Maze and Family Feud and leaves
+  bitmap/SPORT content line-doubled. The legacy `--high-res` line-doubled mode remains the
+  fallback. See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 **Accuracy residuals (not release blockers):**
 

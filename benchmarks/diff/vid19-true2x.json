@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "name": "VID-19: true 2x CEL high-resolution prototype",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "audio": "null",
+    "prefetch": true,
+    "timeoutSeconds": 1800
+  },
+  "titles": [
+    {
+      "id": "jurassic-park-true2x",
+      "name": "Jurassic Park Interactive",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt",
+      "frames": 66000,
+      "checkpoints": [
+        63000,
+        65000
+      ],
+      "options": {
+        "extraArgs": [
+          "--true-2x"
+        ]
+      }
+    },
+    {
+      "id": "family-feud-true2x",
+      "name": "Family Feud",
+      "disc": "${root}/Family Feud (1994)(Gametek)(US)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/family-feud-play7.txt",
+      "frames": 12000,
+      "checkpoints": [
+        9000,
+        12000
+      ],
+      "options": {
+        "extraArgs": [
+          "--true-2x"
+        ]
+      }
+    }
+  ]
+}

@@ -91,6 +91,18 @@ public sealed record EmulatorTuning
     public bool HighResolution { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether CELs render into independent 480-line fields
+    /// instead of duplicating each 240-line field. Requires <see cref="HighResolution"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is the bounded VID-19 prototype. It keeps the four-plane VRAM layout but
+    /// stores even output lines in planes 0/1 and odd output lines in planes 2/3, so
+    /// arbitrary (3D) CEL geometry gains true vertical detail. Bitmap and SPORT-drawn
+    /// content remains line-doubled. The default path is unchanged.
+    /// </remarks>
+    public bool TrueHighResolution { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether CLIO DIPIR latches and XBUS access aborts are
     /// enabled. Opt-in until OP-SYS-03 supplies the matching soft-reset path.
     /// </summary>

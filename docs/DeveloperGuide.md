@@ -294,7 +294,7 @@ lines from the current VDLP state for the optional multitask path.
 
 - Parses display lists at `(addr & 0xFFFFF) + 2 MB`.
 - Line widths 320/384/512/640/1024; `VdlLine.MaxPixels = 1280`.
-- High-res line-doubles 640x240 to 640x480 via planes.
+- High-res line-doubles 640x240 to 640x480 via planes; the opt-in `--true-2x` path writes independent even/odd CEL fields into plane pairs 0/1 and 2/3.
 - The CPU `FrameAssembler` is the oracle; the GPU `Accurate` mode must match.
 
 ### XBUS/CD-ROM

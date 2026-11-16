@@ -833,6 +833,13 @@ change.
   hash `0xD5D6A993` exactly. The only other field is the documented 36-59-sample
   audio-clock delta. See `TestCorpus.md` 1.1ck.
 
+- `benchmarks/diff/vid19-true2x.json`: the VID-19 true 2x captures. Jurassic Park
+  Interactive (66,000 frames, checkpoints 63,000/65,000) and Family Feud (12,000 frames,
+  checkpoints 9,000/12,000) pass `--true-2x` through `options.extraArgs`; run it with
+  `--no-opera` because the reference bridge outputs 320x240. The 5DO-only result is
+  **PASS** with `FiveDoOnly` rows; the PNGs under each `images/` directory are the
+  comparison evidence. See `TestCorpus.md` 1.1cl.
+
 The early boot frames already exposed a real timing divergence: Opera reaches
 the Lemmings boot screen earlier than 5DO. The frame at 300 matches exactly, so
 the renderer/CLUT path agrees; the remaining difference is scheduling. Keep

@@ -455,6 +455,15 @@ reference hash exactly. The row
 stays `Playable` for the default-CEL residual and the unscripted driving/Spitter paths;
 see [`KnownIssues.md`](KnownIssues.md) and [`TestCorpus.md`](TestCorpus.md) 1.1ck.
 
+**VID-19 true 2× CEL (2026-11-16).** The new opt-in `--true-2x` mode renders independent
+480-line CEL fields while leaving the legacy `--high-res` line-doubled mode as the
+fallback. Jurassic Park's Raptor Maze now shows the full corridor and raptor at 640x480;
+38.41% of its pixels differ from a 2x nearest upscale, while Family Feud matches a clean
+2x scale exactly (0.00%). Native hashes are unchanged and the mode costs about 30% more
+emulation time (177 fps versus 232 fps, two-run average). Bitmap/SPORT content stays
+line-doubled. See [`TestCorpus.md`](TestCorpus.md) 1.1cl and
+[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+
 The suspected core-defect triage is closed: DeathKeep's Start Game black screen also
 appears on OperaCore at 48,000 frames, and Kingdom's intro returns to the same title
 screen on both engines at 60,000, so both are content/script limits. BladeForce was also
@@ -504,10 +513,16 @@ for every visual difference.
 
 ## 6. High-resolution pass
 
-The current `--high-res` mode is the FreeDO-style 640x480 path: CELs are rasterized
+The legacy `--high-res` mode is the FreeDO-style 640x480 path: CELs are rasterized
 into four 1 MB VRAM planes and VDLP line-doubles 240 lines to 480. It is not a true
-640x480 internal render for every title. See
-[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+640x480 internal render for every title.
+
+The opt-in `--true-2x` mode keeps the four planes but writes independent 480-line CEL
+fields (even lines to planes 0/1, odd lines to planes 2/3); packed/scaled 2D CELs expand
+to 2x2 blocks, while bitmap/SPORT content remains line-doubled. It is validated on
+Jurassic Park's Raptor Maze and Family Feud. See
+[`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) and
+[`TestCorpus.md`](TestCorpus.md) 1.1cl.
 
 Run the high-resolution pass separately so low-resolution results remain comparable:
 

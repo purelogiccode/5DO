@@ -322,6 +322,7 @@
     "ui.openal_soft_1_23_1_44_1_khz_stereo": "OpenAL Soft 1.23.1 · 44.1 kHz ステレオ",
     "ui.apply_the_4do_per_game_fixes_automatically": "4DO のゲーム別修正を自動適用",
     "ui.high_resolution_cel_mode_640x480_opt_in": "高解像度 CEL モード (640x480、オプトイン)",
+    "ui.true_2x_cel_fields_experimental": "真の2倍CELフィールド（試験的）",
     "ui.arm_timing": "ARM タイミング",
     "ui.clio_timers": "CLIO タイマー",
     "ui.cel_timing": "CEL タイミング",

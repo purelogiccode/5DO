@@ -293,7 +293,9 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   the local image is the same revision, and a 4DO score of 100 does not mean 5DO has
   the same behavior.
 - `--high-res` is FreeDO-style line doubling, not true internal 640x480 rendering. The
-  vertical detail remains 240 lines. See
+  opt-in `--true-2x` path renders independent 480-line CEL fields and is validated on
+  Jurassic Park Interactive's Raptor Maze and Family Feud, but bitmap/SPORT content
+  remains line-doubled and the mode is not enabled by default. See
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md). M14 is post-1.0.
 - Linux x64 validation (2026-11-02): the full test suite (**1,473/1,473**), CLI
   `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent
@@ -480,9 +482,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   `READ_DATA` bursts between the periodic `READ_ID` polls while Opera's loader only
   polls. The current 3,000-frame audio-clock keys are in
   [`TestCorpus.md`](TestCorpus.md) 1.1.
-- High-resolution mode is opt-in and validated mainly with Lemmings. It line-doubles
-  240 lines to 480; it is not true vertical high-resolution rendering. A true 640x240
-  non-interlaced mode has not been identified. Research options are in
+- High-resolution mode is opt-in. The legacy `--high-res` path line-doubles 240 lines to
+  480; the newer `--true-2x` path renders independent 480-line CEL fields but leaves
+  bitmap/SPORT content line-doubled. It is validated on Jurassic Park Interactive's Raptor
+  Maze (3D) and Family Feud (2D), not the full collection. A true 640x240 non-interlaced
+  mode has not been identified. Research options are in
   [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - 480i field handling is a presentation feature, not a new VDLP field model. `auto`
   detects complementary fields by content (12-field confirm, 30-field release) and can

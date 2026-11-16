@@ -1,5 +1,21 @@
 # Project Status and Next Steps
 
+**2026-11-16, VID-19:** **The true 2× CEL high-resolution prototype is opt-in and tested.**
+The new `--true-2x` machine option (Settings > Emulation > **True 2x CEL fields**, per-game
+**TrueHighResolution**, and a save-state field) keeps the four-plane VRAM layout but writes
+even output lines to planes 0/1 and odd output lines to planes 2/3, so arbitrary CELs gain
+real vertical detail at 640x480. Packed and scaled 2D CELs expand to 2x2 blocks; bitmap and
+SPORT content remains line-doubled. Jurassic Park Interactive's Raptor Maze renders the full
+corridor and raptor encounter (38.41% of pixels differ from a 2x nearest upscale), while
+Family Feud is a clean 2x scale (0.00% difference). Native hashes are unchanged
+(`0xD5D6A993` at 63,000), the full suite passes (2,367 tests), and true 2× costs about 30%
+more emulation time (177 fps versus 232 fps, two-run average), still more
+than 3x real time. The legacy `--high-res` line-doubled mode remains the fallback. Remaining
+production work is bitmap/SPORT sampling, framebuffer-read semantics, and a full-collection
+sweep under VID-01. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`,
+[TestCorpus.md](TestCorpus.md) 1.1cl, and
+[HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1.
+
 **2026-11-16, ACC-04:** **Jurassic Park Interactive now reaches in-park gameplay.**
 The earlier stop on the Security Tracking map was input scripting, not CEL accounting or
 rendering: the Operations console is a pointer interface, and the old script never moved
@@ -104,9 +120,9 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-16, v1.10.2: Jurassic Park Interactive reaches the in-park Raptor
-Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
-images, the Windows OpenAL bundle
+**Snapshot:** 2026-11-16, v1.10.2: the opt-in true 2× CEL path, Jurassic Park Interactive
+reaches the in-park Raptor Maze and SECURITY BREACH outcome with a default-CEL-pacing
+residual; CDI and NRG disc images, the Windows OpenAL bundle
 fix, RetroAchievements with a managed rcheevos engine,
 save-state hit persistence, durable offline unlocks, hardcore rules, leaderboards, rich
 presence, and OSD notifications; the `FiveDo` desktop apphost; deferred startup work and

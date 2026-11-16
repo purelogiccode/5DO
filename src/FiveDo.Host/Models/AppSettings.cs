@@ -626,6 +626,12 @@ public sealed class AppSettings
     public bool HighResolution { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the experimental true 2x CEL path is used.
+    /// Requires <see cref="HighResolution"/>.
+    /// </summary>
+    public bool TrueHighResolution { get; set; }
+
+    /// <summary>
     /// Gets or sets the last selected timing profile. The individual timing options below
     /// remain authoritative; the profile is a convenience label and becomes
     /// <see cref="EmulationProfile.Custom"/> when the options no longer match it.
@@ -1523,6 +1529,7 @@ public sealed class AppSettings
             RandomSeed = RandomSeed,
             CpuBackend = CpuBackend,
             HighResolution = HighResolution,
+            TrueHighResolution = TrueHighResolution,
             OperaDipir = OperaDipir,
             OperaSoftReset = OperaSoftReset,
             SwiHle = SwiHle,

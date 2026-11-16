@@ -628,7 +628,10 @@ internal static class Program
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res") || profileTuning.HighResolution,
+            HighResolution = HasFlag(args, "--high-res")
+                || HasFlag(args, "--true-2x")
+                || profileTuning.HighResolution,
+            TrueHighResolution = HasFlag(args, "--true-2x") || profileTuning.TrueHighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -1399,6 +1402,7 @@ internal static class Program
             CpuBackend: machine.Tuning.CpuBackend.ToString(),
             RandomSeed: machine.Tuning.RandomSeed,
             HighResolution: machine.Tuning.HighResolution,
+            TrueHighResolution: machine.Tuning.TrueHighResolution,
             DspRunning: machine.Dsp.IsRunning,
             DspPc: machine.Dsp.ProgramCounter,
             DspSema: ((uint)machine.Dsp.SemaphoreStatus << 16) | machine.Dsp.SemaphoreData,
@@ -1615,7 +1619,10 @@ internal static class Program
             : profileTuning.Region;
         var machine = new FiveDoMachine(new EmulatorTuning
         {
-            HighResolution = HasFlag(args, "--high-res") || profileTuning.HighResolution,
+            HighResolution = HasFlag(args, "--high-res")
+                || HasFlag(args, "--true-2x")
+                || profileTuning.HighResolution,
+            TrueHighResolution = HasFlag(args, "--true-2x") || profileTuning.TrueHighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
             ArmTiming = ParseArmTiming(options.Get("--arm-timing"), profileTuning.ArmTiming),
             ClioTimers = ParseClioTimers(options.Get("--clio-timers"), profileTuning.ClioTimers),
@@ -5298,6 +5305,7 @@ internal static class Program
             ["randomSeed"] = tuning.RandomSeed?.ToString(CultureInfo.InvariantCulture) ?? "default",
             ["fixMode"] = $"0x{(uint)tuning.FixMode:x8}",
             ["highResolution"] = tuning.HighResolution.ToString(),
+            ["trueHighResolution"] = tuning.TrueHighResolution.ToString(),
             ["operaDipir"] = tuning.OperaDipir.ToString(),
             ["operaSoftReset"] = tuning.OperaSoftReset.ToString(),
             ["swiHle"] = tuning.SwiHle.ToString(),
@@ -5613,6 +5621,7 @@ internal static class Program
                 MidpointRounding.AwayFromZero),
             RandomSeed = profile.RandomSeed,
             HighResolution = profile.HighResolution ?? tuning.HighResolution,
+            TrueHighResolution = profile.TrueHighResolution ?? tuning.TrueHighResolution,
             OperaDipir = profile.OperaDipir,
             OperaSoftReset = profile.OperaSoftReset,
             SwiHle = profile.SwiHle,
@@ -6244,7 +6253,7 @@ internal static class Program
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--input-lua path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
-        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
+        Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--true-2x] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");
@@ -6263,7 +6272,7 @@ internal static class Program
         Console.WriteLine("  trace [disc] --bios path [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--trace-frames N] [--ring N]");
         Console.WriteLine("             [--stop-pc 0xADDR] [--stop-kprint text] [--stop-cd 0xCMD]");
         Console.WriteLine("             [--stop-invalid] [--count N] [--out path] [--dump-dsp prefix]");
-        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--deinterlace auto|bob|weave|blend] [--prefetch]");
+        Console.WriteLine("             [--dsp-trace path] [--input-script path] [--nvram path] [--high-res] [--true-2x] [--deinterlace auto|bob|weave|blend] [--prefetch]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");

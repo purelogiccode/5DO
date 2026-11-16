@@ -29,6 +29,15 @@ public sealed class FiveDoMachineTests
     }
 
     [Fact]
+    public void TrueHighResolution_ForcesHighResolutionMode()
+    {
+        var machine = new FiveDoMachine(new EmulatorTuning { TrueHighResolution = true });
+
+        Assert.True(machine.Compatibility.HighResolution);
+        Assert.True(machine.Compatibility.TrueHighResolution);
+    }
+
+    [Fact]
     public void Deinterlace_DefaultsToBobAndPresentationUsesTheField()
     {
         var machine = new FiveDoMachine();

@@ -115,6 +115,7 @@ public sealed class MachineOptionRegistryTests
             FixMode = FixMode.None,
             CpuBackend = CpuBackendKind.Interpreter,
             HighResolution = false,
+            TrueHighResolution = false,
             OperaDipir = false,
             OperaSoftReset = false,
             SwiHle = false,
@@ -152,6 +153,7 @@ public sealed class MachineOptionRegistryTests
         Assert.Equal(settings.RandomSeed, applied.RandomSeed);
         Assert.Equal(settings.CpuBackend, applied.CpuBackend);
         Assert.Equal(settings.HighResolution, applied.HighResolution);
+        Assert.Equal(settings.TrueHighResolution, applied.TrueHighResolution);
         Assert.Equal(settings.OperaDipir, applied.OperaDipir);
         Assert.Equal(settings.OperaSoftReset, applied.OperaSoftReset);
         Assert.Equal(settings.SwiHle, applied.SwiHle);
@@ -183,6 +185,7 @@ public sealed class MachineOptionRegistryTests
             Assert.Equal(settings.RandomSeed, loaded.RandomSeed);
             Assert.Equal(settings.CpuBackend, loaded.CpuBackend);
             Assert.Equal(settings.HighResolution, loaded.HighResolution);
+            Assert.Equal(settings.TrueHighResolution, loaded.TrueHighResolution);
             Assert.Equal(settings.OperaDipir, loaded.OperaDipir);
             Assert.Equal(settings.OperaSoftReset, loaded.OperaSoftReset);
             Assert.Equal(settings.SwiHle, loaded.SwiHle);
@@ -212,6 +215,7 @@ public sealed class MachineOptionRegistryTests
             FixMode = FixMode.BitTiming5,
             CpuBackend = CpuBackendKind.Jit,
             HighResolution = true,
+            TrueHighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
             SwiHle = true,
@@ -235,6 +239,7 @@ public sealed class MachineOptionRegistryTests
             FixMode = tuning.FixMode,
             CpuBackend = tuning.CpuBackend,
             HighResolution = tuning.HighResolution,
+            TrueHighResolution = tuning.TrueHighResolution,
             OperaDipir = tuning.OperaDipir,
             OperaSoftReset = tuning.OperaSoftReset,
             SwiHle = tuning.SwiHle,
@@ -256,6 +261,7 @@ public sealed class MachineOptionRegistryTests
             RandomSeed = 0xDEAD_BEEF,
             CpuBackend = CpuBackendKind.Jit,
             HighResolution = true,
+            TrueHighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
             SwiHle = true,

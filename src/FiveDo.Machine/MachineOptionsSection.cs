@@ -42,9 +42,10 @@ internal sealed class MachineOptionsSection : IStateSection
     /// adds the video region; version 7 records every registered machine option (ARM clock,
     /// random seed, high-resolution mode, Opera DIPIR, Opera soft reset, fix mask, and CPU
     /// backend); version 8 adds the DRAM/VRAM capacity; version 9 adds the Portfolio OS
-    /// SWI HLE flag. Older states default the missing fields to the machine default.
+    /// SWI HLE flag; version 10 adds the true 2x CEL mode. Older states default the
+    /// missing fields to the machine default.
     /// </remarks>
-    public ushort Version => 9;
+    public ushort Version => 10;
 
     /// <summary>Gets the option snapshot read from a state.</summary>
     internal MachineOptionSnapshot? Snapshot { get; private set; }
@@ -70,6 +71,7 @@ internal sealed class MachineOptionsSection : IStateSection
         writer.WriteUInt32((uint)_tuning.CpuBackend);
         writer.WriteUInt32((uint)_memoryConfiguration);
         writer.WriteBoolean(_tuning.SwiHle);
+        writer.WriteBoolean(_tuning.TrueHighResolution);
     }
 
     /// <summary>Reads the option snapshot.</summary>
@@ -226,6 +228,12 @@ internal sealed class MachineOptionsSection : IStateSection
             swiHle = reader.ReadBoolean();
         }
 
+        bool? trueHighResolution = null;
+        if (version >= 10)
+        {
+            trueHighResolution = reader.ReadBoolean();
+        }
+
         Snapshot = new MachineOptionSnapshot
         {
             ArmTiming = armTiming,
@@ -238,6 +246,7 @@ internal sealed class MachineOptionsSection : IStateSection
             RandomSeed = hasRandomSeed ? randomSeed : null,
             RandomSeedSpecified = true,
             HighResolution = highResolution,
+            TrueHighResolution = trueHighResolution,
             OperaDipir = operaDipir,
             OperaSoftReset = operaSoftReset,
             FixMode = fixMode,

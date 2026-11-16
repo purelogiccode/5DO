@@ -322,6 +322,7 @@
     "ui.openal_soft_1_23_1_44_1_khz_stereo": "OpenAL Soft 1.23.1 · 44,1 kHz stereo",
     "ui.apply_the_4do_per_game_fixes_automatically": "Applica automaticamente le correzioni 4DO per gioco",
     "ui.high_resolution_cel_mode_640x480_opt_in": "Modalità CEL ad alta risoluzione (640x480, opzionale)",
+    "ui.true_2x_cel_fields_experimental": "Campi CEL 2x reali (sperimentale)",
     "ui.arm_timing": "Timing ARM",
     "ui.clio_timers": "Timer CLIO",
     "ui.cel_timing": "Timing CEL",

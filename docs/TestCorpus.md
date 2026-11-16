@@ -3997,6 +3997,79 @@ dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
   --checkpoints 62000,63000,64000,65000,65500,66000 --json
 ```
 
+### 1.1cl VID-19 true 2× CEL high-resolution prototype (2026-11-16)
+
+**Finding.** The legacy `--high-res` path is line doubling, and it is visibly wrong for
+CEL scenes: at Jurassic Park frame 63,000 it shows only the ceiling/upper half of the
+Raptor Maze corridor and a half-width HUD, and Family Feud renders a black frame. The new
+opt-in `--true-2x` path keeps the four-plane layout but writes even output lines to planes
+0/1 and odd output lines to planes 2/3, so the VDLP reads real 480-line fields. Arbitrary
+(3D) CEL geometry evaluates at 640x480; packed/scaled 2D CELs expand each source pixel to a
+2x2 block. The default 320x240 path and the legacy `--high-res` behavior are unchanged.
+
+**Visual result.** The named CEL-heavy title is Jurassic Park Interactive's in-park Raptor
+Maze (`jurassic-park-raptor-maze.txt`, 63,000/65,000). Family Feud is the 2D control
+(`family-feud-play7.txt`, 9,000). Compared with a 2x nearest-neighbor upscale of the native
+320x240 frame, the true 2x Raptor Maze frame changes **38.41%** of pixels
+(117,992 / 307,200), while Family Feud changes **0.00%**; the latter is a clean 2x scale
+with no missing columns or palette artifacts. The pixel-difference figures count non-zero
+RGB differences between a 2x nearest-neighbor resize of the native PNG and the true 2x PNG.
+
+| Title / frame | Native 320x240 | Legacy `--high-res` | True 2× |
+|---|---:|---|---:|
+| Jurassic Park, 63,000 | `0xD5D6A993` | `0x79149ECD` (upper half only) | `0xF67CF55B` |
+| Jurassic Park, 65,000 | `0x133DCBA8` | - | `0x130EDE0E` direct / `0xF75B56C7` harness |
+| Family Feud, 9,000 | `0x8893A949` | black frame (972-byte PNG) | `0x92434A2D` |
+| Family Feud, 12,000 | - | - | `0xFBBFD575` |
+
+The harness captures are in `benchmarks/diff/vid19-true2x.json` and
+`artifacts/vid19/diff`; the side-by-side direct captures are under
+`artifacts/vid19/jp-boot-*` and `artifacts/vid19/ff-*`.
+
+**Performance.** A 10,000-frame segment from the same saved state and script measured:
+
+| Mode | Emulation time (run 1 / run 2) | Effective rate |
+|---|---:|---:|
+| Native 320x240 | 40.94 s / 45.17 s | 244.3 / 221.4 fps |
+| Legacy `--high-res` | 40.22 s | 248.6 fps |
+| True 2× | 54.91 s / 57.88 s | 182.1 / 172.8 fps |
+
+Across the two runs, true 2× averaged about 30% more emulation time (177 fps versus
+232 fps) and still runs more than 3x real time. The full 66,000-frame Jurassic Park capture
+completed in 212.1 s in the harness.
+
+**Default stability and state.** The native 63,000 hash remains `0xD5D6A993`, matching the
+ACC-04 checkpoint, and the full suite passes (2,367 tests). A state saved at frame 68,000
+in true 2× mode reloads with `trueHighResolution: true` and produces the same frame hash.
+The mode is opt-in and disabled by default.
+
+**Limitations.** Bitmap and SPORT-drawn content remains line-doubled; a title that reads
+the framebuffer or copies pages after CEL rendering can still need the native path. The
+mode is validated on two titles, not the full collection. The production work for bitmap
+sampling, framebuffer semantics, and a full sweep remains under VID-01.
+
+**Reproduce.**
+
+```powershell
+# Native and true 2x checkpoints (same script and BIOS).
+dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
+  "J:\Panasonic 3DO\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd" `
+  --bios bios/panafz1.bin --frames 66000 `
+  --input-script benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt `
+  --capture-dir artifacts/vid19/jp-native --capture-frames 63000,65000 --json
+
+dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
+  "J:\Panasonic 3DO\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd" `
+  --bios bios/panafz1.bin --frames 66000 --true-2x `
+  --input-script benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt `
+  --capture-dir artifacts/vid19/jp-true2x --capture-frames 63000,65000 --json
+
+# Structured 5DO-only captures for both titles.
+FiveDo.DiffHarness.exe run benchmarks/diff/vid19-true2x.json `
+  --out artifacts/vid19/diff --no-opera --force `
+  --cli src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.exe
+```
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

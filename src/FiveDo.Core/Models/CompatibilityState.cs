@@ -38,6 +38,12 @@ public sealed class CompatibilityState
     /// <summary>Gets or sets a value indicating whether high-resolution CEL rendering is active. FreeDO: <c>HightResMode</c>.</summary>
     public bool HighResolution { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the high-resolution path renders
+    /// independent 480-line fields instead of line-doubling each 240-line field.
+    /// </summary>
+    public bool TrueHighResolution { get; set; }
+
     /// <summary>Restores the values used at machine initialization.</summary>
     public void Reset()
     {
@@ -51,5 +57,6 @@ public sealed class CompatibilityState
         Jw = 0;
         Cnbfix = false;
         HighResolution = false;
+        TrueHighResolution = false;
     }
 }

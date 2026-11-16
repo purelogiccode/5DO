@@ -485,4 +485,4 @@ These images still belong in the loadability sweep. Add a 4DO/5DO row when the t
 2. Run the collection sweep: `pwsh -File tools/compat-sweep.ps1 -Frames 3000`.
 3. Inspect `artifacts/compat/summary.csv` and the per-game JSON/PNG evidence.
 4. Update the `5DO status` and `5DO notes` columns for every tested title.
-5. Re-run a title with `--high-res` and record the result separately when the high-resolution CEL path is being evaluated.
+5. Re-run a title with `--high-res` (legacy line-doubled) or `--true-2x` (independent 480-line CEL fields) and record the result separately when the high-resolution CEL path is being evaluated.

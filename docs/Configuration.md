@@ -109,7 +109,7 @@ every serialized property in `AppSettings`.
 | `AutoGameFixes` | bool | `true` | Apply the 4DO per-game fix-mode mapping automatically. |
 | `FixModeOverrides` | object | `{}` | Per-game fix-mode overrides, keyed by game ID. |
 | `FilterOverrides` | object | `{}` | Per-game filter overrides, keyed by game ID. |
-| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `RunAheadFrames`, `FrameDelayFrames`, `Vrr`, `AudioSyncMilliseconds`, `BiosMd5`, `FixMode`, `Filter`, `Deinterlace`, `HighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
+| `GameProfiles` | object | `{}` | Per-game profile snapshots, keyed by game ID. Each entry holds `Profile`, `Region`, `ArmTiming`, `ClioTimers`, `CelTiming`, `CdromTiming`, `CdSpeed`, `CpuClockMultiplier`, `RandomSeed`, `OperaDipir`, `OperaSoftReset`, `SwiHle`, `CpuBackend`, `CdAudioVolume`, `CdAudioMuted`, `RunAheadFrames`, `FrameDelayFrames`, `Vrr`, `AudioSyncMilliseconds`, `BiosMd5`, `FixMode`, `Filter`, `Deinterlace`, `HighResolution`, `TrueHighResolution`, `Overscan`, `InputDevices`, `NvramStorageMode`, `NvramVersion`, and `CheatBundle`. |
 | `Filter` | enum string | `"SharpBilinear"` | Global presentation filter. |
 | `Deinterlace` | enum string | `"Auto"` | 480i/240p field handling: `Auto` (detect and weave complementary fields), `Bob` (present every field, reference-compatible hashes), `Weave` (always combine two fields into 480/576 lines), or `Blend` (average two fields). Presentation-only. |
 | `FrameSkip` | enum string | `"Auto"` | Presentation frame-skip policy: `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`, or `OneInFive`. Only presentation is skipped; emulation and audio always run every frame. |
@@ -151,6 +151,7 @@ every serialized property in `AppSettings`.
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
+| `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields. Requires `HighResolution`. |
 | `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
 | `Region` | enum string | `"Ntsc"` | Video region used when `AutoRegion` is off: `Ntsc` (320x240, 60 Hz), `Pal1` (320x288, 50 Hz), or `Pal2` (384x288, 50 Hz). |
 | `AutoRegion` | bool | `true` | Follow the resolved BIOS video standard: PAL BIOS selects PAL1, NTSC selects NTSC. Disable to force `Region`. |
@@ -212,9 +213,9 @@ presets; they letterbox or pillarbox the source without changing emulated resolu
 `Renderer` (string): `OpenGl`, `Vulkan`, `Software`.
 
 `Profile` (string): `Compatible`, `Accuracy`, `Performance`, `Custom`. A profile is a
-shortcut for the individual timing fields; it never changes fixes, high-resolution mode,
-or the random seed. If the fields no longer match the selected profile, the dialog saves
-`Custom`.
+shortcut for the individual timing fields; it never changes fixes, high-resolution or
+true 2× mode, or the random seed. If the fields no longer match the selected profile, the
+dialog saves `Custom`.
 
 `Region` (string): `Ntsc`, `Pal1`, `Pal2`. NTSC runs 60 fields per second with 240
 visible lines. PAL1/PAL2 run 50 fields per second with 288 visible lines; PAL2 is 384
@@ -336,6 +337,7 @@ player-1 defaults. See section 3 for the full input structure.
   "Bloom": 0.35,
   "FsrSharpness": 0.8,
   "HighResolution": false,
+  "TrueHighResolution": false,
   "Region": "Ntsc",
   "AutoRegion": true,
   "Volume": 1.0,
@@ -571,7 +573,7 @@ the snapshot into the live settings, and `CreateEffectiveForGame(gameId)` deep-c
 override maps and returns a machine-creation snapshot without mutating live settings. The
 snapshot covers every registered machine option (timing, region, memory capacity, clock,
 random seed, Opera DIPIR/soft reset, CPU backend, fix mask), plus CD-DA, BIOS MD5, video filter,
-high-resolution mode, six PBUS devices, and NVRAM mode/version. Settings >
+high-resolution and true 2× modes, six PBUS devices, and NVRAM mode/version. Settings >
 Emulation edits, saves, deletes, imports, and exports the current game's profile;
 `run/trace --game-profile` applies the machine options headlessly. `RegionOverrides` pins
 a disc to NTSC/PAL1/PAL2 and wins over the automatic/global region choice.
@@ -589,6 +591,9 @@ The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
 - `HighResolution` checkbox (restarts the machine when changed).
+- `TrueHighResolution` checkbox: the experimental true 2× CEL path. It requires
+  high-resolution mode, leaves bitmap/SPORT content line-doubled, and restarts the machine
+  when changed.
 - `Region` combo: NTSC, PAL1, or PAL2. PAL runs at 50 Hz with 288 visible lines and
   needs a PAL BIOS. **Choose PAL/NTSC automatically from the BIOS** is enabled by
   default and switches the running machine between frames when a newly resolved BIOS
@@ -617,10 +622,10 @@ The Settings dialog's **Emulation** page edits:
 support; it falls back to the interpreter for unsupported instructions or when dynamic code
 is unavailable.
 
-Changing high-resolution mode, ARM timing, the CLIO timer mode, the CEL timing mode, the
-CD-ROM timing mode, the CD-ROM speed, the ARM clock, the random seed, Opera DIPIR, Opera
-soft reset, or the CPU backend recreates the machine and reopens the current BIOS/disc;
-the state is not preserved. Save states record every registered machine option, and
+Changing high-resolution mode (including the true 2× mode), ARM timing, the CLIO timer
+mode, the CEL timing mode, the CD-ROM timing mode, the CD-ROM speed, the ARM clock, the
+random seed, Opera DIPIR, Opera soft reset, or the CPU backend recreates the machine and
+reopens the current BIOS/disc; the state is not preserved. Save states record every registered machine option, and
 loading a state written with another value reports a warning instead of rejecting it.
 
 ---
@@ -894,8 +899,9 @@ frontend launch arguments (--disc, --bios, --fullscreen/-fullscreen/-f, --gl-bac
 ```
 
 For the desktop shell, changes made in **Settings** are applied when the dialog is
-accepted; `settings.json` is written immediately. Changes to high-resolution mode
-restart the machine. Changes to audio settings recreate the OpenAL output if needed.
+accepted; `settings.json` is written immediately. Changes to high-resolution mode (including
+the true 2× mode) restart the machine. Changes to audio settings recreate the OpenAL output
+if needed.
 Changing `Renderer` recreates the active presenter without restarting emulation.
 Changes to `OutputResolution`, filters, aspect, and vsync apply to the current renderer
 without restarting the machine. `DisplayRefreshRate` applies immediately: a value above

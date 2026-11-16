@@ -92,6 +92,12 @@ public sealed class GameProfile
     /// <summary>Gets or sets the per-game high-resolution mode, or <see langword="null"/> for the global mode.</summary>
     public bool? HighResolution { get; set; }
 
+    /// <summary>
+    /// Gets or sets the per-game true 2x CEL mode, or <see langword="null"/> for the global mode.
+    /// Requires <see cref="HighResolution"/>.
+    /// </summary>
+    public bool? TrueHighResolution { get; set; }
+
     /// <summary>Gets or sets the per-game presentation crop, or <see langword="null"/> for the global crop.</summary>
     public CropInsets? Overscan { get; set; }
 
@@ -146,6 +152,7 @@ public sealed class GameProfile
             Vrr = settings.Vrr,
             AudioSyncMilliseconds = settings.AudioSyncMilliseconds,
             HighResolution = settings.HighResolution,
+            TrueHighResolution = settings.TrueHighResolution,
             Deinterlace = settings.Deinterlace,
             Overscan = settings.ResolveOverscan(),
             NvramStorageMode = settings.NvramStorageMode,
@@ -221,6 +228,11 @@ public sealed class GameProfile
         if (HighResolution is { } highResolution)
         {
             settings.HighResolution = highResolution;
+        }
+
+        if (TrueHighResolution is { } trueHighResolution)
+        {
+            settings.TrueHighResolution = trueHighResolution;
         }
 
         if (Overscan is { } overscan)

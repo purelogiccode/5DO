@@ -444,6 +444,7 @@ public sealed class SaveStateTests
             RandomSeed = 0x1234_5678,
             FixMode = FixMode.BitTiming5,
             HighResolution = true,
+            TrueHighResolution = true,
             OperaDipir = true,
             OperaSoftReset = true,
             SwiHle = true,

@@ -240,7 +240,7 @@ workflow.
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res`; line-doubled 640x480 output | True internal 640x480 / supersampling research in M14 (post-1.0) |
+| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res` (line-doubled 640x480) or `--true-2x` (independent 480-line CEL fields) | Bitmap/SPORT high-resolution sampling and full-collection validation remain VID-01 research |
 | PAL | Yes: PAL1 320x288 and PAL2 384x288 at 50 Hz, with per-game BIOS selection | |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
@@ -267,13 +267,25 @@ frame source becomes 640x480. The extra planes follow the active VRAM capacity
 planes. Save states, frame hashes, screenshots, the CPU assembler, and the OpenGL
 uploader all carry the larger frame.
 
-**Important limitation:** this is FreeDO-style line doubling, not true internal
-640x480 rendering. Each 240-line source line is written to both interlace fields, so
-the vertical detail is still 240 lines. The mode improves horizontal CEL sampling and
-matches 640-wide titles such as Lemmings, but it does not add true vertical geometry.
-See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the M14 research
-options (true 640x480, 2x supersampling, and GPU CEL compositing). M14 is post-1.0 and
-does not block v1.0.
+**Important limitation:** the legacy `--high-res` path is FreeDO-style line doubling,
+not true internal 640x480 rendering. Each 240-line source line is written to both
+interlace fields, so the vertical detail is still 240 lines. It improves horizontal CEL
+sampling and matches 640-wide titles such as Lemmings, but it does not add true vertical
+geometry.
+
+The opt-in **`--true-2x`** path (`EmulatorTuning.TrueHighResolution`, Settings >
+Emulation > **True 2x CEL fields**, and per-game **TrueHighResolution**) keeps the same
+four planes but writes even output lines to planes 0/1 and odd output lines to planes 2/3.
+Arbitrary CEL geometry evaluates at 640x480 and packed/scaled 2D CELs expand to 2x2
+blocks, so the VDLP presents independent 480-line CEL fields. Bitmap and SPORT content
+still follows the line-doubled layout. The mode is validated on Jurassic Park
+Interactive's Raptor Maze (38.41% of pixels differ from a 2x nearest upscale) and Family
+Feud (0.00% difference, a clean 2x scale); native output and the legacy mode are
+unchanged. True 2× costs about 30% more emulation time on the Raptor Maze and remains
+opt-in.
+See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the remaining
+VID-01 production work (bitmap/SPORT sampling, framebuffer-read semantics, and a
+full-collection sweep).
 
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
@@ -333,10 +345,11 @@ does not need a separate high-resolution input path.
   audio evidence remain.
 - PAL1/PAL2 are implemented and the Europe-only matrix titles have dated captures in
   [PalValidation.md](PalValidation.md).
-- High-resolution CEL rendering is opt-in (`--high-res`) and validated for the
-  Lemmings title; it is FreeDO-style line doubling, not true internal 640x480.
-  Output upscaling via OpenGL is supported separately. See
-  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+- High-resolution CEL rendering is opt-in. The legacy `--high-res` path is validated for
+  the Lemmings title and is FreeDO-style line doubling; `--true-2x` adds independent
+  480-line CEL fields and is validated on Jurassic Park Interactive's Raptor Maze and
+  Family Feud. Bitmap/SPORT content remains line-doubled. Output upscaling via OpenGL is
+  supported separately. See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - Mouse, light gun, arcade light gun, flightstick, and Orbatak trackball devices are
   implemented on the eight PBUS ports with an active-device cap of 0-8 and a 256-byte

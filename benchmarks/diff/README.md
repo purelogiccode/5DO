@@ -67,6 +67,11 @@ not product configuration.
   40,000/42,000/57,000/62,000/63,000/65,000. It is consumed by `FiveDo.DiffHarness` and
   records the first visual divergence (default FreeDO CEL pacing at 65,000) and the
   Opera-busy match. See `docs/TestCorpus.md` 1.1ck.
+- `vid19-true2x.json` - the VID-19 true 2x CEL captures for Jurassic Park Interactive's
+  Raptor Maze (66,000 frames, checkpoints 63,000/65,000) and Family Feud (12,000 frames,
+  checkpoints 9,000/12,000). Both titles pass `--true-2x` through `options.extraArgs`.
+  Run it with `--no-opera` for 5DO-only image/hash evidence; the Opera reference core
+  outputs 320x240 and cannot compare a 640x480 capture. See `docs/TestCorpus.md` 1.1cl.
 
 These manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
 Relative paths resolve from the repository root. The harness stages the OperaCore

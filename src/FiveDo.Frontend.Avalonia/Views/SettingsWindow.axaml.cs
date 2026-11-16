@@ -358,7 +358,8 @@ public partial class SettingsWindow : Window
         CdMuteCheck.IsChecked = settings.CdAudioMuted;
         AutoSwapCheck.IsChecked = settings.AutoSwapOnEject;
         AutoFixesCheck.IsChecked = settings.AutoGameFixes;
-        HighResCheck.IsChecked = settings.HighResolution;
+        HighResCheck.IsChecked = settings.HighResolution || settings.TrueHighResolution;
+        TrueHighResCheck.IsChecked = settings.TrueHighResolution;
         RegionCombo.ItemsSource = _regionOptions;
         RegionCombo.SelectedItem = _regionOptions.FirstOrDefault(option => option.Value == settings.Region)
             ?? _regionOptions[0];
@@ -764,6 +765,11 @@ public partial class SettingsWindow : Window
             ? deinterlace.Value
             : _settings.Deinterlace;
         profile.HighResolution = HighResCheck.IsChecked;
+        profile.TrueHighResolution = TrueHighResCheck.IsChecked;
+        if (profile.TrueHighResolution == true)
+        {
+            profile.HighResolution = true;
+        }
         profile.InputDevices = PerGameInputCheck.IsChecked == true
             ? GetInputDeviceNames()
             : [];
@@ -901,7 +907,10 @@ public partial class SettingsWindow : Window
             DeinterlaceCombo.SelectedItem = _deinterlaceOptions.FirstOrDefault(
                     option => option.Value == (profile.Deinterlace ?? _settings.Deinterlace))
                 ?? _deinterlaceOptions[0];
-            HighResCheck.IsChecked = profile.HighResolution ?? _settings.HighResolution;
+            var profileTrueHighResolution = profile.TrueHighResolution ?? _settings.TrueHighResolution;
+            TrueHighResCheck.IsChecked = profileTrueHighResolution;
+            HighResCheck.IsChecked = (profile.HighResolution ?? _settings.HighResolution)
+                || profileTrueHighResolution;
             if (profile.InputDevices.Count > 0)
             {
                 SetInputDevices(profile.InputDevices.ToArray());
@@ -1277,6 +1286,11 @@ public partial class SettingsWindow : Window
         settings.AutoSwapOnEject = AutoSwapCheck.IsChecked == true;
         settings.AutoGameFixes = AutoFixesCheck.IsChecked == true;
         settings.HighResolution = HighResCheck.IsChecked == true;
+        settings.TrueHighResolution = TrueHighResCheck.IsChecked == true;
+        if (settings.TrueHighResolution)
+        {
+            settings.HighResolution = true;
+        }
         settings.ArmTiming = ArmTimingCombo.SelectedItem is ArmTimingOption armTiming
             ? armTiming.Value
             : ArmTimingMode.FreeDoCompatible;

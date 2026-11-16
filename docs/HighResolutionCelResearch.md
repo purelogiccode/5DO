@@ -1,6 +1,7 @@
 # High-Resolution CEL Rendering Research
 
-**Status:** post-1.0 research plan (2026-10-30; release scope updated 2026-11-02)
+**Status:** post-1.0 research plan (2026-10-30; release scope updated 2026-11-02;
+**VID-19 true 2× prototype implemented 2026-11-16**)
 **Release status:** M14 is **not a v1.0 release blocker**. v1.0 ships the existing
 opt-in `--high-res` mode and 320x240 + output filtering as the default. This document
 tracks future research.
@@ -44,6 +45,66 @@ It improves horizontal sampling for CEL X coordinates and matches the FreeDO
 
 Evidence: Lemmings' 640x480 title matches the reference because the game itself uses a
 640-wide VDL mode; it is not proof that 3D CELs are rendered at true 640x480.
+
+### VID-19 prototype result (2026-11-16)
+
+The bounded spike is implemented as the opt-in **`--true-2x`** machine option
+(Settings > Emulation > **True 2x CEL fields**, per-game **TrueHighResolution**, and a
+save-state field). The legacy `--high-res` line-doubled mode is unchanged and remains the
+fallback.
+
+**Design.** The four-plane layout is kept, but the plane pairs now carry independent
+fields instead of copies. For a high-resolution pixel `(x, y)`:
+
+- output-line parity selects planes 0/1 (even) or planes 2/3 (odd);
+- `x & 1` selects the even/odd column within the pair;
+- the 3DO word layout still stores the two 240-line source rows in opposite halfwords,
+  so VDLP reads the independent fields without changes.
+
+Arbitrary (3D) CEL geometry already evaluates in 640x480 space; the true path routes its
+writes to the correct field plane. Packed and scaled 2D CELs stay on their original
+240-line coordinates and expand each source pixel to a 2x2 block, which keeps sprites,
+text, and HUDs aligned with the 640x480 frame. Bitmap lines and SPORT copies remain
+line-doubled; a title that reads the framebuffer or copies pages after CEL rendering can
+still need the native path.
+
+**Visual comparison.** Jurassic Park Interactive's in-park Raptor Maze is the named
+CEL-heavy 3D title; Family Feud is the 2D control. At frame 63,000 the legacy
+`--high-res` output shows only the ceiling/upper half of the corridor and a half-width
+HUD, while `--true-2x` shows the complete corridor with the HUD at 2x scale. Compared with
+a 2x nearest-neighbor upscale of the native 320x240 frame, the true 2x frame changes
+**38.41%** of pixels (117,992 / 307,200) on the Raptor Maze, proving that the difference is
+not just output scaling. Family Feud at frame 9,000 changes **0.00%** of pixels, showing
+that 2D content is a clean 2x scale with no missing columns or palette artifacts.
+
+| Title / frame | Native 320x240 hash | Legacy `--high-res` | True 2× hash | Result |
+|---|---:|---|---:|---|
+| Jurassic Park, 63,000 | `0xD5D6A993` | `0x79149ECD` (upper half only) | `0xF67CF55B` | Full corridor; 38.41% differs from a 2x upscale |
+| Jurassic Park, 65,000 | `0x133DCBA8` | - | `0x130EDE0E` direct / `0xF75B56C7` harness | Raptor encounter renders at 640x480 |
+| Family Feud, 9,000 | `0x8893A949` | black frame (972-byte PNG) | `0x92434A2D` | 0.00% differs from a 2x upscale |
+
+The exact hashes and captures are recorded in `docs/TestCorpus.md` 1.1cl and
+`benchmarks/diff/vid19-true2x.json`.
+
+**Performance.** On a 10,000-frame segment from the same saved state and script:
+
+| Mode | Emulation time (run 1 / run 2) | Effective rate |
+|---|---:|---:|
+| Native 320x240 | 40.94 s / 45.17 s | 244.3 / 221.4 fps |
+| Legacy `--high-res` | 40.22 s | 248.6 fps |
+| True 2× | 54.91 s / 57.88 s | 182.1 / 172.8 fps |
+
+Across the two runs, true 2× averaged about 56.4 s versus 43.1 s native, about 30% more
+emulation time (177 fps versus 232 fps), and still runs more than 3x real time. The legacy
+path is faster because it writes the same pixel to both fields.
+
+**Default stability.** The native 63,000 frame hash remains `0xD5D6A993`, matching the
+ACC-04 reference checkpoint, and the full suite passes (2,367 tests). The option is
+disabled by default; enabling it changes frame hashes and costs performance, as expected.
+
+**Remaining production work (VID-01).** The prototype does not make high-resolution the
+default and does not solve bitmap/SPORT detail, framebuffer-read semantics, per-title
+validation, or a full-collection sweep. Those remain the production research items.
 
 ---
 
@@ -167,17 +228,21 @@ broken.
 
 ### Phase 2 — True 640x480 prototype (3-5 days)
 
-- Add a separate tuning flag (for example `HighResolutionMode.True640`) so the existing
-  `RESSCALE` behavior remains available as the reference.
-- Remove the plane 2/3 duplication and emit independent 480-line output.
-- Scale CEL Y coordinates, clip Y, and VDLP line timing by 2.
-- Keep guest VRAM semantics unchanged where possible; if a game reads the framebuffer,
-  fall back to the native path for that title.
-- Validate on Lemmings (640x480 title), a 2D title, and a 3D title (Road Rash or Total
-  Eclipse).
+**Delivered 2026-11-16 as the opt-in `--true-2x` path.** The existing `RESSCALE`
+line-doubled behavior remains available as the fallback.
 
-**Deliverable:** screenshots and frame hashes for the prototype; a compatibility list
-of titles that work.
+- Added `EmulatorTuning.TrueHighResolution` (CLI `--true-2x`, Settings > Emulation,
+  per-game profile, and save-state field) without changing the default tuning.
+- Removed the plane 2/3 duplication for CEL writes: even output lines use planes 0/1 and
+  odd output lines use planes 2/3, with VDLP reading them unchanged.
+- Arbitrary CEL geometry evaluates at 640x480; packed/scaled 2D CELs expand to 2x2 blocks.
+- Validated Jurassic Park Interactive's Raptor Maze (3D CELs) and Family Feud (2D CELs);
+  native 320x240 and the legacy line-doubled path are byte-identical to before.
+- Bitmap/SPORT content remains line-doubled, and framebuffer-read semantics are not yet
+  changed; these are the remaining production items.
+
+**Deliverable:** screenshots, hashes, and a frame-time comparison are recorded in §1 and
+`TestCorpus.md` 1.1cl; `benchmarks/diff/vid19-true2x.json` reproduces the captures.
 
 ### Phase 3 — Supersampling prototype (3-5 days)
 
@@ -214,6 +279,10 @@ Record the M14 experiments in this table (one row per title/mode):
 | Road Rash | `--high-res` | 3,000 | | | |
 | Road Rash | True 640 prototype | 3,000 | | | |
 | 2D title | 2x supersample | 3,000 | | | |
+| Jurassic Park | Native 320x240 | 10,000 (state segment) | 43.1 s (232 fps, two-run average) | `artifacts/vid19/jp-boot-native` | Full corridor |
+| Jurassic Park | `--true-2x` | 10,000 (state segment) | 56.4 s (177 fps, two-run average) | `artifacts/vid19/jp-boot-true2x` | Full corridor; 38.41% differs from a 2x upscale |
+| Family Feud | Native 320x240 | 9,000 | - | `artifacts/vid19/ff-native` | 320x240 reference |
+| Family Feud | `--true-2x` | 9,000 | - | `artifacts/vid19/ff-true2x` | Clean 2x scale; 0.00% differs |
 
 Use the same frame number and camera/input state for each pair. A visual difference is
 not automatically an improvement: check for crop, missing HUD/text, wrong palette, and
