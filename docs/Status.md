@@ -1,5 +1,21 @@
 # Project Status and Next Steps
 
+**2026-11-16, ACC-04:** **Jurassic Park Interactive now reaches in-park gameplay.**
+The earlier stop on the Security Tracking map was input scripting, not CEL accounting or
+rendering: the Operations console is a pointer interface, and the old script never moved
+the pointer hand onto a guest or confirmed a destination. The new
+`jurassic-park-raptor-maze.txt` selects Robert Muldoon, chooses the Rest Room, and starts
+the **Raptor Maze** at 63,000 frames; the raptor encounter and **SECURITY BREACH** outcome
+render at 65,000/65,500 and the map returns at 66,000. 5DO and OperaCore frame hashes
+match at 40,000/42,000/57,000/62,000/63,000. The first observed visual divergence is the
+65,000 checkpoint: the default FreeDO CEL model is ahead of the reference's static
+corridor, while `--cel-timing opera` matches the reference hash `0xD5D6A993` exactly. ACC-04 closes as an
+input-scripting fix plus a default-CEL-pacing residual (§4 of the plan); the row stays
+`Playable` until the driving/Spitter paths are scripted and the default pacing is
+resolved. Evidence: `artifacts/acc04`,
+[TestCorpus.md](TestCorpus.md) 1.1ck, and
+[DifferentialHarness.md](DifferentialHarness.md) §8.
+
 **2026-11-15, v1.10.2 release:** **`SYS-24` is complete and the Windows OpenAL
 runtime is fixed.** DiscJuggler `.cdi` and Nero `.nrg` images now open through the CLI,
 File > Open Disc, and the game library. Two standalone readers, `CDISharp` and
@@ -88,7 +104,9 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-15, v1.10.2: CDI and NRG disc images, the Windows OpenAL bundle
+**Snapshot:** 2026-11-16, v1.10.2: Jurassic Park Interactive reaches the in-park Raptor
+Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
+images, the Windows OpenAL bundle
 fix, RetroAchievements with a managed rcheevos engine,
 save-state hit persistence, durable offline unlocks, hardcore rules, leaderboards, rich
 presence, and OSD notifications; the `FiveDo` desktop apphost; deferred startup work and

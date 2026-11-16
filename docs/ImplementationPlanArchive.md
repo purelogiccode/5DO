@@ -382,6 +382,20 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-16 - ACC-04 Jurassic Park Interactive CEL timing.** Closed the investigation
+  with a working in-park script. The old terminal script stopped on the Security
+  Tracking map because it never moved the Operations pointer hand onto a guest; the new
+  `benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` selects Robert Muldoon,
+  cycles to the Rest Room, and starts the Raptor Maze at 63,000 frames. The corridor,
+  key, raptor, and SECURITY BREACH outcome render through 65,500 and return to the map at
+  66,000. The OperaCore run in `benchmarks/diff/acc04-jurassic-cel.json` matches every
+  frame hash through 63,000; the first observed visual divergence is the 65,000
+  checkpoint, where the default FreeDO CEL model is ahead of the static reference
+  corridor. `--cel-timing opera`
+  produces the reference hash `0xD5D6A993` exactly, so the residual is the default CEL
+  busy model, not input or rendering. Evidence: `artifacts/acc04`,
+  [TestCorpus.md](TestCorpus.md) 1.1ck.
+
 - **2026-11-10 - PLAT-03/PLAT-04 native runtime, ACC-03 subcode, SYS-22 conversion,
   UX-25 focus, VID-16/VID-17.** Added `.github/workflows/platform-runtime.yml`, which
   publishes the framework-dependent CLI/frontend on macOS x64 (`macos-15-intel`),

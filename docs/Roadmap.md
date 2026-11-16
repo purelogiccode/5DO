@@ -50,6 +50,12 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
 **Accuracy residuals (not release blockers):**
 
 - Road Rash's long-run frame divergence from the reference core.
+- Jurassic Park Interactive's default FreeDO CEL model runs the Raptor Maze ahead of the
+  reference; at 65,000 the reference is still on the 63,000 corridor frame. The
+  Opera-busy model matches the reference frame hash exactly. Set the per-game CEL timing
+  to **Opera busy** for
+  reference pacing. The game now reaches in-park gameplay; the driving/Spitter minigames
+  are not yet scripted.
 - CD command-cadence residual and audio-only BIOS CD-player transport (the TOC now
   lists; playback remains a documented BIOS limit).
 - Crash 'n Burn (Japan) BIOS/dump boot limitation.

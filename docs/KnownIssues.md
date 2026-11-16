@@ -1,6 +1,8 @@
 # Known Issues
 
-**Snapshot:** 2026-11-15, v1.10.2: CDI and NRG disc images, the Windows OpenAL bundle
+**Snapshot:** 2026-11-16, v1.10.2: Jurassic Park Interactive reaches the in-park Raptor
+Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
+images, the Windows OpenAL bundle
 fix, RetroAchievements with a managed rcheevos engine, save-state hit persistence,
 3DO hashing, a durable offline unlock queue, hardcore rules, rich presence,
 leaderboards, and OSD notifications, the `FiveDo` apphost rename, deferred/ReadyToRun
@@ -314,7 +316,7 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 | Road Rash | Boots, 3D race renders, `BUSTED`/race-select/new-race flow works, autopilot cycles race -> wreck -> menu -> new race, save/load roundtrip | A full 5.5-mile race is still not finished. A fresh 150,000-frame autopilot run ends with the rider off the bike on the sidewalk; the residual is driving/start-line and traffic avoidance, not the old CD wait |
 | Alone in the Dark | Boots, in-game room, upright character, Begin/Resume menu, intro, room exploration, **Actions** menu (`Fight`/`Open/Search`/`Close`/`Push`), save/load roundtrip | The intro needs A input; the scripted pass reaches the room and opens the Actions menu, but a longer inventory-use/exploration sequence is still open |
 | BladeForce | Boots, name entry, Training Mission, Recon Maps, Supply Depot first-person mission with HUD/gun/enemies | No longer menu-only. The scripted mission runs through 90,000 frames without a crash; deeper mission/level completion is not claimed |
-| Jurassic Park Interactive | Boots, Operations map, Security Systems terminal, **Security Tracking** map | A terminal now opens, but no in-park gameplay or mini-game is reached |
+| Jurassic Park Interactive | Boots, Operations map, Security Systems terminal, **Security Tracking** map, guest/destination selection, **Raptor Maze** corridor/key/raptor, and the **SECURITY BREACH** outcome | The earlier gap was input scripting, not CEL or rendering: the pointer hand must be moved onto a guest, a destination must be cycled and confirmed, and the in-park challenge then loads. The default FreeDO CEL model runs the Raptor Maze ahead of the reference; at 65,000 the reference is still on the 63,000 corridor frame. Set `--cel-timing opera` or the per-game CEL timing to **Opera busy** for reference pacing. Driving/Spitter minigames are not yet scripted |
 | Off-world Interceptor | Boots, vehicle shop, loadout, **PLAY**, first mission with 3D vehicle/HUD/enemies | The scripted mission returns to the shop after vehicle loss; continuous 10-minute mission survival is not yet scripted |
 | PGA Tour 96 | Boots, Golf Bag, Rules, Player List, Scoring, Course Selection, Round, **Hole 1** tee/gameplay | A round starts and renders; a full hole/round completion is not claimed |
 | Space Ace | Boots, animated demo, audio, interactive start via X->menu, A->play, save/load roundtrip | A long no-input continuation after the 15,000-frame interactive state reaches a black wait screen; longer input-driven scene/decision validation is still needed |

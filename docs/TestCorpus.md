@@ -3935,6 +3935,68 @@ transient win-x64 artifact-upload retry. Docs run
 and wiki; `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and `wiki/Release-1.10.2` return
 HTTP 200. See [Installers.md](Installers.md) §1.10.2.
 
+### 1.1ck ACC-04 Jurassic Park Interactive in-park gameplay and CEL timing (2026-11-16)
+
+**Finding.** The remaining Jurassic Park Interactive gap was input scripting, not CEL
+cycle accounting or rendering. The earlier `jurassic-park-terminal-boot.txt` run stopped
+on the Security Tracking map because it never moved the pointer hand onto a guest icon.
+The Operations console is a pointer interface: the D-pad moves the hand, `A` clicks, and
+`R`/`L` cycle the system and destination choices. The new boot-absolute script
+`benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` selects **Security
+Tracking**, moves the hand onto **Robert Muldoon**, selects the **Rest Room**
+destination, and opens the in-park **Raptor Maze** at 63,000 frames. The corridor, key
+icon, and raptor render; holding `Up` moves the camera; the **SECURITY BREACH** /
+"SORRY, YOU DID NOT MAKE IT" outcome appears at 65,500 and the Operations map returns at
+66,000. No crash.
+
+**Reference.** The same script runs on OperaCore through
+`benchmarks/diff/acc04-jurassic-cel.json` (65,000 frames; checkpoints
+40,000/42,000/57,000/62,000/63,000/65,000). 5DO and Opera frame hashes match exactly at
+every checkpoint through 63,000. The first observed visual divergence is the 65,000
+checkpoint: 5DO has the raptor at the camera (`0xC8FB9621`), while Opera is still on the
+static corridor (`0xD5D6A993`). The only earlier field divergence is the documented
+audio-clock quantization (36-59 samples, about 1.214 ppm). Phoenix's saved compatibility
+list rates the title 100% with the note *"Timing: Requires CEL-Engine cycle count - 100% +
+out of frame"*; a runnable Phoenix build was not available here, so Phoenix remains
+list-level evidence. The exact Phoenix capture request is the same 65,000-frame Raptor
+Maze run with a CEL-cycle-counting build.
+
+**CEL timing A/B.** With `--cel-timing opera`, 5DO produces the Opera frame hash
+`0xD5D6A993` at 65,000. In the movement probe the busy model records 259,061 cycles at
+63,000 and 1,315,885 at 65,000, so the reference's slower in-maze pace is the CEL busy
+deadline, not a renderer or input defect. The default FreeDO model draws synchronously and
+runs the maze ahead; the `opera` model matches the reference at the checkpoint.
+
+**Verdict.** ACC-04 closes as an input-scripting fix plus a documented default-CEL
+residual. The row stays `Playable`: the Raptor Maze is reached and interactive, but the
+default pacing still differs from the reference and the driving/Spitter minigames are not
+scripted. For reference pacing set `--cel-timing opera` or the per-game **CEL timing** to
+**Opera busy**. Evidence: `artifacts/acc04`; [ImplementationPlan.md](ImplementationPlan.md)
+§4.
+
+**Reproduce.**
+
+```powershell
+dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
+  "J:\Panasonic 3DO\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd" `
+  --bios-auto bios --frames 70000 `
+  --input-script benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt `
+  --capture-dir artifacts/acc04/full-boot `
+  --capture-frames 40000,42000,57000,62000,63000,65000,65500,66000 --json
+
+FiveDo.DiffHarness.exe run benchmarks/diff/acc04-jurassic-cel.json `
+  --out artifacts/acc04/diff-full --timeout 3600 --force `
+  --cli src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.exe `
+  --core References/CPP_SimpleGui/cmake-build-release/SimpleGui/Core/OperaCore.dll
+
+# CEL A/B: the same state/script with the Opera busy model.
+dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
+  "J:\Panasonic 3DO\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd" `
+  --state-in artifacts/acc04/state-muldoon-destinations.tdos --frames 10000 `
+  --input-script artifacts/acc04/scripts/maze-walk.txt --cel-timing opera `
+  --checkpoints 62000,63000,64000,65000,65500,66000 --json
+```
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

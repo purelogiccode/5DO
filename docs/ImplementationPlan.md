@@ -41,7 +41,7 @@ loadability and duplicate coverage.
 | Corpus | 1,371 images → 414 unique titles → **378 game test set** | `artifacts/corpus/inventory.json`, `docs/data/unique-corpus.csv` |
 | 5DO playability | **375 / 378 Playable**; 2 `Title-only`; 1 `No video` | `docs/data/beyond-title-results.csv`, [BeyondTitleEvidence.md](BeyondTitleEvidence.md) |
 | Peer comparison | **0 `Behind`**, **0 `Regression`**; strict superset of the **252-title** peer union (4DO **167**, Phoenix **233**) | [CompatibilityComparison.md](CompatibilityComparison.md) |
-| Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom) | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
+| Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom). Jurassic Park now reaches in-park gameplay; its remaining item is default CEL pacing, recorded in §4. | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
 | Release | **v1.10.2** six framework-dependent bundles (macOS as DMG) and `SHA256SUMS.txt` with CDI/NRG disc images and the Windows OpenAL runtime fix; **v1.10.1** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2) |
@@ -59,7 +59,8 @@ The remaining non-playable rows are three non-retail/add-on images: `Joypad Test
 ### 1.3 Completed stable IDs
 
 The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
-REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **PLAT-01**,
+REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **ACC-04**,
+**PLAT-01**,
 **PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-09**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
 **SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-29**,
@@ -67,7 +68,8 @@ REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **PLAT-01
 for their named hardware evidence.
 
 `ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
-§4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
+§4. `ACC-04` is closed with the new in-park gameplay script and a default-CEL-pacing
+residual in §4. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
 `QUAL-03A`…`QUAL-03D` and `QUAL-05A` are now complete; `QUAL-05B` (the full Road Rash
 race) is blocked in §4. The full completed-ID index, milestone aliases, old gates, and
 dated evidence entries are in
@@ -167,13 +169,14 @@ item stays in §4 until the credentials exist. Evidence: [Installers.md](Install
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **ACC-03 — Done** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test. | The CD sector path already existed; the 2352+96 wire size and Q packing are now implemented. | A synthetic subcode test passes and the Q payload decodes to the same control/track/index/MSF values. Evidence: `CdromMultiTrackTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **ACC-04** | M | **Jurassic Park Interactive CEL-timing investigation**: compare 5DO, Phoenix, and Opera through the Operations hub into an in-park terminal or gameplay scene. Determine whether the remaining gap is input scripting, CEL cycle accounting, or rendering. | 5DO already reaches the hub and Security Tracking, the CEL timing model and scripted input exist, and Phoenix's compatibility list reports 100%. | A dated side-by-side capture identifies the first 5DO/reference divergence, or proves the reference does not reach gameplay; the result is either a tested fix/promotion or a documented limitation. If a runnable Phoenix build/reference capture is unavailable, record the exact capture request and move the item to §4. |
+| **ACC-04 — Done** | M | **Jurassic Park Interactive CEL-timing investigation**: compare 5DO, Phoenix, and Opera through the Operations hub into an in-park terminal or gameplay scene. Determine whether the remaining gap is input scripting, CEL cycle accounting, or rendering. | 5DO already reaches the hub and Security Tracking, the CEL timing model and scripted input exist, and Phoenix's compatibility list reports 100%. | **Result (2026-11-16): the gap was input scripting.** `benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` moves the pointer hand onto Robert Muldoon, cycles to the Rest Room, and starts the in-park **Raptor Maze** at 63,000 frames; the raptor encounter and **SECURITY BREACH** outcome render at 65,000/65,500. 5DO and OperaCore frame hashes match at 40,000/42,000/57,000/62,000/63,000. The first observed visual divergence is the 65,000 checkpoint: the default FreeDO CEL model is ahead of the reference's static corridor, while `--cel-timing opera` produces the reference hash `0xD5D6A993` exactly. The renderer and input path are clean; the residual is the default CEL busy model (§4). Evidence: `artifacts/acc04`, `benchmarks/diff/acc04-jurassic-cel.json`; [TestCorpus.md](TestCorpus.md) 1.1ck. |
 
 `SYS-01` is now in §4: the FZ-10 BIOS CD player lists the audio-only TOC after the
 subcode fix, but its transport controls remain inert and the 4DO reference documents
 the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode.
-`ACC-04` is a bounded investigation, not a promise that the Phoenix 100% claim is
-reproducible on the local dump; it must end in either evidence or a documented block.
+`ACC-04` closed on 2026-11-16 with a working in-park script and a reference-selected
+CEL-pacing residual; its `Good` promotion remains gated on the default CEL model or a
+per-game Opera-busy profile, not on reachability.
 
 ### 3.6 P3 — Product features
 
@@ -199,8 +202,9 @@ reproducible on the local dump; it must end in either evidence or a documented b
 
 **Reference audit (2026-11-15).** 4DO, FreeDO, opera-libretro, and Phoenix were
 re-read for player-visible gaps. The remaining candidates are `VID-19` (true 2× CEL
-spike), `UX-33` (minor presentation options), `ACC-04` (Jurassic Park Interactive CEL
-timing), and `SYS-25` (live CPU clock, candidate). `SYS-24` (CDI/NRG) closed on
+spike), `UX-33` (minor presentation options), and `SYS-25` (live CPU clock, candidate).
+`ACC-04` (Jurassic Park Interactive CEL timing) closed on 2026-11-16 with the in-park
+Raptor Maze script and a default-CEL-pacing residual; `SYS-24` (CDI/NRG) closed on
 2026-11-15. Everything else
 in those references is already implemented, intentionally out of scope, or blocked:
 embedded boot ROM (licensing), GUI debugger (developer tooling), netplay (out of
@@ -266,6 +270,7 @@ documented limitation, not that it is unachievable.
 | **Netplay, achievements, full debugger UI** | Out of scope for v1. | A post-compatibility product roadmap opens. |
 | **QUAL-05B Road Rash full race** | A fresh 150,000-frame `--autopilot road` run still ends with the rider off the bike on the sidewalk; the remaining work is driving/start-line and traffic avoidance, not emulation. Evidence: `artifacts/p0-rr-auto-boot`. | A scripted driver completes the 5.5-mile race without a wreck, or a new autopilot strategy proves it can. |
 | **ACC-01 Road Rash long-run divergence** | Documented residual: first behavioral divergence is frame 600 (guest read-request ordering); no game-visible impact has been shown. | A Road Rash gameplay scene (not intro/attract) diverges, or a matrix title changes status. |
+| **ACC-04 Jurassic Park default CEL pacing** | Documented residual: the default FreeDO CEL model advances the Raptor Maze ahead of the reference; at 65,000 the reference is still on the 63,000 corridor frame, while `--cel-timing opera` matches the OperaCore frame hash `0xD5D6A993` exactly. Reachability and rendering are fixed. | A per-game Opera-busy profile is adopted, the default CEL model is retuned against a CEL-heavy panel, or a player-visible pacing defect appears outside the Raptor Maze. |
 | **CORE-04 CD command-cadence residual** | Documented residual: 11/50 panel titles still differ in CD command cadence at frame 300; video/audio match. | A title shows a player-visible CD/audio effect, or a matrix title changes status. |
 | **Crash 'n Burn (Japan)** | The Japan dump/BIOS pair is the limit; every tested BIOS stays on the Anvil boot screen. USA/Korea revisions work. | A verified Japan dump/BIOS pair renders the game. |
 | **DeathKeep / Kingdom gameplay** | Both match the reference’s black/title screen; no known input reaches gameplay. | A reference gameplay capture proves a reachable scene. |
@@ -290,10 +295,10 @@ documented limitation, not that it is unachievable.
    `PLAT-07` and `PLAT-09` are **done**; `PLAT-08` remains the Vulkan surface work.
 4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
    stay blocked in §4 until certificates/accounts exist.
-5. **P2 accuracy:** `ACC-03` is **done**; `ACC-04` (Jurassic Park CEL timing) is the
-   next bounded investigation. `SYS-01` moved to §4 after the BIOS CD player listed the
-   TOC but stayed inert. The `ACC-01` and `CORE-04` residuals stay in §4 until their
-   revisit conditions are met.
+5. **P2 accuracy:** `ACC-03` and `ACC-04` are **done**. `ACC-04` is a working
+   in-park script plus a default-CEL-pacing residual in §4. `SYS-01` moved to §4 after
+   the BIOS CD player listed the TOC but stayed inert. The `ACC-01` and `CORE-04`
+   residuals stay in §4 until their revisit conditions are met.
 6. **P3 product:** `SYS-22`, `SYS-24`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`,
    `UX-31`, `VID-16`, `VID-17`, `VID-18`, and `UX-32` are **done**. `SYS-21` and `SYS-23`
    are implemented and tested but keep

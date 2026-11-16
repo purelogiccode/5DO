@@ -443,6 +443,18 @@ Jurassic Park **Security Systems** terminal. The ledger is **91 `Good`, 10 `Play
 seven media/reference/add-on discs plus DeathKeep, Kingdom, and Jurassic Park.
 See [`TestCorpus.md`](TestCorpus.md) 1.1bo and 1.1bp.
 
+**ACC-04 Jurassic Park gameplay (2026-11-16).** The Security Tracking stop was an input
+scripting gap, not a CEL or rendering defect. The Operations console needs the pointer
+hand moved onto a guest icon, then a destination cycled and confirmed; the new
+`jurassic-park-raptor-maze.txt` script starts the in-park **Raptor Maze** at 63,000
+frames, renders the raptor encounter and **SECURITY BREACH** outcome at 65,000/65,500,
+and returns to the map at 66,000. 5DO and OperaCore frame hashes match through 63,000.
+The first observed visual divergence is the 65,000 checkpoint: the default FreeDO CEL
+model runs the maze ahead of the reference, while `--cel-timing opera` matches the
+reference hash exactly. The row
+stays `Playable` for the default-CEL residual and the unscripted driving/Spitter paths;
+see [`KnownIssues.md`](KnownIssues.md) and [`TestCorpus.md`](TestCorpus.md) 1.1ck.
+
 The suspected core-defect triage is closed: DeathKeep's Start Game black screen also
 appears on OperaCore at 48,000 frames, and Kingdom's intro returns to the same title
 screen on both engines at 60,000, so both are content/script limits. BladeForce was also

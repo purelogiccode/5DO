@@ -62,6 +62,11 @@ not product configuration.
   boot-absolute title-specific script. It is consumed by
   `python tools/playability-sweep.py`; the results are recorded under
   `artifacts/p0-quality` and in `docs/TestCorpus.md` 1.1bp.
+- `acc04-jurassic-cel.json` - the ACC-04 Jurassic Park Interactive CEL-timing
+  comparison: the in-park Raptor Maze script, 65,000 frames, checkpoints
+  40,000/42,000/57,000/62,000/63,000/65,000. It is consumed by `FiveDo.DiffHarness` and
+  records the first visual divergence (default FreeDO CEL pacing at 65,000) and the
+  Opera-busy match. See `docs/TestCorpus.md` 1.1ck.
 
 These manifests assume the local corpus and the BIOS at `bios/panafz1.bin`.
 Relative paths resolve from the repository root. The harness stages the OperaCore

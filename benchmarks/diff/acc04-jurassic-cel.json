@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "name": "ACC-04: Jurassic Park Interactive CEL-timing",
+  "roots": {
+    "root": "J:/Panasonic 3DO"
+  },
+  "defaults": {
+    "biosAuto": "bios",
+    "audio": "null",
+    "prefetch": true,
+    "timeoutSeconds": 3600
+  },
+  "titles": [
+    {
+      "id": "jurassic-park-raptor-maze",
+      "name": "Jurassic Park Interactive",
+      "disc": "${root}/Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd",
+      "inputScript": "benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt",
+      "frames": 65000,
+      "checkpoints": [
+        40000,
+        42000,
+        57000,
+        62000,
+        63000,
+        65000
+      ]
+    }
+  ]
+}

@@ -825,6 +825,14 @@ change.
   `--no-images --cleanup-iso --resume` on a scratch disk: each title's ISO is
   extracted, used, and removed instead of keeping ~180 GB of staged data.
 
+- `benchmarks/diff/acc04-jurassic-cel.json`: Jurassic Park Interactive, 65,000 frames,
+  checkpoints 40,000/42,000/57,000/62,000/63,000/65,000. The scripted run reaches the
+  in-park Raptor Maze. 5DO and Opera frame hashes match at every checkpoint through
+  63,000; the first observed visual divergence is the 65,000 checkpoint (5DO
+  `0xC8FB9621`, Opera `0xD5D6A993`), and 5DO `--cel-timing opera` produces the reference
+  hash `0xD5D6A993` exactly. The only other field is the documented 36-59-sample
+  audio-clock delta. See `TestCorpus.md` 1.1ck.
+
 The early boot frames already exposed a real timing divergence: Opera reaches
 the Lemmings boot screen earlier than 5DO. The frame at 300 matches exactly, so
 the renderer/CLUT path agrees; the remaining difference is scheduling. Keep
