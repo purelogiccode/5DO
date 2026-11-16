@@ -3979,7 +3979,7 @@ scripted. For reference pacing set `--cel-timing opera` or the per-game **CEL ti
 ```powershell
 dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
   "J:\Panasonic 3DO\Jurassic Park Interactive (1994)(Universal Interactive Studios)(US)[!].chd" `
-  --bios-auto bios --frames 70000 `
+  --bios bios/panafz1.bin --frames 70000 `
   --input-script benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt `
   --capture-dir artifacts/acc04/full-boot `
   --capture-frames 40000,42000,57000,62000,63000,65000,65500,66000 --json
