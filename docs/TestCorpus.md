@@ -3930,7 +3930,10 @@ jobs and the publish job; the six bundles and `SHA256SUMS.txt` are published at
 <https://github.com/purelogiccode/5DO/releases/tag/v1.10.2>, every hash verifies, and
 the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`. CI run
 <https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed after a
-transient win-x64 artifact-upload retry. See [Installers.md](Installers.md) §1.10.2.
+transient win-x64 artifact-upload retry. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43778248201> deployed the Pages site
+and wiki; `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and `wiki/Release-1.10.2` return
+HTTP 200. See [Installers.md](Installers.md) §1.10.2.
 
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 

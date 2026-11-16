@@ -107,6 +107,9 @@ macOS x64/arm64 (native CI, 2026-11-10):
   - `5do-1.10.2-linux-x64.tar.gz` `f90e930a05f5d533a922492c2c8ee469797378b456651a8ac8187497add56563`
   - `5do-1.10.2-osx-arm64.dmg` `97d7202bbef7c40009fcd3e5eede201d691164fd8db4184d02db6e881971dc27`
   - `5do-1.10.2-osx-x64.dmg` `a91cfbd42e6f0b7a4f7d05437d0e8754e9faf3f8ca65ebe1f96ddd0abd28d700`
+- Docs run <https://github.com/purelogiccode/5DO/actions/runs/43778248201> deployed
+  the Pages site and wiki. `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and
+  `wiki/Release-1.10.2` return HTTP 200.
 
 ## 1.10.1 bundle validation (2026-11-15)
 

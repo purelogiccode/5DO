@@ -437,8 +437,9 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       and the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
 - [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed
       after the transient win-x64 artifact-upload retry.
-- [ ] Docs run deploys `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and
-      `wiki/Release-1.10.2` after the `WhatsNew.md` link fix.
+- [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43778248201>
+      deployed the Pages site and wiki. `WhatsNew.html`,
+      `ReleaseNotes-1.10.2.html`, and `wiki/Release-1.10.2` return HTTP 200.
 
 ## 1.10.1 RetroAchievements continuity and startup gate
 

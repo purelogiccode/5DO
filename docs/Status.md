@@ -23,8 +23,10 @@ and InspectCode are clean. Existing 1.9.x and 1.10.0/1.10.1 copies can copy `sof
 jobs and the publish job; all six hashes verify, and the assets are copied into
 `src/FiveDo.Frontend.Avalonia/bin/Release`. CI run
 <https://github.com/purelogiccode/5DO/actions/runs/43776600895> passed after a
-transient win-x64 artifact-upload retry. The docs run is rerun after the `WhatsNew.md`
-link fix.
+transient win-x64 artifact-upload retry. Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/43778248201> deployed the Pages site
+and wiki; `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and `wiki/Release-1.10.2` return
+HTTP 200.
 
 **2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
