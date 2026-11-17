@@ -87,6 +87,11 @@ trap 'rm -rf "$top"' EXIT
 mkdir -p "$top/BUILD" "$top/RPMS" "$top/SOURCES" "$top/SPECS" "$top/SRPMS"
 
 cat >"$top/SPECS/5do.spec" <<EOF
+# The apphosts are self-contained single-file executables: the ELF launcher is small
+# and the .NET runtime/assemblies are appended to it. rpmbrp's strip pass rewrites the
+# ELF and drops the appended bundle, so skip the post-install processing.
+%global __os_install_post %{nil}
+
 Name:           5do
 Version:        $rpm_version
 Release:        1%{?dist}

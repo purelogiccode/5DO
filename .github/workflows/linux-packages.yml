@@ -365,6 +365,30 @@ jobs:
             exit 1
           fi
 
+      - name: Install and smoke-test the RPM package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rpm_file="$(find artifacts/installers -maxdepth 1 -name '5do-*.x86_64.rpm' | head -n1)"
+          if [ -z "$rpm_file" ]; then
+            echo "No x86_64 .rpm was produced." >&2
+            exit 1
+          fi
+
+          # rpm works on the Ubuntu runner with --nodeps. The point is to prove that the
+          # shipped apphosts still run after packaging (brp-strip must not touch them).
+          sudo rpm -i --nodeps "$PWD/$rpm_file"
+          /opt/5do/FiveDo --version
+          /opt/5do/FiveDo.Cli --version
+          test -L /usr/bin/5do
+          test -L /usr/bin/5do-cli
+
+          sudo rpm -e 5do
+          if [ -e /opt/5do ]; then
+            echo "The RPM removal left /opt/5do behind." >&2
+            exit 1
+          fi
+
       - name: Upload installers
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
