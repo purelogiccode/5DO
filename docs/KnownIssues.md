@@ -396,11 +396,14 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   long as an unpaused game runs; hosts without `python3-dbus` fall back silently. macOS
   compositors may still blank or dim the display during play, so macOS remains
   best-effort.
-- **Linux frontend exit segfault (2026-11-16):** closing the window after a game session
-  crashes in a native `atexit` handler (`__run_exit_handlers`) when `XDG_RUNTIME_DIR` is
-  set. `--smoke-test` exits cleanly, and the segfault reproduces with the software,
-  OpenGL, and Vulkan backends, so it is a desktop teardown defect rather than a renderer
-  or display-sleep issue. It is tracked as `PLAT-13`.
+- **Linux frontend exit segfault (fixed 2026-11-17):** closing the window after a game
+  session crashed in a native `atexit` handler (`__run_exit_handlers`) when
+  `XDG_RUNTIME_DIR` was set. The cause was the bundled OpenAL Soft 1.23.1 PipeWire
+  backend: Silk.NET unloads `libopenal.so` when the last context closes, leaving the
+  backend's exit handler pointing at unmapped code. `OpenAlAudioOutput` now keeps one
+  reference to the library on Linux. Software, OpenGL, and Vulkan sessions exit with
+  code 0. The pin can be removed once the bundle ships an OpenAL Soft release that does
+  not register the handler (`PLAT-13`).
 - Auto-crop follows 4DO's detector: it can remove up to 25% per edge, treats the top five
   bits of each color as the content test, and waits one second before cropping more. A
   manual or per-game crop disables it. It changes presentation and native screenshots

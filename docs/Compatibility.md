@@ -715,12 +715,12 @@ and rescales when the window is resized to 1400x820. Wayland-only sessions fall 
 the offscreen path (documented unsupported). Linux also holds an
 `org.freedesktop.ScreenSaver` display-sleep inhibitor for the duration of play through
 a `python3-dbus` helper; acquire and release were traced with matching cookies
-(`1965464518`, `1192968952`, `307216972`). **Open issue:** closing the window after a
-session exits `139` when `XDG_RUNTIME_DIR` is set, with the coredump pointing at a
-native `atexit` handler; `--smoke-test` exits cleanly and the crash reproduces on the
-software, OpenGL, and Vulkan backends. It is tracked as `PLAT-13`, so Linux shutdown
-remains preview-quality. The real-device audio soak and acceptance pass remain open as
-`AUD-02` and `PLAT-10`. Reproducible commands and numbers are in
+(`1965464518`, `1192968952`, `307216972`). A desktop exit segfault (`PLAT-13`) found in
+the same pass was traced to the bundled OpenAL Soft 1.23.1 PipeWire backend being
+unloaded by Silk.NET before its `atexit` handler ran; `OpenAlAudioOutput` now pins the
+library on Linux, and software, OpenGL, and Vulkan sessions close with exit code 0
+(2026-11-17). The real-device audio soak and acceptance pass remain open as `AUD-02`
+and `PLAT-10`. Reproducible commands and numbers are in
 [TestCorpus.md](TestCorpus.md) 1.1cm.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)

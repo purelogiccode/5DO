@@ -4153,12 +4153,21 @@ cookie; the same acquire/release pair was observed for cookies `1965464518` and
 `307216972`. Runs with `DBUS_SESSION_BUS_ADDRESS`/`XDG_RUNTIME_DIR` unset skip the lock
 and stay clean, and `DisplaySleepPolicyTests` cover the run/pause/release transitions.
 
-**New defect: desktop exit segfault (`PLAT-13`).** Closing the window after a session
-now exits `139` when `XDG_RUNTIME_DIR` is set. `coredumpctl` shows SIGSEGV in
-`__run_exit_handlers` (a native `atexit` handler in an unloaded module). It reproduces
-with the software, OpenGL, and Vulkan backends, while `--smoke-test` exits `0` and
-unsetting `XDG_RUNTIME_DIR` also exits `0`, so it is a desktop teardown defect rather
-than a renderer or display-sleep regression.
+**Desktop exit segfault (`PLAT-13`, fixed 2026-11-17).** Closing the window after a
+session exited `139` when `XDG_RUNTIME_DIR` was set. `coredumpctl` showed SIGSEGV in
+`__run_exit_handlers` (a native `atexit` handler in an unloaded module) and the crash
+reproduced with the software, OpenGL, and Vulkan backends. Triage:
+
+- `ALSOFT_DRIVERS=null`, `alsa`, or `pulse` exited `0`; `ALSOFT_DRIVERS=pipewire`
+  crashed, and the default driver order selects PipeWire on this host.
+- `LD_PRELOAD=$HOME/5do-linuxgpu/libopenal.so` exited `0`, proving the handler belongs
+  to libopenal and only crashes after Silk.NET unloads it.
+
+Fix: `OpenAlAudioOutput` keeps one extra reference to the bundled `libopenal.so` on
+Linux so the library stays mapped for the process lifetime. After the fix, software,
+OpenGL, and Vulkan sessions (default drivers, PipeWire) each close with `exit=0`, audio
+still reports `OpenAL audio ready (44100 Hz stereo)`, the display-sleep inhibitor still
+acquires and releases, and `--smoke-test` reports `FRONTEND SMOKE OK 1.10.2`.
 
 **Defect found and fixed: GL swap-interval backend.** The GL probe reported
 `vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
