@@ -19,6 +19,15 @@ native Metal/Vulkan surface, GPU runtime packaging, audio live-switch, Retina/DP
 the NoMac release gate. Evidence: [Compatibility.md](Compatibility.md) §10.4,
 [KnownIssues.md](KnownIssues.md), [ReleaseNotes-1.12.0.md](ReleaseNotes-1.12.0.md).
 
+**v1.12.0 release evidence:** five self-contained bundles and `SHA256SUMS.txt` are
+published at <https://github.com/purelogiccode/5DO/releases/tag/v1.12.0>. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/44141799807> passed all five bundle
+jobs and the publish job; every published SHA-256 entry verified locally after download
+(win-x64 113.9 MB, win-arm64 108 MB, linux-x64 106.5 MB, linux-arm64 99.9 MB,
+osx-arm64 117 MB). Docs run
+<https://github.com/purelogiccode/5DO/actions/runs/44141793084> and CodeQL run
+<https://github.com/purelogiccode/5DO/actions/runs/44141793190> passed.
+
 **2026-11-16, VID-19:** **The true 2× CEL high-resolution prototype is opt-in and tested.**
 The new `--true-2x` machine option (Settings > Emulation > **True 2x CEL fields**, per-game
 **TrueHighResolution**, and a save-state field) keeps the four-plane VRAM layout but writes

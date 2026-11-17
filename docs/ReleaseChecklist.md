@@ -54,9 +54,10 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Release apphosts switched to **self-contained** single files
       (`--self-contained true -p:PublishSingleFile=true`); the .NET 11 runtime is
       embedded and no runtime folder is staged.
-- [ ] Release workflow builds and publishes all five bundles and `SHA256SUMS.txt`;
-      verify every checksum after publication.
-- [ ] Record the release run links and the current suite count in `Status.md`/`README.md`.
+- [x] Release workflow builds and publishes all five bundles and `SHA256SUMS.txt`;
+      every checksum verified after download. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/44141799807>.
+- [x] Record the release run links and the current suite count in `Status.md`/`README.md`.
 
 ---
 

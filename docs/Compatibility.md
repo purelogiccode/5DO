@@ -774,9 +774,12 @@ The macOS-specific renderer changes are:
   path is Vulkan over MoltenVK/Metal.
 
 The `.dmg` remains unsigned (no Developer ID identity was supplied); this is the same
-unsigned drag-to-Applications DMG shape used by the release workflow. `PLAT-15`,
-`PLAT-16`, and `PLAT-18` are closed by this pass; native Metal/Vulkan surface
-(`PLAT-14`) and Retina/DPI (`PLAT-17`) remain open.
+unsigned drag-to-Applications DMG shape used by the release workflow. The release run
+<https://github.com/purelogiccode/5DO/actions/runs/44141799807> built all five
+self-contained bundles; the macOS job verified the bundled Vulkan/MoltenVK files, and
+every published checksum verified after download. `PLAT-15`, `PLAT-16`, and `PLAT-18`
+are closed by this pass; native Metal/Vulkan surface (`PLAT-14`) and Retina/DPI
+(`PLAT-17`) remain open.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
