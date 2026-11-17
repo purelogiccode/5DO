@@ -711,8 +711,8 @@ device selection now ranks discrete > integrated > virtual > other > CPU, so the
 device wins without `VK_ICD_FILENAMES`. The desktop shell also presents through a Linux
 X11 child window: `--gl-backend vulkan` logs `swapchain 1060x466, output 1060x466,
 viewport 370,113 320x240`, displays the Joypad Test card centered in the video area,
-and rescales when the window is resized to 1400x820. Wayland-only sessions fall back to
-the offscreen path (documented unsupported). Linux also holds an
+and rescales when the window is resized to 1400x820. Wayland-only sessions have no X11
+surface and use the OpenGL presenter (native Wayland Vulkan is documented unsupported). Linux also holds an
 `org.freedesktop.ScreenSaver` display-sleep inhibitor for the duration of play through
 a `python3-dbus` helper; acquire and release were traced with matching cookies
 (`1965464518`, `1192968952`, `307216972`). A desktop exit segfault (`PLAT-13`) found in

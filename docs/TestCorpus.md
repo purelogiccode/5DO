@@ -4140,7 +4140,8 @@ default 4:3 integer-scale settings. The child is a depth-24 TrueColor window (th
 Avalonia toplevel is depth-32 ARGB), has an empty `ShapeInput` region so pointer input
 stays in Avalonia, and is raised above Avalonia's render window on each present.
 Resizing the window to 1400x820 recreated the swapchain and scaled the viewport. A
-Wayland-only session has no X11 display and falls back to the offscreen/readback path.
+Wayland-only session has no X11 display, so the shell falls back to the OpenGL
+presenter (the offscreen Vulkan path is probe-only).
 
 **Linux display-sleep inhibit (`PLAT-12`).** `LinuxDisplaySleepBackend` holds an
 `org.freedesktop.ScreenSaver.Inhibit` lock through a persistent `python3-dbus` helper

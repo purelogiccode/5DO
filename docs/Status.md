@@ -938,7 +938,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   GPU, all with 0 managed bytes/frame on the RTX 4070. The 4K window probe reports
   0.077/0.088 ms GPU and 5.96/6.53 ms present (including the 165 Hz FIFO wait), 0
   managed bytes/frame. Wayland and Metal surfaces remain future work; Wayland-only
-  sessions fall back to the offscreen path. See [`Vulkan.md`](Vulkan.md).
+  sessions use the OpenGL presenter. See [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.

@@ -300,17 +300,17 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - Linux x64 validation (2026-11-02): the full test suite (**1,473/1,473**), CLI
   `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent
   audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
-  probe timed out in the VM's SSH/llvmpipe session, so GPU presentation on Linux is
-  unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS x64 and
-  arm64, Linux arm64, and Windows arm64 now pass the native CLI/frontend runtime smoke
-  (2026-11-10); macOS GPU presentation remains best-effort. A bare-metal Linux Mint
+  probe timed out in the VM's SSH/llvmpipe session, so that VM could not validate GPU
+  presentation. macOS x64 and arm64, Linux arm64, and Windows arm64 now pass the native
+  CLI/frontend runtime smoke (2026-11-10); macOS GPU presentation remains best-effort. A
+  bare-metal Linux Mint
   22.3 host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`,
   1920x1080 X11, HDA audio) is now the Linux GPU target (2026-11-16). Its GL probe
   passes at 61 fps (1920x1080, `GLX_EXT_swap_control`), and Vulkan runs on the real
   device through `hasvk`: the X11 window probe matches the CPU oracle with 0 different
   pixels and `--gl-backend vulkan` presents in the desktop shell through a depth-24 X11
-  child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions fall back to the offscreen
-  path (documented unsupported). The 600 s real-device audio soak reports 0 dropped
+  child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions have no X11 surface and
+  use the OpenGL presenter; native Wayland Vulkan remains unsupported. The 600 s real-device audio soak reports 0 dropped
   samples and 0 underruns, evdev gamepads are detected after the ioctl-encoding fix, and
   the full acceptance pass (`PLAT-10`) passed on 2026-11-17 (fullscreen, save/load,
   pause, screenshots, input, display sleep, clean exit). Linux is validated on that

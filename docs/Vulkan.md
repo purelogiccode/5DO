@@ -6,8 +6,8 @@ desktop shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not
 gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and
 MMPX 2x in addition to accurate, nearest, sharp-bilinear, bicubic, and CRT.
 Native Linux X11 surfaces are implemented for both the probe and the desktop shell;
-Wayland and Metal remain unimplemented, and Wayland-only sessions use the
-offscreen/readback path.
+Wayland and Metal remain unimplemented, and Wayland-only sessions use the OpenGL
+presenter.
 
 ## What it is
 
@@ -52,8 +52,9 @@ before presenting. The desktop shell hosts a native child window (Win32 `HWND` o
 window) inside the Avalonia window through `VulkanVideoSurface`
 (`--gl-backend vulkan`), so the steady-state desktop path has no GPU-to-CPU readback
 and no `WriteableBitmap` upload on Windows and Linux/X11. The offscreen readback path
-remains for the headless probe, screenshots, Wayland-only sessions, and fallback if the
-child surface cannot be created. The headless probe remains the primary parity tool.
+remains for the headless probe, screenshots, and fallback if the child surface cannot
+be created; the shell falls back to OpenGL when no native surface is available. The
+headless probe remains the primary parity tool.
 
 Physical devices are ranked so a hardware GPU wins over a software rasterizer:
 discrete > integrated > virtual > other > CPU, with queue and surface support required.
@@ -233,7 +234,7 @@ The desktop shell surface also runs on Linux/X11: `--gl-backend vulkan` creates 
 centered in the video area with the default 4:3 integer-scale settings. Resizing the
 window to 1400x820 scales the viewport up and presents through the recreated swapchain.
 The child is a depth-24 window raised above Avalonia's render window; a Wayland-only
-session still falls back to the offscreen path.
+session uses the OpenGL presenter instead.
 
 ## Build and packaging
 
@@ -287,7 +288,7 @@ The SPIR-V and option-parsing tests run everywhere.
   (`VK_KHR_xlib_surface`). The X11 child is created with an opaque 24-bit TrueColor
   visual, keeps Avalonia's input handling through an empty `ShapeInput` region, and is
   raised above Avalonia's render window on each present. A Wayland-only session has no
-  X11 display, so it falls back to the offscreen/readback path; Wayland surfaces remain
+  X11 display, so the shell uses the OpenGL presenter; Wayland surfaces remain
   unimplemented and Metal is blocked as `PLAT-08B` until a Metal-capable macOS host
   exists. The child window is outside Avalonia's compositor, so Avalonia-drawn overlays
   over the video rectangle (for example the diagnostic overlay) are obscured; the status
