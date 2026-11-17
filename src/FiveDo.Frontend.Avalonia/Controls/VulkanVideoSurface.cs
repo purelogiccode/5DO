@@ -11,20 +11,21 @@ using FiveDo.Video.Vulkan;
 namespace FiveDo.Frontend.Avalonia.Controls;
 
 /// <summary>
-/// Hosts a native Win32 Vulkan swapchain inside the Avalonia window.
+/// Hosts a native Win32 or X11 Vulkan swapchain inside the Avalonia window.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The control owns a child HWND positioned over the control's arranged rectangle. The
+/// The control owns a child window positioned over the control's arranged rectangle. The
 /// existing <see cref="VulkanOffscreenRenderer"/> renders into its offscreen output image
 /// and blits that image into the child window's swapchain, so the steady-state path has no
 /// GPU-to-CPU readback and no <c>WriteableBitmap</c> upload.
 /// </para>
 /// <para>
 /// A native child window is used because Avalonia 12 does not expose a Vulkan control
-/// base. The child window is click-through (<c>HTTRANSPARENT</c>) and non-activating, so
-/// Avalonia keeps keyboard and mouse focus. It is currently Windows-only; other platforms
-/// fall back to the offscreen/readback presenter.
+/// base. On Windows the child HWND is click-through (<c>HTTRANSPARENT</c>) and
+/// non-activating; on Linux the X11 child uses an empty <c>ShapeInput</c> region. Both
+/// keep keyboard and mouse focus in Avalonia. Other platforms fall back to the
+/// offscreen/readback presenter.
 /// </para>
 /// </remarks>
 public sealed class VulkanVideoSurface : Control, IDisposable
@@ -58,6 +59,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
     private RendererSettings _settings = new();
     private nint _parentHandle;
     private nint _childHandle;
+    private X11ChildSurface? _x11Child;
     private bool _startPending;
     private volatile bool _started;
     private volatile bool _presentationVisible;
@@ -135,10 +137,10 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             return true;
         }
 
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
         {
             throw new PlatformNotSupportedException(
-                "The embedded Vulkan surface currently supports Win32 windows only.");
+                "The embedded Vulkan surface supports Win32 and Linux/X11 windows.");
         }
 
         TopLevel? topLevel = TopLevel.GetTopLevel(this);
@@ -161,7 +163,15 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         _parentHandle = platformHandle.Handle;
 
         var (width, height) = GetPixelSize(topLevel);
-        _childHandle = CreateChildWindow(_parentHandle, width, height);
+        if (OperatingSystem.IsWindows())
+        {
+            _childHandle = CreateChildWindow(_parentHandle, width, height);
+        }
+        else
+        {
+            _x11Child = new X11ChildSurface(_parentHandle, width, height);
+        }
+
         try
         {
             _renderer = new VulkanOffscreenRenderer
@@ -169,7 +179,10 @@ public sealed class VulkanVideoSurface : Control, IDisposable
                 Settings = _settings,
                 CaptureToFrame = false,
             };
-            _renderer.InitializeSurface(_childHandle, width, height, _settings.Vsync);
+            VulkanSurface surface = _x11Child is not null
+                ? _x11Child.Surface
+                : VulkanSurface.ForWin32(_childHandle);
+            _renderer.InitializeSurface(surface, width, height, _settings.Vsync);
         }
         catch (Exception exception)
         {
@@ -196,7 +209,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             throw;
         }
 
-        ShowWindow(_childHandle, _presentationVisible ? SwShow : SwHide);
+        SetChildVisible(_presentationVisible);
         Started?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -204,7 +217,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
     /// <summary>Stops presentation and releases the child window and Vulkan device.</summary>
     public void Stop()
     {
-        if (!_started && _renderer is null && _childHandle == 0)
+        if (!_started && _renderer is null && !HasNativeWindow)
         {
             return;
         }
@@ -228,10 +241,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
     public void SetPresentationVisible(bool visible)
     {
         _presentationVisible = visible;
-        if (_childHandle != 0)
-        {
-            ShowWindow(_childHandle, visible ? SwShow : SwHide);
-        }
+        SetChildVisible(visible);
 
         if (visible && _started)
         {
@@ -346,6 +356,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         var start = Stopwatch.GetTimestamp();
         try
         {
+            _x11Child?.Raise();
             _mailbox.Read(_presentFrame, _renderer.Present);
             _renderedSequence = sequence;
             _presentMilliseconds =
@@ -354,9 +365,15 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             {
                 _firstFrameLogged = true;
                 Serilog.Log.Information(
-                    "Vulkan surface presented its first frame ({Width}x{Height}).",
+                    "Vulkan surface presented its first frame (swapchain {SwapchainWidth}x{SwapchainHeight}, output {OutputWidth}x{OutputHeight}, viewport {ViewportX},{ViewportY} {ViewportWidth}x{ViewportHeight}).",
                     _renderer.SwapchainWidth,
-                    _renderer.SwapchainHeight);
+                    _renderer.SwapchainHeight,
+                    _renderer.OutputWidth,
+                    _renderer.OutputHeight,
+                    _renderer.ViewportX,
+                    _renderer.ViewportY,
+                    _renderer.ViewportWidth,
+                    _renderer.ViewportHeight);
             }
 
             FramePresented?.Invoke(
@@ -390,7 +407,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
 
     private void UpdateChildBounds()
     {
-        if (_childHandle == 0)
+        if (!HasNativeWindow)
         {
             return;
         }
@@ -423,14 +440,22 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         _childY = y;
         _childWidth = width;
         _childHeight = height;
-        SetWindowPos(
-            _childHandle,
-            0,
-            x,
-            y,
-            width,
-            height,
-            SwpNoZOrder | SwpNoActivate | (_presentationVisible ? SwpShowWindow : 0));
+        if (_x11Child is not null)
+        {
+            _x11Child.SetBounds(x, y, width, height);
+        }
+        else
+        {
+            SetWindowPos(
+                _childHandle,
+                0,
+                x,
+                y,
+                width,
+                height,
+                SwpNoZOrder | SwpNoActivate | (_presentationVisible ? SwpShowWindow : 0));
+        }
+
         _renderer?.Resize(width, height);
     }
 
@@ -468,8 +493,28 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         return handle;
     }
 
+    private bool HasNativeWindow => _childHandle != 0 || _x11Child is not null;
+
+    private void SetChildVisible(bool visible)
+    {
+        if (_x11Child is not null)
+        {
+            _x11Child.SetVisible(visible);
+        }
+        else if (_childHandle != 0)
+        {
+            ShowWindow(_childHandle, visible ? SwShow : SwHide);
+        }
+    }
+
     private void DestroyChildWindow()
     {
+        if (_x11Child is not null)
+        {
+            _x11Child.Dispose();
+            _x11Child = null;
+        }
+
         if (_childHandle == 0)
         {
             return;

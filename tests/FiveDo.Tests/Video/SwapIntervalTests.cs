@@ -6,7 +6,7 @@ namespace FiveDo.Tests.Video;
 public sealed class SwapIntervalTests
 {
     [Fact]
-    public void TryCreate_PrefersWgl()
+    public void TryCreate_PrefersWglOnWindows()
     {
         ISwapIntervalBackend? backend = SwapInterval.TryCreate(name => name switch
         {
@@ -14,10 +14,43 @@ public sealed class SwapIntervalTests
             "glXSwapIntervalMESA" => 1,
             "eglSwapInterval" => 1,
             _ => 0,
-        });
+        }, isWindows: true);
 
         Assert.NotNull(backend);
         Assert.Equal("WGL_EXT_swap_control", backend.Name);
+    }
+
+    [Fact]
+    public void TryCreate_OffWindows_IgnoresWglAndUsesGlx()
+    {
+        // Mesa's GLX proc-address loader returns a non-null stub for unknown names,
+        // including wglSwapIntervalEXT. The resolver must not treat that as WGL.
+        ISwapIntervalBackend? backend = SwapInterval.TryCreate(name => name switch
+        {
+            "wglSwapIntervalEXT" => 1,
+            "glXSwapIntervalEXT" => 2,
+            "glXGetCurrentDisplay" => 3,
+            "glXGetCurrentDrawable" => 4,
+            _ => 0,
+        }, isWindows: false);
+
+        Assert.NotNull(backend);
+        Assert.Equal("GLX_EXT_swap_control", backend.Name);
+    }
+
+    [Fact]
+    public void TryCreate_OffWindows_FallsBackToEglWhenGlxIsUnavailable()
+    {
+        ISwapIntervalBackend? backend = SwapInterval.TryCreate(name => name switch
+        {
+            "wglSwapIntervalEXT" => 1,
+            "eglSwapInterval" => 1,
+            "eglGetCurrentDisplay" => 1,
+            _ => 0,
+        }, isWindows: false);
+
+        Assert.NotNull(backend);
+        Assert.Equal("EGL_KHR_swap_interval", backend.Name);
     }
 
     [Fact]

@@ -1,10 +1,13 @@
 # Optional Vulkan Backend
 
 **Status:** implemented as an optional offscreen presenter, a validation probe, a
-native Win32 swapchain probe, and an embedded Win32 child surface for the desktop
-shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release
+native Win32/X11 swapchain probe, and an embedded Win32/X11 child surface for the
+desktop shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release
 gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and
 MMPX 2x in addition to accurate, nearest, sharp-bilinear, bicubic, and CRT.
+Native Linux X11 surfaces are implemented for both the probe and the desktop shell;
+Wayland and Metal remain unimplemented, and Wayland-only sessions use the
+offscreen/readback path.
 
 ## What it is
 
@@ -32,7 +35,7 @@ VdlFrame
         |
         +--> host readback buffer (offscreen probe and captures)
         |
-        +--> Win32 swapchain (desktop child surface and window probe)
+        +--> Win32 / X11 swapchain (desktop child surface on Windows, window probe)
 ```
 
 The palette shader is a direct port of `FrameAssembler`/`GpuPalette`: pixel zero uses
@@ -42,13 +45,20 @@ bit 15, and the per-line CLUT uses independent red, green, and blue indices. A 3
 
 The renderer is offscreen by default. It does not create an instance surface, swapchain,
 or presentation queue unless `InitializeSurface` is called. `--vk-window-probe` creates
-a Win32 window, enables `VK_KHR_surface`/`VK_KHR_win32_surface`/`VK_KHR_swapchain`, and
-blits the rendered output image into the current swapchain image before presenting. The
-desktop shell hosts a native Win32 child window inside the Avalonia window through
-`VulkanVideoSurface` (`--gl-backend vulkan`), so the steady-state desktop path has no
-GPU-to-CPU readback and no `WriteableBitmap` upload. The offscreen readback path remains
-for the headless probe, screenshots, non-Windows platforms, and fallback if the child
-surface cannot be created. The headless probe remains the primary validation tool.
+a Win32 window on Windows or an X11 window on Linux, enables
+`VK_KHR_surface` with `VK_KHR_win32_surface` or `VK_KHR_xlib_surface`, plus
+`VK_KHR_swapchain`, and blits the rendered output image into the current swapchain image
+before presenting. The desktop shell hosts a native child window (Win32 `HWND` or X11
+window) inside the Avalonia window through `VulkanVideoSurface`
+(`--gl-backend vulkan`), so the steady-state desktop path has no GPU-to-CPU readback
+and no `WriteableBitmap` upload on Windows and Linux/X11. The offscreen readback path
+remains for the headless probe, screenshots, Wayland-only sessions, and fallback if the
+child surface cannot be created. The headless probe remains the primary parity tool.
+
+Physical devices are ranked so a hardware GPU wins over a software rasterizer:
+discrete > integrated > virtual > other > CPU, with queue and surface support required.
+This matters on Linux, where Mesa enumerates the integrated GPU first and `llvmpipe`
+second; before the 2026-11-16 fix the second device silently won.
 
 ## Filters
 
@@ -178,6 +188,53 @@ palette texture and match the CPU `HqxFilter` expansion in the opt-in parity tes
 
 These are development-machine numbers, not a hardware guarantee.
 
+### Linux baseline (2026-11-16)
+
+Bare-metal Linux Mint 22.3, Intel HD 4000 (Ivy Bridge), Mesa 25.2.8, Vulkan 1.2 through
+`hasvk` (Mesa warns that Ivy Bridge Vulkan support is incomplete). Offscreen probes at
+1920x1080, 30 measured frames after 5 warm-up frames. The default device selection picks
+llvmpipe, so the Intel rows force
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json` because they were
+measured before the device-ranking fix; current builds pick the Intel device
+automatically. The rows use the offscreen probe and therefore include the per-frame
+readback.
+
+| Filter | FPS | GPU mean |
+|---|---:|---:|
+| Accurate | 102.5 | 8.70 ms |
+| xBR | 46.2 | 20.12 ms |
+| FSR (EASU + RCAS) | 46.3 | 20.25 ms |
+| CRT | 83.1 | 11.24 ms |
+| HQx 2x | 99.2 | 9.16 ms |
+| MMPX | 82.1 | 10.58 ms |
+
+Every row reports `ok: true` and `filterFallback: false`. The numbers are a legacy
+integrated-GPU baseline, not a hardware guarantee.
+
+### Linux X11 window probe (2026-11-16)
+
+Same host, X11/Cinnamon at 1920x1080. `--vk-window-probe` creates an X11 window and
+presents through `VK_KHR_xlib_surface` and FIFO. This is the first non-Windows Vulkan
+swapchain result.
+
+| Case | FPS | Present mean | GPU mean | Managed bytes/frame |
+|---|---:|---:|---:|---:|
+| 1920x1080 sharp-bilinear, FIFO | 60.1 | 16.405 ms | 6.287 ms | 0 |
+| 320x240 accurate, FIFO | 91.6 | - | - | 0 |
+
+The 320x240 accurate capture matches the CPU oracle exactly: 0 different pixels,
+no vertical flip, CPU and GPU hash `1573907397` (`0x5DD1D7C5`). Device selection now
+picks the Intel HD 4000 without `VK_ICD_FILENAMES`; the same probe selects the CPU
+device before the fix.
+
+The desktop shell surface also runs on Linux/X11: `--gl-backend vulkan` creates a
+1060x466 child window, logs `Vulkan surface presented its first frame (swapchain
+1060x466, output 1060x466, viewport 370,113 320x240)`, and renders the Joypad Test disc
+centered in the video area with the default 4:3 integer-scale settings. Resizing the
+window to 1400x820 scales the viewport up and presents through the recreated swapchain.
+The child is a depth-24 window raised above Avalonia's render window; a Wayland-only
+session still falls back to the offscreen path.
+
 ## Build and packaging
 
 - `Silk.NET.Vulkan` 2.23.0 provides the Vulkan bindings.
@@ -209,9 +266,11 @@ These are development-machine numbers, not a hardware guarantee.
 - `VkProbeOptionsTests` covers headless/window defaults, size/frames/filter/capture
   parsing, shared option aliases, and invalid values.
 - `VulkanProbeIntegrationTests.WindowProbe_PresentsThroughASwapchain`
-  (`FIVEDO_VULKAN_TESTS=1`, Windows) opens a window and checks `offscreen: false`,
-  FIFO vsync, CPU parity, and zero managed bytes/frame. A CI-run window probe would
-  require a desktop session and is not part of the default suite.
+  (`FIVEDO_VULKAN_TESTS=1`, Windows or Linux with `DISPLAY`) opens a window and checks
+  `offscreen: false`, FIFO vsync, CPU parity, and zero managed bytes/frame. A CI-run
+  window probe would require a desktop session and is not part of the default suite.
+- `VulkanDeviceRankingTests` covers the discrete/integrated/virtual/CPU ordering and the
+  regression where Mesa's `llvmpipe` (listed second) beat the integrated GPU.
 
 ```powershell
 $env:FIVEDO_VULKAN_TESTS = "1"
@@ -224,11 +283,15 @@ The SPIR-V and option-parsing tests run everywhere.
 
 ## Limitations and next steps
 
-- The native swapchain is a Win32 path. The desktop shell embeds it as a native child
-  window inside the Avalonia window; X11/Wayland/Metal surfaces are future work. The
-  child window is outside Avalonia's compositor, so Avalonia-drawn overlays over the
-  video rectangle (for example the diagnostic overlay) are obscured; the status bar and
-  header remain visible. Non-Windows platforms fall back to the offscreen/readback path.
+- The window probe and the desktop shell surface support Win32 and Linux/X11
+  (`VK_KHR_xlib_surface`). The X11 child is created with an opaque 24-bit TrueColor
+  visual, keeps Avalonia's input handling through an empty `ShapeInput` region, and is
+  raised above Avalonia's render window on each present. A Wayland-only session has no
+  X11 display, so it falls back to the offscreen/readback path; Wayland surfaces remain
+  unimplemented and Metal is blocked as `PLAT-08B` until a Metal-capable macOS host
+  exists. The child window is outside Avalonia's compositor, so Avalonia-drawn overlays
+  over the video rectangle (for example the diagnostic overlay) are obscured; the status
+  bar and header remain visible.
 - The per-frame readback is only recorded when `CaptureToFrame` is enabled; probes and
   screenshots use a one-shot copy. The embedded Win32 surface does not read back at all.
   The offscreen fallback still needs the readback every frame and remains slower than
@@ -241,4 +304,9 @@ The SPIR-V and option-parsing tests run everywhere.
 - Vulkan 1.1+ features (storage buffers in fragment shaders, timeline semaphores) are not
   required; the backend requests Vulkan 1.0 and uses sampled images and push constants.
 - Device/driver validation on Linux, macOS/MoltenVK, arm64, and integrated GPUs is
-  pending.
+  pending. A bare-metal Linux Mint 22.3 host is available for it: Intel HD 4000
+  (Ivy Bridge), Mesa 25.2.8, Vulkan 1.2 through `hasvk` (the driver warns that Ivy
+  Bridge Vulkan support is incomplete), 1920x1080 X11 session, HDA Intel PCH audio.
+  The headless `--vk-probe` needs no display server; X11 surfaces and the desktop shell
+  child surface are implemented (`PLAT-08A`), and the integrated/legacy device is a
+  secondary target rather than the primary Vulkan reference.

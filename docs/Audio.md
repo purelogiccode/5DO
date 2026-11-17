@@ -366,6 +366,22 @@ samples**, **0 underrun buffers**, 18 queued buffers, 66.7 ms latency, DSP runni
 hardware limitation rather than a code result. See [`TestCorpus.md`](TestCorpus.md)
 1.1bp.
 
+### Linux real-device soak (AUD-02, 2026-11-17)
+
+The bare-metal Linux Mint 22.3 host (HDA Intel PCH, PipeWire/PulseAudio default
+endpoint) ran the framework-dependent `linux-x64` frontend with `--audio-soak 600`,
+the Joypad Test disc, and the goldstar BIOS:
+
+| Device | Frames | Elapsed | Samples pushed | Dropped | Underruns | OpenAL errors | DSP |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Default PipeWire endpoint | 35,966 | 600.04 s | 26,461,445 | 0 | 0 | 0 | running |
+
+The report is `ok: true`, `openAlReady: true`, `deviceFailed: false`, so the frontend
+consumed the complete DSP stream for ten minutes on a real Linux PCM device. This
+closes the AUD-01 hardware limitation, which only covered the VM's null driver.
+Evidence: `probe/audio-soak-600.json` on the bare-metal host
+([TestCorpus.md](TestCorpus.md) 1.1cm).
+
 ### Frontend NativeAOT soak (PLAT-07, 2026-11-10)
 
 The opt-in **NativeAOT frontend** (`-p:FiveDoNativeAot=true`, win-x64, .NET 11.0.0)
