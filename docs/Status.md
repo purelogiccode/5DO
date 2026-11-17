@@ -922,18 +922,23 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   queries, and a host readback buffer. xBR-lv2 runs as a 4x GPU pass; FSR 1.0 runs
   EASU plus RCAS; HQx 2x/3x/4x run as a GPU rule-table pass over the palette texture.
   `--vk-probe` writes the shared
-  GPU probe JSON and PNG captures; `--vk-window-probe` creates a native Win32
-  swapchain, presents through FIFO vsync, and writes the same report with
-  `offscreen: false`; `--gl-backend vulkan` hosts the optional desktop Win32 child
-  surface. The 320x240 Accurate probe matches the CPU oracle
+  GPU probe JSON and PNG captures; `--vk-window-probe` creates a native Win32 or
+  Linux/X11 swapchain, presents through FIFO vsync, and writes the same report with
+  `offscreen: false`; `--gl-backend vulkan` hosts the optional desktop Win32 or
+  Linux/X11 child surface. On the bare-metal Linux HD 4000 host (2026-11-16) the X11
+  window probe presents at 1920x1080 FIFO (60.1 fps, 16.4 ms present, 6.3 ms GPU,
+  0 bytes/frame) and the 320x240 Accurate capture matches the CPU oracle with 0
+  different pixels; the Linux shell presents through a depth-24 X11 child window at
+  1060x466 and rescales on resize.
+  The 320x240 Accurate probe matches the CPU oracle
   (`0xD6BD89C5`, 0 different pixels); 4K sharp-bilinear measures 0.24 ms mean /
   1.06 ms p99 present and 0.075/0.091 ms GPU, 4K xBR 0.32/0.80 ms present and
   0.13/0.14 ms GPU, 4K FSR 0.60/1.30 ms present and 0.40/0.42 ms GPU, and 4K HQx
   2x/3x/4x 0.26/0.41, 0.29/0.34, and 0.34/0.52 ms present with 0.10/0.12/0.15 ms
   GPU, all with 0 managed bytes/frame on the RTX 4070. The 4K window probe reports
   0.077/0.088 ms GPU and 5.96/6.53 ms present (including the 165 Hz FIFO wait), 0
-  managed bytes/frame. Compositor-embedded/X11/Wayland/Metal surfaces are future
-  work. See [`Vulkan.md`](Vulkan.md).
+  managed bytes/frame. Wayland and Metal surfaces remain future work; Wayland-only
+  sessions fall back to the offscreen path. See [`Vulkan.md`](Vulkan.md).
 - **Renderer robustness:** GL/GLES capability parsing reports the API and version,
   fullscreen/F11/Escape work, GL readback screenshots are implemented, and GL init
   failure or context loss switches the shell to the CPU `WriteableBitmap` presenter.

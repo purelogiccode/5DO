@@ -4082,6 +4082,88 @@ FiveDo.DiffHarness.exe run benchmarks/diff/vid19-true2x.json `
   --cli src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.exe
 ```
 
+### 1.1cm Bare-metal Linux GPU validation: GL probe and Vulkan device (2026-11-16)
+
+**Host.** Bare-metal Linux Mint 22.3 (`systemd-detect-virt` → `none`), Intel Core
+i7-3615QM, Intel HD 4000 (Ivy Bridge, `8086:0166`), Mesa 25.2.8, kernel
+`7.0.0-43-generic`. OpenGL 4.2 core through crocus on a live X11/Cinnamon session at
+1920x1080; Vulkan 1.2 through `hasvk` (Mesa warns "Ivy Bridge Vulkan support is
+incomplete"). HDA Intel PCH audio. No optical drive.
+
+**Build.** The self-contained `linux-x64` 1.10.2 frontend was published on the Windows
+host and extracted to `~/5do-linuxgpu`.
+
+**Smoke.** `./FiveDo --smoke-test --smoke-output /tmp/smoke.txt` wrote:
+
+```text
+FRONTEND SMOKE OK 1.10.2
+locale=en
+firstMenuHeader=File
+windowState=Normal
+```
+
+and logged `OpenGL renderer ready: OpenGL 4.2 (OpenGl), max texture 16384`.
+
+**GL probe (`PLAT-02`).** `--gl-probe` at 1920x1080 sharp-bilinear, 120 frames after
+30 warm-up frames: `ok: true`, renderer `Mesa Intel(R) HD Graphics 4000 (IVB GT2)`,
+OpenGL 4.2, 61.6 fps, present mean 2.528 ms (p99 8.688), GPU mean 1.300 ms
+(p99 1.703), `filterFallback: false`, `rendererAllocatedBytesPerFrame: 0`. A 1280x720
+accurate run with `--gl-probe-vsync` reports `vsyncActive: true` at 61.8 fps. This is
+the first hardware-accelerated Linux GPU presentation result; the previous llvmpipe VM
+probe timed out with zero frames.
+
+**Vulkan device (`PLAT-08A`).** The default `--vk-probe` at 1080p selects
+**llvmpipe (LLVM 20.1.2)** even though the Intel device is present and listed first by
+`vulkaninfo`; that is a device-selection gap in the backend. With
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json` the probe reports
+`ok: true`, renderer `Intel(R) HD Graphics 4000 (IVB GT2)`, Vulkan 1.2, 103.4 fps,
+`filterFallback: false`. Filter matrix at 1080p, 30 frames after 5 warm-up frames, all
+`ok` with no fallback: accurate 102.5 fps (GPU 8.70 ms), xBR 46.2 (20.12), FSR 46.3
+(20.25), CRT 83.1 (11.24), HQx 2x 99.2 (9.16), MMPX 82.1 (10.58).
+
+**Vulkan X11 window probe (`PLAT-08A`).** `--vk-window-probe` now creates an X11 window
+on Linux and presents through `VK_KHR_xlib_surface`. At 1920x1080 sharp-bilinear with
+FIFO it reports `offscreen: false`, `vsyncActive: true`, `vsyncBackend: "fifo"`,
+60.1 fps, present mean 16.405 ms, GPU mean 6.287 ms, and 0 renderer bytes/frame. A
+320x240 accurate capture matches the CPU oracle exactly: `matches: true`,
+`differentPixels: 0`, `verticalFlip: false`, CPU and GPU hash `1573907397`
+(`0x5DD1D7C5`). The same build also fixes device selection: without
+`VK_ICD_FILENAMES`, `--vk-probe` now reports `Intel(R) HD Graphics 4000 (IVB GT2)`
+instead of llvmpipe (discrete > integrated > virtual > other > CPU ranking).
+
+**Vulkan Linux shell surface (`PLAT-08A`).** `--gl-backend vulkan` now runs the desktop
+shell through an X11 child window (`VulkanVideoSurface` → `X11ChildSurface`). With the
+Joypad Test disc and the goldstar BIOS, the shell logs
+`Vulkan surface presented its first frame (swapchain 1060x466, output 1060x466, viewport 370,113 320x240)`
+and the composited screen shows the pad card centered in the video area under the
+default 4:3 integer-scale settings. The child is a depth-24 TrueColor window (the
+Avalonia toplevel is depth-32 ARGB), has an empty `ShapeInput` region so pointer input
+stays in Avalonia, and is raised above Avalonia's render window on each present.
+Resizing the window to 1400x820 recreated the swapchain and scaled the viewport. A
+Wayland-only session has no X11 display and falls back to the offscreen/readback path.
+
+**Defect found and fixed: GL swap-interval backend.** The GL probe reported
+`vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
+returns a non-null stub for `wglSwapIntervalEXT`. `SwapInterval.TryCreate` now probes
+WGL only on Windows, and `SwapIntervalTests` covers the Unix GLX/EGL fallback (7 tests
+pass). After republishing, the same 1280x720 vsync probe reports
+`vsyncActive: true`, `vsyncBackend: "GLX_EXT_swap_control"`, 62.3 fps, and the
+1920x1080 sharp-bilinear rerun reports 61.0 fps with present mean 1.859 ms and GPU mean
+1.243 ms.
+
+**Reproduce.**
+
+```bash
+export DISPLAY=:0 XAUTHORITY=$HOME/.Xauthority XDG_RUNTIME_DIR=/run/user/1000
+cd ~/5do-linuxgpu
+./FiveDo --smoke-test --smoke-output /tmp/smoke.txt
+./FiveDo --gl-probe gl.json --gl-probe-size 1920x1080 --gl-probe-frames 120 \
+  --gl-probe-warmup 30 --gl-probe-filter sharp-bilinear
+VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
+  ./FiveDo --vk-probe vk.json --vk-probe-size 1920x1080 --vk-probe-frames 30 \
+  --vk-probe-warmup 5 --vk-probe-filter xbr
+```
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

@@ -303,8 +303,17 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   probe timed out in the VM's SSH/llvmpipe session, so GPU presentation on Linux is
   unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS x64 and
   arm64, Linux arm64, and Windows arm64 now pass the native CLI/frontend runtime smoke
-  (2026-11-10); macOS GPU presentation remains best-effort. The local Linux target is
-  the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`).
+  (2026-11-10); macOS GPU presentation remains best-effort. A bare-metal Linux Mint
+  22.3 host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`,
+  1920x1080 X11, HDA audio) is now the Linux GPU target (2026-11-16). Its GL probe
+  passes at 61 fps (1920x1080, `GLX_EXT_swap_control`), and Vulkan runs on the real
+  device through `hasvk`: the X11 window probe matches the CPU oracle with 0 different
+  pixels and `--gl-backend vulkan` presents in the desktop shell through a depth-24 X11
+  child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions fall back to the offscreen
+  path (documented unsupported). The real-device audio soak and the full acceptance pass
+  remain open as `AUD-02` and `PLAT-10`; the CLI/frontend stay **preview/best-effort** on
+  Linux until that acceptance pass. The Hyper-V `LinuxMint` VM
+  (`D:\Hyper-V\VMs\LinuxMint`) remains the headless build/test target.
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
   sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
   restriction.
