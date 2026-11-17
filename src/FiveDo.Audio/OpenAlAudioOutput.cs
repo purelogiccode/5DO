@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using FiveDo.Core;
@@ -33,6 +34,31 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 {
     private const int SampleRate = EmulatorConstants.SoundClock;
     private const int DefaultBufferMilliseconds = 100;
+
+    static OpenAlAudioOutput()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        // OpenAL Soft 1.23.1's PipeWire backend registers an atexit handler. Silk.NET
+        // unloads libopenal when the last ALContext is disposed, which leaves the handler
+        // pointing at unmapped code and segfaults during process exit. Taking one extra
+        // reference keeps the library mapped; the OS reclaims it at process exit.
+        string local = Path.Combine(AppContext.BaseDirectory, "libopenal.so");
+        if (File.Exists(local) && NativeLibrary.TryLoad(local, out _))
+        {
+            return;
+        }
+
+        if (NativeLibrary.TryLoad("libopenal.so.1", out _))
+        {
+            return;
+        }
+
+        _ = NativeLibrary.TryLoad("libopenal.so", out _);
+    }
 
     private readonly int _bufferFrames;
     private readonly int _bufferCount;
