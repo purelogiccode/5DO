@@ -502,13 +502,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   mid-run.
 - Frontend NativeAOT audio is validated on Windows with the null and default playback
   devices (0 drops/0 underruns, 600 s each); Linux/macOS AOT audio is not claimed.
-- **macOS live device replacement (open):** `FIVEDO_AUDIO_TESTS=1` passes basic
-  real-time playback and fully queued playback on macOS, but
-  `ReplacingOutput_WhileAnotherIsOpen_KeepsTheReplacementAlive` reports 18
-  `AL_INVALID_ENUM` errors from `SourceQueueBuffers` after the previous output is
-  disposed. It reproduces with `ALSOFT_DRIVERS=null`, so it is an OpenAL Soft context
-  lifetime issue rather than a CoreAudio device problem. Device switching still produces
-  audio, but the error counter is non-zero; this is tracked as a macOS-specific follow-up.
+- **macOS live device replacement (fixed 1.12.0):** OpenAL Soft on macOS has no
+  `ALC_EXT_thread_local_context`, so clearing the current context invalidated a
+  replacement output's source. Outputs now share one context per device and the context
+  is cleared only when the last output is destroyed; all three `FIVEDO_AUDIO_TESTS=1`
+  cases pass on macOS.
 
 ## Emulation
 

@@ -32,6 +32,10 @@ presentation release.
 - **Windows builds required the .NET 8 runtime.** `Directory.Build.targets` sets
   `DOTNET_ROLL_FORWARD=Major` for `XenoAtom.ShaderCompiler.Build`, so the .NET 11 SDK
   alone builds the Vulkan shaders; .NET 8 is still preferred when installed.
+- **macOS live audio replacement invalidated the new source.** macOS has no
+  `ALC_EXT_thread_local_context`; clearing the global context broke a concurrently open
+  output. Outputs now share one context per device and clear/destroy it only after the
+  last output. All three `FIVEDO_AUDIO_TESTS=1` cases pass on macOS.
 
 ### Known limits
 

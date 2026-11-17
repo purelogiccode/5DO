@@ -39,8 +39,8 @@ MoltenVK. No system OpenAL install is required.
 ## Known limits
 
 - Native Metal surface not implemented yet (`PLAT-14`).
-- MoltenVK is an external dependency; bundling/guidance is `PLAT-15`.
-- macOS audio live-switch reports `AL_INVALID_ENUM` (`PLAT-16`).
+- MoltenVK is bundled with the macOS arm64 DMG; no Homebrew install is required.
+- macOS audio live-switch is fixed; all three audio tests pass.
 - Retina/DPI and physical gamepads are not yet validated. Intel macOS support was
   dropped in this release; Apple Silicon is the only supported macOS target.
 - The DMG is unsigned; Gatekeeper may require an explicit exception.

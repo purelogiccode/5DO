@@ -71,9 +71,6 @@ means no system OpenAL install is required.
   `PLAT-14`.
 - **MoltenVK is an external runtime dependency.** Bundling it or adding first-run
   guidance is tracked as `PLAT-15`.
-- **macOS audio live-switch has a residual error.** Basic real-device playback passes,
-  but replacing an open output reports 18 `AL_INVALID_ENUM` errors; tracked as
-  `PLAT-16`.
 - **Retina/DPI and physical gamepads are not yet validated.** Intel macOS support was
   dropped in this release; Apple Silicon is the only supported macOS target.
 - **The DMG is unsigned.** Gatekeeper may require right-click Open or an explicit

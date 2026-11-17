@@ -6,7 +6,9 @@ selects the offscreen Vulkan presenter, reports `Vulkan (Metal)`, and plays Wolf
 3D at 59.8-60.1 fps; all eight filters pass the Vulkan probe without fallback. The full
 suite is **2,394/2,394**, CLI `selftest` and frontend `--smoke-test` pass, and the
 native `.dmg`/`.pkg`/`.tar.gz` smoke-test from both the extracted tarball and the mounted
-DMG with matching SHA-256. The build now runs the net8.0 shader compiler on the
+DMG with matching SHA-256. The macOS audio live-switch fix passes all three audio tests
+after outputs were made to share one OpenAL context per device. The build now runs the
+net8.0 shader compiler on the
 installed .NET 9/10/11 runtime, so only the .NET 11 SDK is required for builds. Release
 bundles are self-contained: the .NET 11 runtime is embedded and no separate runtime
 install is required. macOS OpenGL is not

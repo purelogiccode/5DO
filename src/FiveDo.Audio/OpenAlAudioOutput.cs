@@ -196,7 +196,6 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         }
 
         _al.SetSourceProperty(_source, SourceFloat.Gain, 1f);
-        ClearContext();
         _thread = new Thread(FillLoop)
         {
             IsBackground = true,
@@ -478,6 +477,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
             return;
         }
 
+        shared.Alc.MakeContextCurrent(null);
         shared.Alc.DestroyContext(shared.Context);
         shared.Alc.CloseDevice(shared.Device);
         shared.Al.Dispose();
@@ -504,18 +504,6 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         return _setThreadContext is not null
             ? _setThreadContext(_context) != 0
             : _alc.MakeContextCurrent(_context);
-    }
-
-    private void ClearContext()
-    {
-        if (_setThreadContext is not null)
-        {
-            _setThreadContext(null);
-        }
-        else
-        {
-            _alc.MakeContextCurrent(null);
-        }
     }
 
     /// <summary>Enumerates the OpenAL playback devices visible to the process.</summary>
@@ -844,8 +832,20 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         }
         finally
         {
+            // Delete this output's objects on the thread whose context is current. Doing
+            // it from Dispose would switch the shared context on the caller's thread and
+            // can disturb another output's fill thread on macOS.
+            if (!_deviceFailed && MakeContextCurrent())
+            {
+                _al.SourceStop(_source);
+                _al.DeleteSource(_source);
+                _al.DeleteBuffers(_buffers);
+            }
+
+            // Do not clear the context here. macOS OpenAL Soft has no
+            // ALC_EXT_thread_local_context, so the current context is global; clearing it
+            // would invalidate every other output sharing the device.
             multimediaToken.Dispose();
-            ClearContext();
         }
     }
 
@@ -862,14 +862,8 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _thread.Join(1000);
         _tap?.Dispose();
         _stop.Dispose();
-        if (!_deviceFailed && MakeContextCurrent())
-        {
-            _al.SourceStop(_source);
-            _al.DeleteSource(_source);
-            _al.DeleteBuffers(_buffers);
-            ClearContext();
-        }
 
+        // The fill thread deletes its source/buffers while its context is current.
         // The device/context is shared by every output on the same endpoint. Only the
         // last output destroys it, so live switching never invalidates a replacement.
         ReleaseShared(_sharedKey, _shared);
