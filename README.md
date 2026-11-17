@@ -64,14 +64,20 @@ test harness designed for reproducible compatibility evidence.
   and Direct3D 11 backends mirror the pipeline for desktop and headless probes.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
-  harnesses. Startup and `5do update` check the public GitHub release feed.
+  harnesses. `5do doctor` reports the host, session, native libraries, input devices,
+  and BIOS discovery in one read-only pass. Startup and `5do update` check the public
+  GitHub release feed.
 - **One bundle per supported system and architecture.** Windows and Linux x64/arm64 and
   macOS arm64 contain both the self-contained single-file CLI and desktop app, plus
   the docs/notices. macOS ships as a drag-to-Applications `.dmg`. The .NET 11 runtime is
   embedded, so no separate runtime install is required. Optional NativeAOT CLI builds remain available
-  for developers. Unsigned Windows/Linux installers and macOS `.dmg`/`.pkg` scaffolding
-  register `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file associations; signing/notarization stays conditional
-  on certificates.
+  for developers. Windows installers and macOS `.dmg`/`.pkg` scaffolding register
+  `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file associations; Linux also builds `.deb`, `.rpm`,
+  and AppImage artifacts with an AppStream listing and detached GPG signatures when the
+  release key is configured. The Linux packages install straight from the release page;
+  no repository is hosted. Signing/notarization on Windows/macOS stays conditional on
+  certificates; see the
+  [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
 ## Status at a glance
 
@@ -116,6 +122,11 @@ The apps are **self-contained single-file executables**: the .NET 11 runtime is
 embedded, so no separate runtime install is required. See the
 [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.12.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
+
+Linux users can also install the `.deb`/`.rpm` packages or the portable AppImage built
+from the same bundles; verification commands, the signing model, and the optional mirror
+setup are in the
+[Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
 Bundles are versioned and published for x64 and arm64, for example `5do-1.12.0-win-arm64.zip`
 or `5do-1.12.0-osx-arm64.dmg`.

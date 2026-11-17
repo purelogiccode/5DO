@@ -3,6 +3,48 @@
 All notable changes are recorded here. The project is at v1.12.0, the macOS GPU
 presentation release.
 
+## [Unreleased]
+
+### Added
+
+- **Linux distribution artifacts and signing.** `packaging/linux/` now builds `.deb`
+  and `.rpm` packages with AppStream metadata, 256 px icons, translated desktop
+  entries, and a corrected self-contained dependency list, plus a portable AppImage
+  with zsync update information. `sign-artifacts.sh`, `build-apt-repo.sh`, and
+  `build-rpm-repo.sh` add GPG signatures, signed APT `InRelease`/`Release.gpg`, and
+  signed RPM `repomd.xml` metadata. `.github/workflows/linux-packages.yml` runs the
+  whole set from `release.yml` and validates it with `apt-get update` and
+  `apt-get install --download-only 5do`.
+- **`docs/LinuxDistribution.md`.** Signing model, key runbook, repository hosting,
+  verification commands, the announcement playbook, and the Linux adoption backlog.
+- **BIOS auto-discovery.** `bios discover` and the first-run guide now search
+  `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and
+  `<Documents>/BIOS`, classify every image with the existing catalog, and offer the
+  best primary with a one-click **Use this BIOS** button. 5DO never downloads a ROM.
+- **`5do doctor`.** A read-only host report covering the OS/session (including
+  Wayland-only detection), data-folder write access, disk space, OpenGL/Vulkan/OpenAL
+  loading, evdev and optical devices, settings access, and BIOS discovery. Supports
+  `--json`, `--strict`, and `--folder`.
+- **Packager files in the Linux bundle.** The portable tarball now carries
+  `packaging/` with the installed desktop entry, MIME definition, AppStream metainfo,
+  and both icons, and the bundle gate verifies them. The desktop entry also gains a
+  **Play in fullscreen** action for launchers and Steam Deck shortcuts.
+- **Automated Linux release packaging.** `linux-packages.yml` builds the `.deb`,
+  `.rpm`, and AppImage artifacts, signs them, installs the `.deb` in CI to verify the
+  symlinks and desktop integration, runs the CLI self-test and `doctor`, and publishes
+  the set as GitHub release assets. Users install the downloaded file directly; no
+  package repository is hosted.
+
+### Fixed
+
+- **Linux packages no longer declare a `dotnet-runtime` dependency.** The release
+  bundles are self-contained, so the old `dotnet-runtime-11.0` dependency made the
+  `.deb`/`.rpm` uninstallable on stock distros. They now require only the X11,
+  fontconfig, freetype, glib, and GL libraries the app loads at run time.
+- **`application/x-3do-disc` no longer claims every ISO 9660 image.** The MIME magic
+  rule matched the shared `CD001` signature at offset 32769 and retyped all ISOs; the
+  type is now a subclass of `application/x-cd-image` with extension globs only.
+
 ## [1.12.0] - 2026-11-17
 
 ### Added

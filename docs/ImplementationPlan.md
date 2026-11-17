@@ -202,13 +202,23 @@ decision; the DMG remains unsigned.
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **UX-16** | L | **Installer/package scaffolding (partial)**: Windows Inno Setup installer + associations, Linux `.deb`/`.rpm` + desktop entry/MIME, macOS `.app`/`.dmg`/`.pkg`. Signing/notarization remains conditional. | The unsigned Windows installer built, installed, launched, and association-checked; Linux packages built and metadata/MIME-validated; macOS `.app`/`.dmg`/`.pkg` are built natively in CI on 2026-11-10. | The unsigned artifacts install, launch, and associate `.iso`/`.cue`/`.chd` where built; a signed/notarized release remains in §4 until certificates/accounts exist. |
+| **REL-04** | S | **Linux release signing**: GPG signing subkey, detached `.asc` for every Linux artifact, `SHA256SUMS-linux.txt.asc`, published `5do-archive-keyring.gpg`, and verification instructions. Scripted in `packaging/linux/sign-artifacts.sh` and wired into `linux-packages.yml`; it activates when `LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID` exist. | Linux has no OS-level binary signature, so the release key signs the checksum manifest and repository metadata; the CI already has an Ubuntu runner and the scripts are pure bash + GnuPG. | One tagged release publishes the keyring, a signed `SHA256SUMS-linux.txt`, and a `.asc` for every `.deb`/`.rpm`/`.AppImage`; the fingerprint is recorded in [LinuxDistribution.md](LinuxDistribution.md) §4 and the release notes; `gpg --verify` and `sha256sum -c` pass from a clean download. |
+| **REL-05** | S | **Optional signed repository tooling (not a project service)**: `build-apt-repo.sh`/`build-rpm-repo.sh` generate an `apt`/`dnf` tree from downloaded release files for operators who mirror 5DO. The project itself publishes GitHub release assets only; `apt install ./…deb` and `dnf install ./…rpm` cover normal users, so no second repository and no hosted index are required. | The packages are self-contained, the scripts are pure bash, and any HTTPS host can serve the generated tree; the decision to avoid a project-hosted repository removes the hosting and token requirements entirely. | The scripts still build `InRelease`/`Release.gpg` and `repomd.xml.asc` for a mirror, the optional path is documented in [LinuxDistribution.md](LinuxDistribution.md) §5.1, and the release assets install directly on stock Debian/Ubuntu/Mint/Fedora. |
+| **REL-06** | S | **Package metadata quality**: AppStream metainfo (id, screenshots, releases, OARS, categories, languages), 256 px + SVG icons in `hicolor`, MIME `sub-class-of` without the ISO-9660 magic override, translated desktop `Name`/`Comment`, `StartupWMClass`, and a self-contained dependency list (no `dotnet-runtime`). | The desktop entry, MIME XML, and packages already existed; software centers need metainfo before they show anything beyond a bare launcher, and the dependency list was a real install blocker for self-contained bundles. | `appstreamcli validate --no-net`, `desktop-file-validate`, and `update-mime-database` pass in CI; GNOME Software / KDE Discover show the name, summary, icon, and screenshots from the `.deb`/`.rpm`, not a generic placeholder; a plain `.iso` keeps `application/x-iso9660-image`. |
+| **REL-07** | S | **AppImage with zsync update information**: portable single file, `AppRun` and `usr/bin` wrappers, embedded update info, `.zsync`, optional embedded signature. Implemented in `build-appimage.sh` and the CI job. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged. | `5do-x86_64.AppImage` runs `--version` and the frontend smoke on a stock Ubuntu host (with FUSE 2 or `--appimage-extract-and-run`), `--appimage-signature` verifies when signed, and `AppImageUpdate` finds the next release through the published `.zsync`. |
+| **REL-08** | M | **Third-party channel listings**: publish the AUR `5do-bin` package, an AppImageHub entry, and an itch.io project page. The packager-facing files now ship inside the Linux bundle (`packaging/5do.desktop`, `5do.xml`, the AppStream metainfo, and both icons), and `build-bundle.yml` verifies them. | These channels accept a repackaged upstream release and need no licence change; the PKGBUILD and catalog entry are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
+| **REL-09** | L | **Flatpak distribution**: a self-hosted signed Flatpak repository first, then a Flathub submission once the licence position is settled. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest is packaging only. | `flatpak install` from the project repository launches 5DO with gamepad, audio, and display-sleep inhibit working; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
+| **REL-10** | S | **Steam Deck and EmuDeck integration**: `--fullscreen` desktop action (now in `5do.desktop`), a Deck-sized first-run BIOS prompt, documented non-Steam-game setup, and an upstream EmuDeck/RetroDeck entry. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the work is packaging and presentation, not emulation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
 
 The packaging scaffolding is implemented and reproducible from `packaging/`. The Windows
 installer, Linux packages, desktop entry, MIME/registry associations, and the macOS
 `.app`/`.dmg`/`.pkg` are unsigned by default and built on their native CI runners.
+Linux signing and repository generation are implemented in
+`.github/workflows/linux-packages.yml` and activate when the release key secrets exist.
 Signing and notarization require valid certificates/accounts; if those are unavailable,
 the unsigned installers and portable bundles remain the release artifacts and the signing
-item stays in §4 until the credentials exist. Evidence: [Installers.md](Installers.md).
+item stays in §4 until the credentials exist. Evidence: [Installers.md](Installers.md),
+[LinuxDistribution.md](LinuxDistribution.md).
 
 ### 3.5 P2 — Optional accuracy features
 
@@ -243,6 +253,8 @@ per-game Opera-busy profile, not on reachability.
 | **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
 | **VID-19 — Done** | L | **True 2× CEL high-resolution spike**: prototype a 640×480 CEL path behind a non-default option, following Opera's four-plane high-resolution approach and Phoenix's hardware-renderer behavior. Keep the current line-doubled mode as the fallback. | Opera's `opera_high_resolution` and Phoenix's hardware renderer provide a concrete reference; 5DO already has high-resolution VRAM planes, CEL parsing, and renderer settings. This is a bounded spike, not the full production feature. | **Result (2026-11-16): implemented as the opt-in `--true-2x` machine option, gated to validated titles.** The four-plane layout now carries independent 480-line fields: CEL writes select planes 0/1 for even lines and 2/3 for odd lines, arbitrary CEL geometry evaluates at 640x480, and packed/scaled 2D CELs expand to 2x2 blocks. Jurassic Park's Raptor Maze renders the full corridor at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale), while Family Feud matches a clean 2x scale exactly (0.00%). Native hashes are unchanged (`0xD5D6A993` at 63,000), the full suite passes, and true 2× costs about 30% more emulation time (177 fps versus 232 fps, two-run average) over the same 10,000-frame segment. **Validation gate:** Road Rash (`d7672550`) shows stale/rainbow rows at the bottom of the presented frame during scene transitions even though its CPU frame is clean. The host therefore enables the mode only for game IDs `18036597` (Jurassic Park) and `55f8ccf1` (Family Feud); every other title falls back to native 320x240 with a warning. The presentation/bitmap residual is in §4. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`, [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1. |
 | **UX-33** | S | **Minor Phoenix/4DO presentation options**: audio channel swap, background expansion/scanout borders, named void patterns (4DO/Bumps/Metal) alongside the existing solid/checker/grid/scanline set, and an emulation-health badge for frame pacing/underrun state. Land each option as its own change. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | Each option has a settings round-trip test; audio swap changes left/right output without changing frame/state/audio hashes; borders/patterns render across the presenters; the health badge reflects existing counters and is documented in the UserGuide. |
+| **UX-34** | S | **BIOS discovery and first-run offer**: search `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`; expose `5do bios discover [--json]`; offer the discovered image from the first-run guide. **Implemented 2026-11-17** in `BiosDiscovery`, `bios discover`, and the **Use this BIOS** button. | BIOS classification (`BiosLibrary`), the welcome dialog, and the settings persistence already existed; the missing piece was a deterministic search order and a one-click path. | Discovery finds a primary and secondary image in a temp folder, reports missing folders without throwing, prefers the first folder in priority order, and the welcome dialog offers the image; `BiosDiscoveryTests` (4) cover the cases. |
+| **UX-35** | S | **`5do doctor` host report**: a read-only report of OS/session, data-folder access, disk space, OpenGL/Vulkan/OpenAL loading, evdev and optical devices, settings access, and BIOS discovery, with `--json` and `--strict`. **Implemented 2026-11-17** in `DoctorReport` and `DoctorCommand`. | The probes (GL/Vulkan load, evdev readability, data paths) are host calls with no emulator state; `doctor` turns them into one support artifact. | The report renders text and JSON, `--strict` returns 1 on a warning, and the BIOS line uses the provided discovery result; `DoctorReportTests` (3) cover collection, the BIOS row, and text rendering. |
 | **SYS-25** | M | **Live CPU-clock changes (candidate)**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×-4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
 | **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
@@ -304,6 +316,7 @@ documented limitation, not that it is unachievable.
 |---|---|---|
 | **SYS-05 embedded boot ROM** | GPL-2.0-only licensing risk; no distributable ROM exists. Retail titles still need a user BIOS. | Legal sign-off and a distributable ROM exist. |
 | **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
+| **Official Linux archives (Debian, Ubuntu, Fedora, openSUSE)** | The FreeDO notice forbids commercial use without the rights holders' approval, which fails the Debian DFSG and Fedora legal tests; the archive builders also run without network access, so the NuGet graph must be vendored. Direct downloads plus the optional mirror tooling (`REL-05`) and Fedora COPR/Ubuntu PPAs are the interim paths. | The FreeDO rights holders grant written commercial-use permission (or clarify the licence) **and** a network-free, vendored source build exists. |
 | **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project now supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
 | **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player now lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
@@ -356,10 +369,17 @@ Apple Silicon macOS is supported.
    packaging), `PLAT-16` (audio live-switch), and `PLAT-18` (NoMac release gate) are
    **done**; `PLAT-14` (native Metal/Vulkan surface) and `PLAT-17` (Retina/DPI) are the
    remaining P1 items, and `PLAT-05` still needs a physical controller. `PLAT-08B` remains documented in §4.
-4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
-   stay blocked until certificates/accounts exist. The macOS DMG is a required release
-   artifact and is smoke-tested from the mounted image; notarization is the remaining
-   distribution blocker.
+4. **P1 packaging:** `UX-16` unsigned scaffolding is done, and `REL-04`..`REL-07`
+   (Linux signing, optional mirror tooling, package metadata, AppImage) are implemented
+   in `packaging/linux/` and `.github/workflows/linux-packages.yml`; they produce
+   evidence on the first tagged run with the `LINUX_GPG_PRIVATE_KEY` secret. The
+   packages ship as GitHub release assets and install with `apt install ./…deb` /
+   `dnf install ./…rpm`; no repository is hosted. `REL-08`..`REL-10`
+   (AUR/AppImageHub/itch.io, Flatpak, Steam Deck) are the next distribution steps.
+   Signed/notarized Windows and macOS installers stay blocked until
+   certificates/accounts exist. The macOS DMG is a required release artifact and is
+   smoke-tested from the mounted image; notarization is the remaining distribution
+   blocker. Official Linux archives stay in §4 on licence grounds.
 5. **P2 accuracy:** `ACC-03` and `ACC-04` are **done**. `ACC-04` is a working
    in-park script plus a default-CEL-pacing residual in §4. `SYS-01` moved to §4 after
    the BIOS CD player listed the TOC but stayed inert. The `ACC-01` and `CORE-04`
@@ -408,6 +428,10 @@ dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/
 # Frontend smoke
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
+# Host diagnostics and BIOS discovery
+dotnet run --project src/FiveDo.Cli -c Debug -- doctor --strict
+dotnet run --project src/FiveDo.Cli -c Debug -- bios discover --json
+
 # Native platform runtime smoke (macOS arm64, Linux arm64, Windows arm64)
 gh workflow run platform-runtime.yml
 
@@ -417,6 +441,16 @@ gh workflow run platform-runtime.yml
 
 # Release bundles
 pwsh -NoProfile -File packaging/package-bundle.ps1
+```
+
+```bash
+# Linux packages, signatures, and repositories (Linux or WSL)
+bash packaging/linux/build-deb.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
+bash packaging/linux/build-rpm.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
+bash packaging/linux/build-appimage.sh --bundle artifacts/bundle/linux-x64 --name 5do-x86_64.AppImage
+bash packaging/linux/sign-artifacts.sh --key-id "$LINUX_GPG_KEY_ID" \
+  --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
+sudo apt install ./artifacts/installers/5do_1.12.0_amd64.deb
 ```
 
 For a release, also run the commands in [ReleaseChecklist.md](ReleaseChecklist.md). Keep a

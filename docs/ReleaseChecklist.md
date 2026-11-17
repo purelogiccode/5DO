@@ -63,6 +63,42 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ---
 
+## Next release: Linux distribution gate
+
+The Linux packaging and signing scripts are in `packaging/linux/` and run from
+`.github/workflows/linux-packages.yml`. This gate turns them into release evidence; the
+runbook and verification commands are in
+[LinuxDistribution.md](LinuxDistribution.md).
+
+- [ ] `LINUX_GPG_PRIVATE_KEY` and `LINUX_GPG_KEY_ID` are configured; only the signing
+      subkey is stored, and its fingerprint matches `LinuxDistribution.md` §4.
+- [ ] `linux-packages.yml` builds `.deb` and `.rpm` for x64 and arm64 and an x64
+      AppImage from the release bundles.
+- [ ] The Linux bundle contains the packager files under `packaging/` and the
+      `5do.desktop` fullscreen action validates.
+- [ ] `5do doctor --strict` and `5do bios discover --json` behave on the target host
+      (the first-run guide offers the discovered BIOS when one exists).
+- [ ] `desktop-file-validate`, `appstreamcli validate --no-net`, and
+      `update-mime-database` pass on the shipped desktop/MIME/metainfo files.
+- [ ] The AppStream `<release version="...">` entry matches `Directory.Build.props`
+      and the screenshots resolve on the published docs site.
+- [ ] `dpkg-deb -f` shows no `dotnet-runtime` dependency and the expected
+      X11/fontconfig/freetype/GL dependency list.
+- [ ] `sudo apt install ./5do_<version>_amd64.deb` succeeds on a stock Debian/Ubuntu
+      host (the dependency list resolves), `5do --version` runs, and `sudo apt remove 5do`
+      removes the symlinks.
+- [ ] `gpg --verify` passes for `SHA256SUMS-linux.txt.asc` and every artifact `.asc`;
+      `sha256sum -c SHA256SUMS-linux.txt` passes from a clean download.
+- [ ] `rpm --checksig` passes for any header-signed package, and
+      `sudo dnf install ./5do-<version>-1.x86_64.rpm` succeeds on Fedora.
+- [ ] The release page lists the `.deb`/`.rpm` files, the AppImage (+ `.zsync`), the
+      keyring, and both checksum manifests; no repository is hosted or required.
+- [ ] The key fingerprint, run links, and install commands are recorded in
+      [Installers.md](Installers.md), [TestCorpus.md](TestCorpus.md), and the release
+      notes; any unsigned run is labeled "unsigned".
+
+---
+
 ## 1.1.0 maintenance gate
 
 - [x] Bump `FiveDoVersion.Version` and `Directory.Build.props` to `1.1.0`.

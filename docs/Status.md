@@ -31,6 +31,34 @@ osx-arm64 117 MB). CI run
 <https://github.com/purelogiccode/5DO/actions/runs/44141793190> passed; the macOS
 bundle job verified the bundled Vulkan/MoltenVK runtime and self-contained apphosts.
 
+**2026-11-17, REL-04..REL-07:** **Linux packages and release signing are implemented and
+wired into the release pipeline.** `packaging/linux/` now builds `.deb`/`.rpm` packages
+with AppStream metadata, 256 px icons, translated desktop entries, and a self-contained
+dependency list (the old `dotnet-runtime-11.0` dependency is gone), plus an x64 AppImage
+with zsync update information. `sign-artifacts.sh` adds detached `.asc` signatures and a
+published `5do-archive-keyring.gpg`. The packages are published as **GitHub release
+assets**; users install them with `sudo apt install ./5do_<version>_amd64.deb` or
+`sudo dnf install ./5do-<version>-1.x86_64.rpm`, and no package repository is hosted.
+`build-apt-repo.sh`/`build-rpm-repo.sh` remain available for operators who mirror the
+files (`REL-05`). `linux-packages.yml` runs from `release.yml` and installs the `.deb`
+in CI to verify the desktop integration; CI builds the unsigned path on every push.
+Evidence is pending the first tagged run with `LINUX_GPG_PRIVATE_KEY`; the runbook,
+verification steps, and announcement channels are in
+[LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages and the
+AUR/AppImageHub/itch.io/Flatpak channels stay open as `REL-08`..`REL-10`.
+
+**2026-11-17, UX-34/UX-35:** **BIOS discovery and `5do doctor` remove the two biggest
+Linux support round-trips.** `bios discover` searches `FIVEDO_BIOS_DIR`, `<data>/bios`,
+`bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`, and the first-run guide
+offers the best image with a one-click **Use this BIOS** button. `doctor` reports the
+session (including Wayland-only detection), data-folder write access, disk space,
+OpenGL/Vulkan/OpenAL loading, evdev and optical devices, settings access, and BIOS
+discovery, with `--json` and `--strict`. The Linux bundle now also carries its desktop,
+MIME, AppStream, and icon files under `packaging/`, and the desktop entry has a
+**Play in fullscreen** action. Suite: **2,401/2,401**; format clean; frontend smoke
+passes. Evidence: `BiosDiscoveryTests` (4), `DoctorReportTests` (3),
+[Installation.md](Installation.md), [Diagnostics.md](Diagnostics.md).
+
 **2026-11-16, VID-19:** **The true 2× CEL high-resolution prototype is opt-in and tested.**
 The new `--true-2x` machine option (Settings > Emulation > **True 2x CEL fields**, per-game
 **TrueHighResolution**, and a save-state field) keeps the four-plane VRAM layout but writes
