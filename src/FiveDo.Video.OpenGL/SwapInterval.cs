@@ -16,13 +16,30 @@ public static class SwapInterval
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="getProcAddress"/> is null.</exception>
     public static ISwapIntervalBackend? TryCreate(Func<string, nint> getProcAddress)
     {
+        return TryCreate(getProcAddress, OperatingSystem.IsWindows());
+    }
+
+    /// <summary>
+    /// Creates the best available swap-interval backend for an explicit platform.
+    /// </summary>
+    /// <param name="getProcAddress">Context proc-address loader, typically <c>GlInterface.GetProcAddress</c>.</param>
+    /// <param name="isWindows">Whether the context is a Win32 WGL context.</param>
+    /// <returns>The selected backend, or <see langword="null"/> when the platform exposes no supported extension.</returns>
+    internal static ISwapIntervalBackend? TryCreate(Func<string, nint> getProcAddress, bool isWindows)
+    {
         ArgumentNullException.ThrowIfNull(getProcAddress);
 
         // WGL_EXT_swap_control: BOOL wglSwapIntervalEXT(int interval).
-        var wgl = getProcAddress("wglSwapIntervalEXT");
-        if (wgl != 0)
+        // WGL only exists on Windows. Mesa's GLX loader returns a non-null stub for
+        // unknown names, so probing WGL on Linux would misreport the backend (and call
+        // a stub instead of the GLX extension).
+        if (isWindows)
         {
-            return new WglSwapIntervalBackend(wgl);
+            var wgl = getProcAddress("wglSwapIntervalEXT");
+            if (wgl != 0)
+            {
+                return new WglSwapIntervalBackend(wgl);
+            }
         }
 
         // GLX_EXT_swap_control: void glXSwapIntervalEXT(Display*, GLXDrawable, int).
