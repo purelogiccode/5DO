@@ -63,6 +63,29 @@ transient win-x64 artifact-upload retry. Docs run
 and wiki; `WhatsNew.html`, `ReleaseNotes-1.10.2.html`, and `wiki/Release-1.10.2` return
 HTTP 200.
 
+**2026-11-17, v1.11.0 release:** **Linux x64 is validated end to end and the
+found defects are fixed.** On the bare-metal Linux Mint 22.3 host (Intel HD 4000, Mesa
+25.2.8, 1920x1080 X11), hardware OpenGL 4.2 presents at 61 fps, Vulkan 1.2 presents
+through X11 in the window probe (0 different pixels at 320x240) and the desktop shell
+(no per-frame readback, resize supported), a 600 s real-device audio soak reports 0
+dropped samples and 0 underruns, evdev gamepads drive the 3DO, display sleep is
+inhibited while unpaused, and fullscreen/save/load/pause/screenshots/exit pass. The
+release also adds the opt-in true 2x CEL path for Jurassic Park Interactive and Family
+Feud and fixes the Linux gamepad ioctl encoding, the OpenAL PipeWire exit segfault, the
+1x1 software/Vulkan screenshots, the noisy save-state version warning, and the macOS
+Vulkan-to-OpenGL fallback. The suite is **2,393 tests**; build, format, and InspectCode
+are clean.
+
+**v1.11.0 release evidence:** the six bundles and `SHA256SUMS.txt` are published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.11.0>. Release run
+<https://github.com/purelogiccode/5DO/actions/runs/44028488601> passed all six bundle
+jobs and the publish job; all six hashes verify, and the assets are copied into
+`src/FiveDo.Frontend.Avalonia/bin/Release`. CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44027199860>, docs run
+<https://github.com/purelogiccode/5DO/actions/runs/44027199667>, platform runtime run
+<https://github.com/purelogiccode/5DO/actions/runs/44027199636>, CodeQL, and Scorecard
+all passed.
+
 **2026-11-15 update:** **v1.10.1** adds RetroAchievements save-state progress
 persistence, renames the desktop apphost to **`FiveDo`** (`FiveDo.exe` on Windows), and
 cuts time to the first window with lazy audio, deferred BIOS/disc loading, background
