@@ -508,10 +508,23 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             return VkApi.GetApi();
         }
 
+        // Prefer the loader and ICD shipped beside the app. The release bundle carries
+        // libvulkan.1.dylib, libMoltenVK.dylib, and MoltenVK_icd.json so macOS users do
+        // not need Homebrew. The ICD path must be set before vkCreateInstance.
+        string baseDirectory = AppContext.BaseDirectory;
+        string bundledIcd = Path.Combine(baseDirectory, "MoltenVK_icd.json");
+        if (File.Exists(bundledIcd))
+        {
+            Environment.SetEnvironmentVariable("VK_ICD_FILENAMES", bundledIcd);
+            Environment.SetEnvironmentVariable("VK_DRIVER_FILES", bundledIcd);
+        }
+
         // Homebrew installs libvulkan outside dyld's default search path. Silk.NET's
         // default loader names are tried last so a system Vulkan SDK still works.
         string[] candidates =
         [
+            Path.Combine(baseDirectory, "libvulkan.1.dylib"),
+            Path.Combine(baseDirectory, "libvulkan.dylib"),
             "/opt/homebrew/lib/libvulkan.1.dylib",
             "/opt/homebrew/lib/libvulkan.dylib",
             "/usr/local/lib/libvulkan.1.dylib",

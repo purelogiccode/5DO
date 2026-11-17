@@ -1,9 +1,11 @@
 # 5DO — Consolidated Implementation Plan
 
 **Snapshot:** 2026-11-17
-**Release:** v1.11.0
+**Release:** v1.12.0
 **Status:** the compatibility program is complete. This file is the single actionable plan;
-it tracks only **achievable post-1.11.0 work**.
+it tracks only **achievable post-1.11.0 work**. The macOS full-support workstream is
+active: arm64 GPU presentation is validated through Vulkan/MoltenVK on the rented NoMac
+host, and the remaining macOS items are tracked in §3.3 as `PLAT-14`..`PLAT-19`.
 **Merged from:** the former active plan and
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md). The archive remains the raw
 evidence store, completed log, stable-ID index, and appendices.
@@ -45,10 +47,10 @@ loadability and duplicate coverage.
 | Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
 | High-resolution CEL | Opt-in `--true-2x` prototype: independent 480-line CEL fields, validated on Jurassic Park's Raptor Maze and Family Feud; native hashes unchanged | [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
 | Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
-| Release | **v1.11.0** Linux validation and stability: hardware OpenGL/Vulkan X11, 600 s real-device audio, evdev gamepads, display sleep, full acceptance, true 2x CEL, and the Linux gamepad/exit/screenshot fixes, as six framework-dependent bundles (macOS as DMG) with `SHA256SUMS.txt`; **v1.10.2** added CDI/NRG disc images and the Windows OpenAL runtime fix; **v1.10.1** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0) |
+| Release | **v1.12.0** macOS GPU presentation: arm64 Vulkan/MoltenVK presenter, all eight filters, 2,394 tests, packaged DMG, and a .NET 8-free build; the macOS full-support backlog is `PLAT-14`..`PLAT-18`; **v1.11.0** Linux validation and stability: hardware OpenGL/Vulkan X11, 600 s real-device audio, evdev gamepads, display sleep, full acceptance, true 2x CEL, and the Linux gamepad/exit/screenshot fixes, as six framework-dependent bundles (macOS as DMG) with `SHA256SUMS.txt`; **v1.10.2** added CDI/NRG disc images and the Windows OpenAL runtime fix; **v1.10.1** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0) |
 | Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
 | Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
-| Platform | Windows x64 validated; macOS x64/arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux x64 GL/Vulkan/audio/input/acceptance validated on the bare-metal HD 4000 host (2026-11-16/17); macOS arm64 Vulkan/MoltenVK presentation, all eight GPU filters, packaged DMG, and a 60 fps Wolfenstein session validated on a NoMac Apple M5 Pro (2026-11-17), with Wayland surfaces, accelerated macOS OpenGL, and non-Intel GPUs still best-effort | [Compatibility.md](Compatibility.md) §10.3/§10.4, [KnownIssues.md](KnownIssues.md) |
+| Platform | Windows x64 validated; macOS arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux x64 GL/Vulkan/audio/input/acceptance validated on the bare-metal HD 4000 host (2026-11-16/17); macOS arm64 Vulkan/MoltenVK presentation, all eight GPU filters, packaged DMG, and a 60 fps Wolfenstein session validated on a NoMac Apple M5 Pro (2026-11-17). Intel macOS support was dropped in 1.12.0 because no Intel Mac is available for GPU validation; Wayland surfaces, accelerated macOS OpenGL, and non-Intel GPUs remain best-effort | [Compatibility.md](Compatibility.md) §10.3/§10.4, [KnownIssues.md](KnownIssues.md) |
 | RetroAchievements | Managed rcheevos evaluation, 3DO `rc_hash_3do` parity with RAHasher 1.8.3, hardcore rules, durable offline unlock queue, hardcore-only leaderboard submission, rich presence, OSD, and achievement window; hardcore credit pending RA approval | [RetroAchievements.md](RetroAchievements.md), [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md) |
 | Localization | Nine embedded UI catalogs (English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, Simplified Chinese); `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
 | Metadata | External metadata lookup with deterministic cache and manual media attachments | [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
@@ -133,7 +135,7 @@ and a linked capture for every promotion or documented limit.
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
 | **PLAT-02 — Done (2026-11-16)** | S | **Linux x64 GPU presentation**: run the GL probe on a real Linux GPU host, not llvmpipe over SSH. Host: bare-metal Linux Mint 22.3, i7-3615QM, Intel HD 4000 (Ivy Bridge), Mesa 25.2.8 (crocus GL, hasvk Vulkan 1.2). | The renderer and probe already existed; the GPU host is now available. | 1920x1080 sharp-bilinear probe `ok: true` at 61.0-61.6 fps (present mean 1.9-2.5 ms, GPU 1.2-1.3 ms, `filterFallback: false`) and 1280x720 vsync `vsyncActive: true` via `GLX_EXT_swap_control`. The pass also found and fixed the Linux WGL/GLX swap-interval misdetection. Evidence: [Compatibility.md](Compatibility.md) §10.3, [TestCorpus.md](TestCorpus.md) 1.1cm. |
-| **PLAT-03 — Done** | M | **macOS runtime validation**: execute the x64 and arm64 bundles on macOS and run CLI/frontend smoke. | Hosted macOS runners run both bundles natively. | Both bundles start, run `selftest`, and pass the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10), [Compatibility.md](Compatibility.md) §10.3. |
+| **PLAT-03 - Done** | M | **macOS arm64 runtime validation**: execute the arm64 bundle on macOS and run CLI/frontend smoke. | Hosted macOS runners run the arm64 bundle natively; Intel macOS was dropped in 1.12.0. | The arm64 bundle starts, runs `selftest`, and passes the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10), [Compatibility.md](Compatibility.md) §10.4. |
 | **PLAT-04 — Done** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | Hosted arm64 runners run both bundles natively. | CLI and frontend smoke pass on both arm64 targets; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10). |
 | **PLAT-05** | S | **macOS gamepad backend**: physical detection for the new IOKit HID source. The source and pure mapping layer are implemented; 21 mapping/profile tests pass. | The remaining check needs a macOS host with a connected controller. | A macOS gamepad is detected and mapped through the existing eight-player profile; the mapping is already unit-tested. |
 | **PLAT-06 — Partial (documented)** | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: complete the missing presentation/performance matrix. | The renderer and benchmark harness exist; the work is measurement on available hardware. | Results are recorded in [Performance.md](Performance.md) §8.8, with every residual labeled `validated` or `best-effort`. DPI math is validated by `PixelSizeTests` at 100/125/150/200%; GLES 3.0/ANGLE and 4K WGL are validated; real GLES 3.1 hardware and a real Tier B device remain best-effort. |
@@ -144,6 +146,11 @@ and a linked capture for every promotion or documented limit.
 | **PLAT-11 — Done (2026-11-17)** | S | **Linux evdev gamepad validation**: detect and map a controller through `EvdevGamepadSource`, including the `input` group/udev permission path. The pass found and fixed a real defect: `EventIoctl` encoded the ioctl **type and request number in the wrong bit positions**, so no evdev device was ever accepted. `--gamepad-probe` now samples for two seconds so a press is not missed. | The source and diagnostic existed but the ioctl encoding made the backend inert on every Linux host; a virtual uinput pad reproduces the same kernel evdev path as physical hardware. | A virtual 8-button/4-axis uinput pad is detected (`connected=1`), its South button maps to `buttons=South`, and the `input`-group/udev requirement is documented in [Installation.md](Installation.md). Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm, `EvdevGamepadSourceTests`. |
 | **PLAT-12 — Done (2026-11-16)** | S | **Linux display-sleep inhibit**: replace `NullDisplaySleepBackend` on Linux with the freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`), held by a persistent `python3-dbus` helper for the connection lifetime. | `DisplaySleepPolicy` and its lifecycle already existed; only the Linux backend was null, and the host has a session bus and a real desktop to test it. | A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit` and `UnInhibit` with the same cookie, and closing the window released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip the lock cleanly, and `DisplaySleepPolicyTests` cover the run/pause/release transitions. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
 | **PLAT-13 — Done (2026-11-17)** | S | **Linux desktop exit segfault**: closing the window after a game session crashed in a native `atexit` handler when `XDG_RUNTIME_DIR` was set. | The host reproduced it deterministically; forcing `ALSOFT_DRIVERS=pulse,alsa` avoided it, which bounded the root cause to the bundled OpenAL Soft 1.23.1 PipeWire backend. | Root cause: Silk.NET unloads `libopenal.so` when the last context is disposed, leaving the PipeWire backend's `atexit` handler pointing at unmapped code. `OpenAlAudioOutput` now keeps one reference to the library on Linux; software, OpenGL, and Vulkan sessions close with exit code 0 and `--smoke-test` still passes. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
+| **PLAT-14 - Open (2026-11-17)** | L | **macOS native Metal/Vulkan surface**: replace the offscreen Vulkan plus bitmap-readback shell path with a native `CAMetalLayer`/`NSView` surface (through `VK_EXT_metal_surface`/MoltenVK or a native Metal presenter), including swapchain creation, resize/`OUT_OF_DATE`, present-mode selection, and no per-frame CPU readback. | The NoMac host has a Metal device; the Linux X11 native surface and the macOS offscreen renderer are working references; MoltenVK is installed. | `--vk-window-probe` on macOS presents natively (`ok: true`), 1080p FIFO at >=60 fps with 0 renderer bytes/frame; a 320x240 Accurate capture matches the CPU oracle with 0 different pixels; the desktop shell uses the surface through resize and fullscreen. Evidence: [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md). |
+| **PLAT-15 - Open (2026-11-17)** | M | **macOS GPU runtime packaging**: remove the manual `brew install molten-vk vulkan-loader` requirement by bundling the loader/ICD with notices, or detect the missing runtime and present an actionable first-run message; keep the CPU fallback usable. | MoltenVK is redistributable and `packaging/package-bundle.ps1` already stages platform natives; alternatively the shell can guide the user. | A clean Mac with only the .NET 11 runtime either renders through the packaged GPU runtime or shows an actionable message and uses the CPU presenter; DMG smoke and legal notices are updated. |
+| **PLAT-16 - Open (2026-11-17)** | S | **macOS OpenAL live-switch fix**: eliminate the 18 `AL_INVALID_ENUM` errors when a second output replaces an open one; validate context/device lifetime and ref-counting. | The failure reproduces deterministically with bundled OpenAL Soft 1.23.1, including `ALSOFT_DRIVERS=null`; the Linux replacement path and tests are references. | `FIVEDO_AUDIO_TESTS=1` passes all three audio tests on the macOS default and null devices; a real device switch reports 0 AL errors; no Windows/Linux regression. Evidence: [Audio.md](Audio.md), [Compatibility.md](Compatibility.md) §10.4. |
+| **PLAT-17 - Open (2026-11-17)** | M | **macOS Retina/DPI and presentation matrix**: validate 1x/2x Retina scaling, logical versus physical pixel sizing, fullscreen, window resize, 320x240 screenshot dimensions, and 4K offscreen output on the NoMac host. | `PixelSizeTests` cover the math and the shell already handles size/scale; NoMac provides a 1920x1080 desktop and Metal GPU. | A dated matrix records windowed/fullscreen and 1x/2x results, screenshots have the expected pixel size, the video rectangle is not stretched, and the results are labeled in [Performance.md](Performance.md) §8.8. |
+| **PLAT-18 - Open (2026-11-17)** | S | **macOS NoMac release gate**: make the rented host the repeatable validation target for every macOS change: full suite, CLI self-test, frontend smoke, all Vulkan probes, a 600-frame real-game boot, the packaged DMG, a screenshot, and a clean `nomac stop`. | The NoMac CLI and host are available; the 2026-11-17 run already produced this evidence set and the commands are host-agnostic. | A documented runbook/script starts and stops the host, records cost/time and JSON/TRX/PNG evidence, and a fresh run reproduces the [Compatibility.md](Compatibility.md) §10.4 table from a clean checkout. |
 
 `PLAT-05` code is complete: `MacOsGamepadSource` uses IOKit HID Manager for Generic
 Desktop joystick/gamepad/multi-axis devices, and `MacOsHidGamepadMapper` plus
@@ -155,9 +162,10 @@ OpenAL path for 600 s on the null device and on the NVIDIA playback endpoint, bo
 all eight Europe-only/PAL-sensitive titles produced dated PAL1 captures with
 `panafz10e-anvil.bin`, and a Battle Chess PAL2 probe rendered 384x288 at 50 Hz
 ([PalValidation.md](PalValidation.md)). `PLAT-03` and `PLAT-04` are closed by
-`.github/workflows/platform-runtime.yml`: macOS x64, macOS arm64, Linux arm64, and
-Windows arm64 each publish the framework-dependent CLI/frontend, run `selftest`, and
-pass the frontend `--smoke-test` (run 42770783778, 2026-11-10).
+`.github/workflows/platform-runtime.yml`: macOS arm64, Linux arm64, and Windows arm64
+each publish the framework-dependent CLI/frontend, run `selftest`, and pass the
+frontend `--smoke-test` (run 42770783778, 2026-11-10). Intel macOS was dropped in
+1.12.0 because no Intel Mac is available for GPU validation.
 
 **Linux workstream (2026-11-16).** A bare-metal Linux Mint 22.3 host removes the
 hardware blocker that kept Linux at preview/best-effort: Intel Core i7-3615QM, Intel
@@ -173,7 +181,20 @@ workstream has no remaining §3 items; GLES 3.1/Tier B timing stays in `PLAT-06`
 the legacy/integrated validation target, not the primary Vulkan reference. Do not treat
 CI `Xvfb` smokes as GPU evidence: they run `llvmpipe` without a swapchain.
 
-### 3.4 P1 — Release and packaging
+**macOS full-support workstream (2026-11-17).** A rented NoMac Apple M5 Pro (Virtual,
+macOS 26.6.2, arm64) unblocks macOS GPU work. The first pass validated the offscreen
+Vulkan/MoltenVK presenter (all eight filters, a 60 fps packaged Wolfenstein session, and
+2,394/2,394 tests) and removed the external .NET 8 build requirement. Full support is
+defined as: a native Metal/MoltenVK surface with no per-frame readback; a packaged GPU
+runtime or actionable first-run guidance; working macOS audio live-switch; Retina/DPI;
+physical gamepad detection; and a signed/notarized DMG. Intel macOS is out of scope
+(dropped in 1.12.0), so the target is Apple Silicon only. `PLAT-14`..`PLAT-18` track the
+achievable arm64 items. Every item is validated on NoMac and recorded in
+[Compatibility.md](Compatibility.md) §10.4.
+Credentials and start/stop commands are in the gitignored `AGENTS.local.md`; stop the
+Mac after each run to end billing.
+
+### 3.4 P1 - Release and packaging
 
 | ID | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|
@@ -280,7 +301,7 @@ documented limitation, not that it is unachievable.
 |---|---|---|
 | **SYS-05 embedded boot ROM** | GPL-2.0-only licensing risk; no distributable ROM exists. Retail titles still need a user BIOS. | Legal sign-off and a distributable ROM exist. |
 | **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
-| **PLAT-08B Vulkan macOS/Metal** | A MoltenVK surface needs a Metal-capable macOS host; hosted runners only cover the CLI/frontend smoke, so there is no device to validate against. The Linux half is split out as `PLAT-08A` and is achievable. | A Metal-capable macOS host or a hosted runner with a usable Metal device is available. |
+| **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project now supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
 | **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player now lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
@@ -301,7 +322,12 @@ documented limitation, not that it is unachievable.
 | **DeathKeep / Kingdom gameplay** | Both match the reference’s black/title screen; no known input reaches gameplay. | A reference gameplay capture proves a reachable scene. |
 | **480i real-title validation** | No local title is confirmed 480i; only synthetic processor tests exist. | A confirmed 480i title or hardware capture is available. |
 | **Exact peer frame parity after beyond-title** | Not required by the playable definition. | A player-visible regression is traced to a peer divergence. |
-| **Deep playthrough of all 378 titles** | The compatibility claim is beyond-title, not full-game completion. | A title’s status or quality grade depends on deeper play. |
+| **Deep playthrough of all 378 titles** | The compatibility claim is beyond-title, not full-game completion. | A title's status or quality grade depends on deeper play. |
+
+**2026-11-17 unblock:** `PLAT-08B` left this table. A NoMac Metal host and a working
+offscreen Vulkan/MoltenVK path now exist, so the native-surface remainder is tracked as
+`PLAT-14` in §3.3. Intel macOS was dropped because the project cannot validate it; only
+Apple Silicon macOS is supported.
 
 ---
 
@@ -323,9 +349,14 @@ documented limitation, not that it is unachievable.
    `.github/workflows/platform-runtime.yml`; `PLAT-05` needs physical macOS controller
    detection; `PLAT-06` is documented in Performance §8.8 (DPI math validated; GLES 3.1
    hardware and Tier B timing remain best-effort); `PLAT-07` and `PLAT-09` are **done**;
-   `PLAT-08B` (Metal) stays blocked in §4.
+   The macOS workstream is unblocked by the rented NoMac host: `PLAT-14` (native
+   Metal/Vulkan surface), `PLAT-15` (GPU runtime packaging), `PLAT-16` (audio
+   live-switch), `PLAT-17` (Retina/DPI), and `PLAT-18` (NoMac release gate) are the next
+   P1 items; `PLAT-05` still needs a physical controller. `PLAT-08B` remains documented in §4.
 4. **P1 packaging:** `UX-16` unsigned scaffolding is done; signed/notarized installers
-   stay blocked in §4 until certificates/accounts exist.
+   stay blocked until certificates/accounts exist. The macOS DMG is a required release
+   artifact and is smoke-tested from the mounted image; notarization is the remaining
+   distribution blocker.
 5. **P2 accuracy:** `ACC-03` and `ACC-04` are **done**. `ACC-04` is a working
    in-park script plus a default-CEL-pacing residual in §4. `SYS-01` moved to §4 after
    the BIOS CD player listed the TOC but stayed inert. The `ACC-01` and `CORE-04`
@@ -374,7 +405,7 @@ dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/
 # Frontend smoke
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
 
-# Native platform runtime smoke (macOS x64/arm64, Linux arm64, Windows arm64)
+# Native platform runtime smoke (macOS arm64, Linux arm64, Windows arm64)
 gh workflow run platform-runtime.yml
 
 # Disc conversion round-trip

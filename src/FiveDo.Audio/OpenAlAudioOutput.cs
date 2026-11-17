@@ -60,6 +60,9 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _ = NativeLibrary.TryLoad("libopenal.so", out _);
     }
 
+    private static readonly Lock SharedLock = new();
+    private static readonly Dictionary<string, SharedOutputContext> SharedContexts = new(StringComparer.Ordinal);
+
     private readonly int _bufferFrames;
     private readonly int _bufferCount;
     private readonly int _prefillFrames;
@@ -68,6 +71,8 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private readonly Device* _device;
     private readonly Context* _context;
     private readonly delegate* unmanaged<Context*, byte> _setThreadContext;
+    private readonly SharedOutputContext _shared;
+    private readonly string _sharedKey;
     private readonly uint _source;
     private readonly uint[] _buffers;
     private readonly int[] _bufferFrameCounts;
@@ -98,20 +103,48 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private int _silenceFramesRemaining;
     private int _dropFramesRemaining;
 
+    private sealed class SharedOutputContext
+    {
+        public SharedOutputContext(
+            ALContext alc,
+            AL al,
+            Device* device,
+            Context* context,
+            delegate* unmanaged<Context*, byte> setThreadContext)
+        {
+            Alc = alc;
+            Al = al;
+            Device = device;
+            Context = context;
+            SetThreadContext = setThreadContext;
+        }
+
+        public ALContext Alc { get; }
+
+        public AL Al { get; }
+
+        public Device* Device { get; }
+
+        public Context* Context { get; }
+
+        public delegate* unmanaged<Context*, byte> SetThreadContext { get; }
+
+        public int ReferenceCount { get; set; }
+    }
+
     private OpenAlAudioOutput(
-        ALContext alc,
-        AL al,
-        Device* device,
-        Context* context,
-        delegate* unmanaged<Context*, byte> setThreadContext,
+        SharedOutputContext shared,
+        string sharedKey,
         AudioRingBuffer ring,
         AudioBufferConfiguration configuration)
     {
-        _alc = alc;
-        _al = al;
-        _device = device;
-        _context = context;
-        _setThreadContext = setThreadContext;
+        _shared = shared;
+        _sharedKey = sharedKey;
+        _alc = shared.Alc;
+        _al = shared.Al;
+        _device = shared.Device;
+        _context = shared.Context;
+        _setThreadContext = shared.SetThreadContext;
         _ring = ring;
         _bufferFrames = configuration.BufferFrames;
         _bufferCount = configuration.BufferCount;
@@ -336,49 +369,83 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         out string? error)
     {
         error = null;
-        ALContext? alc = null;
-        AL? al = null;
-        Device* device = null;
-        Context* context = null;
-        delegate* unmanaged<Context*, byte> setThreadContext;
+        string key = string.IsNullOrWhiteSpace(deviceName) ? string.Empty : deviceName;
+        SharedOutputContext? shared = null;
+        var acquired = false;
         try
         {
-            alc = ALContext.GetApi();
-            al = AL.GetApi();
-            device = alc.OpenDevice(string.IsNullOrWhiteSpace(deviceName) ? string.Empty : deviceName);
-            if (device is null)
+            lock (SharedLock)
             {
-                error = "No OpenAL playback device was found.";
-                return null;
+                if (!SharedContexts.TryGetValue(key, out shared))
+                {
+                    ALContext alc = ALContext.GetApi();
+                    AL al = AL.GetApi();
+                    Device* device = null;
+                    Context* context = null;
+                    try
+                    {
+                        device = alc.OpenDevice(key);
+                        if (device is null)
+                        {
+                            error = "No OpenAL playback device was found.";
+                            al.Dispose();
+                            alc.Dispose();
+                            return null;
+                        }
+
+                        context = alc.CreateContext(device, null);
+                        if (context is null)
+                        {
+                            error = "The OpenAL context could not be created.";
+                            alc.CloseDevice(device);
+                            al.Dispose();
+                            alc.Dispose();
+                            return null;
+                        }
+
+                        // One context is shared by every output on this device. Separate
+                        // contexts on the same OpenAL Soft device invalidate each other's
+                        // sources when one is destroyed, which breaks live device switching.
+                        delegate* unmanaged<Context*, byte> setThreadContext =
+                            GetSetThreadContext(alc, device);
+                        shared = new SharedOutputContext(alc, al, device, context, setThreadContext);
+                        SharedContexts.Add(key, shared);
+                    }
+                    catch
+                    {
+                        if (context is not null)
+                        {
+                            alc.DestroyContext(context);
+                        }
+
+                        if (device is not null)
+                        {
+                            alc.CloseDevice(device);
+                        }
+
+                        al.Dispose();
+                        alc.Dispose();
+                        throw;
+                    }
+                }
+
+                shared.ReferenceCount++;
+                acquired = true;
             }
 
-            context = alc.CreateContext(device, null);
-            if (context is null)
-            {
-                error = "The OpenAL context could not be created.";
-                return null;
-            }
-
-            // OpenAL's current context is process-wide; concurrent outputs (device switching
-            // or the Settings test tone) would otherwise fight over it. OpenAL Soft exposes
-            // the thread-local context extension, which keeps each fill thread independent.
-            setThreadContext = GetSetThreadContext(alc, device);
-            var output = new OpenAlAudioOutput(
-                alc,
-                al,
-                device,
-                context,
-                setThreadContext,
+            return new OpenAlAudioOutput(
+                shared,
+                key,
                 new AudioRingBuffer(capacityFrames),
                 configuration);
-            alc = null;
-            al = null;
-            device = null;
-            context = null;
-            return output;
         }
         catch (Exception exception)
         {
+            if (acquired && shared is not null)
+            {
+                ReleaseShared(key, shared);
+            }
+
             error = exception.Message;
 
             // Audio availability is host state, not an application defect: headless
@@ -391,21 +458,30 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                 exception.Message);
             return null;
         }
-        finally
+    }
+
+    private static void ReleaseShared(string key, SharedOutputContext shared)
+    {
+        bool last;
+        lock (SharedLock)
         {
-            if (context is not null)
+            shared.ReferenceCount--;
+            last = shared.ReferenceCount <= 0;
+            if (last)
             {
-                alc?.DestroyContext(context);
+                SharedContexts.Remove(key);
             }
-
-            if (device is not null)
-            {
-                alc?.CloseDevice(device);
-            }
-
-            al?.Dispose();
-            alc?.Dispose();
         }
+
+        if (!last)
+        {
+            return;
+        }
+
+        shared.Alc.DestroyContext(shared.Context);
+        shared.Alc.CloseDevice(shared.Device);
+        shared.Al.Dispose();
+        shared.Alc.Dispose();
     }
 
     private static delegate* unmanaged<Context*, byte> GetSetThreadContext(
@@ -786,28 +862,17 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _thread.Join(1000);
         _tap?.Dispose();
         _stop.Dispose();
-        if (_deviceFailed)
+        if (!_deviceFailed && MakeContextCurrent())
         {
-            _al.Dispose();
-            _alc.Dispose();
-            return;
+            _al.SourceStop(_source);
+            _al.DeleteSource(_source);
+            _al.DeleteBuffers(_buffers);
+            ClearContext();
         }
 
-        if (!MakeContextCurrent())
-        {
-            _al.Dispose();
-            _alc.Dispose();
-            return;
-        }
-
-        _al.SourceStop(_source);
-        _al.DeleteSource(_source);
-        _al.DeleteBuffers(_buffers);
-        ClearContext();
-        _alc.DestroyContext(_context);
-        _alc.CloseDevice(_device);
-        _al.Dispose();
-        _alc.Dispose();
+        // The device/context is shared by every output on the same endpoint. Only the
+        // last output destroys it, so live switching never invalidates a replacement.
+        ReleaseShared(_sharedKey, _shared);
     }
 }
 

@@ -1,57 +1,57 @@
-# What's new in 5DO 1.11.0
+# What's new in 5DO 1.12.0
 
 **Released:** 2026-11-17
 
-5DO 1.11.0 is the **Linux platform validation and stability** update. Linux x64 is now
-validated on a real machine — hardware OpenGL, Vulkan through X11, real-device audio,
-gamepads, display sleep, fullscreen, save states, screenshots, and clean shutdown — and
-the release adds the opt-in true 2x CEL path plus fixes for four defects found during
-that pass. Emulation accuracy and deterministic hashes are unchanged.
+5DO 1.12.0 is the **macOS GPU presentation** update. macOS arm64 now renders the 3DO
+through Vulkan/MoltenVK on Metal instead of falling back to a blank OpenGL surface,
+with all eight filters, a packaged DMG, and a full validation pass on a rented NoMac
+host. The build also no longer requires the .NET 8 runtime.
 
 ## Highlights
 
-### Linux x64 is validated
+### macOS arm64 renders at 60 fps
 
-Validated on a bare-metal Linux Mint 22.3 host (Intel HD 4000, Mesa 25.2.8, 1920x1080
-X11, HDA audio):
+Validated on a NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64:
 
-- **OpenGL 4.2 hardware presentation** at 61 fps / 1080p, with `GLX_EXT_swap_control`.
-- **Vulkan 1.2** presents through an X11 swapchain in both the window probe and the
-  desktop shell. A 320x240 capture matches the CPU oracle with **0 different pixels**;
-  the shell has no per-frame readback and survives resizing.
-- **600 s real-device audio soak:** 26,461,445 samples, **0 dropped**, **0 underruns**,
-  0 OpenAL errors.
-- **evdev gamepads**, **display-sleep inhibition**, `F11` fullscreen, `F5`/`F8` slot
-  save/load, `Escape` pause, `F12` 320x240 screenshots, and exit code 0 on the software,
-  OpenGL, and Vulkan presenters.
-- Wayland-only sessions use the OpenGL presenter; native Wayland Vulkan is not
-  implemented.
+- **Vulkan/MoltenVK presenter** - offscreen Vulkan renders into the shared bitmap
+  presenter; the status bar reports `Vulkan (Metal)`.
+- **60 fps gameplay** - Wolfenstein 3D ran at 59.8-60.1 fps in the packaged app.
+- **All eight filters** - Accurate, Nearest, SharpBilinear, Bicubic, xBR, HQx, MMPX,
+  and FSR 1.0 pass the Vulkan probe with no fallback.
+- **2,394/2,394 tests** pass, plus CLI `selftest` and frontend `--smoke-test`.
+- **DMG/PKG/tar.gz** - built natively; smoke tests pass from the tarball and mounted
+  DMG; SHA-256 verifies.
 
-### True 2x CEL fields (opt-in)
+### macOS fixes
 
-`--true-2x` (or Settings > Video > *True 2x CEL fields*) renders CELs into independent
-480-line fields for **Jurassic Park Interactive** and **Family Feud**. Other titles fall
-back to native 320x240 with a warning. Bitmap and SPORT content remains line-doubled,
-the mode costs about 30% more emulation time, and native hashes are unchanged.
+- `VK_KHR_portability_enumeration` is enabled for MoltenVK.
+- Homebrew's `/opt/homebrew/lib/libvulkan.1.dylib` is loaded directly.
+- The OpenGL probe fails immediately with an explanation instead of timing out.
+- OpenGL/Vulkan/Direct3D selections use the Vulkan presenter on macOS, with a CPU
+  fallback if MoltenVK is missing.
+- The status bar shows `(GPU)` for the Vulkan readback path.
 
-## Fixed
+### Builds no longer need .NET 8
 
-- **Linux gamepads now work.** The evdev ioctl request had the type and number bits
-  swapped, so no device was ever accepted.
-- **Linux exit segfault fixed.** The bundled OpenAL Soft PipeWire backend's `atexit`
-  handler ran after the library was unloaded; `libopenal` is now kept mapped on Linux.
-- **Screenshots on software/Vulkan are 320x240**, not 1x1 pixels.
-- **Old save states no longer warn.** Version drift is an informational note; the CLI
-  `run` JSON adds `notes`.
-- **macOS Vulkan selections now use OpenGL**, and Vulkan failures try OpenGL before the
-  CPU presenter.
-- **Linux Vsync now reports `GLX_EXT_swap_control`** instead of a WGL name.
+`XenoAtom.ShaderCompiler.Build` ships a net8.0 tool. The build now rolls it forward to
+the installed .NET 9/10/11 runtime when .NET 8 is absent; when .NET 8 is present it is
+still preferred. This fixes the `You must install or update .NET` build failure on
+clean machines.
 
-## Upgrading
+## Install
 
-- Install the **.NET 11 runtime**; the bundles do not include it.
-- Linux: gamepads need the `input` group or a udev rule; display-sleep inhibition uses
-  `python3-dbus`, normally installed with the desktop.
-- macOS GPU presentation and physical gamepad detection remain best-effort.
+The bundles are **self-contained**: the .NET 11 runtime is embedded, so no separate
+runtime install is required. The macOS arm64 bundle also includes the Vulkan loader and
+MoltenVK. No system OpenAL install is required.
 
-See [ReleaseNotes-1.11.0.md](ReleaseNotes-1.11.0.md) for the full list and evidence.
+## Known limits
+
+- Native Metal surface not implemented yet (`PLAT-14`).
+- MoltenVK is an external dependency; bundling/guidance is `PLAT-15`.
+- macOS audio live-switch reports `AL_INVALID_ENUM` (`PLAT-16`).
+- Retina/DPI and physical gamepads are not yet validated. Intel macOS support was
+  dropped in this release; Apple Silicon is the only supported macOS target.
+- The DMG is unsigned; Gatekeeper may require an explicit exception.
+
+See the [1.12.0 release notes](ReleaseNotes-1.12.0.md), [compatibility evidence](Compatibility.md)
+§10.4, and [known issues](KnownIssues.md).

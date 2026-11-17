@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('win-x64', 'win-arm64', 'linux-x64', 'linux-arm64', 'osx-x64', 'osx-arm64')]
+    [ValidateSet('win-x64', 'win-arm64', 'linux-x64', 'linux-arm64', 'osx-arm64')]
     [string] $Rid,
 
     [Parameter(Mandatory = $true)]
@@ -108,8 +108,8 @@ function Copy-PublishTree {
 try {
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
 
-    # Both apps are framework-dependent single files. No .NET runtime is copied
-    # into the bundle; users install the .NET 11 runtime on their machine.
+    # Both apps are self-contained single files: the .NET runtime is embedded in the
+    # executable, so users do not install a separate runtime.
     Copy-PublishTree -Source $cliPath -Destination $staging
     Copy-PublishTree -Source $frontendPath -Destination $staging
 
@@ -135,6 +135,46 @@ try {
         if (-not (Test-Path -LiteralPath $runtimePath)) {
             throw ("The bundle is missing the OpenAL Soft runtime '$runtimeName'. " +
                 'Publish must copy the loader-named native library beside the apphosts.')
+        }
+    }
+
+    if ($Rid -eq 'osx-arm64') {
+        # Ship the Vulkan loader and MoltenVK ICD so a release DMG does not require
+        # Homebrew. The app loader prefers these files over /opt/homebrew/lib.
+        $brew = Get-Command -Name 'brew' -ErrorAction SilentlyContinue
+        if ($null -eq $brew) {
+            throw 'Homebrew is required to stage the macOS MoltenVK runtime.'
+        }
+
+        $moltenPrefix = (& $brew.Source --prefix molten-vk 2>$null).Trim()
+        $loaderPrefix = (& $brew.Source --prefix vulkan-loader 2>$null).Trim()
+        $loaderLibrary = Join-Path $loaderPrefix 'lib/libvulkan.1.dylib'
+        $moltenLibrary = Join-Path $moltenPrefix 'lib/libMoltenVK.dylib'
+        if (-not (Test-Path -LiteralPath $loaderLibrary) -or
+            -not (Test-Path -LiteralPath $moltenLibrary)) {
+            throw ('Install the macOS Vulkan runtime before packaging: ' +
+                'brew install molten-vk vulkan-loader.')
+        }
+
+        Copy-Item -LiteralPath $loaderLibrary -Destination (Join-Path $staging 'libvulkan.1.dylib') -Force
+        Copy-Item -LiteralPath $moltenLibrary -Destination (Join-Path $staging 'libMoltenVK.dylib') -Force
+        $icd = [ordered]@{
+            file_format_version = '1.0.0'
+            ICD = [ordered]@{
+                library_path = './libMoltenVK.dylib'
+                api_version = '1.4.0'
+                is_portability_driver = $true
+            }
+        } | ConvertTo-Json -Depth 4
+        Set-Content -LiteralPath (Join-Path $staging 'MoltenVK_icd.json') -Value $icd -Encoding utf8NoBOM
+
+        foreach ($licenseName in @('MoltenVK-LICENSE.txt', 'Vulkan-Loader-LICENSE.txt')) {
+            $licensePath = Join-Path $repoRoot "docs/$licenseName"
+            if (Test-Path -LiteralPath $licensePath) {
+                $docsStaging = Join-Path $staging 'docs'
+                New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+                Copy-Item -LiteralPath $licensePath -Destination $docsStaging -Force
+            }
         }
     }
 
@@ -213,14 +253,14 @@ try {
         "version: $Version"
         "commit: $commit"
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
-        'runtime: none bundled; requires the .NET 11 runtime installed on the host'
-        'runtime-download: https://dotnet.microsoft.com/download/dotnet/11.0'
-        'apps: FiveDo.Cli and FiveDo (framework-dependent single-file apphosts)'
+        'runtime: .NET 11 embedded; no separate runtime install required'
+        'apps: FiveDo.Cli and FiveDo (self-contained single-file apphosts)'
         "launch: $launch"
         ''
         'BIOS ROMs and game images are not included.'
         'See README.md, whatsnew.md, LICENSE, THIRD-PARTY-NOTICES.md, docs/Licensing.md, and docs/OpenALSoft.md.'
         'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/OpenAL-Soft-COPYING.txt.'
+        'macOS arm64 bundles include the Vulkan loader and MoltenVK (Apache-2.0); see docs/MoltenVK-LICENSE.txt and docs/Vulkan-Loader-LICENSE.txt.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 

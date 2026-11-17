@@ -9,7 +9,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
 | Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, or Nero NRG. |
-| .NET | The **.NET 11 Runtime** must be installed on the host; the published bundles are framework-dependent and do **not** include the runtime. The .NET 11 SDK is only needed for source builds. |
+| .NET | The published bundles are **self-contained**: the .NET 11 runtime is embedded, so no separate runtime install is required. The .NET 11 SDK is only needed for source builds. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
 | Audio | No system OpenAL installation is required; OpenAL Soft 1.23.1 is bundled. |
@@ -22,21 +22,20 @@ Download the bundle for your system and architecture from
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.10.2-win-x64.zip` |
-| Windows arm64 | `5do-1.10.2-win-arm64.zip` |
-| Linux x64 | `5do-1.10.2-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.10.2-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.10.2-osx-x64.dmg` |
-| macOS arm64 | `5do-1.10.2-osx-arm64.dmg` |
+| Windows x64 | `5do-1.12.0-win-x64.zip` |
+| Windows arm64 | `5do-1.12.0-win-arm64.zip` |
+| Linux x64 | `5do-1.12.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.12.0-linux-arm64.tar.gz` |
+| macOS arm64 | `5do-1.12.0-osx-arm64.dmg` |
 
-Each bundle contains both the desktop app and the CLI. Install the .NET 11 Runtime
-first from <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundle does not
-contain a .NET runtime. On Windows extract the ZIP and run
+Each bundle contains both the desktop app and the CLI. The .NET 11 runtime is embedded
+in the self-contained apphosts, so no separate runtime install is required. On Windows
+extract the ZIP and run
 `FiveDo.exe`; on Linux extract the tarball and run
 `./FiveDo`; on macOS open the DMG and drag `5DO.app` to Applications.
 
-Bundles are versioned, for example `5do-1.10.2-win-arm64.zip` or
-`5do-1.10.2-osx-arm64.dmg`.
+Bundles are versioned, for example `5do-1.12.0-win-arm64.zip` or
+`5do-1.12.0-osx-arm64.dmg`.
 
 ### Installers and file associations
 
@@ -154,19 +153,19 @@ Named profiles live under `profiles/<name>/` and can be selected with
   desktop entry and `application/x-3do-disc` MIME type.
 - The local validation target is a Linux Mint virtual machine. Full distribution
   coverage is still post-1.0 work.
-- The framework-dependent `linux-x64` and `linux-arm64` bundles are produced by CI.
+- The self-contained `linux-x64` and `linux-arm64` bundles are produced by CI.
 
 ### macOS
 
-- The framework-dependent `osx-x64` and `osx-arm64` bundles are produced by CI.
+- The self-contained macOS arm64 bundle is produced by CI. Intel macOS is
+  unsupported as of 1.12.0.
 - The gamepad backend uses IOKit HID (Generic Desktop Joystick/Gamepad/Multi-axis) and
   maps through the same eight-player profile as XInput/evdev. macOS may ask for Input
   Monitoring permission; without it the frontend falls back to the keyboard.
 - The `.dmg`/`.pkg` script in [`packaging/macos`](https://github.com/purelogiccode/5DO/tree/master/packaging/macos)
   declares the disc UTI and document type. Building it requires a macOS host.
-- The `osx-x64` and `osx-arm64` bundles pass the native CLI `selftest` and frontend
-  `--smoke-test` on hosted macOS runners (2026-11-10). GPU presentation remains
-  best-effort. Report platform-specific findings with a
+- The macOS arm64 bundle passes the native CLI `selftest`, frontend `--smoke-test`, and
+  the Vulkan/MoltenVK GPU path (2026-11-17). Report platform-specific findings with a
   [diagnostics bundle](Diagnostics.md).
 
 ### arm64

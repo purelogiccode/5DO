@@ -37,7 +37,7 @@ the same path the shell passes from a file association.
   signed. Without a certificate the installer is unsigned but fully functional.
 - **macOS Developer ID:** pass `--sign-identity` (or set `MACOS_SIGN_IDENTITY`). The
   script signs `5DO.app` with the hardened runtime and the JIT entitlements required by
-  the framework-dependent .NET apphost. Pass `--notary-profile` (or
+  the self-contained .NET apphost. Pass `--notary-profile` (or
   `MACOS_NOTARY_PROFILE`) to submit and staple the DMG and PKG with `notarytool`.
 - **Linux:** packages are unsigned; add a repository signing key at the distribution
   layer if needed.
@@ -71,10 +71,10 @@ Linux x64 (WSL Ubuntu 22.04):
 - `desktop-file-validate` exits 0, and `update-mime-database` produces
   `application/x-3do-disc` globs for `*.iso`, `*.cue`, `*.chd`, `*.bin`, `*.cdi`, and `*.nrg`.
 
-macOS x64/arm64 (native CI, 2026-11-10):
+macOS arm64 (native CI; Intel macOS was dropped in 1.12.0):
 
 - `package-bundle.ps1` ran `build-macos-package.sh` from the staged bundle and produced
-  `5do-1.7.1-osx-x64.dmg` and `5do-1.7.1-osx-arm64.dmg` (plus `.pkg`) in CI run
+  `5do-1.7.1-osx-arm64.dmg` (plus `.pkg`) in CI run
   <https://github.com/purelogiccode/5DO/actions/runs/42877150967>.
 - `build-bundle.yml` selected the DMG as the release asset for each macOS RID; the
   release workflow publishes the DMG instead of the internal tar.gz.

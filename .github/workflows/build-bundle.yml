@@ -35,9 +35,6 @@ jobs:
             arch: arm64
           # Build the macOS bundles natively so package-bundle.ps1 can add the
           # drag-to-Applications DMG that is published for each architecture.
-          - os: macos-15-intel
-            rid: osx-x64
-            arch: x86_64
           - os: macos-latest
             rid: osx-arm64
             arch: arm64
@@ -54,6 +51,10 @@ jobs:
         with:
           dotnet-version: 11.0.100
 
+      - name: Install macOS Vulkan runtime
+        if: matrix.rid == 'osx-arm64'
+        run: brew install molten-vk vulkan-loader
+
       - name: Restore
         run: dotnet restore 5DO.sln --locked-mode
 
@@ -62,7 +63,7 @@ jobs:
           dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
           -c Release
           -r ${{ matrix.rid }}
-          --self-contained false
+          --self-contained true
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
           -m:1
@@ -73,7 +74,7 @@ jobs:
           dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
           -c Release
           -r ${{ matrix.rid }}
-          --self-contained false
+          --self-contained true
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
           -m:1
@@ -136,11 +137,11 @@ jobs:
             }
           }
 
-      - name: Verify bundle has no runtime or XML docs
+      - name: Verify bundle has no XML docs or separate runtime folder
         shell: pwsh
         run: |
           if (Test-Path 'artifacts/bundle-smoke/runtime') {
-            throw 'The bundle must not contain a .NET runtime folder.'
+            throw 'The self-contained runtime must be embedded in the single-file apphost, not staged as a runtime/ folder.'
           }
           $xml = Get-ChildItem 'artifacts/bundle-smoke' -Recurse -File -Filter '*.xml'
           if ($xml) {
@@ -166,6 +167,23 @@ jobs:
               throw "The bundle is missing the OpenAL Soft runtime '$name'."
             }
             Write-Host "$name $((Get-Item -LiteralPath $path).Length) bytes"
+          }
+
+      - name: Verify bundled Vulkan/MoltenVK runtime (macOS)
+        if: matrix.rid == 'osx-arm64'
+        shell: pwsh
+        run: |
+          foreach ($name in @('libvulkan.1.dylib', 'libMoltenVK.dylib', 'MoltenVK_icd.json')) {
+            $path = Join-Path 'artifacts/bundle-smoke' $name
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "The macOS bundle is missing the Vulkan runtime '$name'."
+            }
+            Write-Host "$name $((Get-Item -LiteralPath $path).Length) bytes"
+          }
+          foreach ($name in @('docs/MoltenVK-LICENSE.txt', 'docs/Vulkan-Loader-LICENSE.txt')) {
+            if (-not (Test-Path -LiteralPath (Join-Path 'artifacts/bundle-smoke' $name))) {
+              throw "The macOS bundle is missing $name."
+            }
           }
 
       - name: Verify Windows bundle architecture

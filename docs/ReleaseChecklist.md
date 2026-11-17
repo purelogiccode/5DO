@@ -1,9 +1,10 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.11.0 is the current release**; unified Windows/Linux/macOS x64/arm64
-bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
-published as a DMG.
+**Release timing:** **v1.12.0 is the current release**; five bundles (Windows/Linux
+x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
+v1.2.x. macOS is published as a DMG. v1.12.0 adds macOS arm64 Vulkan/MoltenVK
+presentation, drops Intel macOS, and removes the external .NET 8 build requirement.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -35,6 +36,27 @@ and known issues, and move everything else to the post-1.0 backlog.
 This checklist is the release gate. A checked box must have evidence (a command, CI
 run, screenshot, or recorded hash), not just an intention. Update `docs/Status.md`,
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
+
+---
+
+## 1.12.0 macOS GPU gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs index, wiki,
+      MkDocs navigation, changelog, and release notes to `1.12.0`.
+- [x] Build with only the .NET 11 SDK on Windows (no `DOTNET_ROLL_FORWARD` environment
+      override); the shader target rolls the net8.0 tool forward automatically.
+- [x] macOS arm64: full suite **2,394/2,394**, CLI `selftest`, frontend `--smoke-test`,
+      all eight Vulkan filter probes, and a 600-frame Wolfenstein 3D boot.
+- [x] macOS arm64: packaged `.dmg`/`.pkg`/`.tar.gz`; CLI and frontend smoke pass from the
+      tarball and the mounted DMG; SHA-256 checksums verify.
+- [x] macOS evidence and limits recorded in `Compatibility.md` §10.4, `KnownIssues.md`,
+      `Video.md`, `Vulkan.md`, and `ImplementationPlan.md` §3.3.
+- [x] Release apphosts switched to **self-contained** single files
+      (`--self-contained true -p:PublishSingleFile=true`); the .NET 11 runtime is
+      embedded and no runtime folder is staged.
+- [ ] Release workflow builds and publishes all five bundles and `SHA256SUMS.txt`;
+      verify every checksum after publication.
+- [ ] Record the release run links and the current suite count in `Status.md`/`README.md`.
 
 ---
 
@@ -885,16 +907,14 @@ source-only tag or GitHub release is not a complete release.
       wiki.
 - [x] Local copies are written to `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
-### 5.1 Single-file decision
+### 5.1 Single-file decision (changed in 1.12.0)
 
-A self-contained single-file publish embeds a complete .NET runtime in **each**
-executable (roughly 70 MB per app before compression) and duplicates it. The release
-therefore uses **framework-dependent single-file apphosts**: each app is one executable,
-the .NET runtime is not embedded, and the bundle contains no runtime folder. Users must
-install the .NET 11 runtime on their machine.
-
-This is the required distribution model for v1.0.0: no .NET runtime in the binaries or
-inside the bundle.
+The v1.0.0 distribution model was framework-dependent: users installed the .NET 11
+runtime separately. **As of 1.12.0 the release uses self-contained single-file
+apphosts.** Each app embeds the .NET 11 runtime (roughly 70-100 MB before compression),
+so a download runs without a separate runtime install. The bundle still contains no
+`runtime/` folder because the runtime is inside the single-file executable. This is the
+required distribution model for 1.12.0 and later.
 
 ---
 

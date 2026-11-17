@@ -17,7 +17,6 @@ per component. Each bundle contains both the desktop app and the headless CLI:
 | Windows arm64 | `5do-<version>-win-arm64.zip` |
 | Linux x64 | `5do-<version>-linux-x64.tar.gz` |
 | Linux arm64 | `5do-<version>-linux-arm64.tar.gz` |
-| macOS x64 | `5do-<version>-osx-x64.dmg` |
 | macOS arm64 | `5do-<version>-osx-arm64.dmg` |
 
 For example, version `1.8.0` produces `5do-1.8.0-win-arm64.zip` or
@@ -27,9 +26,9 @@ pass `-Version` to `package-bundle.ps1` to override it. On macOS the script also
 
 ## Requirements
 
-The bundles are **framework-dependent**. The .NET 11 runtime must be installed on the
-user's machine; no .NET runtime is embedded in the executables or copied into the
-bundle.
+The bundles are **self-contained**. The .NET 11 runtime is embedded in each
+single-file executable; no separate runtime install is required and no `runtime/`
+folder is staged.
 
 - Download: <https://dotnet.microsoft.com/download/dotnet/11.0>
 - The apphosts print the standard ".NET runtime not found" message when the runtime is
@@ -194,7 +193,7 @@ the portable tarball.
 `.github/workflows/build-bundle.yml` builds the Windows and Linux bundles on their
 native runners and cross-publishes the macOS x64 bundle on Ubuntu; the macOS bundle is
 validated as Mach-O x86_64 rather than executed. The runners install .NET 11, which also
-proves the framework-dependent apphosts work. `.github/workflows/release.yml` publishes
+proves the self-contained apphosts work. `.github/workflows/release.yml` publishes
 the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
 documentation site and the wiki.
 

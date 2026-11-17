@@ -30,10 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-intel
-            rid: osx-x64
-            name: macOS x64
-            shell: bash
           - os: macos-latest
             rid: osx-arm64
             name: macOS arm64

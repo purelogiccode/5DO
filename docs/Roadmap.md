@@ -6,8 +6,9 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.11.0 Linux platform validation and stability release**
-(published on GitHub). The compatibility plan is complete:
+The project is at the **v1.12.0 macOS GPU presentation release** (published on GitHub).
+Windows x64 and Linux x64 remain validated, and macOS arm64 now renders through
+Vulkan/MoltenVK. The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
 - **375 are playable**; the other three are non-retail/add-on images with documented root
@@ -15,13 +16,16 @@ The project is at the **v1.11.0 Linux platform validation and stability release*
 - 5DO is a strict superset of the **252-title peer union**, ahead of 4DO's **167** and
   Phoenix's **233** playable titles.
 - The six framework-dependent bundles and `SHA256SUMS.txt` are published; macOS ships as
-  a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
-  macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
-  best-effort.
-- v1.11.0 validates Linux x64 end to end (hardware OpenGL 4.2, Vulkan 1.2 X11 in the
-  probe and desktop shell, 600 s real-device audio, evdev gamepads, display sleep, full
-  acceptance), adds the opt-in true 2x CEL path for Jurassic Park Interactive and Family
-  Feud, and fixes the Linux gamepad, exit, screenshot, and save-state-note defects. The
+  a DMG. Windows x64 and Linux x64 are validated desktops; macOS arm64 GPU presentation
+  is validated through Vulkan/MoltenVK (60 fps, all eight filters, packaged DMG), and
+  macOS x64/arm64 plus Linux arm64 and Windows arm64 pass the native runtime smoke.
+- v1.12.0 adds macOS arm64 GPU presentation, removes the external .NET 8 build
+  requirement, and fixes the macOS OpenGL probe, renderer selection, and GPU/CPU status
+  label. The v1.11.0 base validates Linux x64 end to end (hardware OpenGL 4.2, Vulkan
+  1.2 X11 in the probe and desktop shell, 600 s real-device audio, evdev gamepads,
+  display sleep, full acceptance), adds the opt-in true 2x CEL path for Jurassic Park
+  Interactive and Family Feud, and fixes the Linux gamepad, exit, screenshot, and
+  save-state-note defects. The
   v1.10.2 base adds DiscJuggler `.cdi` and Nero `.nrg` disc images and the Windows
   bundle's loader-named OpenAL runtime. The v1.10.1 feature set remains:
   RetroAchievements save-state hit persistence, the `FiveDo` desktop apphost, and
@@ -34,7 +38,7 @@ The project is at the **v1.11.0 Linux platform validation and stability release*
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
   display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.11.0
+## Post-1.12.0
 
 **Playability depth (in progress):**
 

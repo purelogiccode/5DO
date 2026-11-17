@@ -1,7 +1,43 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.11.0, the validated Linux
-platform release.
+All notable changes are recorded here. The project is at v1.12.0, the macOS GPU
+presentation release.
+
+## [1.12.0] - 2026-11-17
+
+### Added
+
+- **macOS arm64 GPU presentation through Vulkan/MoltenVK.** The desktop shell maps
+  OpenGL/Vulkan/Direct3D selections to the offscreen Vulkan renderer, copies the
+  readback into the existing bitmap presenter, and reports `Vulkan (Metal)`. A packaged
+  Wolfenstein 3D session ran at 59.8-60.1 fps; all eight filters pass the Vulkan probe
+  without fallback; 2,394/2,394 tests pass on macOS arm64.
+- **Vulkan portability enumeration and Homebrew loader discovery.** macOS instances
+  enable `VK_KHR_portability_enumeration`, and Silk.NET loads
+  `/opt/homebrew/lib/libvulkan.1.dylib` when present.
+- **macOS validation evidence.** `Compatibility.md` §10.4 records the NoMac host,
+  test suite, CLI/frontend smoke, real-game boot, filter matrix, and DMG/PKG/tar.gz
+  checks. `ImplementationPlan.md` adds the macOS full-support workstream
+  (`PLAT-14`..`PLAT-18`).
+
+### Fixed
+
+- **The OpenGL probe hung on macOS.** Avalonia's macOS backend has no
+  `OpenGlControlBase`; the probe now fails immediately and points at `--vk-probe`.
+- **macOS selected an unusable OpenGL surface.** OpenGL/Vulkan/Direct3D selections now
+  use the offscreen Vulkan presenter, with the CPU presenter as the fallback when
+  MoltenVK is absent.
+- **The macOS status bar said `(CPU)` for GPU filtering.** It now reports `(GPU)` for
+  the Vulkan readback path.
+- **Windows builds required the .NET 8 runtime.** `Directory.Build.targets` sets
+  `DOTNET_ROLL_FORWARD=Major` for `XenoAtom.ShaderCompiler.Build`, so the .NET 11 SDK
+  alone builds the Vulkan shaders; .NET 8 is still preferred when installed.
+
+### Known limits
+
+- Native Metal surface, MoltenVK packaging, macOS audio live-switch, Retina/DPI,
+  physical gamepad detection, and macOS x64 GPU validation remain open. The unsigned
+  DMG may require a Gatekeeper exception until signing/notarization is available.
 
 ## [1.11.0] - 2026-11-17
 

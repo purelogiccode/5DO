@@ -45,4 +45,34 @@
           SkipUnchangedFiles="true" />
   </Target>
 
+  <!--
+    XenoAtom.ShaderCompiler.Build ships its dotnet-shaderc tool with a net8.0
+    runtimeconfig. A machine with only the .NET 9/10/11 runtimes therefore fails the
+    Vulkan shader step with "You must install or update .NET" even though the SDK is
+    installed. Set the runtime roll-forward for this build process so the tool runs on
+    the newest installed runtime; when .NET 8 is present, Major still prefers it.
+
+    The environment variable is inherited by the ShaderCompileTask's child process.
+  -->
+  <UsingTask
+    TaskName="FiveDoSetEnvironmentVariable"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Name ParameterType="System.String" Required="true" />
+      <Value ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        System.Environment.SetEnvironmentVariable(Name, Value);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="FiveDoAllowShaderCompilerRollForward"
+          BeforeTargets="ShaderCompile"
+          Condition="'$(MSBuildProjectName)' == 'FiveDo.Video.Vulkan'">
+    <FiveDoSetEnvironmentVariable Name="DOTNET_ROLL_FORWARD" Value="Major" />
+  </Target>
+
 </Project>

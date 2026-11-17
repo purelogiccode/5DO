@@ -15,8 +15,8 @@ Download the bundle for your system and architecture from
 | macOS arm64 | `5do-1.9.1-osx-arm64.dmg` |
 
 Each bundle contains both the desktop app and the CLI. The bundles are
-framework-dependent: install the **.NET 11 Runtime** from
-<https://dotnet.microsoft.com/download/dotnet/11.0> before running them. No .NET
+self-contained: the **.NET 11 runtime is embedded**, so no separate runtime install is
+required. No .NET
 runtime is included in the bundle.
 
 Extract the bundle and run the executables.

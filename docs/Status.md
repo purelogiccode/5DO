@@ -1,5 +1,22 @@
 # Project Status and Next Steps
 
+**2026-11-17, v1.12.0 macOS GPU release:** **macOS arm64 renders through Vulkan/MoltenVK
+on Metal.** On a rented NoMac Apple M5 Pro (Virtual, macOS 26.6.2), the desktop shell
+selects the offscreen Vulkan presenter, reports `Vulkan (Metal)`, and plays Wolfenstein
+3D at 59.8-60.1 fps; all eight filters pass the Vulkan probe without fallback. The full
+suite is **2,394/2,394**, CLI `selftest` and frontend `--smoke-test` pass, and the
+native `.dmg`/`.pkg`/`.tar.gz` smoke-test from both the extracted tarball and the mounted
+DMG with matching SHA-256. The build now runs the net8.0 shader compiler on the
+installed .NET 9/10/11 runtime, so only the .NET 11 SDK is required for builds. Release
+bundles are self-contained: the .NET 11 runtime is embedded and no separate runtime
+install is required. macOS OpenGL is not
+a presentation path (Avalonia has no macOS OpenGL control); `--gl-probe` fails fast and
+points at `--vk-probe`. Intel macOS support was dropped in 1.12.0; Apple Silicon is the
+only supported macOS target. Remaining macOS work is tracked as `PLAT-14`..`PLAT-18`:
+native Metal/Vulkan surface, GPU runtime packaging, audio live-switch, Retina/DPI, and
+the NoMac release gate. Evidence: [Compatibility.md](Compatibility.md) §10.4,
+[KnownIssues.md](KnownIssues.md), [ReleaseNotes-1.12.0.md](ReleaseNotes-1.12.0.md).
+
 **2026-11-16, VID-19:** **The true 2× CEL high-resolution prototype is opt-in and tested.**
 The new `--true-2x` machine option (Settings > Emulation > **True 2x CEL fields**, per-game
 **TrueHighResolution**, and a save-state field) keeps the four-plane VRAM layout but writes

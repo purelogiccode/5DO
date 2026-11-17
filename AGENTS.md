@@ -42,14 +42,16 @@ Run the release gate commands from `docs/ReleaseChecklist.md` before tagging a r
 Every release must **produce and publish runnable bundles/binaries**. A source tag or
 GitHub release without the built artifacts is not a complete release.
 
-- One bundle per system and architecture: `5do-win-x64.zip`, `5do-win-arm64.zip`,
-  `5do-linux-x64.tar.gz`, `5do-linux-arm64.tar.gz`, `5do-osx-x64.dmg`, and
-  `5do-osx-arm64.dmg`. macOS is distributed as a drag-to-Applications DMG; the
-  internal `5do-osx-*.tar.gz` is only the CI extraction/smoke intermediate.
-- Each bundle contains the framework-dependent single-file CLI and desktop apphosts,
+- Five bundles: `5do-win-x64.zip`, `5do-win-arm64.zip`, `5do-linux-x64.tar.gz`,
+  `5do-linux-arm64.tar.gz`, and `5do-osx-arm64.dmg`. Intel macOS is no longer
+  supported (the validation host is arm64); macOS is distributed as a
+  drag-to-Applications DMG and the internal `5do-osx-arm64.tar.gz` is only the CI
+  extraction/smoke intermediate.
+- Each bundle contains the **self-contained** single-file CLI and desktop apphosts,
   `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, and the
-  release/legal docs. **No .NET runtime is bundled**; users must install the .NET 11
-  runtime on their machine.
+  release/legal docs. The .NET 11 runtime is embedded; users do not install a separate
+  runtime. Publish with `--self-contained true -p:PublishSingleFile=true
+  -p:PublishTrimmed=false`.
 - Build with `packaging/package-bundle.ps1`. `build-bundle.yml` validates the bundles
   in CI and `release.yml` publishes them with `SHA256SUMS.txt`.
 - Keep a local copy of each bundle in `src/FiveDo.Frontend.Avalonia/bin/Release`.

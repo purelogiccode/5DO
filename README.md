@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.11.0-orange" alt="Version 1.11.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.12.0-orange" alt="Version 1.12.0"></a>
 </p>
 
 <p align="center">
@@ -27,17 +27,17 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.11.0**, the Linux platform validation and stability release. Windows x64
-> and **Linux x64** are validated GPU targets: Linux passes hardware OpenGL 4.2, Vulkan
-> 1.2 through X11 in both the probe and the desktop shell, a 600-second real-device audio
-> soak with zero drops/underruns, evdev gamepads, display-sleep inhibition, fullscreen,
-> save states, screenshots, and clean shutdown on bare-metal hardware. macOS x64/arm64,
-> Linux arm64, and Windows arm64 pass the native CLI/frontend runtime smoke. The release
-> also adds the opt-in true 2x CEL path for Jurassic Park Interactive and Family Feud and
-> fixes the Linux gamepad, exit, screenshot, and save-state-note defects. The Windows
-> bundles include both `OpenAL32.dll` and `soft_oal.dll`, so the bundled OpenAL Soft
-> runtime is the one the loader opens. No BIOS ROMs, game images, or extracted game
-> assets are included. You must supply legally obtained files.
+> 5DO is at **v1.12.0**, the macOS GPU presentation release. Windows x64 and Linux x64
+> remain validated targets, and **macOS arm64** now renders through Vulkan/MoltenVK
+> (offscreen presenter with Metal acceleration) at 60 fps, including all eight filters.
+> macOS needs `molten-vk` and `vulkan-loader` installed (for example with Homebrew);
+> without them the app uses the CPU presenter, and the OpenGL probe reports that
+> Avalonia has no macOS OpenGL control. macOS arm64, Linux arm64, and Windows arm64
+> also pass the native CLI/frontend runtime smoke. Intel macOS is no longer supported.
+> The build now works with only the
+> .NET 11 SDK: the shader compiler rolls forward instead of requiring the .NET 8 runtime.
+> No BIOS ROMs, game images, or extracted game assets are included. You must supply
+> legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -65,10 +65,10 @@ test harness designed for reproducible compatibility evidence.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
   harnesses. Startup and `5do update` check the public GitHub release feed.
-- **One bundle per system and architecture.** Windows, Linux, and macOS bundles for x64
-  and arm64 contain both the framework-dependent single-file CLI and desktop app, plus
+- **One bundle per supported system and architecture.** Windows and Linux x64/arm64 and
+  macOS arm64 contain both the self-contained single-file CLI and desktop app, plus
   the docs/notices. macOS ships as a drag-to-Applications `.dmg`. The .NET 11 runtime is
-  a prerequisite and is **not** bundled. Optional NativeAOT CLI builds remain available
+  embedded, so no separate runtime install is required. Optional NativeAOT CLI builds remain available
   for developers. Unsigned Windows/Linux installers and macOS `.dmg`/`.pkg` scaffolding
   register `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file associations; signing/notarization stays conditional
   on certificates.
@@ -77,16 +77,17 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.11.0` release (GitHub Releases) |
-| Validated platform | **Windows x64 and Linux x64** |
-| Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,393 tests** in the current test assembly |
+| Version | `1.12.0` release (GitHub Releases) |
+| Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
+| Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
+| Automated tests | **2,394 tests** in the current test assembly |
+| macOS GPU runtime | Vulkan/MoltenVK; install `molten-vk` + `vulkan-loader` (CPU fallback otherwise) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
 | Loadability sweep | **594 disc images** tested; after triage **593 loadable/rendered**, 1 known no-video case, 0 not loadable |
 | First pass | 576 rendered, 13 black/blank, 5 not loadable; triage resolved the failures and the blank/black set |
-| Desktop presentation | OpenGL/GLES required; Vulkan and Direct3D 11 optional; CPU fallback available |
+| Desktop presentation | Windows/Linux: OpenGL/GLES or optional Vulkan/Direct3D 11; macOS arm64: Vulkan/MoltenVK; CPU fallback available |
 | Audio | Exact 44.1 kHz DSP clock; bundled OpenAL Soft 1.23.1 |
 
 The full compatibility picture, per-title evidence, and remaining limitations live in
@@ -101,24 +102,23 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.11.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.11.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.11.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.11.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.11.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.11.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.12.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.12.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.12.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.12.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-linux-arm64.tar.gz) |
+| macOS arm64 | [`5do-1.12.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-osx-arm64.dmg) |
 
-The 1.11.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
+The 1.12.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
 bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux
 bundles ship the same OpenAL Soft runtime and do not require a system OpenAL install.
 
-The apps are single-file executables. **Install the .NET 11 Runtime first** from
-<https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0)
+The apps are **self-contained single-file executables**: the .NET 11 runtime is
+embedded, so no separate runtime install is required. See the
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.12.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.11.0-win-arm64.zip`
-or `5do-1.11.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.12.0-win-arm64.zip`
+or `5do-1.12.0-osx-arm64.dmg`.
 
 ## Features
 
@@ -201,7 +201,7 @@ or `5do-1.11.0-osx-arm64.dmg`.
 | Windows arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
 | Linux x64 | ✅ | ✅ | **Validated target**: hardware GL/Vulkan, audio, gamepads, display sleep, acceptance (2026-11-17) |
 | Linux arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
-| macOS x64 / arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10); GPU best-effort |
+| macOS arm64 | ✅ | ✅ | Vulkan/MoltenVK GPU, CLI/frontend smoke, and packaged DMG validated (2026-11-17); Intel macOS unsupported |
 | Raspberry Pi 4/5 (GLES 3.1) | — | — | Post-1.0 target |
 
 ## Quick start
@@ -218,8 +218,8 @@ or `5do-1.11.0-osx-arm64.dmg`.
 > [!NOTE]
 > v1.10.2 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
 > macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
-> runtime is required on the host and is not bundled. Build from source below if you
-> prefer.
+> runtime is embedded in each single-file apphost, so no separate runtime install is
+> required. Build from source below if you prefer.
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test

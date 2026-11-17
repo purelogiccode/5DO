@@ -20,20 +20,20 @@ dotnet format 5DO.sln --verify-no-changes
 
 ## Publish
 
-The release layout is one bundle per system and architecture (Windows, Linux, and macOS
-on x64 and arm64), containing both apps. The bundles are framework-dependent: users
-must install the .NET 11 Runtime. Publish the two apphosts as framework-dependent single
-files:
+The release layout is five bundles: Windows and Linux x64/arm64 plus macOS arm64
+(Intel macOS is unsupported), containing both apps. The bundles are self-contained:
+the .NET 11 runtime is embedded and users do not install it separately. Publish the two
+apphosts as self-contained single files:
 
 ```powershell
 $rid = 'win-x64'
 
 dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r $rid `
-  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false `
+  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false `
   -m:1 -o "artifacts/bundle/$rid/cli"
 
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj `
-  -c Release -r $rid --self-contained false -p:PublishSingleFile=true `
+  -c Release -r $rid --self-contained true -p:PublishSingleFile=true `
   -p:PublishTrimmed=false -m:1 -o "artifacts/bundle/$rid/frontend"
 
 pwsh -NoProfile -File packaging/package-bundle.ps1 `
@@ -44,8 +44,8 @@ pwsh -NoProfile -File packaging/package-bundle.ps1 `
 ```
 
 The script removes PDB and XML documentation files, copies the README/license/notices/
-whatsnew/release notes, and writes `PACKAGE.txt` and `SHA256SUMS.txt`. It does not copy
-the .NET runtime.
+whatsnew/release notes, and writes `PACKAGE.txt` and `SHA256SUMS.txt`. The .NET
+runtime is embedded in the single-file apphosts; no separate runtime folder is staged.
 
 Optional NativeAOT CLI:
 
@@ -55,9 +55,9 @@ dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
 ```
 
 CI builds `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`,
-`5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`,
-`5do-<version>-osx-x64.dmg`, and `5do-<version>-osx-arm64.dmg` and publishes them to the
-GitHub release. The macOS jobs run natively and `package-bundle.ps1` builds the DMG (the
+`5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, and `5do-<version>-osx-arm64.dmg` and publishes them
+to the GitHub release. The macOS job runs natively and `package-bundle.ps1` builds the
+DMG (the
 tar.gz is only the extraction/smoke intermediate).
 
 ## Documentation

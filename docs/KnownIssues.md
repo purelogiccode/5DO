@@ -301,7 +301,7 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   `selftest`, `bench`, `info`, `bios info`, a 3,000-frame Wolfenstein boot, non-silent
   audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
   probe timed out in the VM's SSH/llvmpipe session, so that VM could not validate GPU
-  presentation. macOS x64 and arm64, Linux arm64, and Windows arm64 now pass the native
+  presentation. macOS arm64, Linux arm64, and Windows arm64 now pass the native
   CLI/frontend runtime smoke (2026-11-10). On 2026-11-17 macOS arm64 was validated with
   the offscreen Vulkan/MoltenVK presenter (2,394 tests, a packaged 60 fps Wolfenstein 3D
   session, and all eight filters); macOS OpenGL presentation remains unavailable because
@@ -447,19 +447,20 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 
 ## Packaging and platforms
 
-- CI builds all six bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
+- CI builds five bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
-  smoke on macOS x64, macOS arm64, Linux arm64, and Windows arm64 (run 42770783778,
-  2026-11-10). The smoke hides the GL surface, so GPU presentation is not covered.
-- macOS GPU presentation is now validated through Vulkan/MoltenVK on a paravirtual Apple
-  M5 Pro (2026-11-17), including the packaged `.app`/`.dmg`. macOS physical gamepad
-  detection remains unvalidated, and accelerated OpenGL is not available on that host.
-  Bundles need MoltenVK and a Vulkan loader installed by the user; without them the
-  shell falls back to the CPU presenter.
-- **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
-  publish as single-file apphosts (`PublishTrimmed=false`); the .NET 11 runtime must be
-  installed on the host and is **not** bundled. PDB and XML documentation files are
-  removed from the bundles. Trimming remains available for developer and NativeAOT
+  smoke on macOS arm64, Linux arm64, and Windows arm64. Intel macOS support was dropped
+  in 1.12.0 because no Intel Mac is available for GPU validation. The smoke hides the
+  GL surface, so GPU presentation is not covered.
+- macOS arm64 GPU presentation is validated through Vulkan/MoltenVK on a paravirtual
+  Apple M5 Pro (2026-11-17), including the packaged `.app`/`.dmg`. Intel macOS is
+  unsupported. macOS physical gamepad detection remains unvalidated, and accelerated
+  OpenGL is not available on that host. Bundles need MoltenVK and a Vulkan loader
+  installed by the user; without them the shell falls back to the CPU presenter.
+- **Release bundles are self-contained and not trimmed.** The CLI and desktop app
+  publish as single-file apphosts (`PublishSingleFile=true`,
+  `PublishTrimmed=false`) with the .NET 11 runtime embedded; no separate runtime install
+  is required. PDB and XML documentation files are removed from the bundles. Trimming remains available for developer and NativeAOT
   experiments. See
   [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
 - Installer/package scaffolding is implemented for Windows, Linux, and macOS, but

@@ -12,8 +12,8 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | Requirement | Version / notes |
 |---|---|
 | .NET SDK | **11.0.100** (pinned by `global.json` with `rollForward: latestFeature`). |
-| .NET runtime | **8.0** is also required to build: `XenoAtom.ShaderCompiler.Build` runs its `dotnet-shaderc` tool on the .NET 8 runtime. Installing only the .NET 11 SDK/runtime makes the Vulkan shader step fail with `You must install or update .NET`. Alternatively set `DOTNET_ROLL_FORWARD=LatestMajor` for the build so the tool runs on .NET 11. |
-| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. All six x64/arm64 bundles are built and architecture-validated. macOS arm64 is validated with the Vulkan/MoltenVK presenter (2026-11-17); macOS x64/arm64 CLI/frontend runtime smoke also passes (2026-11-10). |
+| .NET runtime | **.NET 8 is optional.** `XenoAtom.ShaderCompiler.Build` ships its `dotnet-shaderc` tool as a net8.0 app; `Directory.Build.targets` sets `DOTNET_ROLL_FORWARD=Major` for the shader target, so the tool runs on the installed .NET 9/10/11 runtime when .NET 8 is absent and still prefers .NET 8 when present. |
+| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+ on Apple Silicon. Five bundles (Windows/Linux x64+arm64 and macOS arm64) are built and architecture-validated. macOS arm64 is validated with the Vulkan/MoltenVK presenter (2026-11-17); Linux arm64 and Windows arm64 also pass the native runtime smoke. Intel macOS is unsupported as of 1.12.0. |
 | GPU | Windows/Linux: OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. macOS: Avalonia has no OpenGL control, so the shell uses the offscreen Vulkan renderer through MoltenVK/Metal (install `molten-vk` + `vulkan-loader` with Homebrew). The CPU fallback runs without a GPU backend. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
@@ -382,23 +382,23 @@ See [`Video.md`](Video.md) and [`Performance.md`](Performance.md) for interpreta
 
 ## 6. Publish
 
-### Framework-dependent single file (release shape)
+### Self-contained single file (release shape)
 
 ```powershell
 dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj -c Release -r win-x64 `
-  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
+  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
   -o artifacts/cli/win-x64
 
 dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release -r win-x64 `
-  --self-contained false -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
+  --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -m:1 `
   -o artifacts/frontend/win-x64
 ```
 
 Release bundles are produced for `win-x64`, `win-arm64`, `linux-x64`,
-`linux-arm64`, `osx-x64`, and `osx-arm64`. They contain no .NET runtime; users must
-install the .NET 11 runtime on their machine.
+`linux-arm64`, and `osx-arm64`. Intel macOS is unsupported. The .NET 11 runtime is
+embedded in each apphost, so users do not install a separate runtime.
 
-Both executables are single-file framework-dependent apphosts. The frontend also ships
+Both executables are single-file self-contained apphosts. The frontend also ships
 native Skia/HarfBuzz/ANGLE assets. OpenAL Soft is copied as both `OpenAL32.dll` (the
 name Silk.NET.OpenAL loads) and `soft_oal.dll` (the package name) on Windows by
 `Directory.Build.targets`; publish runs the copy after `dotnet publish`, and
@@ -418,7 +418,7 @@ dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c R
   -o artifacts/frontend-aot
 ```
 
-AOT is not part of the six-RID default matrix. The CLI AOT path opens live OpenAL; the
+AOT is not part of the five-RID default matrix. The CLI AOT path opens live OpenAL; the
 frontend AOT binary now has a headless `--audio-soak` mode that runs the same
 `FiveDoMachine`/`CoreRunner`/`OpenAlAudioOutput` path and writes drop/underrun counters:
 
@@ -459,14 +459,15 @@ pwsh -File packaging/package-bundle.ps1 -Rid win-x64 `
   -OutputDirectory artifacts/bundles
 ```
 
-The bundle contains both framework-dependent apphosts and their native libraries,
+The bundle contains both self-contained apphosts and their native libraries,
 `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, `whatsnew.md`,
 `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, the exact
 `docs/ReleaseNotes-<version>.md`, and a generated `PACKAGE.txt` with component, RID, version,
 commit, and build time. Linux bundles also include `5do.desktop`. PDB and XML
-documentation files are removed, and no .NET runtime is copied into the bundle. The
-archive name includes the product version, for example
-`5do-1.10.2-win-x64.zip`, `5do-1.10.2-win-arm64.zip`, or `5do-1.10.2-linux-arm64.tar.gz`; the version is read from
+documentation files are removed, and the .NET runtime is embedded in the single-file
+apphosts (no separate runtime folder). The archive name includes the product version,
+for example `5do-1.12.0-win-x64.zip`, `5do-1.12.0-win-arm64.zip`, or
+`5do-1.12.0-linux-arm64.tar.gz`; the version is read from
 `Directory.Build.props` unless `-Version` is supplied. On macOS the same script
 additionally builds `5do-<version>-osx-<arch>.dmg` (and `.pkg`) from the staged bundle;
 the release workflow uploads the DMG, while the tarball remains the extraction/smoke
@@ -483,7 +484,7 @@ The workflow is [`.github/workflows/ci.yml`](https://github.com/purelogiccode/5D
 | `build-test` | Windows, Ubuntu, macOS | Restore, Release build, all tests. Ubuntu also runs format check, benchmark smoke + gate, allocation gate, and uploads the baseline. Windows runs trimmed CLI and frontend publish smoke tests. |
 | `aot-cli` | Windows | NativeAOT win-x64 CLI publish, `--version`/`selftest`/`bench`, artifact upload. |
 | `aot-frontend` | Windows | NativeAOT win-x64 frontend publish, smoke test, artifact upload. |
-| `bundle` | Windows, Ubuntu, macOS | Builds the unified Windows/Linux/macOS x64/arm64 bundles with framework-dependent single-file apphosts; the .NET 11 runtime is required on the host and not bundled. macOS jobs build natively and upload the DMG; Linux/Windows jobs upload ZIP or tar.gz. Runs CLI/frontend smoke tests and validates apphost machine types. |
+| `bundle` | Windows, Ubuntu, macOS | Builds five bundles (Windows/Linux x64+arm64 and macOS arm64) with self-contained single-file apphosts; the .NET 11 runtime is embedded. macOS jobs build natively and upload the DMG; Linux/Windows jobs upload ZIP or tar.gz. Runs CLI/frontend smoke tests and validates apphost machine types. |
 | `ci-complete` | Ubuntu | Aggregate gate that fails if any required CI job fails or is cancelled. |
 
 Separate workflows add:
@@ -491,8 +492,8 @@ Separate workflows add:
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `docs.yml` | Push/PR touching docs or the wiki, manual | Strict MkDocs build, GitHub Pages deployment from `master`, and curated wiki publishing. |
-| `platform-runtime.yml` | Push touching `src/`, `packaging/`, or the workflow; manual | Native CLI `selftest` and frontend `--smoke-test` on macOS x64/arm64, Linux arm64, and Windows arm64. |
-| `release.yml` | Tag push or manual | Builds the six x64/arm64 bundles (macOS as DMG), writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
+| `platform-runtime.yml` | Push touching `src/`, `packaging/`, or the workflow; manual | Native CLI `selftest` and frontend `--smoke-test` on macOS arm64, Linux arm64, and Windows arm64. |
+| `release.yml` | Tag push or manual | Builds five bundles (Windows/Linux x64+arm64, macOS arm64 DMG), writes `SHA256SUMS.txt`, updates the GitHub release, and removes obsolete per-component assets. |
 | `codeql.yml` | Push/PR, weekly, manual | CodeQL analysis for C#, GitHub Actions, and Python. |
 | `dependency-review.yml` | Pull request | Blocks high-severity dependency changes and comments on the PR. |
 | `scorecard.yml` | Push, weekly, manual | OpenSSF Scorecard analysis, SARIF upload, and published results. |
@@ -531,14 +532,16 @@ BIOS or disc images.
 Validated 2026-11-17 on a NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64, Apple
 Paravirtual GPU with unified memory (Metal) and 16 GB reported VRAM.
 
-The host has Xcode and Homebrew but no .NET SDK. Install both runtimes into
-`~/.dotnet`; the .NET 8 runtime is needed by the shader compiler, and
-`DOTNET_ROOT` is needed by framework-dependent apphosts:
+The host has Xcode and Homebrew but no .NET SDK. Install the .NET 11 SDK into
+`~/.dotnet`; `DOTNET_ROOT` is needed by locally built framework-dependent apphosts
+(the release bundles are self-contained). The .NET 8
+runtime is optional because the build rolls the shader compiler forward:
 
 ```bash
 curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
 bash /tmp/dotnet-install.sh --channel 11.0 --install-dir "$HOME/.dotnet"
-bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir "$HOME/.dotnet"
+# Optional: install .NET 8 if you want the shader tool to use its original target runtime.
+# bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir "$HOME/.dotnet"
 export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"
 ```
 
