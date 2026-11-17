@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.10.2 Windows audio and disc-container patch release**
+The project is at the **v1.11.0 Linux platform validation and stability release**
 (published on GitHub). The compatibility plan is complete:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
@@ -18,7 +18,11 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
   a DMG. Windows x64 is the validated desktop; Linux x64 build/test and smoke pass, and
   macOS/arm64 native runtime smoke passes. GPU presentation on non-Windows hosts remains
   best-effort.
-- v1.10.2 adds DiscJuggler `.cdi` and Nero `.nrg` disc images and fixes the Windows
+- v1.11.0 validates Linux x64 end to end (hardware OpenGL 4.2, Vulkan 1.2 X11 in the
+  probe and desktop shell, 600 s real-device audio, evdev gamepads, display sleep, full
+  acceptance), adds the opt-in true 2x CEL path for Jurassic Park Interactive and Family
+  Feud, and fixes the Linux gamepad, exit, screenshot, and save-state-note defects. The
+  v1.10.2 base adds DiscJuggler `.cdi` and Nero `.nrg` disc images and the Windows
   bundle's loader-named OpenAL runtime. The v1.10.1 feature set remains:
   RetroAchievements save-state hit persistence, the `FiveDo` desktop apphost, and
   deferred/ReadyToRun startup. The v1.10.0 feature set remains: managed rcheevos
@@ -30,7 +34,7 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
   display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.10.2
+## Post-1.11.0
 
 **Playability depth (in progress):**
 

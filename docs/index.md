@@ -16,12 +16,13 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.10.2 documented compatibility"
-    5DO is at the v1.10.2 documented-compatibility release stage. Windows x64 is the
-    validated platform; Linux x64 full suite passed (GPU presentation is
-    preview/best-effort), and macOS/arm64 pass the native runtime smoke. No BIOS ROMs,
-    game images, or extracted game assets are distributed here; supply legally obtained
-    files.
+!!! important "v1.11.0 Linux validation release"
+    5DO is at v1.11.0, the Linux platform validation release. **Windows x64 and Linux
+    x64** are validated targets: Linux passes hardware OpenGL 4.2, Vulkan 1.2 through
+    X11 (probe and desktop shell), a 600 s real-device audio soak with zero drops and
+    underruns, evdev gamepads, display sleep, and the full acceptance pass. macOS/arm64
+    pass the native runtime smoke. No BIOS ROMs, game images, or extracted game assets
+    are distributed here; supply legally obtained files.
 
 ## Start here
 
@@ -75,14 +76,14 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.10.2.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.11.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-15, v1.10.2 release (GitHub Releases).**
+**2026-11-17, v1.11.0 Linux validation release (GitHub Releases).**
 
-- **2,365 tests** are present in the current test assembly.
+- **2,393 tests** are present in the current test assembly.
 - Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI, and
   Nero NRG. The CDI and NRG readers accept cooked 2048-byte, 2336-byte Mode 2, raw
   2352-byte, and the 2353/2368/2448/2449-byte raw variants, and expose the same track
@@ -125,15 +126,17 @@
   and **0 not-loadable rows**.
 - MMPX 2x and Catmull-Rom bicubic filtering are available in OpenGL/GLES, Direct3D 11,
   Vulkan, and the CPU fallback. Aspect presets now include 5:4, 16:9, 16:10, and 21:9.
-- Windows x64 is the validated GPU target. Linux x64 full suite passed; GPU
-  presentation is preview/best-effort. macOS x64/arm64, Linux arm64, and Windows
+- **Windows x64 and Linux x64 are validated GPU targets.** Linux passes hardware OpenGL
+  4.2, Vulkan 1.2 through X11 in the probe and desktop shell, a 600 s real-device audio
+  soak with 0 drops/underruns, evdev gamepads, display sleep, and the full acceptance
+  pass on bare-metal hardware (2026-11-17). macOS x64/arm64, Linux arm64, and Windows
   arm64 pass the native CLI/frontend runtime smoke (2026-11-10).
-- v1.10.2 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2)
+- v1.11.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
   desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 11 runtime
-  is required on the host and is not bundled. The release adds RetroAchievements save-state
-  hit persistence, the `FiveDo` apphost rename, and faster startup. See
-  [What's new](WhatsNew.md).
+  is required on the host and is not bundled. The release validates Linux x64 end to end,
+  adds the opt-in true 2x CEL path, and fixes the Linux gamepad, exit, screenshot, and
+  save-state-note defects. See [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.10.2-orange" alt="Version 1.10.2"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.11.0-orange" alt="Version 1.11.0"></a>
 </p>
 
 <p align="center">
@@ -27,18 +27,17 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.10.2**, a documented-compatibility release with RetroAchievements, UI catalogs for
-> English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean,
-> and Simplified Chinese, external metadata and media, physical optical-drive boot,
-> DiscJuggler `.cdi` and Nero `.nrg` images, Windows
-> DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, an
-> editable input timeline, and best-effort 4DO state interop. Windows x64 is the
-> validated GPU target; Linux x64 full suite passed (GPU presentation is
-> preview/best-effort), and macOS x64/arm64, Linux arm64, and Windows arm64 pass the
-> native CLI/frontend runtime smoke. The Windows bundles include both `OpenAL32.dll`
-> and `soft_oal.dll`, so the bundled OpenAL Soft runtime is the one the loader opens.
-> No BIOS ROMs, game images, or extracted game assets are included. You must supply
-> legally obtained files.
+> 5DO is at **v1.11.0**, the Linux platform validation and stability release. Windows x64
+> and **Linux x64** are validated GPU targets: Linux passes hardware OpenGL 4.2, Vulkan
+> 1.2 through X11 in both the probe and the desktop shell, a 600-second real-device audio
+> soak with zero drops/underruns, evdev gamepads, display-sleep inhibition, fullscreen,
+> save states, screenshots, and clean shutdown on bare-metal hardware. macOS x64/arm64,
+> Linux arm64, and Windows arm64 pass the native CLI/frontend runtime smoke. The release
+> also adds the opt-in true 2x CEL path for Jurassic Park Interactive and Family Feud and
+> fixes the Linux gamepad, exit, screenshot, and save-state-note defects. The Windows
+> bundles include both `OpenAL32.dll` and `soft_oal.dll`, so the bundled OpenAL Soft
+> runtime is the one the loader opens. No BIOS ROMs, game images, or extracted game
+> assets are included. You must supply legally obtained files.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -78,10 +77,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.10.2` release (GitHub Releases) |
-| Validated platform | **Windows x64** |
+| Version | `1.11.0` release (GitHub Releases) |
+| Validated platform | **Windows x64 and Linux x64** |
 | Build/publish targets | Windows, Linux, macOS — x64 and arm64 (macOS as DMG) |
-| Automated tests | **2,365 tests** in the current test assembly |
+| Automated tests | **2,393 tests** in the current test assembly |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |
@@ -102,23 +101,24 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.10.2-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-win-x64.zip) |
-| Windows arm64 | [`5do-1.10.2-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-win-arm64.zip) |
-| Linux x64 | [`5do-1.10.2-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.10.2-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-linux-arm64.tar.gz) |
-| macOS x64 | [`5do-1.10.2-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-osx-x64.dmg) |
-| macOS arm64 | [`5do-1.10.2-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.10.2/5do-1.10.2-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.11.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.11.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.11.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.11.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-linux-arm64.tar.gz) |
+| macOS x64 | [`5do-1.11.0-osx-x64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-x64.dmg) |
+| macOS arm64 | [`5do-1.11.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.11.0/5do-1.11.0-osx-arm64.dmg) |
 
-The 1.10.2 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
-bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy.
+The 1.11.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
+bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux
+bundles ship the same OpenAL Soft runtime and do not require a system OpenAL install.
 
 The apps are single-file executables. **Install the .NET 11 Runtime first** from
 <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do **not** contain a
-.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2)
+.NET runtime. See the [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.10.2-win-arm64.zip`
-or `5do-1.10.2-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.11.0-win-arm64.zip`
+or `5do-1.11.0-osx-arm64.dmg`.
 
 ## Features
 
@@ -199,7 +199,7 @@ or `5do-1.10.2-osx-arm64.dmg`.
 |---|:---:|:---:|---|
 | Windows x64 | ✅ | ✅ | **Validated target** |
 | Windows arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
-| Linux x64 | ✅ | ✅ | Local VM smoke; GPU presentation preview/best-effort |
+| Linux x64 | ✅ | ✅ | **Validated target**: hardware GL/Vulkan, audio, gamepads, display sleep, acceptance (2026-11-17) |
 | Linux arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10) |
 | macOS x64 / arm64 | ✅ | ✅ | Native CLI/frontend smoke passed (2026-11-10); GPU best-effort |
 | Raspberry Pi 4/5 (GLES 3.1) | — | — | Post-1.0 target |

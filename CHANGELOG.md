@@ -1,7 +1,45 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.10.2, a documented-compatibility
-release.
+All notable changes are recorded here. The project is at v1.11.0, the validated Linux
+platform release.
+
+## [1.11.0] - 2026-11-17
+
+### Added
+
+- **Linux x64 is validated on bare-metal hardware.** OpenGL 4.2 presentation (61 fps at
+  1080p), Vulkan 1.2 through `VK_KHR_xlib_surface` in the window probe and the desktop
+  shell (0 different pixels at 320x240, no per-frame readback, resize supported),
+  600 s real-device audio (0 dropped, 0 underruns), evdev gamepads, display-sleep
+  inhibition, fullscreen, save/load, screenshots, and clean exit on software, OpenGL,
+  and Vulkan.
+- **True 2x CEL path (opt-in).** `--true-2x` renders independent 480-line CEL fields for
+  Jurassic Park Interactive and Family Feud; other titles fall back to native 320x240.
+  Native frame hashes are unchanged.
+- **Save-state notes.** `FiveDoMachine.StateNotes` records benign version drift; the CLI
+  `run` JSON adds a `notes` array.
+
+### Fixed
+
+- **Linux evdev gamepads were inert.** `EventIoctl` encoded the ioctl type and request
+  number in the wrong bit positions, so no device passed the capability check.
+  `--gamepad-probe` also samples for two seconds now.
+- **Linux exit segfault.** The bundled OpenAL Soft 1.23.1 PipeWire backend's `atexit`
+  handler ran after Silk.NET unloaded `libopenal.so`; the library is now pinned for the
+  process lifetime on Linux.
+- **Software and Vulkan screenshots were 1x1 pixels.** `F12` used the OpenGL capture
+  path when the OpenGL presenter was inactive; the capture now requires it.
+- **Old save states no longer raise warnings.** Version drift is informational; warnings
+  stay for BIOS/disc/option mismatches and unknown sections.
+- **macOS Vulkan fell back to the CPU presenter.** Vulkan requests map to OpenGL on
+  macOS, and Vulkan presentation failures try OpenGL before the CPU presenter.
+- **Linux GL swap-interval reported WGL.** The probe now reports
+  `GLX_EXT_swap_control`.
+
+### Changed
+
+- Dependencies: coverlet.collector 10.1.1, mkdocs-material 9.8.1, and
+  mkdocs-git-revision-date-localized-plugin 1.7.0.
 
 ## [1.10.2] - 2026-11-15
 

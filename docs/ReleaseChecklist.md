@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.10.2 is the current release**; unified Windows/Linux/macOS x64/arm64
+**Release timing:** **v1.11.0 is the current release**; unified Windows/Linux/macOS x64/arm64
 bundles are built from the same gates used for v1.0.0, v1.1.0, and v1.2.x. macOS is
 published as a DMG.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a

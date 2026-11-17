@@ -1,44 +1,57 @@
-# What's new in 5DO 1.10.2
+# What's new in 5DO 1.11.0
 
-**Released:** 2026-11-15
+**Released:** 2026-11-17
 
-5DO 1.10.2 is a **Windows audio and disc-container** patch update. It restores the
-bundled OpenAL Soft runtime on Windows and adds DiscJuggler `.cdi` and Nero `.nrg` disc
-images. The emulation core, deterministic hashes, save states, and the documented
-compatibility model are unchanged.
+5DO 1.11.0 is the **Linux platform validation and stability** update. Linux x64 is now
+validated on a real machine — hardware OpenGL, Vulkan through X11, real-device audio,
+gamepads, display sleep, fullscreen, save states, screenshots, and clean shutdown — and
+the release adds the opt-in true 2x CEL path plus fixes for four defects found during
+that pass. Emulation accuracy and deterministic hashes are unchanged.
 
 ## Highlights
 
-### Windows OpenAL audio
+### Linux x64 is validated
 
-The Windows bundles now ship **`OpenAL32.dll`** as well as `soft_oal.dll`. Silk.NET.OpenAL
-loads `OpenAL32.dll`; the old publish step copied only the package name, so a deployed
-copy could fall back to a system OpenAL build and fail with *The OpenAL context could not
-be made current*. The bundled OpenAL Soft 1.23.1 runtime is now the one the loader opens,
-and the bundle script rejects an archive missing it.
+Validated on a bare-metal Linux Mint 22.3 host (Intel HD 4000, Mesa 25.2.8, 1920x1080
+X11, HDA audio):
 
-Audio startup failures are logged with the failing path and the ALC error instead of
-being submitted as bug reports. If you are on 1.10.1 or older, copy `soft_oal.dll` to
-`OpenAL32.dll` beside `FiveDo.exe` and `FiveDo.Cli.exe` and restart.
+- **OpenGL 4.2 hardware presentation** at 61 fps / 1080p, with `GLX_EXT_swap_control`.
+- **Vulkan 1.2** presents through an X11 swapchain in both the window probe and the
+  desktop shell. A 320x240 capture matches the CPU oracle with **0 different pixels**;
+  the shell has no per-frame readback and survives resizing.
+- **600 s real-device audio soak:** 26,461,445 samples, **0 dropped**, **0 underruns**,
+  0 OpenAL errors.
+- **evdev gamepads**, **display-sleep inhibition**, `F11` fullscreen, `F5`/`F8` slot
+  save/load, `Escape` pause, `F12` 320x240 screenshots, and exit code 0 on the software,
+  OpenGL, and Vulkan presenters.
+- Wayland-only sessions use the OpenGL presenter; native Wayland Vulkan is not
+  implemented.
 
-### DiscJuggler `.cdi` and Nero `.nrg`
+### True 2x CEL fields (opt-in)
 
-- `.cdi` and `.nrg` images open through the CLI, **File > Open Disc**, the game library,
-  and the file associations.
-- The new readers handle cooked 2048-byte, 2324/2336-byte Mode 2, raw 2352-byte, and the
-  2353/2368/2448/2449-byte sector variants.
-- Malformed images fail with typed errors and are covered by the parser fuzz target.
+`--true-2x` (or Settings > Video > *True 2x CEL fields*) renders CELs into independent
+480-line fields for **Jurassic Park Interactive** and **Family Feud**. Other titles fall
+back to native 320x240 with a warning. Bitmap and SPORT content remains line-doubled,
+the mode costs about 30% more emulation time, and native hashes are unchanged.
 
-## Verification
+## Fixed
 
-- Full suite **2,365/2,365** passes in Debug.
-- Build, locked restore, `dotnet format --verify-no-changes`, and
-  `jb inspectcode --severity=WARNING` are clean.
-- The win-x64 CLI and frontend publishes contain `OpenAL32.dll` and `soft_oal.dll`; the
-  published CLI reports OpenAL Soft `1.23.1` and lists the `OpenAL Soft on ...` endpoints.
-- The published frontend writes `FRONTEND SMOKE OK 1.10.2`.
-- `packaging/package-bundle.ps1` rejects a publish tree without `OpenAL32.dll`.
+- **Linux gamepads now work.** The evdev ioctl request had the type and number bits
+  swapped, so no device was ever accepted.
+- **Linux exit segfault fixed.** The bundled OpenAL Soft PipeWire backend's `atexit`
+  handler ran after the library was unloaded; `libopenal` is now kept mapped on Linux.
+- **Screenshots on software/Vulkan are 320x240**, not 1x1 pixels.
+- **Old save states no longer warn.** Version drift is an informational note; the CLI
+  `run` JSON adds `notes`.
+- **macOS Vulkan selections now use OpenGL**, and Vulkan failures try OpenGL before the
+  CPU presenter.
+- **Linux Vsync now reports `GLX_EXT_swap_control`** instead of a WGL name.
 
-See [ReleaseNotes-1.10.2.md](ReleaseNotes-1.10.2.md),
-[OpenALSoft.md](OpenALSoft.md), and
-[CHANGELOG.md](https://github.com/purelogiccode/5DO/blob/v1.10.2/CHANGELOG.md).
+## Upgrading
+
+- Install the **.NET 11 runtime**; the bundles do not include it.
+- Linux: gamepads need the `input` group or a udev rule; display-sleep inhibition uses
+  `python3-dbus`, normally installed with the desktop.
+- macOS GPU presentation and physical gamepad detection remain best-effort.
+
+See [ReleaseNotes-1.11.0.md](ReleaseNotes-1.11.0.md) for the full list and evidence.

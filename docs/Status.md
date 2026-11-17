@@ -123,7 +123,7 @@ open pending physical hardware evidence. See [Localization.md](Localization.md),
 [Metadata.md](Metadata.md), [Tas.md](Tas.md) §8-9, [SaveStates.md](SaveStates.md) §9,
 and [TestCorpus.md](TestCorpus.md) 1.1bw, 1.1bx, 1.1bz, and 1.1cd.
 
-**Snapshot:** 2026-11-16, v1.10.2: the opt-in true 2× CEL path, Jurassic Park Interactive
+**Snapshot:** 2026-11-17, v1.11.0: Linux x64 is validated end to end on bare-metal hardware (hardware OpenGL 4.2, Vulkan X11 probe and desktop shell, 600 s real-device audio with 0 drops/underruns, evdev gamepads, display sleep, full acceptance, clean exit); the opt-in true 2× CEL path, Jurassic Park Interactive
 reaches the in-park Raptor Maze and SECURITY BREACH outcome with a default-CEL-pacing
 residual; CDI and NRG disc images, the Windows OpenAL bundle
 fix, RetroAchievements with a managed rcheevos engine,

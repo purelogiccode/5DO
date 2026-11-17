@@ -4,8 +4,8 @@
 Interactive Multiplayer**. It combines a deterministic managed emulation core with an
 Avalonia desktop app, a headless CLI, and a reproducible test harness.
 
-> **v1.10.2 is released.** Download the Windows, Linux, or macOS bundle from
-> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2).
+> **v1.11.0 is released.** Download the Windows, Linux, or macOS bundle from
+> [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0).
 > No BIOS ROMs or game images are included. Supply legally obtained files.
 
 ## Download
@@ -15,12 +15,12 @@ desktop app and the CLI:
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.10.2-win-x64.zip` |
-| Windows arm64 | `5do-1.10.2-win-arm64.zip` |
-| Linux x64 | `5do-1.10.2-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.10.2-linux-arm64.tar.gz` |
-| macOS x64 | `5do-1.10.2-osx-x64.dmg` |
-| macOS arm64 | `5do-1.10.2-osx-arm64.dmg` |
+| Windows x64 | `5do-1.11.0-win-x64.zip` |
+| Windows arm64 | `5do-1.11.0-win-arm64.zip` |
+| Linux x64 | `5do-1.11.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.11.0-linux-arm64.tar.gz` |
+| macOS x64 | `5do-1.11.0-osx-x64.dmg` |
+| macOS arm64 | `5do-1.11.0-osx-arm64.dmg` |
 
 The apps are framework-dependent single-file executables. Install the **.NET 11
 Runtime** first from <https://dotnet.microsoft.com/download/dotnet/11.0>; the bundles do
@@ -36,7 +36,7 @@ Runtime** first from <https://dotnet.microsoft.com/download/dotnet/11.0>; the bu
 - [[Building-from-Source]] - build, test, and publish commands.
 - [[Contributing]] - issues, pull requests, and evidence.
 - [[Legal]] - license, donationware, and trademark rules.
-- [[Release-1.10.2]] - what changed in the current release.
+- [[Release-1.11.0]] - what changed in the current release.
 
 ## Full documentation
 
