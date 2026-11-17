@@ -237,9 +237,15 @@ internal sealed class EvdevGamepadSource : IRawGamepadSource
         }
     }
 
-    private static nuint EventIoctl(int number, int length)
+    /// <summary>Builds an <c>_IOC</c> request in the kernel's encoding.</summary>
+    /// <param name="number">Request number (for example <c>0x20 + EV_KEY</c>).</param>
+    /// <param name="length">Argument size in bytes.</param>
+    /// <returns>The ioctl request.</returns>
+    internal static nuint EventIoctl(int number, int length)
     {
-        return (2u << 30) | ((uint)length << 16) | ((uint)number << 8) | 'E';
+        // _IOC(dir,type,nr,size) = (dir << 30) | (size << 16) | (type << 8) | nr.
+        // The type ('E') belongs at bits 8-15 and the request number at bits 0-7.
+        return (2u << 30) | ((uint)length << 16) | ((uint)'E' << 8) | (uint)number;
     }
 
     private static nuint AbsIoctl(int axis)

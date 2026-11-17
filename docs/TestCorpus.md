@@ -4082,6 +4082,132 @@ FiveDo.DiffHarness.exe run benchmarks/diff/vid19-true2x.json `
   --cli src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.exe
 ```
 
+### 1.1cm Bare-metal Linux GPU validation: GL probe and Vulkan device (2026-11-16)
+
+**Host.** Bare-metal Linux Mint 22.3 (`systemd-detect-virt` → `none`), Intel Core
+i7-3615QM, Intel HD 4000 (Ivy Bridge, `8086:0166`), Mesa 25.2.8, kernel
+`7.0.0-43-generic`. OpenGL 4.2 core through crocus on a live X11/Cinnamon session at
+1920x1080; Vulkan 1.2 through `hasvk` (Mesa warns "Ivy Bridge Vulkan support is
+incomplete"). HDA Intel PCH audio. No optical drive.
+
+**Build.** The self-contained `linux-x64` 1.10.2 frontend was published on the Windows
+host and extracted to `~/5do-linuxgpu`.
+
+**Smoke.** `./FiveDo --smoke-test --smoke-output /tmp/smoke.txt` wrote:
+
+```text
+FRONTEND SMOKE OK 1.10.2
+locale=en
+firstMenuHeader=File
+windowState=Normal
+```
+
+and logged `OpenGL renderer ready: OpenGL 4.2 (OpenGl), max texture 16384`.
+
+**GL probe (`PLAT-02`).** `--gl-probe` at 1920x1080 sharp-bilinear, 120 frames after
+30 warm-up frames: `ok: true`, renderer `Mesa Intel(R) HD Graphics 4000 (IVB GT2)`,
+OpenGL 4.2, 61.6 fps, present mean 2.528 ms (p99 8.688), GPU mean 1.300 ms
+(p99 1.703), `filterFallback: false`, `rendererAllocatedBytesPerFrame: 0`. A 1280x720
+accurate run with `--gl-probe-vsync` reports `vsyncActive: true` at 61.8 fps. This is
+the first hardware-accelerated Linux GPU presentation result; the previous llvmpipe VM
+probe timed out with zero frames.
+
+**Vulkan device (`PLAT-08A`).** The default `--vk-probe` at 1080p selects
+**llvmpipe (LLVM 20.1.2)** even though the Intel device is present and listed first by
+`vulkaninfo`; that is a device-selection gap in the backend. With
+`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json` the probe reports
+`ok: true`, renderer `Intel(R) HD Graphics 4000 (IVB GT2)`, Vulkan 1.2, 103.4 fps,
+`filterFallback: false`. Filter matrix at 1080p, 30 frames after 5 warm-up frames, all
+`ok` with no fallback: accurate 102.5 fps (GPU 8.70 ms), xBR 46.2 (20.12), FSR 46.3
+(20.25), CRT 83.1 (11.24), HQx 2x 99.2 (9.16), MMPX 82.1 (10.58).
+
+**Vulkan X11 window probe (`PLAT-08A`).** `--vk-window-probe` now creates an X11 window
+on Linux and presents through `VK_KHR_xlib_surface`. At 1920x1080 sharp-bilinear with
+FIFO it reports `offscreen: false`, `vsyncActive: true`, `vsyncBackend: "fifo"`,
+60.1 fps, present mean 16.405 ms, GPU mean 6.287 ms, and 0 renderer bytes/frame. A
+320x240 accurate capture matches the CPU oracle exactly: `matches: true`,
+`differentPixels: 0`, `verticalFlip: false`, CPU and GPU hash `1573907397`
+(`0x5DD1D7C5`). The same build also fixes device selection: without
+`VK_ICD_FILENAMES`, `--vk-probe` now reports `Intel(R) HD Graphics 4000 (IVB GT2)`
+instead of llvmpipe (discrete > integrated > virtual > other > CPU ranking).
+
+**Vulkan Linux shell surface (`PLAT-08A`).** `--gl-backend vulkan` now runs the desktop
+shell through an X11 child window (`VulkanVideoSurface` → `X11ChildSurface`). With the
+Joypad Test disc and the goldstar BIOS, the shell logs
+`Vulkan surface presented its first frame (swapchain 1060x466, output 1060x466, viewport 370,113 320x240)`
+and the composited screen shows the pad card centered in the video area under the
+default 4:3 integer-scale settings. The child is a depth-24 TrueColor window (the
+Avalonia toplevel is depth-32 ARGB), has an empty `ShapeInput` region so pointer input
+stays in Avalonia, and is raised above Avalonia's render window on each present.
+Resizing the window to 1400x820 recreated the swapchain and scaled the viewport. A
+Wayland-only session has no X11 display and falls back to the offscreen/readback path.
+
+**Linux display-sleep inhibit (`PLAT-12`).** `LinuxDisplaySleepBackend` holds an
+`org.freedesktop.ScreenSaver.Inhibit` lock through a persistent `python3-dbus` helper
+(the D-Bus connection owns the inhibitor, so it must stay open). With the Joypad Test
+disc running, the shell logged `Display-sleep inhibitor acquired (cookie 1192968952)`
+and `dbus-monitor --session "destination='org.freedesktop.ScreenSaver'"` recorded the
+`Inhibit` call and the same `uint32 1192968952`. Closing the window logged
+`Display-sleep inhibitor released.` and the monitor recorded `UnInhibit` with the same
+cookie; the same acquire/release pair was observed for cookies `1965464518` and
+`307216972`. Runs with `DBUS_SESSION_BUS_ADDRESS`/`XDG_RUNTIME_DIR` unset skip the lock
+and stay clean, and `DisplaySleepPolicyTests` cover the run/pause/release transitions.
+
+**Desktop exit segfault (`PLAT-13`, fixed 2026-11-17).** Closing the window after a
+session exited `139` when `XDG_RUNTIME_DIR` was set. `coredumpctl` showed SIGSEGV in
+`__run_exit_handlers` (a native `atexit` handler in an unloaded module) and the crash
+reproduced with the software, OpenGL, and Vulkan backends. Triage:
+
+- `ALSOFT_DRIVERS=null`, `alsa`, or `pulse` exited `0`; `ALSOFT_DRIVERS=pipewire`
+  crashed, and the default driver order selects PipeWire on this host.
+- `LD_PRELOAD=$HOME/5do-linuxgpu/libopenal.so` exited `0`, proving the handler belongs
+  to libopenal and only crashes after Silk.NET unloads it.
+
+Fix: `OpenAlAudioOutput` keeps one extra reference to the bundled `libopenal.so` on
+Linux so the library stays mapped for the process lifetime. After the fix, software,
+OpenGL, and Vulkan sessions (default drivers, PipeWire) each close with `exit=0`, audio
+still reports `OpenAL audio ready (44100 Hz stereo)`, the display-sleep inhibitor still
+acquires and releases, and `--smoke-test` reports `FRONTEND SMOKE OK 1.10.2`.
+
+**Linux evdev gamepad (`PLAT-11`).** Validation with a virtual uinput pad found that
+`EvdevGamepadSource.EventIoctl` encoded the request number in the ioctl **type** bits
+and `'E'` in the number bits (`(number << 8) | 'E'` instead of
+`('E' << 8) | number`). Every `EVIOCGBIT` therefore returned an error and the backend
+rejected every device. After the fix, `--gamepad-probe` reports
+`source=EvdevGamepadSource`, `connected=1`, and `pad0: buttons=South ...` for a virtual
+pad with eight buttons, `ABS_X`/`ABS_Y`, and a hat. The probe now samples for two
+seconds and merges the peak buttons/axes, because a single poll misses a press that
+happens just after the device opens. `EvdevGamepadSourceTests` locks the kernel
+encodings (`0x80604521`, `0x80084523`, `0x80144540`). The desktop user still needs the
+`input` group (or a udev rule), as documented in [Installation.md](Installation.md).
+
+**Linux real-device audio soak (`AUD-02`).** The framework-dependent frontend ran
+`--audio-soak 600` with the Joypad Test disc on the default PipeWire endpoint:
+600.04 s, 35,966 frames, 26,461,445 samples pushed, **0 dropped**, **0 underruns**,
+0 OpenAL errors, DSP running, `ok: true`. This closes the AUD-01 VM hardware limitation.
+
+**Defect found and fixed: GL swap-interval backend.** The GL probe reported
+`vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
+returns a non-null stub for `wglSwapIntervalEXT`. `SwapInterval.TryCreate` now probes
+WGL only on Windows, and `SwapIntervalTests` covers the Unix GLX/EGL fallback (7 tests
+pass). After republishing, the same 1280x720 vsync probe reports
+`vsyncActive: true`, `vsyncBackend: "GLX_EXT_swap_control"`, 62.3 fps, and the
+1920x1080 sharp-bilinear rerun reports 61.0 fps with present mean 1.859 ms and GPU mean
+1.243 ms.
+
+**Reproduce.**
+
+```bash
+export DISPLAY=:0 XAUTHORITY=$HOME/.Xauthority XDG_RUNTIME_DIR=/run/user/1000
+cd ~/5do-linuxgpu
+./FiveDo --smoke-test --smoke-output /tmp/smoke.txt
+./FiveDo --gl-probe gl.json --gl-probe-size 1920x1080 --gl-probe-frames 120 \
+  --gl-probe-warmup 30 --gl-probe-filter sharp-bilinear
+VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
+  ./FiveDo --vk-probe vk.json --vk-probe-size 1920x1080 --vk-probe-frames 30 \
+  --vk-probe-warmup 5 --vk-probe-filter xbr
+```
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

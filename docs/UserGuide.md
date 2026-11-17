@@ -128,7 +128,7 @@ Developer/CI options already supported by the frontend:
 |---|---|
 | `--gl-probe <json>` | OpenGL presentation probe with `--gl-probe-size`, `--gl-probe-frames`, `--gl-probe-warmup`, `--gl-probe-filter`, `--gl-probe-vsync`, `--gl-probe-offscreen`, `--gl-probe-capture`, and `--gl-probe-timeout`. |
 | `--vk-probe <json>` | Headless Vulkan probe with `--vk-probe-size`, `--vk-probe-frames`, `--vk-probe-warmup`, `--vk-probe-filter`, `--vk-probe-capture`, and `--vk-probe-timeout`. |
-| `--vk-window-probe <json>` | Native Win32 Vulkan swapchain probe with the matching `--vk-window-probe-*` options. |
+| `--vk-window-probe <json>` | Native Vulkan swapchain probe (Win32, or Linux/X11 with `DISPLAY` set) with the matching `--vk-window-probe-*` options. |
 | `--d3d-probe <json>` | Headless Direct3D 11 probe with `--d3d-probe-size`, `--d3d-probe-frames`, `--d3d-probe-warmup`, `--d3d-probe-filter`, `--d3d-probe-capture`, and `--d3d-probe-timeout`. Windows only. |
 | `--d3d-window-probe <json>` | Native Win32 Direct3D 11 swapchain probe with the matching `--d3d-window-probe-*` options. Windows only. |
 | `--smoke-test [--smoke-output <path>]` | Startup smoke test used by CI; exits after the first UI pass. |

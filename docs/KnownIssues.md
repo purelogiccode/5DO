@@ -303,8 +303,18 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   probe timed out in the VM's SSH/llvmpipe session, so GPU presentation on Linux is
   unvalidated; the CLI/frontend ship as a **preview/best-effort** build. macOS x64 and
   arm64, Linux arm64, and Windows arm64 now pass the native CLI/frontend runtime smoke
-  (2026-11-10); macOS GPU presentation remains best-effort. The local Linux target is
-  the Hyper-V `LinuxMint` VM (`D:\Hyper-V\VMs\LinuxMint`).
+  (2026-11-10); macOS GPU presentation remains best-effort. A bare-metal Linux Mint
+  22.3 host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`,
+  1920x1080 X11, HDA audio) is now the Linux GPU target (2026-11-16). Its GL probe
+  passes at 61 fps (1920x1080, `GLX_EXT_swap_control`), and Vulkan runs on the real
+  device through `hasvk`: the X11 window probe matches the CPU oracle with 0 different
+  pixels and `--gl-backend vulkan` presents in the desktop shell through a depth-24 X11
+  child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions fall back to the offscreen
+  path (documented unsupported). The 600 s real-device audio soak reports 0 dropped
+  samples and 0 underruns, and evdev gamepads are detected after the ioctl-encoding fix.
+  The full acceptance pass remains open as `PLAT-10`; the CLI/frontend stay
+  **preview/best-effort** on Linux until that acceptance pass. The Hyper-V `LinuxMint` VM
+  (`D:\Hyper-V\VMs\LinuxMint`) remains the headless build/test target.
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
   sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
   restriction.
@@ -379,9 +389,22 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
 - Linux/macOS OpenGL GPU presentation is not fully validated; the native runtime smoke
-  hides the GL surface and validates startup/XAML/settings instead.
-- Display-sleep inhibition is implemented for Windows. Linux and macOS compositors may
-  still blank or dim the display during play; those platforms remain best-effort.
+  hides the GL surface and validates startup/XAML/settings instead. On the 2026-11-16
+  bare-metal Linux host the X11 GPU probe and Vulkan shell pass, so Linux GL/Vulkan
+  presentation is validated for that device while macOS remains best-effort.
+- Display-sleep inhibition is implemented for Windows and Linux. Linux holds an
+  `org.freedesktop.ScreenSaver` inhibitor through a small `python3-dbus` helper for as
+  long as an unpaused game runs; hosts without `python3-dbus` fall back silently. macOS
+  compositors may still blank or dim the display during play, so macOS remains
+  best-effort.
+- **Linux frontend exit segfault (fixed 2026-11-17):** closing the window after a game
+  session crashed in a native `atexit` handler (`__run_exit_handlers`) when
+  `XDG_RUNTIME_DIR` was set. The cause was the bundled OpenAL Soft 1.23.1 PipeWire
+  backend: Silk.NET unloads `libopenal.so` when the last context closes, leaving the
+  backend's exit handler pointing at unmapped code. `OpenAlAudioOutput` now keeps one
+  reference to the library on Linux. Software, OpenGL, and Vulkan sessions exit with
+  code 0. The pin can be removed once the bundle ships an OpenAL Soft release that does
+  not register the handler (`PLAT-13`).
 - Auto-crop follows 4DO's detector: it can remove up to 25% per edge, treats the top five
   bits of each color as the content test, and waits one second before cropping more. A
   manual or per-game crop disables it. It changes presentation and native screenshots

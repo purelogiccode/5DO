@@ -8,6 +8,13 @@ The local Linux validation target is the Hyper-V VM `LinuxMint` at
 `D:\Hyper-V\VMs\LinuxMint` (Linux Mint 22.3, x86_64). Start it from an elevated
 PowerShell with `Start-VM -Name LinuxMint`.
 
+A hardware GPU target is also available: the **bare-metal** Linux Mint 22.3 host at
+`192.168.1.108` (`ssh linuxgpu`, details in `AGENTS.local.md`). It has a real Intel
+HD 4000 with hardware OpenGL 4.2 (crocus) and Vulkan 1.2 (`hasvk`), a live 1920x1080
+X11 session, and HDA Intel PCH audio, so use it for GPU presentation, Vulkan-surface,
+real-device audio, and acceptance evidence. It has no optical drive. Do not treat CI
+`Xvfb`/`llvmpipe` results as GPU evidence.
+
 Machine-specific SSH credentials are kept in the gitignored `AGENTS.local.md`.
 Read that file before connecting. The guest does not have the .NET SDK installed;
 publish `linux-x64` on the host and copy the output into the guest, or install the

@@ -161,11 +161,11 @@ internal static class VkProbeRunner
         long allocatedBytes = 0;
         var measured = 0;
         VulkanOffscreenRenderer? renderer = null;
-        Win32ProbeWindow? window = null;
+        IProbeWindow? window = null;
         byte[]? capturedPixels = null;
         try
         {
-            window = new Win32ProbeWindow(options.Width, options.Height);
+            window = CreateProbeWindow(options.Width, options.Height);
             renderer = new VulkanOffscreenRenderer
             {
                 Settings = new RendererSettings
@@ -176,7 +176,7 @@ internal static class VkProbeRunner
                     Vsync = true,
                 },
             };
-            renderer.InitializeSurface(window.Handle, options.Width, options.Height, vsync: true);
+            renderer.InitializeSurface(window.Surface, options.Width, options.Height, vsync: true);
             for (var i = 0; i < options.WarmupFrames + options.Frames; i++)
             {
                 window.PumpMessages();
@@ -276,6 +276,22 @@ internal static class VkProbeRunner
             renderer?.Dispose();
             window?.Dispose();
         }
+    }
+
+    private static IProbeWindow CreateProbeWindow(int width, int height)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return new Win32ProbeWindow(width, height);
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return new X11ProbeWindow(width, height);
+        }
+
+        throw new PlatformNotSupportedException(
+            "The Vulkan window probe supports Windows and Linux/X11; use --vk-probe offscreen here.");
     }
 
     private static bool IsParityCandidate(VkProbeOptions options)
@@ -454,7 +470,7 @@ internal static class VkProbeRunner
         return Math.Round(value, 3, MidpointRounding.AwayFromZero);
     }
 
-    private sealed class Win32ProbeWindow : IDisposable
+    private sealed class Win32ProbeWindow : IProbeWindow
     {
         private const uint WsOverlappedWindow = 0x00CF0000;
         private const uint WsVisible = 0x10000000;
@@ -519,9 +535,9 @@ internal static class VkProbeRunner
             _ = UpdateWindow(_handle);
         }
 
-        internal nint Handle => _handle;
+        public VulkanSurface Surface => VulkanSurface.ForWin32(_handle);
 
-        internal void PumpMessages()
+        public void PumpMessages()
         {
             while (PeekMessage(out Msg message, 0, 0, 0, PmRemove))
             {

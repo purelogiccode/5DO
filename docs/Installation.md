@@ -13,6 +13,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
 | Audio | No system OpenAL installation is required; OpenAL Soft 1.23.1 is bundled. |
+| Linux display sleep | Display-sleep inhibition uses the freedesktop screen-saver D-Bus API through `python3-dbus` (normally installed with the desktop). Without it the feature is skipped silently. |
 
 ## Download
 

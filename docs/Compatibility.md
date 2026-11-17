@@ -685,6 +685,47 @@ at <https://github.com/purelogiccode/5DO/releases/tag/v1.7.0>; the published
 `SHA256SUMS.txt` entries verify. Release and docs run links are recorded in the release
 checklist.
 
+**2026-11-16 bare-metal Linux GPU validation (`PLAT-02`):** a physical Linux Mint 22.3
+machine (Intel Core i7-3615QM, Intel HD 4000 / Ivy Bridge, Mesa 25.2.8, kernel
+`7.0.0-43-generic`) replaces the llvmpipe-only VM for platform work. It runs a live
+X11/Cinnamon session at 1920x1080 with hardware OpenGL 4.2 core
+(`Mesa Intel(R) HD Graphics 4000 (IVB GT2)`, crocus). The self-contained `linux-x64`
+1.10.2 frontend passed `--smoke-test` (`FRONTEND SMOKE OK 1.10.2`, `locale=en`,
+`firstMenuHeader=File`, `windowState=Normal`) and logged `OpenGL renderer ready:
+OpenGL 4.2 (OpenGl), max texture 16384`. The GL probe at 1920x1080 sharp-bilinear
+(120 frames, 30 warm-up) reports `ok: true`, 61.6 fps, present mean 2.528 ms
+(p99 8.688), GPU mean 1.300 ms (p99 1.703), `filterFallback: false`, and zero renderer
+allocations per frame; a 1280x720 accurate run with `--gl-probe-vsync` reports
+`vsyncActive: true` at 61.8 fps (62.3 fps and `vsyncBackend: "GLX_EXT_swap_control"`
+after the 2026-11-16 swap-interval fix). This is the first hardware-accelerated Linux
+GPU presentation result, so **Linux GL presentation is validated on this device**
+instead of llvmpipe-only preview. Vulkan 1.2 is available through `hasvk` (Mesa warns that Ivy
+Bridge Vulkan support is incomplete): the offscreen probe reaches the Intel device with
+`ok: true` and `filterFallback: false` for accurate, xBR, FSR, CRT, HQx 2x, and MMPX at
+1080p (46-103 fps), but only when the Intel ICD is forced with `VK_ICD_FILENAMES`; the
+default selection picked llvmpipe before the fix. The same build adds the X11 Vulkan
+surface: `--vk-window-probe` presents through `VK_KHR_xlib_surface` at 1920x1080 FIFO
+(60.1 fps, 16.405 ms present, 6.287 ms GPU, 0 renderer bytes/frame) and a 320x240
+accurate capture matches the CPU oracle with **0 different pixels** (`0x5DD1D7C5`);
+device selection now ranks discrete > integrated > virtual > other > CPU, so the Intel
+device wins without `VK_ICD_FILENAMES`. The desktop shell also presents through a Linux
+X11 child window: `--gl-backend vulkan` logs `swapchain 1060x466, output 1060x466,
+viewport 370,113 320x240`, displays the Joypad Test card centered in the video area,
+and rescales when the window is resized to 1400x820. Wayland-only sessions fall back to
+the offscreen path (documented unsupported). Linux also holds an
+`org.freedesktop.ScreenSaver` display-sleep inhibitor for the duration of play through
+a `python3-dbus` helper; acquire and release were traced with matching cookies
+(`1965464518`, `1192968952`, `307216972`). A desktop exit segfault (`PLAT-13`) found in
+the same pass was traced to the bundled OpenAL Soft 1.23.1 PipeWire backend being
+unloaded by Silk.NET before its `atexit` handler ran; `OpenAlAudioOutput` now pins the
+library on Linux, and software, OpenGL, and Vulkan sessions close with exit code 0
+(2026-11-17). The same pass fixed the evdev ioctl encoding, so the Linux gamepad backend
+now detects a virtual uinput pad (`connected=1`, `buttons=South`) and the two-second
+`--gamepad-probe`; the 600 s real-device audio soak reports 0 dropped samples and 0
+underruns on the default PipeWire endpoint. Only the full acceptance pass (`PLAT-10`)
+remains open. Reproducible commands and numbers are in
+[TestCorpus.md](TestCorpus.md) 1.1cm.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
