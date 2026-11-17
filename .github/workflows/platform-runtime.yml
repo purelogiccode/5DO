@@ -62,7 +62,7 @@ jobs:
           dotnet publish src/FiveDo.Cli/FiveDo.Cli.csproj
           -c Release
           -r ${{ matrix.rid }}
-          --self-contained false
+          --self-contained true
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
           -m:1
@@ -73,7 +73,7 @@ jobs:
           dotnet publish src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj
           -c Release
           -r ${{ matrix.rid }}
-          --self-contained false
+          --self-contained true
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
           -m:1

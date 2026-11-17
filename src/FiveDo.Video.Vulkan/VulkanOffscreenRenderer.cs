@@ -29,6 +29,11 @@ namespace FiveDo.Video.Vulkan;
 /// </remarks>
 public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, IRendererTiming
 {
+    static VulkanOffscreenRenderer()
+    {
+        MacVulkanBootstrap.Initialize();
+    }
+
     private const int MaxSourceWidth = VdlFrameUploader.MaxWidth;
     private const int MaxSourceHeight = VdlFrameUploader.MaxHeight;
     private const int ClutEntries = VdlFrameUploader.ClutEntries;

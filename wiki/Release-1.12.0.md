@@ -20,6 +20,12 @@ Validated on a rented NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64:
 - **DMG/PKG/tar.gz** built natively; CLI and frontend smoke pass from the tarball and
   the mounted DMG; SHA-256 verifies.
 
+## Self-contained bundles
+
+Every bundle embeds the .NET 11 runtime in its single-file apphosts, so no separate
+runtime install is required. The macOS arm64 bundle also includes the Vulkan loader and
+MoltenVK, with no Homebrew dependency.
+
 ## Fixes
 
 - Enabled `VK_KHR_portability_enumeration` for MoltenVK.

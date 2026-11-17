@@ -7,6 +7,9 @@ presentation release.
 
 ### Added
 
+- **Self-contained release bundles.** The CLI and desktop apphosts now embed the .NET 11
+  runtime; users no longer install a separate runtime. The macOS arm64 bundle also
+  bundles the Vulkan loader, MoltenVK, and their Apache-2.0 notices.
 - **macOS arm64 GPU presentation through Vulkan/MoltenVK.** The desktop shell maps
   OpenGL/Vulkan/Direct3D selections to the offscreen Vulkan renderer, copies the
   readback into the existing bitmap presenter, and reports `Vulkan (Metal)`. A packaged
@@ -37,11 +40,16 @@ presentation release.
   output. Outputs now share one context per device and clear/destroy it only after the
   last output. All three `FIVEDO_AUDIO_TESTS=1` cases pass on macOS.
 
+### Changed
+
+- **Intel macOS support was dropped.** The release matrix is Windows/Linux x64+arm64
+  and macOS arm64; the Intel macOS host used for earlier smoke tests was retired.
+
 ### Known limits
 
-- Native Metal surface, MoltenVK packaging, macOS audio live-switch, Retina/DPI,
-  physical gamepad detection, and macOS x64 GPU validation remain open. The unsigned
-  DMG may require a Gatekeeper exception until signing/notarization is available.
+- Native Metal surface (`PLAT-14`), Retina/DPI (`PLAT-17`), physical gamepad detection,
+  and signing/notarization remain open. The unsigned DMG may require a Gatekeeper
+  exception until signing is available.
 
 ## [1.11.0] - 2026-11-17
 

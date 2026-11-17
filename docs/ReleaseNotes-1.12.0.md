@@ -30,6 +30,14 @@ Paravirtual GPU with unified memory and Metal.
   CLI and frontend smoke tests pass from both the extracted tarball and the mounted DMG;
   SHA-256 checksums verify.
 
+### Self-contained bundles
+
+Every release bundle now embeds the .NET 11 runtime in its single-file apphosts. A
+download runs without installing the runtime separately; the bundle still contains no
+`runtime/` folder because the runtime is inside each executable. The macOS arm64 bundle
+also includes `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both
+Apache-2.0 license texts, so no Homebrew install is required for GPU rendering.
+
 ### macOS fixes
 
 - **Vulkan instances now enable `VK_KHR_portability_enumeration`.** MoltenVK is a
@@ -69,8 +77,6 @@ means no system OpenAL install is required.
 - **No native Metal surface yet.** macOS uses offscreen Vulkan plus a per-frame readback
   into a bitmap; a native `CAMetalLayer`/`VK_EXT_metal_surface` presenter is tracked as
   `PLAT-14`.
-- **MoltenVK is an external runtime dependency.** Bundling it or adding first-run
-  guidance is tracked as `PLAT-15`.
 - **Retina/DPI and physical gamepads are not yet validated.** Intel macOS support was
   dropped in this release; Apple Silicon is the only supported macOS target.
 - **The DMG is unsigned.** Gatekeeper may require right-click Open or an explicit
@@ -79,7 +85,6 @@ means no system OpenAL install is required.
 ## Evidence
 
 - [Compatibility.md](Compatibility.md) §10.4 - dated macOS arm64 validation table.
-- [KnownIssues.md](KnownIssues.md) - macOS OpenGL, audio live-switch, and packaging
-  limitations.
+- [KnownIssues.md](KnownIssues.md) - macOS OpenGL and packaging limitations.
 - [Vulkan.md](Vulkan.md) - MoltenVK portability and loader details.
 - [ImplementationPlan.md](ImplementationPlan.md) §3.3 - `PLAT-14`..`PLAT-18`.

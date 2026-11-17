@@ -737,32 +737,34 @@ capture branch and wrote a 1x1 PNG. Optical-drive boot is N/A on this host (no
 Validated on a NoMac cloud Mac: Apple M5 Pro (Virtual), macOS 26.6.2 (build 25G83),
 arm64, Apple Paravirtual GPU with unified memory and 16 GB reported VRAM. The host is
 Metal-only for acceleration; its OpenGL implementation is Apple Software Renderer 4.1
-and rejects an accelerated CGL pixel format. The .NET 11.0.100 SDK and .NET 8 runtime
-were installed into `~/.dotnet` (the .NET 8 runtime is required by the XenoAtom shader
-compiler). The repository was cloned from GitHub; the BIOS folder and Wolfenstein 3D
+and rejects an accelerated CGL pixel format. The .NET 11.0.100 SDK was installed into
+`~/.dotnet`; the XenoAtom shader compiler is rolled forward, so the .NET 8 runtime is
+optional. The repository was cloned from GitHub; the BIOS folder and Wolfenstein 3D
 CHD were uploaded over SSH.
 
 | Check | Result |
 |---|---|
 | Full test suite | `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: **2,394/2,394 passed** in 10 s |
-| CLI version / self-test | `5DO 1.11.0 (FiveDo)`; `selftest --json` reports `ok: true` |
+| CLI version / self-test | `5DO 1.12.0 (FiveDo)`; `selftest --json` reports `ok: true` |
 | 600-frame Wolfenstein boot | 0.888 s (~676 fps), 320x240, non-black final frame written to `artifacts/macos/wolf-frame.png` |
-| Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.11.0`; real Avalonia window opened and shut down cleanly |
+| Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.12.0`; real Avalonia window opened and shut down cleanly |
 | OpenGL | Avalonia's macOS backend has no `OpenGlControlBase`; `--gl-probe` now fails immediately with that explanation. CGL reports `4.1 APPLE-23.1.1 / Apple Software Renderer`; accelerated GL is unavailable |
 | Metal | `MTLCreateSystemDefaultDevice()` returns `Apple Paravirtual device`, unified memory, 1024x1024x1024 max threadgroup |
 | Vulkan / MoltenVK | Homebrew `vulkan-loader` 1.4.363 + MoltenVK 1.4; `--vk-probe` reports `ok: true`, `Apple Paravirtual device`, Vulkan 1.0, max texture 16,384, 0 managed bytes/frame |
 | Vulkan filters | `Accurate`, `Nearest`, `SharpBilinear`, `Bicubic`, `xBR`, `HQx`, `MMPX`, and `FSR` all pass with `filterFallback: false` at 640x480 (529-975 fps offscreen) |
 | Desktop presentation | `--gl-backend vulkan` selects `Vulkan (Metal)` and presents Wolfenstein at 59.8-60.1 fps; the status bar reports `SharpBilinear (GPU)` |
-| Bundle / DMG | `5do-1.11.0-osx-arm64.dmg`, `.pkg`, and `.tar.gz` built on the Mac; CLI `selftest` and frontend `--smoke-test` pass from the extracted tarball **and** the mounted DMG; SHA-256 checksums verify |
-| Audio | Real-device OpenAL opens and basic real-time/queued playback tests pass; the live replacement test reports 18 `AL_INVALID_ENUM` errors (documented in [`KnownIssues.md`](KnownIssues.md)) |
+| Bundle / DMG | `5do-1.12.0-osx-arm64.dmg`, `.pkg`, and `.tar.gz` built on the Mac; the 104 MB tarball is self-contained, contains `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both Apache-2.0 notices; CLI `selftest` and frontend `--smoke-test` pass without `DOTNET_ROOT` from the tarball **and** the mounted DMG; SHA-256 verifies |
+| Bundled Vulkan | With no `DYLD_LIBRARY_PATH`, `DYLD_PRINT_LIBRARIES=1` loads `/tmp/5do-self2/libvulkan.1.dylib` and `/tmp/5do-self2/libMoltenVK.dylib`; `--vk-probe` returns `ok: true` with `Apple Paravirtual device` |
+| Audio | All three `FIVEDO_AUDIO_TESTS=1` cases pass, including live output replacement: outputs share one OpenAL context per device because macOS lacks `ALC_EXT_thread_local_context`; Windows audio tests also pass |
 
 The macOS-specific renderer changes are:
 
 - Vulkan instances on macOS enable `VK_KHR_portability_enumeration` with
   `InstanceCreateFlags.EnumeratePortabilityBitKhr`; without it MoltenVK is not
   enumerated and `vkCreateInstance` returns `ErrorIncompatibleDriver`.
-- Silk.NET loads Homebrew's `/opt/homebrew/lib/libvulkan.1.dylib` explicitly, so
-  `DYLD_LIBRARY_PATH` is not required.
+- Silk.NET prefers the bundled `libvulkan.1.dylib`/`libMoltenVK.dylib`; the
+  `MoltenVK_icd.json` path is installed from the renderer's static constructor so the
+  loader never falls back to Homebrew. `DYLD_LIBRARY_PATH` is not required.
 - The desktop shell maps OpenGL/Vulkan/Direct3D selections to an offscreen
   `VulkanOffscreenRenderer` (`CaptureToFrame=true`) and copies the readback into the
   existing `WriteableBitmap` presenter; a CPU presenter remains the fallback when
@@ -772,7 +774,9 @@ The macOS-specific renderer changes are:
   path is Vulkan over MoltenVK/Metal.
 
 The `.dmg` remains unsigned (no Developer ID identity was supplied); this is the same
-unsigned drag-to-Applications DMG shape used by the release workflow.
+unsigned drag-to-Applications DMG shape used by the release workflow. `PLAT-15`,
+`PLAT-16`, and `PLAT-18` are closed by this pass; native Metal/Vulkan surface
+(`PLAT-14`) and Retina/DPI (`PLAT-17`) remain open.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
