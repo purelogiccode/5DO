@@ -213,6 +213,24 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     /// <summary>Gets the output format used by the renderer.</summary>
     public string OutputFormat => _outputFormat.ToString();
 
+    /// <summary>Gets the current output width in pixels.</summary>
+    public int OutputWidth => _outputWidth;
+
+    /// <summary>Gets the current output height in pixels.</summary>
+    public int OutputHeight => _outputHeight;
+
+    /// <summary>Gets the X offset of the most recently recorded video viewport.</summary>
+    public int ViewportX { get; private set; }
+
+    /// <summary>Gets the Y offset of the most recently recorded video viewport.</summary>
+    public int ViewportY { get; private set; }
+
+    /// <summary>Gets the width of the most recently recorded video viewport.</summary>
+    public int ViewportWidth { get; private set; }
+
+    /// <summary>Gets the height of the most recently recorded video viewport.</summary>
+    public int ViewportHeight { get; private set; }
+
     /// <inheritdoc />
     public void Initialize(int width, int height)
     {
@@ -653,24 +671,27 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     private static PhysicalDevice SelectPhysicalDevice(VkApi vk, PhysicalDevice* devices, uint count)
     {
-        var fallback = devices[0];
+        var best = devices[0];
+        var bestType = PhysicalDeviceType.Other;
+        var found = false;
         for (var i = 0; i < count; i++)
         {
             PhysicalDevice device = devices[i];
-            PhysicalDeviceProperties properties = vk.GetPhysicalDeviceProperties(device);
-            if (properties.DeviceType == PhysicalDeviceType.DiscreteGpu
-                && HasGraphicsQueue(vk, device))
+            if (!HasGraphicsQueue(vk, device))
             {
-                return device;
+                continue;
             }
 
-            if (HasGraphicsQueue(vk, device))
+            PhysicalDeviceType type = vk.GetPhysicalDeviceProperties(device).DeviceType;
+            if (!found || VulkanDeviceRanking.IsBetter(type, bestType))
             {
-                fallback = device;
+                best = device;
+                bestType = type;
+                found = true;
             }
         }
 
-        return fallback;
+        return best;
     }
 
     private static bool HasGraphicsQueue(VkApi vk, PhysicalDevice device)
@@ -2315,6 +2336,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             _outputHeight,
             _settings,
             _sourcePixelAspect);
+        ViewportX = viewport.X;
+        ViewportY = viewport.Y;
+        ViewportWidth = viewport.Width;
+        ViewportHeight = viewport.Height;
         ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
         RenderPassBeginInfo begin = new()
         {

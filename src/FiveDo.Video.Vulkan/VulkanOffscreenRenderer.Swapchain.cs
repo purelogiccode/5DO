@@ -20,6 +20,8 @@ namespace FiveDo.Video.Vulkan;
 public sealed unsafe partial class VulkanOffscreenRenderer
 {
     private nint _windowHandle;
+    private nint _surfaceDisplay;
+    private VulkanSurfaceKind _surfaceKind;
     private SurfaceKHR _surface;
     private KhrSurface? _khrSurface;
     private KhrSwapchain? _khrSwapchain;
@@ -69,10 +71,39 @@ public sealed unsafe partial class VulkanOffscreenRenderer
     /// <param name="width">Desired output width.</param>
     /// <param name="height">Desired output height.</param>
     /// <param name="vsync">Request FIFO (vsync) presentation instead of immediate.</param>
+    /// <exception cref="PlatformNotSupportedException">The platform is not Windows.</exception>
     public void InitializeSurface(nint windowHandle, int width, int height, bool vsync = true)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(windowHandle);
-        _windowHandle = windowHandle;
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "The Win32 Vulkan surface is Windows-only; use the VulkanSurface overload.");
+        }
+
+        InitializeSurface(VulkanSurface.ForWin32(windowHandle), width, height, vsync);
+    }
+
+    /// <summary>
+    /// Initializes the renderer and a native swapchain for the supplied window.
+    /// </summary>
+    /// <param name="window">Native window identity.</param>
+    /// <param name="width">Desired output width.</param>
+    /// <param name="height">Desired output height.</param>
+    /// <param name="vsync">Request FIFO (vsync) presentation instead of immediate.</param>
+    /// <exception cref="PlatformNotSupportedException">
+    /// The surface kind is not supported on the current platform.
+    /// </exception>
+    public void InitializeSurface(VulkanSurface window, int width, int height, bool vsync = true)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(window.Window, nameof(window));
+        if (window.Kind == VulkanSurfaceKind.Xlib)
+        {
+            ArgumentOutOfRangeException.ThrowIfZero(window.Display, nameof(window));
+        }
+
+        _surfaceKind = window.Kind;
+        _surfaceDisplay = window.Display;
+        _windowHandle = window.Window;
         _swapchainVsync = vsync;
         Initialize(width, height);
     }
@@ -84,13 +115,17 @@ public sealed unsafe partial class VulkanOffscreenRenderer
             return [];
         }
 
-        if (!OperatingSystem.IsWindows())
+        return _surfaceKind switch
         {
-            throw new PlatformNotSupportedException(
-                "The native Vulkan swapchain currently supports Win32 windows only.");
-        }
-
-        return ["VK_KHR_surface", "VK_KHR_win32_surface"];
+            VulkanSurfaceKind.Win32 when OperatingSystem.IsWindows() =>
+                ["VK_KHR_surface", "VK_KHR_win32_surface"],
+            VulkanSurfaceKind.Xlib when OperatingSystem.IsLinux() =>
+                ["VK_KHR_surface", "VK_KHR_xlib_surface"],
+            VulkanSurfaceKind.Win32 => throw new PlatformNotSupportedException(
+                "The Win32 Vulkan surface is Windows-only."),
+            _ => throw new PlatformNotSupportedException(
+                "The X11 Vulkan surface is Linux-only; Wayland surfaces are not implemented yet."),
+        };
     }
 
     private string[] GetDeviceExtensions()
@@ -105,18 +140,37 @@ public sealed unsafe partial class VulkanOffscreenRenderer
             return;
         }
 
-        if (!_vk!.TryGetInstanceExtension(_instance, out KhrWin32Surface win32Surface))
+        if (_surfaceKind == VulkanSurfaceKind.Win32)
         {
-            throw new NotSupportedException("VK_KHR_win32_surface is unavailable.");
+            if (!_vk!.TryGetInstanceExtension(_instance, out KhrWin32Surface win32Surface))
+            {
+                throw new NotSupportedException("VK_KHR_win32_surface is unavailable.");
+            }
+
+            Win32SurfaceCreateInfoKHR create = new()
+            {
+                SType = StructureType.Win32SurfaceCreateInfoKhr,
+                Hinstance = GetModuleHandle(null),
+                Hwnd = _windowHandle,
+            };
+            Check(win32Surface.CreateWin32Surface(_instance, &create, null, out _surface), "vkCreateWin32SurfaceKHR");
+        }
+        else
+        {
+            if (!_vk!.TryGetInstanceExtension(_instance, out KhrXlibSurface xlibSurface))
+            {
+                throw new NotSupportedException("VK_KHR_xlib_surface is unavailable.");
+            }
+
+            XlibSurfaceCreateInfoKHR create = new()
+            {
+                SType = StructureType.XlibSurfaceCreateInfoKhr,
+                Dpy = (nint*)_surfaceDisplay,
+                Window = _windowHandle,
+            };
+            Check(xlibSurface.CreateXlibSurface(_instance, &create, null, out _surface), "vkCreateXlibSurfaceKHR");
         }
 
-        Win32SurfaceCreateInfoKHR create = new()
-        {
-            SType = StructureType.Win32SurfaceCreateInfoKhr,
-            Hinstance = GetModuleHandle(null),
-            Hwnd = _windowHandle,
-        };
-        Check(win32Surface.CreateWin32Surface(_instance, &create, null, out _surface), "vkCreateWin32SurfaceKHR");
         if (!_vk.TryGetInstanceExtension(_instance, out KhrSurface surface))
         {
             throw new NotSupportedException("VK_KHR_surface is unavailable.");
@@ -127,7 +181,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer
 
     private PhysicalDevice SelectSurfacePhysicalDevice(VkApi vk, PhysicalDevice* devices, uint count)
     {
-        var fallback = devices[0];
+        var best = devices[0];
+        var bestType = PhysicalDeviceType.Other;
+        var found = false;
         for (var i = 0; i < count; i++)
         {
             PhysicalDevice device = devices[i];
@@ -136,16 +192,16 @@ public sealed unsafe partial class VulkanOffscreenRenderer
                 continue;
             }
 
-            PhysicalDeviceProperties properties = vk.GetPhysicalDeviceProperties(device);
-            if (properties.DeviceType == PhysicalDeviceType.DiscreteGpu)
+            PhysicalDeviceType type = vk.GetPhysicalDeviceProperties(device).DeviceType;
+            if (!found || VulkanDeviceRanking.IsBetter(type, bestType))
             {
-                return device;
+                best = device;
+                bestType = type;
+                found = true;
             }
-
-            fallback = device;
         }
 
-        return fallback;
+        return best;
     }
 
     private bool HasSurfaceQueue(VkApi vk, PhysicalDevice device)

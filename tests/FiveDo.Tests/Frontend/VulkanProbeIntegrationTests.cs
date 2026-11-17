@@ -131,7 +131,10 @@ public sealed class VulkanProbeIntegrationTests
     [Fact]
     public void WindowProbe_PresentsThroughASwapchain()
     {
-        if (!OperatingSystem.IsWindows()
+        var hasWindowSystem = OperatingSystem.IsWindows()
+            || (OperatingSystem.IsLinux()
+                && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")));
+        if (!hasWindowSystem
             || !string.Equals(
                 Environment.GetEnvironmentVariable("FIVEDO_VULKAN_TESTS"),
                 "1",
