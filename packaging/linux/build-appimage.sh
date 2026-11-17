@@ -154,7 +154,7 @@ if [[ -n "$sign_key" ]] && ! command -v gpg2 >/dev/null 2>&1 && command -v gpg >
     export PATH
 fi
 
-arguments=(--comp zstd --arch "$arch")
+arguments=(--comp zstd)
 if "$appimagetool" --help 2>&1 | grep -q -- '--no-appstream'; then
     arguments+=(--no-appstream)
 fi
@@ -170,7 +170,8 @@ if [[ -n "$name" ]]; then
     output="$output_dir/$name"
 fi
 rm -f "$output" "$output.zsync"
-"$appimagetool" "${arguments[@]}" "$appdir" "$output"
+# Current appimagetool has no --arch option: it guesses from the AppDir or reads ARCH.
+ARCH="$arch" "$appimagetool" "${arguments[@]}" "$appdir" "$output"
 
 chmod 0755 "$output"
 
