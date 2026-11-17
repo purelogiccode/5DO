@@ -14,7 +14,7 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | .NET SDK | **11.0.100** (pinned by `global.json` with `rollForward: latestFeature`). |
 | .NET runtime | **.NET 8 is optional.** `XenoAtom.ShaderCompiler.Build` ships its `dotnet-shaderc` tool as a net8.0 app; `Directory.Build.targets` sets `DOTNET_ROLL_FORWARD=Major` for the shader target, so the tool runs on the installed .NET 9/10/11 runtime when .NET 8 is absent and still prefers .NET 8 when present. |
 | OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+ on Apple Silicon. Five bundles (Windows/Linux x64+arm64 and macOS arm64) are built and architecture-validated. macOS arm64 is validated with the Vulkan/MoltenVK presenter (2026-11-17); Linux arm64 and Windows arm64 also pass the native runtime smoke. Intel macOS is unsupported as of 1.12.0. |
-| GPU | Windows/Linux: OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. macOS: Avalonia has no OpenGL control, so the shell uses the offscreen Vulkan renderer through MoltenVK/Metal (install `molten-vk` + `vulkan-loader` with Homebrew). The CPU fallback runs without a GPU backend. |
+| GPU | Windows/Linux: OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. macOS: Avalonia has no OpenGL control, so the shell uses the offscreen Vulkan renderer through MoltenVK/Metal. Release bundles include MoltenVK and the Vulkan loader; development builds can install `molten-vk` + `vulkan-loader` with Homebrew. The CPU fallback runs without a GPU backend. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
 | Optional | `jq` for the CI allocation-gate command. |
@@ -547,7 +547,8 @@ export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"
 
 Avalonia's macOS backend uses Metal and does not implement `OpenGlControlBase`, so
 `--gl-probe` now fails immediately with that explanation. The desktop shell selects
-the offscreen Vulkan renderer instead. Install MoltenVK and the loader:
+the offscreen Vulkan renderer instead. Release bundles already include MoltenVK and the
+loader; for a local development build install them once:
 
 ```bash
 brew install molten-vk vulkan-loader
@@ -556,8 +557,9 @@ brew install molten-vk vulkan-loader
   --bios <bios> <disc>
 ```
 
-The Vulkan renderer enables `VK_KHR_portability_enumeration` and loads Homebrew's
-`/opt/homebrew/lib/libvulkan.1.dylib` directly, so `DYLD_LIBRARY_PATH` is not needed.
+The Vulkan renderer enables `VK_KHR_portability_enumeration` and prefers the bundled
+`libvulkan.1.dylib`/`libMoltenVK.dylib`; Homebrew's `/opt/homebrew/lib` is the
+development fallback, so `DYLD_LIBRARY_PATH` is not needed.
 Bundle packaging needs PowerShell 7 (`brew install --cask powershell@preview`) because
 `packaging/package-bundle.ps1` is PowerShell.
 

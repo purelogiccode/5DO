@@ -30,9 +30,9 @@
 > 5DO is at **v1.12.0**, the macOS GPU presentation release. Windows x64 and Linux x64
 > remain validated targets, and **macOS arm64** now renders through Vulkan/MoltenVK
 > (offscreen presenter with Metal acceleration) at 60 fps, including all eight filters.
-> macOS needs `molten-vk` and `vulkan-loader` installed (for example with Homebrew);
-> without them the app uses the CPU presenter, and the OpenGL probe reports that
-> Avalonia has no macOS OpenGL control. macOS arm64, Linux arm64, and Windows arm64
+> The macOS arm64 bundle includes the Vulkan loader and MoltenVK, so no Homebrew
+> install is required; the OpenGL probe reports that Avalonia has no macOS OpenGL
+> control. macOS arm64, Linux arm64, and Windows arm64
 > also pass the native CLI/frontend runtime smoke. Intel macOS is no longer supported.
 > The build now works with only the
 > .NET 11 SDK: the shader compiler rolls forward instead of requiring the .NET 8 runtime.
@@ -81,7 +81,7 @@ test harness designed for reproducible compatibility evidence.
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
 | Automated tests | **2,394 tests** in the current test assembly |
-| macOS GPU runtime | Vulkan/MoltenVK; install `molten-vk` + `vulkan-loader` (CPU fallback otherwise) |
+| macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
 | Playability | **375/378** game-test-set titles playable under the binary beyond-title rule; 0 `Behind`, 0 `Regression` |

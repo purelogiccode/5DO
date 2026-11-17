@@ -19,8 +19,8 @@
 !!! important "v1.12.0 macOS GPU release"
     5DO is at v1.12.0, the macOS GPU presentation release. **Windows x64, Linux x64,
     and macOS arm64** are validated targets: macOS renders through Vulkan/MoltenVK on
-    Metal at 60 fps, with all eight filters and a packaged DMG. Install `molten-vk` and
-    `vulkan-loader` for GPU rendering; the CPU presenter is the fallback. Linux arm64
+    Metal at 60 fps, with all eight filters and a packaged DMG. The macOS arm64 bundle
+    includes MoltenVK and the Vulkan loader; the CPU presenter is the fallback. Linux arm64
     and Windows arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game images,
     or extracted game assets are distributed here; supply legally obtained files.
 

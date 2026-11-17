@@ -455,8 +455,9 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - macOS arm64 GPU presentation is validated through Vulkan/MoltenVK on a paravirtual
   Apple M5 Pro (2026-11-17), including the packaged `.app`/`.dmg`. Intel macOS is
   unsupported. macOS physical gamepad detection remains unvalidated, and accelerated
-  OpenGL is not available on that host. Bundles need MoltenVK and a Vulkan loader
-  installed by the user; without them the shell falls back to the CPU presenter.
+  OpenGL is not available on that host. The macOS arm64 bundle includes MoltenVK and the
+  Vulkan loader (with notices); if the bundled runtime is unavailable, the shell falls
+  back to the CPU presenter.
 - **Release bundles are self-contained and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishSingleFile=true`,
   `PublishTrimmed=false`) with the .NET 11 runtime embedded; no separate runtime install

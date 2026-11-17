@@ -397,9 +397,10 @@ macOS is a special case: Avalonia's backend composes with Metal and does not imp
 `OpenGlControlBase`, so the OpenGL surface never initializes. The shell maps `OpenGl`,
 `Vulkan`, and `Direct3D11` selections to Vulkan and creates a
 `VulkanOffscreenRenderer` with `CaptureToFrame=true`; the readback is copied into the
-same `WriteableBitmap` used by the CPU presenter. Install MoltenVK and a Vulkan loader
-(for example `brew install molten-vk vulkan-loader`) to enable this path; without them
-the shell falls back to the CPU presenter. `--gl-probe` is not available on macOS and
+same `WriteableBitmap` used by the CPU presenter. The macOS arm64 release bundle ships
+MoltenVK and the Vulkan loader; a development build can use Homebrew
+(`brew install molten-vk vulkan-loader`). Without either, the shell falls back to the
+CPU presenter. `--gl-probe` is not available on macOS and
 reports that immediately; use `--vk-probe` instead.
 
 `OpenGlCapabilities.Detect` parses `GL_VERSION` and reports:

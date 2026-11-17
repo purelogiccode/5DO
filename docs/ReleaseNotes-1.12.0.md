@@ -43,9 +43,9 @@ Apache-2.0 license texts, so no Homebrew install is required for GPU rendering.
 - **Vulkan instances now enable `VK_KHR_portability_enumeration`.** MoltenVK is a
   portability driver; without the instance flag `vkCreateInstance` returned
   `ErrorIncompatibleDriver`.
-- **Homebrew's Vulkan loader is discovered directly.** Silk.NET loads
-  `/opt/homebrew/lib/libvulkan.1.dylib` when present, so `DYLD_LIBRARY_PATH` is not
-  required. The system Vulkan SDK path remains the fallback.
+- **The bundled Vulkan loader is preferred.** The macOS arm64 bundle ships
+  `libvulkan.1.dylib`, `libMoltenVK.dylib`, and `MoltenVK_icd.json`; Homebrew is only a
+  development fallback. `DYLD_LIBRARY_PATH` is not required.
 - **The OpenGL probe fails immediately on macOS.** Avalonia's macOS backend has no
   `OpenGlControlBase`, so the old probe waited for its timeout. It now reports the
   limitation and points at `--vk-probe`.

@@ -192,7 +192,10 @@ physical gamepad detection; and a signed/notarized DMG. Intel macOS is out of sc
 achievable arm64 items. Every item is validated on NoMac and recorded in
 [Compatibility.md](Compatibility.md) §10.4.
 Credentials and start/stop commands are in the gitignored `AGENTS.local.md`; stop the
-Mac after each run to end billing.
+Mac after each run to end billing. `PLAT-06`'s macOS Retina portion is tracked as
+`PLAT-17`; GLES 3.1 hardware and Tier B timing are not macOS targets. Signing and
+notarization (`UX-16`) are intentionally out of scope for this release by owner
+decision; the DMG remains unsigned.
 
 ### 3.4 P1 - Release and packaging
 

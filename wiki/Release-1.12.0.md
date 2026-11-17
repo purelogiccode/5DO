@@ -29,7 +29,7 @@ MoltenVK, with no Homebrew dependency.
 ## Fixes
 
 - Enabled `VK_KHR_portability_enumeration` for MoltenVK.
-- Load Homebrew's `/opt/homebrew/lib/libvulkan.1.dylib` directly.
+- Prefer the bundled Vulkan loader and MoltenVK; Homebrew is a development fallback.
 - Fail the OpenGL probe immediately on macOS instead of timing out.
 - Stop selecting Avalonia's unusable OpenGL surface on macOS; use Vulkan/MoltenVK with
   a CPU fallback.

@@ -313,7 +313,7 @@ The SPIR-V and option-parsing tests run everywhere.
   audio; X11 surfaces and the desktop shell child surface are implemented (`PLAT-08A`).
   A NoMac Apple M5 Pro (Virtual, macOS 26.6.2, arm64) provides MoltenVK 1.4.363 and a
   paravirtual Metal GPU. On macOS the offscreen path enables
-  `VK_KHR_portability_enumeration`, loads `/opt/homebrew/lib/libvulkan.1.dylib`
-  directly, and all eight filters pass without fallback; the packaged app presents at
-  ~60 fps. The integrated/legacy devices are secondary targets rather than the primary
+  `VK_KHR_portability_enumeration`, prefers the bundled `libvulkan.1.dylib`/
+  `libMoltenVK.dylib` (with Homebrew as a development fallback), and all eight filters
+  pass without fallback; the packaged app presents at ~60 fps. The integrated/legacy devices are secondary targets rather than the primary
   Vulkan reference.
