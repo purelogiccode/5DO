@@ -56,7 +56,9 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       embedded and no runtime folder is staged.
 - [x] Release workflow builds and publishes all five bundles and `SHA256SUMS.txt`;
       every checksum verified after download. Release run
-      <https://github.com/purelogiccode/5DO/actions/runs/44141799807>.
+      <https://github.com/purelogiccode/5DO/actions/runs/44141799807>; CI run
+      <https://github.com/purelogiccode/5DO/actions/runs/44144837632> and platform
+      runtime run <https://github.com/purelogiccode/5DO/actions/runs/44141793058> passed.
 - [x] Record the release run links and the current suite count in `Status.md`/`README.md`.
 
 ---
