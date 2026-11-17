@@ -71,9 +71,10 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
   host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`, 1920x1080
   X11, HDA audio) replaces the llvmpipe-only VM for GPU evidence. Hardware GL
   presentation and Vulkan X11 (probe and desktop shell child surface) are validated
-  (2026-11-16); Wayland is documented as unsupported. Remaining: real-device audio
-  soak, evdev gamepad hardware, D-Bus display-sleep inhibit, and a full real-machine
-  acceptance pass. `hasvk` is the legacy/integrated validation target.
+  (2026-11-16); Wayland is documented as unsupported and display-sleep inhibition uses
+  the screen-saver D-Bus API. Remaining: real-device audio soak, evdev gamepad hardware,
+  a full real-machine acceptance pass, and the desktop exit segfault tracked as
+  `PLAT-13`. `hasvk` is the legacy/integrated validation target.
 - GLES 3.1 and Tier B timing validation. Native CLI/frontend runtime smoke now passes on
   macOS x64/arm64, Linux arm64, and Windows arm64 (2026-11-10); desktop arm64 is no
   longer an open platform item.

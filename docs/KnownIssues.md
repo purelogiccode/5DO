@@ -388,9 +388,19 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
 - Linux/macOS OpenGL GPU presentation is not fully validated; the native runtime smoke
-  hides the GL surface and validates startup/XAML/settings instead.
-- Display-sleep inhibition is implemented for Windows. Linux and macOS compositors may
-  still blank or dim the display during play; those platforms remain best-effort.
+  hides the GL surface and validates startup/XAML/settings instead. On the 2026-11-16
+  bare-metal Linux host the X11 GPU probe and Vulkan shell pass, so Linux GL/Vulkan
+  presentation is validated for that device while macOS remains best-effort.
+- Display-sleep inhibition is implemented for Windows and Linux. Linux holds an
+  `org.freedesktop.ScreenSaver` inhibitor through a small `python3-dbus` helper for as
+  long as an unpaused game runs; hosts without `python3-dbus` fall back silently. macOS
+  compositors may still blank or dim the display during play, so macOS remains
+  best-effort.
+- **Linux frontend exit segfault (2026-11-16):** closing the window after a game session
+  crashes in a native `atexit` handler (`__run_exit_handlers`) when `XDG_RUNTIME_DIR` is
+  set. `--smoke-test` exits cleanly, and the segfault reproduces with the software,
+  OpenGL, and Vulkan backends, so it is a desktop teardown defect rather than a renderer
+  or display-sleep issue. It is tracked as `PLAT-13`.
 - Auto-crop follows 4DO's detector: it can remove up to 25% per edge, treats the top five
   bits of each color as the content test, and waits one second before cropping more. A
   manual or per-game crop disables it. It changes presentation and native screenshots

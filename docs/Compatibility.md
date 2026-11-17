@@ -712,8 +712,15 @@ device wins without `VK_ICD_FILENAMES`. The desktop shell also presents through 
 X11 child window: `--gl-backend vulkan` logs `swapchain 1060x466, output 1060x466,
 viewport 370,113 320x240`, displays the Joypad Test card centered in the video area,
 and rescales when the window is resized to 1400x820. Wayland-only sessions fall back to
-the offscreen path (documented unsupported). The real-device audio soak and acceptance
-pass remain open as `AUD-02` and `PLAT-10`. Reproducible commands and numbers are in
+the offscreen path (documented unsupported). Linux also holds an
+`org.freedesktop.ScreenSaver` display-sleep inhibitor for the duration of play through
+a `python3-dbus` helper; acquire and release were traced with matching cookies
+(`1965464518`, `1192968952`, `307216972`). **Open issue:** closing the window after a
+session exits `139` when `XDG_RUNTIME_DIR` is set, with the coredump pointing at a
+native `atexit` handler; `--smoke-test` exits cleanly and the crash reproduces on the
+software, OpenGL, and Vulkan backends. It is tracked as `PLAT-13`, so Linux shutdown
+remains preview-quality. The real-device audio soak and acceptance pass remain open as
+`AUD-02` and `PLAT-10`. Reproducible commands and numbers are in
 [TestCorpus.md](TestCorpus.md) 1.1cm.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)

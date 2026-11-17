@@ -62,7 +62,7 @@ The remaining non-playable rows are three non-retail/add-on images: `Joypad Test
 The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
 REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **ACC-04**,
 **PLAT-01**, **PLAT-02**,
-**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-08A**, **PLAT-09**, **TEST-06/07/08**,
+**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-08A**, **PLAT-09**, **PLAT-12**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
 **SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-29**,
 **UX-30**, **UX-31**, **UX-32**, **VID-04/12/16/17/18**, **VID-19** items. `SYS-21` and `SYS-23` are code-complete but remain open
@@ -141,7 +141,8 @@ and a linked capture for every promotion or documented limit.
 | **PLAT-09** | M | **Done (2026-11-10).** Full PAL library validation: eight PAL-sensitive titles captured with the documented PAL BIOS, plus a PAL2 presentation probe. | PAL1/PAL2, 50 Hz pacing, and per-game BIOS selection are implemented. | Evidence: [PalValidation.md](PalValidation.md) and `docs/data/pal-validation.csv`. |
 | **PLAT-10** | M | **Real-machine acceptance**: install the shipped framework-dependent bundle on clean physical machines (the bare-metal Linux Mint host and a physical Windows x64 desktop) and exercise the player path: image boot, GL presentation at 720p/1080p, real audio device, gamepad, fullscreen, DPI change, pause/resume, save states, screenshots, and library metadata. | Every subsystem exists and is smoke-tested; a clean non-developer run and a dated pass are the only missing pieces. The Linux host is available with hardware GL 4.2 and a 1920x1080 display. | A dated acceptance record in [Compatibility.md](Compatibility.md) §10.3 lists every check with pass/fail, bundle version, GPU/driver, and audio device for both hosts; each failure becomes a named defect item instead of an undocumented limitation. |
 | **PLAT-11** | S | **Linux evdev gamepad hardware validation**: detect and map a physical controller through `EvdevGamepadSource`, including the `input` group/udev permission path. | The source (`EvdevGamepadSource`) and the `--gamepad-probe` diagnostic already exist; only a physical pad and the permission check are missing. | `--gamepad-probe` reports the evdev backend with raw samples from a physical pad mapped through the eight-player profile, and the `input`-group/udev requirement is documented in [Installation.md](Installation.md). |
-| **PLAT-12** | S | **Linux display-sleep inhibit**: replace `NullDisplaySleepBackend` on Linux with a D-Bus inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`, falling back to `org.freedesktop.login1.Manager.Inhibit`). | `DisplaySleepPolicy` and its lifecycle already exist; only the Linux backend is null, and the host has a session bus and a real desktop to test it. | A running, unpaused game holds a desktop inhibitor (verified with `systemd-inhibit --list` or the desktop indicator), pause/stop/exit releases it, a no-session-bus host falls back cleanly, and `DisplaySleepPolicyTests` plus a documented manual check cover it. |
+| **PLAT-12 — Done (2026-11-16)** | S | **Linux display-sleep inhibit**: replace `NullDisplaySleepBackend` on Linux with the freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`), held by a persistent `python3-dbus` helper for the connection lifetime. | `DisplaySleepPolicy` and its lifecycle already existed; only the Linux backend was null, and the host has a session bus and a real desktop to test it. | A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit` and `UnInhibit` with the same cookie, and closing the window released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip the lock cleanly, and `DisplaySleepPolicyTests` cover the run/pause/release transitions. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
+| **PLAT-13** | S | **Linux desktop exit segfault**: closing the window after a game session crashes in a native `atexit` handler when `XDG_RUNTIME_DIR` is set. It reproduces with the software, OpenGL, and Vulkan backends, and `--smoke-test` exits cleanly. | The host reproduces it deterministically and records coredumps (`coredumpctl`), so the root cause is bounded to the desktop teardown path rather than a renderer. | Closing a game window with `XDG_RUNTIME_DIR` set exits with code 0 on all three backends, with a regression test or a documented manual check covering shutdown. |
 
 `PLAT-05` code is complete: `MacOsGamepadSource` uses IOKit HID Manager for Generic
 Desktop joystick/gamepad/multi-axis devices, and `MacOsHidGamepadMapper` plus
@@ -162,10 +163,10 @@ hardware blocker that kept Linux at preview/best-effort: Intel Core i7-3615QM, I
 HD 4000 (Ivy Bridge), Mesa 25.2.8 with hardware OpenGL 4.2 (crocus) and Vulkan 1.2
 (`hasvk`), a live Cinnamon/X11 session at 1920x1080, and HDA Intel PCH audio. `PLAT-02`
 is done (hardware GL 4.2 probe); `PLAT-08A` is done (X11 surface, device ranking, and
-Linux shell child surface; Wayland documented unsupported), `PLAT-10`
-(real-machine acceptance), `PLAT-11` (evdev hardware), and `PLAT-12` (D-Bus display-sleep
-inhibit) are the Linux-specific items; `AUD-02` closes the remaining Linux audio
-hardware gap. `hasvk` reports "Ivy Bridge Vulkan support is incomplete", so this host is
+Linux shell child surface; Wayland documented unsupported), `PLAT-12` is done (D-Bus
+screen-saver inhibitor), and `PLAT-10` (real-machine acceptance) and `PLAT-11` (evdev
+hardware) remain. `PLAT-13` covers the pre-existing desktop exit segfault found during
+the `PLAT-12` pass; `AUD-02` closes the remaining Linux audio hardware gap. `hasvk` reports "Ivy Bridge Vulkan support is incomplete", so this host is
 the legacy/integrated validation target, not the primary Vulkan reference. Do not treat
 CI `Xvfb` smokes as GPU evidence: they run `llvmpipe` without a swapchain.
 
@@ -313,9 +314,9 @@ documented limitation, not that it is unachievable.
    unblocks the Linux workstream. `PLAT-02` is **done** (hardware GL 4.2 probe plus the
    GLX swap-interval fix); `PLAT-08A` is **done** (X11 `VK_KHR_xlib_surface`, X11 probe
    window, device ranking, and the Linux shell child surface; Wayland documented as
-   unsupported). Next are `AUD-02` (real-device soak) and
-   `PLAT-12` (D-Bus display-sleep); `PLAT-10` is the end-to-end acceptance pass and
-   `PLAT-11` needs a physical evdev pad. `PLAT-03` and `PLAT-04` are **done** via
+   unsupported). `PLAT-12` (D-Bus display-sleep) is **done**. Next are `AUD-02`
+   (real-device soak) and `PLAT-13` (desktop exit segfault); `PLAT-10` is the end-to-end
+   acceptance pass and `PLAT-11` needs a physical evdev pad. `PLAT-03` and `PLAT-04` are **done** via
    `.github/workflows/platform-runtime.yml`; `PLAT-05` needs physical macOS controller
    detection; `PLAT-06` is documented in Performance §8.8 (DPI math validated; GLES 3.1
    hardware and Tier B timing remain best-effort); `PLAT-07` and `PLAT-09` are **done**;

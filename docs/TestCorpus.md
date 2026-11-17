@@ -4142,6 +4142,24 @@ stays in Avalonia, and is raised above Avalonia's render window on each present.
 Resizing the window to 1400x820 recreated the swapchain and scaled the viewport. A
 Wayland-only session has no X11 display and falls back to the offscreen/readback path.
 
+**Linux display-sleep inhibit (`PLAT-12`).** `LinuxDisplaySleepBackend` holds an
+`org.freedesktop.ScreenSaver.Inhibit` lock through a persistent `python3-dbus` helper
+(the D-Bus connection owns the inhibitor, so it must stay open). With the Joypad Test
+disc running, the shell logged `Display-sleep inhibitor acquired (cookie 1192968952)`
+and `dbus-monitor --session "destination='org.freedesktop.ScreenSaver'"` recorded the
+`Inhibit` call and the same `uint32 1192968952`. Closing the window logged
+`Display-sleep inhibitor released.` and the monitor recorded `UnInhibit` with the same
+cookie; the same acquire/release pair was observed for cookies `1965464518` and
+`307216972`. Runs with `DBUS_SESSION_BUS_ADDRESS`/`XDG_RUNTIME_DIR` unset skip the lock
+and stay clean, and `DisplaySleepPolicyTests` cover the run/pause/release transitions.
+
+**New defect: desktop exit segfault (`PLAT-13`).** Closing the window after a session
+now exits `139` when `XDG_RUNTIME_DIR` is set. `coredumpctl` shows SIGSEGV in
+`__run_exit_handlers` (a native `atexit` handler in an unloaded module). It reproduces
+with the software, OpenGL, and Vulkan backends, while `--smoke-test` exits `0` and
+unsetting `XDG_RUNTIME_DIR` also exits `0`, so it is a desktop teardown defect rather
+than a renderer or display-sleep regression.
+
 **Defect found and fixed: GL swap-interval backend.** The GL probe reported
 `vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
 returns a non-null stub for `wglSwapIntervalEXT`. `SwapInterval.TryCreate` now probes
