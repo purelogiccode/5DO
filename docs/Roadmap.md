@@ -73,9 +73,9 @@ The project is at the **v1.10.2 Windows audio and disc-container patch release**
   presentation and Vulkan X11 (probe and desktop shell child surface) are validated
   (2026-11-16); Wayland is documented as unsupported and display-sleep inhibition uses
   the screen-saver D-Bus API, the OpenAL PipeWire exit segfault is fixed, evdev
-  gamepads detect correctly, and the 600 s real-device soak is clean (2026-11-17).
-  Remaining: the full real-machine acceptance pass. `hasvk` is the
-  legacy/integrated validation target.
+  gamepads detect correctly, the 600 s real-device soak is clean, and the full
+  real-machine acceptance pass is complete (2026-11-17). GLES 3.1 and the DPI matrix
+  remain best-effort. `hasvk` is the legacy/integrated validation target.
 - GLES 3.1 and Tier B timing validation. Native CLI/frontend runtime smoke now passes on
   macOS x64/arm64, Linux arm64, and Windows arm64 (2026-11-10); desktop arm64 is no
   longer an open platform item.

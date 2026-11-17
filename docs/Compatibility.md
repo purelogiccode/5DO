@@ -722,8 +722,13 @@ library on Linux, and software, OpenGL, and Vulkan sessions close with exit code
 (2026-11-17). The same pass fixed the evdev ioctl encoding, so the Linux gamepad backend
 now detects a virtual uinput pad (`connected=1`, `buttons=South`) and the two-second
 `--gamepad-probe`; the 600 s real-device audio soak reports 0 dropped samples and 0
-underruns on the default PipeWire endpoint. Only the full acceptance pass (`PLAT-10`)
-remains open. Reproducible commands and numbers are in
+underruns on the default PipeWire endpoint. The full acceptance pass (`PLAT-10`) also
+passed on 2026-11-17: boot on software/OpenGL/Vulkan, `F11` fullscreen round-trip,
+`F5`/`F8` slot save/load, `Escape` pause, `F12` 320x240 screenshots, a virtual evdev pad
+driving the 3DO, display-sleep acquire/release, library listing, and exit code 0. The
+pass found and fixed a screenshot bug where software/Vulkan sessions took the OpenGL
+capture branch and wrote a 1x1 PNG. Optical-drive boot is N/A on this host (no
+`/dev/sr*`); the DPI matrix remains `PLAT-06`. Reproducible commands and numbers are in
 [TestCorpus.md](TestCorpus.md) 1.1cm.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)

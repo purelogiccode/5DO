@@ -4186,6 +4186,28 @@ encodings (`0x80604521`, `0x80084523`, `0x80144540`). The desktop user still nee
 600.04 s, 35,966 frames, 26,461,445 samples pushed, **0 dropped**, **0 underruns**,
 0 OpenAL errors, DSP running, `ok: true`. This closes the AUD-01 VM hardware limitation.
 
+**Real-machine acceptance (`PLAT-10`, 2026-11-17).** Self-contained `linux-x64` 1.10.2
+frontend on the bare-metal host, Joypad Test CHD with the goldstar BIOS:
+
+| Check | Result |
+|---|---|
+| Boot and video | 320x240 pad card; software, OpenGL 4.2, and Vulkan backends present |
+| Fullscreen | `F11` → 1920x1080 at 0,0; `F11` again → 1060x620 at 440,282 |
+| Screenshot | `F12` writes a 320x240 PNG. **Found and fixed:** with software/Vulkan the shell took the OpenGL capture branch and wrote a 1x1 image; `CaptureScreenshot` now requires the OpenGL presenter to be active |
+| Save state | `F5` → `State saved to slot 1 (Joypad Test v1.0)` |
+| Load state | `F8` → `State loaded from slot 1` |
+| Pause | `Escape` → `Emulation paused` |
+| Audio | Real-device soak, 0 dropped / 0 underruns |
+| Gamepad | Virtual evdev pad drives the 3DO: the screenshot reads `PAD1:TWO MANY PRESSED KEYS` |
+| Display sleep | Inhibitor acquired and released around the session |
+| Library | 2 entries listed from 2 images |
+| Exit | Window close exits `0` on software, OpenGL, and Vulkan |
+| Optical drive | Not applicable: the host has no `/dev/sr*` |
+| DPI matrix | Not exercised here; tracked by `PLAT-06` |
+
+The screenshot path fix is covered by the manual check above; the presenter gate is
+`_rendererKind == VideoRendererKind.OpenGl && !_openGlDisabled`.
+
 **Defect found and fixed: GL swap-interval backend.** The GL probe reported
 `vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
 returns a non-null stub for `wglSwapIntervalEXT`. `SwapInterval.TryCreate` now probes

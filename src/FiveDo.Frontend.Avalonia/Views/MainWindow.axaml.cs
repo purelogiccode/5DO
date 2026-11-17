@@ -2382,7 +2382,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if (Video.IsOpenGlAvailable)
+        if (_rendererKind == VideoRendererKind.OpenGl && Video.IsOpenGlAvailable && !_openGlDisabled)
         {
             Video.CaptureCompleted += OnCaptured;
             Video.RequestCapture();

@@ -311,9 +311,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   pixels and `--gl-backend vulkan` presents in the desktop shell through a depth-24 X11
   child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions fall back to the offscreen
   path (documented unsupported). The 600 s real-device audio soak reports 0 dropped
-  samples and 0 underruns, and evdev gamepads are detected after the ioctl-encoding fix.
-  The full acceptance pass remains open as `PLAT-10`; the CLI/frontend stay
-  **preview/best-effort** on Linux until that acceptance pass. The Hyper-V `LinuxMint` VM
+  samples and 0 underruns, evdev gamepads are detected after the ioctl-encoding fix, and
+  the full acceptance pass (`PLAT-10`) passed on 2026-11-17 (fullscreen, save/load,
+  pause, screenshots, input, display sleep, clean exit). Linux is validated on that
+  hardware; GLES 3.1 and the DPI matrix remain best-effort under `PLAT-06`. The Hyper-V `LinuxMint` VM
   (`D:\Hyper-V\VMs\LinuxMint`) remains the headless build/test target.
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
   sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
