@@ -64,7 +64,7 @@ test harness designed for reproducible compatibility evidence.
   and Direct3D 11 backends mirror the pipeline for desktop and headless probes.
 - **Powerful automation.** Headless `run`, `trace`, `bench`, `selftest`, disc/BIOS/
   NVRAM/cheat/movie/state commands, JSON output, watchpoints, dumps, and differential
-  harnesses. `5do doctor` reports the host, session, native libraries, input devices,
+  harnesses. `5do-cli doctor` reports the host, session, native libraries, input devices,
   and BIOS discovery in one read-only pass. Startup and `5do update` check the public
   GitHub release feed.
 - **One bundle per supported system and architecture.** Windows and Linux x64/arm64 and

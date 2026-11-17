@@ -76,7 +76,7 @@ runbook and verification commands are in
       AppImage from the release bundles.
 - [ ] The Linux bundle contains the packager files under `packaging/` and the
       `5do.desktop` fullscreen action validates.
-- [ ] `5do doctor --strict` and `5do bios discover --json` behave on the target host
+- [ ] `5do-cli doctor --strict` and `5do-cli bios discover --json` behave on the target host
       (the first-run guide offers the discovered BIOS when one exists).
 - [ ] `desktop-file-validate`, `appstreamcli validate --no-net`, and
       `update-mime-database` pass on the shipped desktop/MIME/metainfo files.

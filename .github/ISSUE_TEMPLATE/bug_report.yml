@@ -56,9 +56,9 @@ body:
     id: doctor
     attributes:
       label: Host report
-      description: Paste `5do doctor` (or `5do doctor --json`) and the diagnostics bundle. Both are read-only; the JSON is privacy-safe.
+      description: Paste `5do-cli doctor` (or `5do-cli doctor --json`) and the diagnostics bundle. Both are read-only; the JSON is privacy-safe.
       placeholder: |
-        $ 5do doctor
+        $ 5do-cli doctor
         5DO 1.12.0 doctor
           summary: ok
           ...

@@ -10,7 +10,7 @@ and the symptom checklist in [`Troubleshooting.md`](Troubleshooting.md).
 
 | Question | Tool |
 |---|---|
-| Is this host set up correctly at all? | `5do doctor [--json]`, then the support bundle |
+| Is this host set up correctly at all? | `5do-cli doctor [--json]`, then the support bundle |
 | Did the machine boot and what state is it in? | `run --json`, `--progress`, `--frame-out` |
 | What is the CPU doing? | `trace`, `--stop-pc`, `--stop-invalid`, instruction ring |
 | What is the guest printing? | `--kprint`, `--kprint-pc`, `trace --stop-kprint` |

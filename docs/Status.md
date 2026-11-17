@@ -47,7 +47,7 @@ verification steps, and announcement channels are in
 [LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages and the
 AUR/AppImageHub/itch.io/Flatpak channels stay open as `REL-08`..`REL-10`.
 
-**2026-11-17, UX-34/UX-35:** **BIOS discovery and `5do doctor` remove the two biggest
+**2026-11-17, UX-34/UX-35:** **BIOS discovery and `5do-cli doctor` remove the two biggest
 Linux support round-trips.** `bios discover` searches `FIVEDO_BIOS_DIR`, `<data>/bios`,
 `bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`, and the first-run guide
 offers the best image with a one-click **Use this BIOS** button. `doctor` reports the

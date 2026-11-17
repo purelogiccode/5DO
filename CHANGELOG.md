@@ -21,7 +21,7 @@ presentation release.
   `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and
   `<Documents>/BIOS`, classify every image with the existing catalog, and offer the
   best primary with a one-click **Use this BIOS** button. 5DO never downloads a ROM.
-- **`5do doctor`.** A read-only host report covering the OS/session (including
+- **`5do-cli doctor`.** A read-only host report covering the OS/session (including
   Wayland-only detection), data-folder write access, disk space, OpenGL/Vulkan/OpenAL
   loading, evdev and optical devices, settings access, and BIOS discovery. Supports
   `--json`, `--strict`, and `--folder`.

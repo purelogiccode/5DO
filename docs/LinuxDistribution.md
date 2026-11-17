@@ -243,7 +243,7 @@ CI (`linux-packages.yml`, called by `release.yml`) already:
 - imports the signing subkey and signs every artifact and the checksum manifest;
 - installs the `.deb` with `apt-get install`, checks the generated symlinks, desktop
   entry, MIME, metainfo, and icon, runs `5do --version`, `5do-cli selftest --json`, and
-  `5do doctor`, then removes the package and verifies the removal;
+  `5do-cli doctor`, then removes the package and verifies the removal;
 - publishes `5do-linux-installers` (packages, signatures, checksums, keyring), which
   `release.yml` attaches to the GitHub release.
 
@@ -501,8 +501,8 @@ committed until it has an ID.
 | Priority | Item | Why it matters | Effort |
 |---|---|---|---|
 | P0 | **BIOS auto-discovery** | Every new user hits "no BIOS". Scan `~/.local/share/5DO/bios`, `~/BIOS`, `~/Documents/BIOS`, and the folder next to the executable, then offer a one-click "use this BIOS" prompt. Never download ROMs. **Implemented:** `bios discover`, the first-run **Use this BIOS** button, and the `doctor` BIOS row | S |
-| P0 | **`5do doctor`** | A single command that dumps distro, session type, GL/Vulkan renderer, audio device, gamepad permissions (`input` group, `/dev/uinput`), XDG paths, and the last 200 log lines. Cuts support round-trips and gives useful bug reports. **Implemented:** `5do doctor [--json] [--strict]` reports session, data-folder access, disk space, native libraries, evdev/optical devices, settings, and BIOS discovery | M |
-| P0 | **Wayland guidance and fallback check** | X11/XWayland works today; Wayland-only sessions fall back to the slower offscreen path. Detect `WAYLAND_DISPLAY` without `DISPLAY`, warn once, and document the XWayland workaround. **Implemented:** `5do doctor` reports the case and the shell logs it once and shows a status-line hint | S |
+| P0 | **`5do-cli doctor`** | A single command that dumps distro, session type, GL/Vulkan renderer, audio device, gamepad permissions (`input` group, `/dev/uinput`), XDG paths, and the last 200 log lines. Cuts support round-trips and gives useful bug reports. **Implemented:** `5do-cli doctor [--json] [--strict]` reports session, data-folder access, disk space, native libraries, evdev/optical devices, settings, and BIOS discovery | M |
+| P0 | **Wayland guidance and fallback check** | X11/XWayland works today; Wayland-only sessions fall back to the slower offscreen path. Detect `WAYLAND_DISPLAY` without `DISPLAY`, warn once, and document the XWayland workaround. **Implemented:** `5do-cli doctor` reports the case and the shell logs it once and shows a status-line hint | S |
 | P1 | **AppImage auto-update** | Embed zsync info and surface a newer release. **Implemented:** the AppImage embeds zsync update information and the existing startup/`update` check offers the release page; remaining work is an in-app download if wanted | M |
 | P1 | **Steam Deck preset** | A Deck-friendly on-screen hint for the BIOS step and documented non-Steam-game setup. **Implemented:** the desktop entry has a **Play in fullscreen** action; the BIOS hint and EmuDeck entry stay as `REL-10` | S |
 | P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub | M |
@@ -525,7 +525,7 @@ bundle already has no runtime dependency).
 - [ ] `linux-packages.yml` built `.deb`/`.rpm` for x64 and arm64 and an x64 AppImage.
 - [ ] The Linux tarball contains `packaging/5do.desktop`, `5do.xml`, the metainfo, and
       both icons, and `desktop-file-validate` accepts the fullscreen action.
-- [ ] `5do doctor --strict` reports no unexpected warnings on the target host, and
+- [ ] `5do-cli doctor --strict` reports no unexpected warnings on the target host, and
       `bios discover` finds the test BIOS.
 - [ ] `desktop-file-validate` and `appstreamcli validate --no-net` pass (also in CI).
 - [ ] `dpkg-deb -f` shows no `dotnet-runtime` dependency and the expected X11/font deps.

@@ -357,7 +357,7 @@ jobs:
 
           5do --version
           5do-cli selftest --json
-          5do doctor
+          5do-cli doctor
 
           sudo apt-get remove -y 5do
           if [ -e /usr/bin/5do ]; then

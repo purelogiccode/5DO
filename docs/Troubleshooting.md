@@ -10,7 +10,7 @@ are in [`KnownIssues.md`](KnownIssues.md).
 
 1. **Check the version.** `5do --version` or **Help > About**. This documentation
    describes the `1.0.0` documented-compatibility release.
-2. **Run `5do doctor`.** It reports the session type, data-folder access, native
+2. **Run `5do-cli doctor`.** It reports the session type, data-folder access, native
    libraries, input devices, optical drives, and BIOS discovery in one read-only pass.
    Paste the text output (or `doctor --json`) into an issue; `doctor --strict` returns 1
    on a warning for scripts.

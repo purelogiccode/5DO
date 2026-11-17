@@ -5,6 +5,10 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 [`UserGuide.md`](UserGuide.md).
 
 - Executable name in published packages: `FiveDo.Cli` (`.exe` on Windows).
+- Installed package command names: `/usr/bin/5do` is the **desktop app** and
+  `/usr/bin/5do-cli` is this **CLI** (the `.deb`/`.rpm` install both). The command
+  examples below use `5do` as shorthand for the CLI apphost; type `5do-cli` on an
+  installed Linux package, or `./FiveDo.Cli` in a portable bundle.
 - From source: `dotnet run --project src/FiveDo.Cli -- <command> ...`
 - Version: `--version` or `-v`.
 - Help: `--help`, `-h`, or `help`.

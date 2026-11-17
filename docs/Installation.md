@@ -162,7 +162,7 @@ Named profiles live under `profiles/<name>/` and can be selected with
 
 - Use a current desktop with OpenGL 3.3 or GLES 3.0/3.1 drivers.
 - evdev gamepads are supported; the user normally needs membership in the `input`
-  group. `5do doctor` reports unreadable `/dev/input/event*` nodes and prints the
+  group. `5do-cli doctor` reports unreadable `/dev/input/event*` nodes and prints the
   `usermod` command.
 - `packaging/linux/build-deb.sh`, `build-rpm.sh`, and `build-appimage.sh` produce the
   `.deb`, `.rpm`, and portable AppImage; CI builds, signs, and publishes them as release
@@ -170,7 +170,7 @@ Named profiles live under `profiles/<name>/` and can be selected with
   in [Linux distribution and signing](LinuxDistribution.md).
 - X11 works directly. On a Wayland session the shell runs under XWayland; a
   Wayland-only session without `DISPLAY` falls back to the slower offscreen presenter.
-  `5do doctor` reports which case applies.
+  `5do-cli doctor` reports which case applies.
 - The portable tarball includes a `packaging/` folder with the desktop entry, MIME
   definition, AppStream metainfo, and icons for third-party packagers.
 - The self-contained `linux-x64` and `linux-arm64` bundles are produced by CI.
