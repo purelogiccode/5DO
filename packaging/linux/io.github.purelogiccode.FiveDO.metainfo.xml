@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for 5DO.
+
+  The component ID is reverse-DNS so the same file can be reused by a future
+  Flatpak/Flathub submission. The desktop entry keeps its short name (5do.desktop)
+  for command-line compatibility; <launchable> links the two.
+
+  Screenshots are 4x nearest-neighbour captures of the native 320x240 frame, which
+  is exactly what the sharp-bilinear presenter shows on a HiDPI display. Replace
+  them with real window captures when a screenshot pass is available.
+-->
+<component type="desktop-application">
+  <id>io.github.purelogiccode.FiveDO</id>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-FreeDO-modified-LGPL-2.1</project_license>
+
+  <name>5DO</name>
+  <summary>3DO Interactive Multiplayer emulator</summary>
+
+  <developer id="io.github.purelogiccode">
+    <name>5DO contributors</name>
+  </developer>
+
+  <description>
+    <p>
+      5DO is a source-available 3DO Interactive Multiplayer emulator derived from the
+      FreeDO core. It ships a desktop application with a game library, BIOS manager,
+      save states, cheats, TAS movies, RetroAchievements, and a headless command-line
+      tool for automation and verification.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Accurate ARM60, CLIO, MADAM, DSP, and CD-ROM emulation with a 378-title compatibility set.</li>
+      <li>OpenGL, GLES, Vulkan, and Direct3D 11 presentation with Accurate, Nearest, SharpBilinear, Bicubic, xBR, HQx, MMPX, and FSR 1.0 filters.</li>
+      <li>Game library with cover art, metadata, cheats, and per-game profiles.</li>
+      <li>Eight-player input profiles, evdev gamepads, lightguns, and scripted input timelines.</li>
+      <li>ISO, BIN/CUE, CHD, CDI, and NRG disc images, plus disc conversion.</li>
+      <li>Localized UI in nine languages.</li>
+    </ul>
+    <p>
+      5DO does not include a BIOS ROM or any game images. Users must supply legally
+      obtained files.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">5do.desktop</launchable>
+
+  <url type="homepage">https://github.com/purelogiccode/5DO</url>
+  <url type="bugtracker">https://github.com/purelogiccode/5DO/issues</url>
+  <url type="help">https://purelogiccode.github.io/5DO/</url>
+  <url type="vcs-browser">https://github.com/purelogiccode/5DO</url>
+  <url type="contribute">https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Star Control II running through the Vulkan presenter</caption>
+      <image type="source">https://purelogiccode.github.io/5DO/assets/screenshots/star-control-ii.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Battle Chess with the default sharp-bilinear filter</caption>
+      <image type="source">https://purelogiccode.github.io/5DO/assets/screenshots/battle-chess.png</image>
+    </screenshot>
+  </screenshots>
+
+  <languages>
+    <lang>de</lang>
+    <lang>en</lang>
+    <lang>es</lang>
+    <lang>fr</lang>
+    <lang>it</lang>
+    <lang>ja</lang>
+    <lang>ko</lang>
+    <lang>pt_BR</lang>
+    <lang>zh_CN</lang>
+  </languages>
+
+  <releases>
+    <release version="1.12.0" date="2026-11-17">
+      <description>
+        <p>
+          macOS arm64 GPU presentation through Vulkan/MoltenVK, a packaged GPU
+          runtime, and self-contained single-file apphosts for every platform.
+        </p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1"/>
+
+  <categories>
+    <category>Game</category>
+    <category>Emulator</category>
+  </categories>
+
+  <keywords>
+    <keyword>3do</keyword>
+    <keyword>emulator</keyword>
+    <keyword>panasonic</keyword>
+    <keyword>retro</keyword>
+    <keyword>disc</keyword>
+    <keyword>iso</keyword>
+    <keyword>chd</keyword>
+  </keywords>
+
+  <supports>
+    <control>gamepad</control>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+
+  <provides>
+    <binary>5do</binary>
+    <binary>5do-cli</binary>
+  </provides>
+</component>

@@ -226,6 +226,22 @@ try {
         # entry that launches the /usr/bin/5do wrapper.
         Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do-portable.desktop') `
             -Destination (Join-Path $staging '5do.desktop') -Force
+
+        # Desktop-integration files for third-party packagers (AUR, Flatpak, distro
+        # packages). They are reference copies only; the apphosts do not read them at
+        # runtime, and the .deb/.rpm/AppImage install their own copies from packaging/.
+        $packagerDirectory = Join-Path $staging 'packaging'
+        New-Item -ItemType Directory -Path $packagerDirectory -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do.desktop') `
+            -Destination (Join-Path $packagerDirectory '5do.desktop') -Force
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/linux/5do.xml') `
+            -Destination (Join-Path $packagerDirectory '5do.xml') -Force
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/linux/io.github.purelogiccode.FiveDO.metainfo.xml') `
+            -Destination (Join-Path $packagerDirectory 'io.github.purelogiccode.FiveDO.metainfo.xml') -Force
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/5do.svg') `
+            -Destination (Join-Path $packagerDirectory '5do.svg') -Force
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'packaging/linux/5do-256.png') `
+            -Destination (Join-Path $packagerDirectory '5do-256.png') -Force
     }
 
     $commit = 'unknown'

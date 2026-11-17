@@ -14,5 +14,6 @@
 *.slnx     text eol=lf
 *.sh       text eol=lf
 *.desktop  text eol=lf
+PKGBUILD   text eol=lf
 *.iss      text eol=crlf
 *.plist    text eol=lf

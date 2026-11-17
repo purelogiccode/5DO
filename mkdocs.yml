@@ -114,6 +114,7 @@ nav:
   - Getting started:
       - Installation: Installation.md
       - Installers and file associations: Installers.md
+      - Linux distribution and signing: LinuxDistribution.md
       - User guide: UserGuide.md
       - FAQ: FAQ.md
   - Using 5DO:

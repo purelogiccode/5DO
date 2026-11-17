@@ -1,15 +1,19 @@
 # Installers and file associations
 
-5DO ships the portable six-bundle matrix as its primary release artifact; the macOS
-bundle itself is a drag-to-Applications DMG. **UX-16** adds unsigned installer/package
-scaffolding on top of those bundles. Signing and notarization are conditional: they run
-only when the required Windows certificate or Apple Developer ID/keychain profile is
-available.
+5DO ships the portable five-bundle matrix as its primary release artifact; the macOS
+bundle itself is a drag-to-Applications DMG. **UX-16** adds installer/package
+scaffolding on top of those bundles. Signing is conditional: Windows Authenticode needs
+a certificate, macOS notarization needs a Developer ID and keychain profile, and Linux
+artifacts get detached GPG signatures when `LINUX_GPG_PRIVATE_KEY` is configured. The
+Linux packages are published as release assets and install directly
+(`sudo apt install ./5do_<version>_amd64.deb`); no package repository is hosted.
+Nothing is committed to this repository when the credentials are absent; the unsigned
+packages remain usable.
 
 | Platform | Artifact | Script | Status |
 |---|---|---|---|
 | Windows | `5do-<version>-win-x64-setup.exe`, `win-arm64` | `packaging/windows/build-installer.ps1` | x64 built and install/launch/association-tested; arm64 built (unsigned) |
-| Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm` | `packaging/linux/build-deb.sh`, `build-rpm.sh` | Built and metadata/MIME-validated (unsigned) |
+| Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm`, `5do-x86_64.AppImage` | `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh` | Built; metadata, MIME, and AppStream validated; GPG-signed release assets when the release key is configured (unsigned otherwise) |
 | macOS | `5do-<version>-osx-<arch>.dmg`, `.pkg`, `.app` | `packaging/macos/build-macos-package.sh` | Built natively in CI; DMG is the published macOS bundle |
 
 The authoritative build instructions and script arguments are in
@@ -39,8 +43,15 @@ the same path the shell passes from a file association.
   script signs `5DO.app` with the hardened runtime and the JIT entitlements required by
   the self-contained .NET apphost. Pass `--notary-profile` (or
   `MACOS_NOTARY_PROFILE`) to submit and staple the DMG and PKG with `notarytool`.
-- **Linux:** packages are unsigned; add a repository signing key at the distribution
-  layer if needed.
+- **Linux:** there is no OS-level signature check for an ELF binary or a `.deb`, so the
+  release key signs the trust chain instead: a detached `.asc` for every artifact and
+  `SHA256SUMS-linux.txt.asc`. The public key is published as
+  `5do-archive-keyring.gpg`. The packages are release assets, not a hosted repository;
+  users install them with `sudo apt install ./5do_<version>_amd64.deb` or
+  `sudo dnf install ./5do-<version>-1.x86_64.rpm`. Without the
+  `LINUX_GPG_PRIVATE_KEY` secret the packages are built unsigned. The full runbook,
+  verification commands, and the optional mirror tooling are in
+  [LinuxDistribution.md](LinuxDistribution.md).
 
 No certificate, Apple account, or private key is committed to this repository.
 

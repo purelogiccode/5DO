@@ -42,6 +42,13 @@ FiveDo[.exe] single-file apphost
 OpenAL32.dll / soft_oal.dll   native OpenAL Soft (Windows)
 libopenal.so / libopenal.dylib
 libSkiaSharp.*, av_libglesv2.dll, ...
+5do.desktop                   portable launcher (Linux, Exec=FiveDo)
+packaging/                    packager reference files (Linux only)
+  ├── 5do.desktop             installed launcher (Exec=5do)
+  ├── 5do.xml                 shared-mime-info definition
+  ├── io.github.purelogiccode.FiveDO.metainfo.xml   AppStream metadata
+  ├── 5do.svg                  scalable icon
+  └── 5do-256.png              256 px icon
 README.md
 whatsnew.md
 LICENSE
@@ -149,24 +156,87 @@ Requires Inno Setup 6 (`ISCC.exe`). The output is
 `5do-<version>-win-x64-setup.exe` plus a `.sha256` file. `win-arm64` uses
 `-Architecture arm64`.
 
-### Linux (.deb, .rpm, desktop entry, MIME)
+### Linux (.deb, .rpm, AppImage, desktop entry, MIME, AppStream)
 
 The Linux packages install the apphosts under `/opt/5do`, add `/usr/bin/5do` and
-`/usr/bin/5do-cli`, install the desktop entry and SVG icon, and register the
-`application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`, `*.bin`, `*.cdi`, and `*.nrg` globs.
+`/usr/bin/5do-cli`, install the desktop entry, a 256 px and SVG icon, the AppStream
+metainfo, and the `application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`,
+`*.bin`, `*.cdi`, and `*.nrg` globs. The bundles are self-contained, so the packages
+depend on the X11/fontconfig/freetype/GL libraries only — never on a
+`dotnet-runtime` package.
 
 ```sh
 bash packaging/linux/build-deb.sh \
-  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.6.0 \
+  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.12.0 \
   --output artifacts/installers
 
 bash packaging/linux/build-rpm.sh \
-  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.6.0 \
+  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.12.0 \
   --output artifacts/installers
+
+APPIMAGETOOL=/path/to/appimagetool/AppRun \
+bash packaging/linux/build-appimage.sh \
+  --bundle artifacts/bundle/linux-x64 --version 1.12.0 \
+  --output artifacts/installers --name 5do-x86_64.AppImage
 ```
 
-The scripts require `dpkg-deb` or `rpmbuild`. Open the installed `5do` entry or a
-`.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch the frontend with the disc path.
+The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), and `appimagetool`.
+Open the installed `5do` entry or a `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch
+the frontend with the disc path.
+
+#### Linux signing
+
+Linux has no OS-level signature for an ELF binary or a `.deb`. Trust is anchored in the
+5DO GPG key that signs `SHA256SUMS-linux.txt` and a detached `.asc` for every release
+asset.
+
+```sh
+# Detached signatures for every release asset plus the public keyring.
+bash packaging/linux/sign-artifacts.sh \
+  --key-id "$LINUX_GPG_KEY_ID" \
+  --keyring-out artifacts/signing/5do-archive-keyring.gpg \
+  artifacts/installers
+```
+
+The artifacts are published as GitHub release assets; users install the downloaded
+package directly (`sudo apt install ./5do_<version>_amd64.deb`), so no repository is
+hosted.
+
+`.github/workflows/linux-packages.yml` runs the builds and the signing after
+`build-bundle.yml` and is called by `release.yml`. It also installs the generated
+`.deb`, runs the CLI self-test and `5do doctor`, and removes the package again. Signing
+is skipped with a warning when the `LINUX_GPG_PRIVATE_KEY` secret is absent.
+
+#### Optional package repositories
+
+`build-apt-repo.sh` and `build-rpm-repo.sh` can turn downloaded release files into a
+signed `apt`/`dnf` repository if you operate a mirror. This is optional and is not part
+of the 5DO release pipeline. The scripts take `--repo-dir`, `--base-url`, and
+`--key-id`; keep every release in the pool so pinned versions stay installable.
+
+`--gpgcheck 0` in the RPM example is for a mirror whose packages are not header-signed;
+run `build-rpm.sh --sign-key` (or configure `rpmsign` in CI with a passphrase-less key)
+to sign the package headers, then publish with `--gpgcheck 1`.
+
+[docs/LinuxDistribution.md](../docs/LinuxDistribution.md) covers verification,
+mirroring, and the announcement channels.
+
+#### AUR package
+
+`packaging/linux/aur/` holds the reference `5do-bin` PKGBUILD and the submission steps.
+It repacks the released tarball and installs the desktop, MIME, metainfo, and icon files
+from the bundle's `packaging/` directory.
+
+#### AppStream metadata
+
+`packaging/linux/io.github.purelogiccode.FiveDO.metainfo.xml` supplies the component
+name, summary, screenshots, release, OARS rating, and categories that GNOME Software,
+KDE Discover, and Flathub display. `appstreamcli validate --no-net` runs in CI. Keep its
+`<release version="...">` entry in sync with `Directory.Build.props` on every version
+bump. The `project_license` is a `LicenseRef-*` identifier because the FreeDO modified
+LGPL is not an SPDX-listed license; if a validator rejects the custom reference, use
+`LicenseRef-proprietary`, the Flathub convention for non-free apps.
+
 
 ### macOS (.app, .dmg, .pkg)
 
@@ -191,14 +261,18 @@ the portable tarball.
 ## CI
 
 `.github/workflows/build-bundle.yml` builds the Windows and Linux bundles on their
-native runners and cross-publishes the macOS x64 bundle on Ubuntu; the macOS bundle is
-validated as Mach-O x86_64 rather than executed. The runners install .NET 11, which also
-proves the self-contained apphosts work. `.github/workflows/release.yml` publishes
-the bundles and `SHA256SUMS.txt` to the GitHub release. The docs workflow publishes the
-documentation site and the wiki.
+native runners and builds the macOS arm64 DMG on a macOS runner. The runners install
+.NET 11, which also proves the self-contained apphosts work.
+`.github/workflows/linux-packages.yml` turns the two Linux bundles into `.deb`, `.rpm`,
+and AppImage artifacts, validates their metadata, installs the `.deb` to verify the
+desktop integration, signs them when the GPG secret is configured, and publishes them as
+GitHub release assets. There is no hosted package repository.
+`.github/workflows/release.yml` publishes the bundles, the Linux packages, the
+signatures, and the checksum manifests to the GitHub release.
 
 The Windows/Linux archives and the macOS DMG are the portable bundles; the installer
 scripts above are additive. Unsigned installers can be produced locally and in CI.
 Authenticode signing, Developer ID signing, and notarization remain conditional on valid
-certificates and an Apple developer account; without them the portable bundles and
-unsigned installers are the release artifacts.
+certificates and an Apple developer account; Linux GPG signing remains conditional on
+`LINUX_GPG_PRIVATE_KEY`. Without those credentials the portable bundles and unsigned
+packages are the release artifacts.

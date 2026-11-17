@@ -56,6 +56,25 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: dotnet format 5DO.sln --verify-no-changes --no-restore
 
+      - name: Linux packaging metadata
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq appstream desktop-file-utils shared-mime-info
+          for script in packaging/linux/*.sh; do
+            bash -n "$script"
+          done
+          desktop-file-validate packaging/5do.desktop packaging/5do-portable.desktop
+          sudo install -m 0644 packaging/5do.desktop /usr/share/applications/5do.desktop
+          appstreamcli validate --no-net \
+            packaging/linux/io.github.purelogiccode.FiveDO.metainfo.xml
+          mime_dir="$(mktemp -d)"
+          mkdir -p "$mime_dir/packages"
+          cp packaging/linux/5do.xml "$mime_dir/packages/"
+          update-mime-database "$mime_dir"
+          test -f "$mime_dir/mime.cache"
+
       - name: Benchmark smoke and budget gate
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -197,6 +216,15 @@ jobs:
     name: Release bundles
     uses: ./.github/workflows/build-bundle.yml
 
+  linux-packages:
+    name: Linux packages
+    needs: bundle
+    uses: ./.github/workflows/linux-packages.yml
+    # No secrets are passed: CI builds and validates the packages unsigned. The
+    # signed path runs from release.yml, which uses `secrets: inherit`.
+    with:
+      ref: ${{ github.ref }}
+
   ci-complete:
     name: CI complete
     if: always()
@@ -205,6 +233,7 @@ jobs:
       - aot-cli
       - aot-frontend
       - bundle
+      - linux-packages
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -215,6 +244,7 @@ jobs:
           echo "aot-cli: ${{ needs.aot-cli.result }}"
           echo "aot-frontend: ${{ needs.aot-frontend.result }}"
           echo "bundle: ${{ needs.bundle.result }}"
+          echo "linux-packages: ${{ needs.linux-packages.result }}"
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
             echo "One or more required CI jobs failed." >&2
             exit 1

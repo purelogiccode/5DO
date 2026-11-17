@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 #
-# Build an unsigned RPM package from a published linux bundle.
+# Build an RPM package from a published linux bundle.
+#
+# The bundle apphosts are self-contained (the .NET 11 runtime is embedded), so the
+# package does not require dotnet-runtime. It requires the X11, fontconfig, freetype,
+# and GL libraries that the Avalonia and Skia native code loads at run time.
 #
 # Usage:
 #   bash packaging/linux/build-rpm.sh --bundle artifacts/bundle/linux-x64 \
-#       --rid linux-x64 --version 1.6.0 --output artifacts/installers
+#       --rid linux-x64 --version 1.12.0 --output artifacts/installers
+#
+# Optional:
+#   --sign-key <gpg-key-id>   Add a GPG header signature with rpmsign --addsign.
 #
 set -euo pipefail
 
@@ -15,9 +22,10 @@ bundle=""
 rid="linux-x64"
 version=""
 output_dir=""
+sign_key=""
 
 usage() {
-    sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -26,6 +34,7 @@ while [[ $# -gt 0 ]]; do
         --rid) rid="${2:-}"; shift 2 ;;
         --version) version="${2:-}"; shift 2 ;;
         --output) output_dir="${2:-}"; shift 2 ;;
+        --sign-key) sign_key="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -85,12 +94,17 @@ Summary:        3DO Interactive Multiplayer emulator
 License:        FreeDO modified LGPL
 URL:            https://github.com/purelogiccode/5DO
 BuildArch:      $rpm_arch
-Requires:       dotnet-runtime-11.0
+Requires:       glibc, libgcc, libstdc++, zlib, libX11, libICE, libSM, libXext, libXrandr, libXi, libXcursor, glib2, fontconfig, freetype
+Recommends:     mesa-libGL, python3-dbus
 
 %description
 5DO is a FreeDO-derived 3DO emulator with a headless CLI and an Avalonia desktop
-frontend. This package installs both apphosts under /opt/5do and registers the
-5do desktop entry, icon, and disc-image MIME type.
+frontend. This package installs both apphosts under /opt/5do, registers the 5do
+desktop entry, icon, and AppStream metadata, and adds the application/x-3do-disc
+MIME type for *.iso, *.cue, *.chd, *.bin, *.cdi, and *.nrg images.
+
+The .NET 11 runtime is embedded in the apphosts; no separate runtime package is
+required. A 3DO BIOS image and game images must be supplied by the user.
 
 %install
 rm -rf %{buildroot}
@@ -98,8 +112,11 @@ mkdir -p %{buildroot}/opt/5do
 mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/share/applications
 mkdir -p %{buildroot}/usr/share/mime/packages
+mkdir -p %{buildroot}/usr/share/metainfo
 mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
+mkdir -p %{buildroot}/usr/share/icons/hicolor/256x256/apps
 mkdir -p %{buildroot}/usr/share/doc/5do
+mkdir -p %{buildroot}/usr/share/licenses/5do
 cp -a %{_bundle_dir}/. %{buildroot}/opt/5do/
 rm -f %{buildroot}/opt/5do/5do.desktop
 find %{buildroot}/opt/5do -type f \\( -name '*.pdb' -o -name '*.xml' \\) -delete
@@ -110,12 +127,17 @@ ln -sf /opt/5do/FiveDo %{buildroot}/usr/bin/5do
 ln -sf /opt/5do/FiveDo.Cli %{buildroot}/usr/bin/5do-cli
 install -m 0644 %{_repo_dir}/packaging/5do.desktop %{buildroot}/usr/share/applications/5do.desktop
 install -m 0644 %{_repo_dir}/packaging/linux/5do.xml %{buildroot}/usr/share/mime/packages/5do.xml
+install -m 0644 %{_repo_dir}/packaging/linux/io.github.purelogiccode.FiveDO.metainfo.xml %{buildroot}/usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml
 install -m 0644 %{_repo_dir}/packaging/5do.svg %{buildroot}/usr/share/icons/hicolor/scalable/apps/5do.svg
-for document in LICENSE THIRD-PARTY-NOTICES.md README.md; do
+install -m 0644 %{_repo_dir}/packaging/linux/5do-256.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/5do.png
+for document in README.md THIRD-PARTY-NOTICES.md; do
     if [ -f "%{_repo_dir}/\$document" ]; then
         install -m 0644 "%{_repo_dir}/\$document" "%{buildroot}/usr/share/doc/5do/\$document"
     fi
 done
+if [ -f "%{_repo_dir}/LICENSE" ]; then
+    install -m 0644 "%{_repo_dir}/LICENSE" "%{buildroot}/usr/share/licenses/5do/LICENSE"
+fi
 
 %files
 /opt/5do
@@ -123,8 +145,11 @@ done
 /usr/bin/5do-cli
 /usr/share/applications/5do.desktop
 /usr/share/mime/packages/5do.xml
+/usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml
 /usr/share/icons/hicolor/scalable/apps/5do.svg
+/usr/share/icons/hicolor/256x256/apps/5do.png
 /usr/share/doc/5do
+%license /usr/share/licenses/5do/LICENSE
 
 %post
 if command -v update-desktop-database >/dev/null 2>&1; then
@@ -132,6 +157,12 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 if command -v update-mime-database >/dev/null 2>&1; then
     update-mime-database /usr/share/mime || true
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q /usr/share/icons/hicolor || true
+fi
+if command -v appstreamcli >/dev/null 2>&1; then
+    appstreamcli refresh --force >/dev/null 2>&1 || true
 fi
 
 %postun
@@ -141,6 +172,9 @@ fi
 if command -v update-mime-database >/dev/null 2>&1; then
     update-mime-database /usr/share/mime || true
 fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q /usr/share/icons/hicolor || true
+fi
 
 %changelog
 * $(date -u '+%a %b %d %Y') 5DO <noreply@localhost> - $rpm_version-1
@@ -148,6 +182,7 @@ fi
 EOF
 
 rpmbuild -bb \
+    --target "$rpm_arch" \
     --define "_topdir $top" \
     --define "_bundle_dir $bundle" \
     --define "_repo_dir $repo_root" \
@@ -161,5 +196,15 @@ fi
 
 archive="$output_dir/5do-${version}-1.${rpm_arch}.rpm"
 cp "$rpm_file" "$archive"
+
+if [[ -n "$sign_key" ]]; then
+    if ! command -v rpmsign >/dev/null 2>&1; then
+        echo "rpmsign is required for --sign-key (install rpm-sign)." >&2
+        exit 1
+    fi
+    rpmsign --addsign --define "_gpg_name $sign_key" "$archive"
+    rpm --checksig "$archive"
+fi
+
 sha256sum "$archive" >"$archive.sha256"
 printf 'Built %s\n' "$archive"

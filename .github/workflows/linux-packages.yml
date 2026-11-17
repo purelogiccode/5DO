@@ -1,0 +1,308 @@
+name: Linux packages
+
+# Builds the Linux distribution artifacts from the bundles produced by
+# build-bundle.yml: .deb and .rpm for x64/arm64, an x64 AppImage, GPG signatures,
+# and a signed checksum manifest. Everything is published as GitHub release assets;
+# 5DO does not host a package-manager repository, so users install the downloaded
+# package directly (apt install ./5do_....deb).
+#
+# Signing is opt-in. Without the LINUX_GPG_PRIVATE_KEY secret the packages are built
+# unsigned so a release still produces artifacts; the workflow logs a warning and the
+# evidence records "unsigned".
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref or tag to package
+        required: false
+        type: string
+        default: ''
+      tag:
+        description: Release tag to download bundles from (empty when artifacts are used)
+        required: false
+        type: string
+        default: ''
+      version:
+        description: Version override (defaults to Directory.Build.props)
+        required: false
+        type: string
+        default: ''
+    secrets:
+      LINUX_GPG_PRIVATE_KEY:
+        required: false
+      LINUX_GPG_KEY_ID:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag whose Linux bundles are repackaged
+        required: true
+        type: string
+      ref:
+        description: Git ref to build the packaging scripts from
+        required: false
+        type: string
+        default: master
+      version:
+        description: Version override (defaults to Directory.Build.props)
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    name: Linux packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
+
+      - name: Install packaging tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            appstream \
+            desktop-file-utils \
+            gnupg \
+            rpm \
+            shared-mime-info \
+            zstd \
+            zsync
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ inputs.version }}"
+          if [ -z "$version" ]; then
+            version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n1)"
+          fi
+          version="${version#v}"
+          if [ -z "$version" ]; then
+            version="0.0.0"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "Packaging 5DO $version"
+
+      - name: Download Linux bundles
+        if: inputs.tag == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: 5do-bundle-linux-*
+          path: artifacts/downloads
+          merge-multiple: true
+
+      - name: Download Linux bundles from the release
+        if: inputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/downloads
+          gh release download '${{ inputs.tag }}' \
+            --pattern '5do-*-linux-*.tar.gz' \
+            --dir artifacts/downloads \
+            --clobber
+          ls -l artifacts/downloads
+
+      - name: Extract bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          for rid in linux-x64 linux-arm64; do
+            archive="$(find artifacts/downloads -maxdepth 1 -type f -name "5do-*-${rid}.tar.gz" | head -n1)"
+            if [ -z "$archive" ]; then
+              echo "No ${rid} bundle found." >&2
+              exit 1
+            fi
+            mkdir -p "artifacts/bundle/$rid"
+            tar -xzf "$archive" -C "artifacts/bundle/$rid"
+            test -x "artifacts/bundle/$rid/FiveDo"
+            test -x "artifacts/bundle/$rid/FiveDo.Cli"
+            file "artifacts/bundle/$rid/FiveDo"
+          done
+
+      - name: Build Debian and RPM packages
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/installers
+          for rid in linux-x64 linux-arm64; do
+            bash packaging/linux/build-deb.sh \
+              --bundle "artifacts/bundle/$rid" \
+              --rid "$rid" \
+              --version "$VERSION" \
+              --output artifacts/installers
+            bash packaging/linux/build-rpm.sh \
+              --bundle "artifacts/bundle/$rid" \
+              --rid "$rid" \
+              --version "$VERSION" \
+              --output artifacts/installers
+          done
+          ls -l artifacts/installers
+
+      - name: Validate package metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          desktop-file-validate packaging/5do.desktop packaging/5do-portable.desktop
+          # AppStream checks that <launchable> resolves to an installed desktop file.
+          sudo install -m 0644 packaging/5do.desktop /usr/share/applications/5do.desktop
+          appstreamcli validate --no-net \
+            packaging/linux/io.github.purelogiccode.FiveDO.metainfo.xml
+
+          mime_dir="$(mktemp -d)"
+          mkdir -p "$mime_dir/packages"
+          cp packaging/linux/5do.xml "$mime_dir/packages/"
+          update-mime-database "$mime_dir"
+          test -f "$mime_dir/mime.cache"
+
+          deb="$(find artifacts/installers -maxdepth 1 -name '5do_*_amd64.deb' | head -n1)"
+          dpkg-deb -f "$deb" Package Version Architecture Depends Recommends
+          dpkg-deb -c "$deb" > artifacts/deb-contents.txt
+          grep -q 'usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml' artifacts/deb-contents.txt
+          grep -q 'usr/share/applications/5do.desktop' artifacts/deb-contents.txt
+          grep -q 'usr/share/icons/hicolor/256x256/apps/5do.png' artifacts/deb-contents.txt
+          grep -q 'usr/share/doc/5do/copyright' artifacts/deb-contents.txt
+
+          rpm="$(find artifacts/installers -maxdepth 1 -name '5do-*.x86_64.rpm' | head -n1)"
+          rpm -qip "$rpm" | sed -n '1,12p'
+          rpm -qlp "$rpm" > artifacts/rpm-contents.txt
+          grep -q 'usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml' artifacts/rpm-contents.txt
+          grep -q 'usr/share/applications/5do.desktop' artifacts/rpm-contents.txt
+
+      - name: Build AppImage
+        id: appimage
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          tool_dir="artifacts/tools"
+          mkdir -p "$tool_dir"
+          url="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          if ! curl -fsSL -o "$tool_dir/appimagetool.AppImage" "$url"; then
+            echo "::warning::appimagetool download failed; the AppImage is skipped for this run."
+            echo "built=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x "$tool_dir/appimagetool.AppImage"
+          (cd "$tool_dir" && ./appimagetool.AppImage --appimage-extract >/dev/null)
+          name="5do-x86_64.AppImage"
+          bash packaging/linux/build-appimage.sh \
+            --bundle artifacts/bundle/linux-x64 \
+            --version "$VERSION" \
+            --output artifacts/installers \
+            --appimagetool "$tool_dir/squashfs-root/AppRun" \
+            --name "$name" \
+            --zsync-url "https://github.com/purelogiccode/5DO/releases/latest/download/$name.zsync"
+          test -x "artifacts/installers/$name"
+          echo "built=true" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Linux checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd artifacts/installers
+          find . -maxdepth 1 -type f \
+            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) \
+            -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS-linux.txt
+          cat SHA256SUMS-linux.txt
+
+      - name: Import GPG key
+        id: signing
+        env:
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${LINUX_GPG_PRIVATE_KEY:-}" ]; then
+            echo "::warning::LINUX_GPG_PRIVATE_KEY is not configured; Linux packages and repositories are unsigned."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -p "$GNUPGHOME"
+          chmod 700 "$GNUPGHOME"
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+          printf '%s\n' "$LINUX_GPG_PRIVATE_KEY" | gpg --batch --import
+          key_id="${LINUX_GPG_KEY_ID:-}"
+          if [ -z "$key_id" ]; then
+            key_id="$(gpg --batch --list-secret-keys --with-colons |
+              awk -F: '/^fpr:/ { print $10 }')"
+            key_id="${key_id%%$'\n'*}"
+          fi
+          if [ -z "$key_id" ]; then
+            echo "No secret key was imported." >&2
+            exit 1
+          fi
+          echo "LINUX_GPG_KEY_ID=$key_id" >> "$GITHUB_ENV"
+          gpg --batch --list-secret-keys --keyid-format long
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Sign artifacts
+        if: steps.signing.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash packaging/linux/sign-artifacts.sh \
+            --key-id "$LINUX_GPG_KEY_ID" \
+            --keyring-out artifacts/signing/5do-archive-keyring.gpg \
+            artifacts/installers \
+            artifacts/downloads \
+            artifacts/installers/SHA256SUMS-linux.txt
+          cp artifacts/downloads/*.asc artifacts/installers/
+          cp artifacts/signing/5do-archive-keyring.gpg \
+             artifacts/signing/5do-archive-keyring.gpg.asc \
+             artifacts/installers/
+
+      - name: Install and smoke-test the Debian package
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(find artifacts/installers -maxdepth 1 -name '5do_*_amd64.deb' | head -n1)"
+          if [ -z "$deb" ]; then
+            echo "No amd64 .deb was produced." >&2
+            exit 1
+          fi
+
+          # A local-file install is exactly what a release download does. It also
+          # proves the dependency list resolves on the runner's distro.
+          sudo apt-get install -y "$PWD/$deb"
+          test -L /usr/bin/5do
+          test -L /usr/bin/5do-cli
+          test -f /usr/share/applications/5do.desktop
+          test -f /usr/share/mime/packages/5do.xml
+          test -f /usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml
+          test -f /usr/share/icons/hicolor/256x256/apps/5do.png
+
+          5do --version
+          5do-cli selftest --json
+          5do doctor
+
+          sudo apt-get remove -y 5do
+          if [ -e /usr/bin/5do ]; then
+            echo "The package removal left /usr/bin/5do behind." >&2
+            exit 1
+          fi
+
+      - name: Upload installers
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: 5do-linux-installers
+          path: artifacts/installers
+          if-no-files-found: error

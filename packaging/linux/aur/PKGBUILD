@@ -1,0 +1,53 @@
+# Maintainer: 5DO contributors <https://github.com/purelogiccode/5DO/issues>
+# Reference copy for the AUR `5do-bin` package. The published package lives in its own
+# AUR git repository; see README.md for the submission steps.
+pkgname=5do-bin
+pkgver=1.12.0
+pkgrel=1
+pkgdesc="3DO Interactive Multiplayer emulator"
+arch=('x86_64' 'aarch64')
+url="https://github.com/purelogiccode/5DO"
+license=('custom:FreeDO')
+depends=('glibc' 'gcc-libs' 'zlib' 'libx11' 'libice' 'libsm' 'libxext'
+         'libxrandr' 'libxi' 'libxcursor' 'glib2' 'fontconfig' 'freetype2'
+         'libglvnd')
+optdepends=('mesa: OpenGL rendering'
+            'python-dbus: display-sleep inhibit')
+options=('!strip')
+
+case "$CARCH" in
+  x86_64)  _rid=linux-x64 ;;
+  aarch64) _rid=linux-arm64 ;;
+  *) error "Unsupported architecture: $CARCH" ;;
+esac
+_asset="5do-$pkgver-$_rid.tar.gz"
+
+source=("$url/releases/download/v$pkgver/$_asset")
+noextract=("$_asset")
+sha256sums_x86_64=('REPLACE_WITH_X64_SHA256')
+sha256sums_aarch64=('REPLACE_WITH_ARM64_SHA256')
+
+package() {
+  install -d "$pkgdir/opt/5do"
+  bsdtar -x -f "$srcdir/$_asset" -C "$pkgdir/opt/5do"
+  rm -f "$pkgdir/opt/5do/5do.desktop"
+
+  install -d "$pkgdir/usr/bin" "$pkgdir/usr/share/applications" \
+    "$pkgdir/usr/share/metainfo" "$pkgdir/usr/share/mime/packages" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps"
+  ln -s /opt/5do/FiveDo "$pkgdir/usr/bin/5do"
+  ln -s /opt/5do/FiveDo.Cli "$pkgdir/usr/bin/5do-cli"
+
+  # The bundle ships desktop-integration reference files under packaging/.
+  _pkg="$pkgdir/opt/5do/packaging"
+  install -m 0644 "$_pkg/5do.desktop" "$pkgdir/usr/share/applications/"
+  install -m 0644 "$_pkg/5do.xml" "$pkgdir/usr/share/mime/packages/"
+  install -m 0644 "$_pkg/io.github.purelogiccode.FiveDO.metainfo.xml" \
+    "$pkgdir/usr/share/metainfo/"
+  install -m 0644 "$_pkg/5do.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/"
+  install -m 0644 "$_pkg/5do-256.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/5do.png"
+  rm -rf "$_pkg"
+}

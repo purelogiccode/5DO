@@ -143,9 +143,31 @@ jobs:
           if (Test-Path 'artifacts/bundle-smoke/runtime') {
             throw 'The self-contained runtime must be embedded in the single-file apphost, not staged as a runtime/ folder.'
           }
-          $xml = Get-ChildItem 'artifacts/bundle-smoke' -Recurse -File -Filter '*.xml'
+          # packaging/ carries the AppStream metainfo on purpose; that is desktop
+          # integration metadata, not generated XML documentation.
+          $xml = Get-ChildItem 'artifacts/bundle-smoke' -Recurse -File -Filter '*.xml' |
+            Where-Object { $_.FullName -notmatch '[\\/]packaging[\\/]' }
           if ($xml) {
             throw "The bundle must not contain XML documentation files: $($xml.Name -join ', ')"
+          }
+
+      - name: Verify Linux packager files
+        if: startsWith(matrix.rid, 'linux-')
+        shell: pwsh
+        run: |
+          $required = @(
+            'packaging/5do.desktop',
+            'packaging/5do.xml',
+            'packaging/5do-256.png',
+            'packaging/5do.svg',
+            'packaging/io.github.purelogiccode.FiveDO.metainfo.xml'
+          )
+          foreach ($relative in $required) {
+            $path = Join-Path 'artifacts/bundle-smoke' $relative
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "The Linux bundle is missing the packager file $relative."
+            }
+            Write-Host "$relative $((Get-Item -LiteralPath $path).Length) bytes"
           }
 
       - name: Verify bundled OpenAL Soft runtime

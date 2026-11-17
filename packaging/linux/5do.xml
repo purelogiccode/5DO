@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <!--
+    The type is declared as a subclass of the generic CD-image type so desktops can
+    fall back to 5DO for plain ISO/CUE/BIN images while still typing those files as
+    application/x-cd-image or application/x-iso9660-image.
+
+    Do not add a magic rule for the ISO 9660 "CD001" signature at offset 32769: every
+    data CD carries it, so matching it here would retype every ISO on the system as a
+    3DO disc and make 5DO the default handler for unrelated images.
+  -->
   <mime-type type="application/x-3do-disc">
     <comment>3DO disc image</comment>
     <comment xml:lang="de">3DO-Disk-Image</comment>
+    <comment xml:lang="es">Imagen de disco de 3DO</comment>
     <comment xml:lang="fr">Image de disque 3DO</comment>
+    <comment xml:lang="it">Immagine disco 3DO</comment>
+    <comment xml:lang="ja">3DO ディスクイメージ</comment>
+    <comment xml:lang="ko">3DO 디스크 이미지</comment>
+    <comment xml:lang="pt_BR">Imagem de disco 3DO</comment>
+    <comment xml:lang="zh_CN">3DO 光盘镜像</comment>
+    <sub-class-of type="application/x-cd-image"/>
     <glob pattern="*.iso" weight="10"/>
-    <glob pattern="*.cue" weight="10"/>
-    <glob pattern="*.chd" weight="10"/>
-    <glob pattern="*.cdi" weight="10"/>
-    <glob pattern="*.nrg" weight="10"/>
-    <glob pattern="*.bin" weight="5"/>
-    <magic priority="50">
-      <match value="CD001" type="string" offset="32769"/>
-    </magic>
+    <glob pattern="*.cue" weight="50"/>
+    <glob pattern="*.chd" weight="50"/>
+    <glob pattern="*.cdi" weight="50"/>
+    <glob pattern="*.nrg" weight="50"/>
+    <glob pattern="*.bin" weight="10"/>
     <generic-icon name="application-x-executable"/>
   </mime-type>
 </mime-info>

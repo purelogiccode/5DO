@@ -17,9 +17,11 @@ import time
 EXECUTABLES = {"FiveDo.Cli", "FiveDo", "5do.desktop"}
 
 
-def mode_for(name: str) -> int:
-    if name in EXECUTABLES:
+def mode_for(arcname: str) -> int:
+    normalized = arcname.replace(os.sep, "/")
+    if normalized in EXECUTABLES:
         return 0o755
+    name = os.path.basename(normalized)
     if name.endswith((".so", ".dylib")) or ".so." in name:
         return 0o755
     return 0o644
@@ -54,14 +56,15 @@ def main() -> int:
 
             for name in files:
                 path = os.path.join(root, name)
-                info = archive.gettarinfo(path, arcname=os.path.relpath(path, source))
+                relpath = os.path.relpath(path, source)
+                info = archive.gettarinfo(path, arcname=relpath)
                 info.uid = info.gid = 0
                 info.uname = info.gname = "root"
                 info.mtime = mtime
                 if info.issym() or info.islnk():
                     archive.addfile(info)
                     continue
-                info.mode = mode_for(name)
+                info.mode = mode_for(relpath)
                 with open(path, "rb") as handle:
                     archive.addfile(info, handle)
 

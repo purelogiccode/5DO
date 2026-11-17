@@ -29,9 +29,18 @@ jobs:
     with:
       ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
 
+  linux:
+    name: Build Linux packages
+    needs: bundle
+    uses: ./.github/workflows/linux-packages.yml
+    with:
+      ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+      version: ''
+    secrets: inherit
+
   publish:
     name: Publish GitHub release
-    needs: bundle
+    needs: [bundle, linux]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -50,12 +59,24 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Download Linux packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: 5do-linux-installers
+          path: dist
+
       - name: Generate checksums
         shell: bash
         run: |
           set -euo pipefail
           cd dist
-          sha256sum 5do-*.zip 5do-*.tar.gz 5do-*.dmg | tee SHA256SUMS.txt
+          find . -maxdepth 1 -type f \
+            \( -name '5do-*.zip' -o -name '5do-*.tar.gz' -o -name '5do-*.dmg' \
+               -o -name '5do_*.deb' -o -name '5do-*.rpm' -o -name '5do-*.AppImage' \) \
+            -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          test -f SHA256SUMS-linux.txt
+          sha256sum -c SHA256SUMS-linux.txt
 
       - name: Publish release
         shell: bash
@@ -95,11 +116,24 @@ jobs:
             esac
           done
 
-          gh release upload "$tag" \
-            dist/5do-*.zip \
-            dist/5do-*.tar.gz \
-            dist/5do-*.dmg \
-            dist/SHA256SUMS.txt \
-            --clobber
+          # Publish every asset the build produced. Optional artifacts (the AppImage
+          # and the GPG signatures) are included only when they exist, so an
+          # unsigned or AppImage-less run still publishes the bundles.
+          assets=()
+          while IFS= read -r asset; do
+            assets+=("$asset")
+          done < <(find dist -maxdepth 1 -type f \
+            \( -name '5do-*.zip' -o -name '5do-*.tar.gz' -o -name '5do-*.dmg' \
+               -o -name '5do_*.deb' -o -name '5do-*.rpm' -o -name '5do-*.AppImage' \
+               -o -name '5do-*.AppImage.zsync' -o -name '*.asc' \
+               -o -name '5do-archive-keyring.gpg' -o -name 'SHA256SUMS*.txt' \) \
+            | sort)
+
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "No release assets were produced." >&2
+            exit 1
+          fi
+          printf 'Uploading %s\n' "${assets[@]}"
+          gh release upload "$tag" "${assets[@]}" --clobber
 
           gh release edit "$tag" --latest
