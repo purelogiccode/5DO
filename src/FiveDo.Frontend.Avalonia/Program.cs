@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using FiveDo.Core;
@@ -399,12 +400,29 @@ internal static class Program
             return 1;
         }
 
-        backend.Poll();
         Console.WriteLine($"source={backend.SourceName}");
-        Console.WriteLine($"connected={backend.ConnectedControllers}");
-        for (var index = 0; index < backend.ConnectedControllers; index++)
+
+        // A single poll misses a press that happens just after the device opens. Sample
+        // for two seconds and report the merged peak so a hardware check can press a
+        // button and see it.
+        var peak = new GamepadState[PbusEncoder.MaxControllers];
+        var deadline = System.Diagnostics.Stopwatch.GetTimestamp()
+            + (System.Diagnostics.Stopwatch.Frequency * 2);
+        while (System.Diagnostics.Stopwatch.GetTimestamp() < deadline)
         {
-            GamepadState state = backend.GetRawState(index);
+            backend.Poll();
+            for (var index = 0; index < backend.ConnectedControllers && index < peak.Length; index++)
+            {
+                peak[index] = Merge(peak[index], backend.GetRawState(index));
+            }
+
+            Thread.Sleep(10);
+        }
+
+        Console.WriteLine($"connected={backend.ConnectedControllers}");
+        for (var index = 0; index < backend.ConnectedControllers && index < peak.Length; index++)
+        {
+            GamepadState state = peak[index];
             Console.WriteLine(
                 $"pad{index}: buttons={state.Buttons} lx={state.LeftStickX:0.###} ly={state.LeftStickY:0.###} "
                 + $"rx={state.RightStickX:0.###} ry={state.RightStickY:0.###} lt={state.LeftTrigger:0.###} "
@@ -412,6 +430,23 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static GamepadState Merge(GamepadState held, GamepadState sample)
+    {
+        return new GamepadState(
+            held.Buttons | sample.Buttons,
+            Farthest(held.LeftStickX, sample.LeftStickX),
+            Farthest(held.LeftStickY, sample.LeftStickY),
+            Farthest(held.RightStickX, sample.RightStickX),
+            Farthest(held.RightStickY, sample.RightStickY),
+            MathF.Max(held.LeftTrigger, sample.LeftTrigger),
+            MathF.Max(held.RightTrigger, sample.RightTrigger));
+    }
+
+    private static float Farthest(float held, float sample)
+    {
+        return MathF.Abs(sample) > MathF.Abs(held) ? sample : held;
     }
 
     private static void PrintLocales()
@@ -445,7 +480,7 @@ internal static class Program
         Console.WriteLine("  --vk-probe <json> | --vk-window-probe <json> ...");
         Console.WriteLine("  --d3d-probe <json> | --d3d-window-probe <json> ...");
         Console.WriteLine("  --smoke-test [--smoke-output <path>]");
-        Console.WriteLine("  --gamepad-probe         List the active gamepad source and raw controller samples.");
+        Console.WriteLine("  --gamepad-probe         List the active gamepad source and sample raw input for two seconds.");
         Console.WriteLine("  --audio-soak <seconds> [--audio-soak-output <json>] [--audio-device <name>]");
         Console.WriteLine("                         [--audio-buffer 20..500] [--audio-sync -250..250] [--region auto|ntsc|pal1|pal2]");
     }
