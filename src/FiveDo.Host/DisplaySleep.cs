@@ -1,6 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace FiveDo.Host;
 
@@ -22,9 +25,9 @@ public interface IDisplaySleepBackend
 
 /// <summary>Creates the display-sleep backend for the current platform.</summary>
 /// <remarks>
-/// Windows is fully supported through <c>SetThreadExecutionState</c>. Linux and macOS
-/// return <see cref="NullDisplaySleepBackend"/> as a documented best-effort limitation:
-/// their compositors may still blank the display during play.
+/// Windows uses <c>SetThreadExecutionState</c> and Linux holds a freedesktop
+/// screen-saver inhibitor for the duration of play. macOS returns
+/// <see cref="NullDisplaySleepBackend"/> as a documented best-effort limitation.
 /// </remarks>
 public static class DisplaySleepBackend
 {
@@ -32,9 +35,17 @@ public static class DisplaySleepBackend
     /// <returns>A supported backend, or <see cref="NullDisplaySleepBackend.Instance"/>.</returns>
     public static IDisplaySleepBackend Create()
     {
-        return OperatingSystem.IsWindows()
-            ? WindowsDisplaySleepBackend.Instance
-            : NullDisplaySleepBackend.Instance;
+        if (OperatingSystem.IsWindows())
+        {
+            return WindowsDisplaySleepBackend.Instance;
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            return LinuxDisplaySleepBackend.Instance;
+        }
+
+        return NullDisplaySleepBackend.Instance;
     }
 }
 
@@ -105,6 +116,177 @@ internal sealed class WindowsDisplaySleepBackend : IDisplaySleepBackend
     }
 }
 
+/// <summary>
+/// Linux implementation using the freedesktop screen-saver D-Bus API.
+/// </summary>
+/// <remarks>
+/// <c>org.freedesktop.ScreenSaver.Inhibit</c> returns a cookie that suppresses screen
+/// blanking, the lock screen, and idle suspend while it is held; <c>UnInhibit</c>
+/// releases it. The inhibitor is tied to the D-Bus connection, so the call runs in a
+/// small persistent Python helper that holds the session-bus connection for as long as
+/// the game is running. The helper exits (and the lock is released) when the parent
+/// closes its stdin or the process ends. Hosts without <c>python3-dbus</c> fall back to
+/// the null backend.
+/// </remarks>
+internal sealed class LinuxDisplaySleepBackend : IDisplaySleepBackend
+{
+    private const string Python = "python3";
+    private const string Script =
+        "import sys, dbus\n" +
+        "bus = dbus.SessionBus()\n" +
+        "proxy = bus.get_object('org.freedesktop.ScreenSaver', '/org/freedesktop/ScreenSaver')\n" +
+        "cookie = int(proxy.Inhibit('5DO', 'Game running', dbus_interface='org.freedesktop.ScreenSaver'))\n" +
+        "print(cookie, flush=True)\n" +
+        "sys.stdin.readline()\n" +
+        "try:\n" +
+        "    proxy.UnInhibit(cookie, dbus_interface='org.freedesktop.ScreenSaver')\n" +
+        "except Exception:\n" +
+        "    pass\n";
+
+    private static readonly Lazy<bool> Available =
+        new(() => OperatingSystem.IsLinux() && FindOnPath(Python));
+
+    private Process? _process;
+
+    private LinuxDisplaySleepBackend()
+    {
+    }
+
+    internal static LinuxDisplaySleepBackend Instance { get; } = new();
+
+    /// <summary>Gets a value indicating whether <c>python3</c> is installed.</summary>
+    internal static bool IsAvailable => Available.Value;
+
+    /// <inheritdoc />
+    public bool IsSupported => IsAvailable;
+
+    /// <inheritdoc />
+    public bool Acquire()
+    {
+        if (_process is { HasExited: false })
+        {
+            return true;
+        }
+
+        Release();
+        if (!IsSupported)
+        {
+            return false;
+        }
+
+        Process? process = null;
+        try
+        {
+            ProcessStartInfo start = new()
+            {
+                FileName = Python,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+            start.ArgumentList.Add("-c");
+            start.ArgumentList.Add(Script);
+            process = Process.Start(start);
+            if (process is null)
+            {
+                return false;
+            }
+
+            Task<string?> reply = process.StandardOutput.ReadLineAsync();
+            if (!reply.Wait(TimeSpan.FromSeconds(5))
+                || reply.Result is null
+                || !uint.TryParse(reply.Result.Trim(), out uint cookie)
+                || cookie == 0)
+            {
+                process.Kill(entireProcessTree: true);
+                process.Dispose();
+                return false;
+            }
+
+            _process = process;
+            Serilog.Log.Information(
+                "Display-sleep inhibitor acquired (cookie {Cookie}).",
+                cookie);
+            return true;
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception
+            or InvalidOperationException
+            or IOException)
+        {
+            Debug.WriteLine($"Screen-saver inhibit failed: {exception.Message}");
+            process?.Dispose();
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Release()
+    {
+        Process? process = _process;
+        _process = null;
+        if (process is null)
+        {
+            return;
+        }
+
+        Serilog.Log.Information("Display-sleep inhibitor released.");
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.StandardInput.WriteLine("release");
+                process.StandardInput.Flush();
+                process.StandardInput.Close();
+                if (!process.WaitForExit(2000))
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is InvalidOperationException
+            or System.ComponentModel.Win32Exception
+            or NotSupportedException
+            or IOException)
+        {
+            Debug.WriteLine($"Screen-saver release failed: {exception.Message}");
+        }
+        finally
+        {
+            process.Dispose();
+        }
+    }
+
+    private static bool FindOnPath(string name)
+    {
+        string? path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        foreach (string directory in path.Split(
+            Path.PathSeparator,
+            StringSplitOptions.RemoveEmptyEntries))
+        {
+            try
+            {
+                if (File.Exists(Path.Combine(directory, name)))
+                {
+                    return true;
+                }
+            }
+            catch (Exception exception) when (exception is ArgumentException
+                or IOException
+                or UnauthorizedAccessException)
+            {
+                Debug.WriteLine($"PATH entry rejected: {exception.Message}");
+            }
+        }
+
+        return false;
+    }
+}
 /// <summary>
 /// Applies run/pause transitions to a display-sleep backend with no toolkit dependency.
 /// </summary>

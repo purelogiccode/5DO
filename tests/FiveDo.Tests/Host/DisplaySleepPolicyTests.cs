@@ -113,7 +113,41 @@ public sealed class DisplaySleepPolicyTests
     {
         IDisplaySleepBackend backend = DisplaySleepBackend.Create();
 
-        Assert.Equal(OperatingSystem.IsWindows(), backend.IsSupported);
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.True(backend.IsSupported);
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            Assert.Equal(LinuxDisplaySleepBackend.IsAvailable, backend.IsSupported);
+            Assert.Same(LinuxDisplaySleepBackend.Instance, backend);
+        }
+        else
+        {
+            Assert.False(backend.IsSupported);
+            Assert.Same(NullDisplaySleepBackend.Instance, backend);
+        }
+    }
+
+    [Fact]
+    public void LinuxBackend_ReleaseWithoutAcquireIsSafe()
+    {
+        LinuxDisplaySleepBackend backend = LinuxDisplaySleepBackend.Instance;
+
+        backend.Release();
+        backend.Release();
+    }
+
+    [Fact]
+    public void LinuxBackend_ReportsUnsupportedWhenTheCommandIsMissing()
+    {
+        if (LinuxDisplaySleepBackend.IsAvailable)
+        {
+            return;
+        }
+
+        Assert.False(LinuxDisplaySleepBackend.Instance.IsSupported);
+        Assert.False(LinuxDisplaySleepBackend.Instance.Acquire());
     }
 
     private sealed class FakeBackend : IDisplaySleepBackend
