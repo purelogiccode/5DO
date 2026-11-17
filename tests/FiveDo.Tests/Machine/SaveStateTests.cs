@@ -35,6 +35,30 @@ public sealed class SaveStateTests
     }
 
     [Fact]
+    public void LoadState_ReportsVersionDriftAsANoteNotAWarning()
+    {
+        FiveDoMachine source = CreateMachine();
+        source.RunFrames(2);
+        using var state = new MemoryStream();
+        source.SaveState(state, "disc");
+
+        byte[] bytes = state.ToArray();
+        byte[] current = System.Text.Encoding.UTF8.GetBytes(FiveDoVersion.Version);
+        byte[] older = System.Text.Encoding.UTF8.GetBytes(new string('9', current.Length));
+        int index = bytes.AsSpan().IndexOf(current);
+        Assert.True(index >= 0);
+        older.AsSpan().CopyTo(bytes.AsSpan(index));
+
+        FiveDoMachine loaded = CreateMachine();
+        loaded.LoadState(new MemoryStream(bytes));
+
+        Assert.Empty(loaded.StateWarnings);
+        Assert.Contains(
+            loaded.StateNotes,
+            note => note.Contains("State was written by version", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadState_FlushesQueuedAudio()
     {
         FiveDoMachine source = CreateMachine();

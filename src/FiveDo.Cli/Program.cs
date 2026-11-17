@@ -1474,6 +1474,7 @@ internal static class Program
             AudioHash: audio.Hash,
             Checkpoints: checkpointResults,
             Warnings: machine.StateWarnings,
+            Notes: machine.StateNotes,
             CheatCount: cheats?.ActiveCount ?? 0,
             CheatWrites: cheats?.Writes ?? 0,
             CheatPath: resolvedCheatPath,

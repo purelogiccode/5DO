@@ -40,6 +40,7 @@ public sealed class FiveDoMachine
     private VdlFrame _presentedFrame;
 
     private readonly List<string> _stateWarnings = [];
+    private readonly List<string> _stateNotes = [];
     private long _framesExecuted;
     private string? _biosHash;
     private long _audioSamplesProduced;
@@ -274,6 +275,16 @@ public sealed class FiveDoMachine
 
     /// <summary>Gets warnings produced by the most recent state load.</summary>
     public IReadOnlyList<string> StateWarnings => _stateWarnings;
+
+    /// <summary>
+    /// Gets informational notes produced by the most recent state load.
+    /// </summary>
+    /// <remarks>
+    /// A note records a benign difference such as a state written by another emulator
+    /// version. The state still loads completely, so the host reports notes separately
+    /// from warnings and does not surface them as an error.
+    /// </remarks>
+    public IReadOnlyList<string> StateNotes => _stateNotes;
 
     /// <summary>Gets the FIQ request-to-vector latency telemetry for this machine.</summary>
     /// <remarks>
@@ -589,6 +600,7 @@ public sealed class FiveDoMachine
     {
         var reader = new StateReader(data);
         _stateWarnings.Clear();
+        _stateNotes.Clear();
         FiqLatency.Reset();
 
         if (reader.Remaining < 8)
@@ -666,7 +678,10 @@ public sealed class FiveDoMachine
 
         if (!string.Equals(emulatorVersion, FiveDoVersion.Version, StringComparison.Ordinal))
         {
-            _stateWarnings.Add($"State was written by version {emulatorVersion}.");
+            // Version drift alone is benign: the section table decides compatibility.
+            // Keep it out of StateWarnings so the host does not report a load warning
+            // (and the diagnostics reporter does not file an issue) for an old save.
+            _stateNotes.Add($"State was written by version {emulatorVersion}.");
         }
 
         if (armClock != Tuning.ArmClock)

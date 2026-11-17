@@ -73,6 +73,7 @@ internal sealed record CliRunResult(
     uint? AudioHash,
     IReadOnlyList<CliCheckpointResult> Checkpoints,
     IReadOnlyList<string> Warnings,
+    IReadOnlyList<string> Notes,
     int CheatCount,
     long CheatWrites,
     string? CheatPath,

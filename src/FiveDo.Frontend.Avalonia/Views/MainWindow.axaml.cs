@@ -1923,6 +1923,16 @@ public partial class MainWindow : Window, IDisposable
                 slot + 1,
                 string.Join(" ", _machine.StateWarnings));
         }
+        else if (_machine.StateNotes.Count > 0)
+        {
+            // Version drift is informational: the state loaded completely.
+            StatusText.Text = $"State loaded: slot {slot + 1}.";
+            ShowOsd($"State loaded: slot {slot + 1}", OsdSeverity.Success);
+            _logger.ForCategory(LogCategory.State).Information(
+                "State loaded from slot {Slot} with notes: {Notes}",
+                slot + 1,
+                string.Join(" ", _machine.StateNotes));
+        }
         else
         {
             StatusText.Text = $"State loaded: slot {slot + 1}.";
@@ -5597,13 +5607,18 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var exception = e.Exception;
-        _logger.ForCategory(LogCategory.Video).Warning(
+        _logger.ForCategory(LogCategory.Video).Information(
             exception,
-            "Vulkan surface failed; falling back to the CPU presenter.");
+            "Vulkan surface failed; switching to OpenGL.");
         _vulkanPresenter = false;
         VulkanVideo.Stop();
         VulkanVideo.IsVisible = false;
-        StartCpuFallback(exception, allowGpuPresenters: false);
+        _rendererKind = VideoRendererKind.OpenGl;
+        _openGlDisabled = false;
+        Video.IsVisible = true;
+        ReattachOpenGlSurface();
+        SetRendererLabel("OpenGL");
+        StatusText.Text = $"Vulkan unavailable ({exception.Message}); using OpenGL.";
     }
 
     private void OnDirect3DStarted(object? sender, EventArgs e)
@@ -5696,7 +5711,7 @@ public partial class MainWindow : Window, IDisposable
 
     private VideoRendererKind ResolveRendererKind()
     {
-        return Program.RequestedGlBackend switch
+        VideoRendererKind kind = Program.RequestedGlBackend switch
         {
             GlBackend.Vulkan => VideoRendererKind.Vulkan,
             GlBackend.Direct3D11 => OperatingSystem.IsWindows()
@@ -5706,12 +5721,44 @@ public partial class MainWindow : Window, IDisposable
             GlBackend.Wgl or GlBackend.Angle => VideoRendererKind.OpenGl,
             _ => _settings.Renderer,
         };
+        return NormalizeRendererKind(kind);
+    }
+
+    /// <summary>
+    /// Maps renderer kinds that cannot present on the current platform.
+    /// </summary>
+    /// <remarks>
+    /// Vulkan presentation needs a native window surface. Windows and Linux/X11 have
+    /// one; macOS needs a Metal surface that is not implemented yet, so Vulkan requests
+    /// fall back to OpenGL instead of throwing at surface start.
+    /// </remarks>
+    private static VideoRendererKind NormalizeRendererKind(VideoRendererKind kind)
+    {
+        VideoRendererKind normalized = NormalizeRendererKind(kind, OperatingSystem.IsMacOS());
+        if (normalized != kind)
+        {
+            Serilog.Log.Information(
+                "Vulkan presentation is not implemented on macOS; using OpenGL.");
+        }
+
+        return normalized;
+    }
+
+    /// <summary>Applies platform renderer constraints for a known operating system.</summary>
+    /// <param name="kind">Requested renderer.</param>
+    /// <param name="isMacOs">Whether the host is macOS.</param>
+    /// <returns>The renderer to use.</returns>
+    internal static VideoRendererKind NormalizeRendererKind(VideoRendererKind kind, bool isMacOs)
+    {
+        return kind == VideoRendererKind.Vulkan && isMacOs
+            ? VideoRendererKind.OpenGl
+            : kind;
     }
 
     private void ApplyRendererSelection()
     {
         var previousRenderer = _rendererKind;
-        _rendererKind = _settings.Renderer;
+        _rendererKind = NormalizeRendererKind(_settings.Renderer);
         Video.Settings = _settings.ToRendererSettings(_gameId);
         if (_rendererKind == VideoRendererKind.OpenGl)
         {
@@ -5877,10 +5924,16 @@ public partial class MainWindow : Window, IDisposable
             {
                 VulkanVideo.Stop();
                 VulkanVideo.IsVisible = false;
-                exception = vulkanException;
-                _logger.ForCategory(LogCategory.Video).Warning(
+                _logger.ForCategory(LogCategory.Video).Information(
                     vulkanException,
-                    "Vulkan is unavailable; falling back to the CPU presenter.");
+                    "Vulkan is unavailable; switching to OpenGL.");
+                _rendererKind = VideoRendererKind.OpenGl;
+                _openGlDisabled = false;
+                Video.IsVisible = true;
+                ReattachOpenGlSurface();
+                SetRendererLabel("OpenGL");
+                StatusText.Text = $"Vulkan unavailable ({vulkanException.Message}); trying OpenGL.";
+                return;
             }
         }
 

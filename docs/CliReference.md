@@ -431,6 +431,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `audioHash` | uint? | FNV-1a hash of all packed stereo samples, when hashing is enabled. |
 | `checkpoints` | object[] | Samples at the requested frames. Each entry has `frame`, `pc`, `instructions`, `frameHash`, `samples`, `audioHash`, `stateHash`, `cdStatus`, `cdPoll`, `dspPc`, `dspSema`, `dspSeed`, and `celBusyCycles`. |
 | `warnings` | string[] | `machine.StateWarnings` after a state load. |
+| `notes` | string[] | `machine.StateNotes` after a state load; benign differences such as a state written by an older version. |
 | `cheatCount` | int | Enabled, valid cheats attached to the run. |
 | `cheatWrites` | long | Bytes written by the cheat engine, including the initial apply. |
 | `cheatPath` | string? | Loaded cheat document path, or null when no file was used. |

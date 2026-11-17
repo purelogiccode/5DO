@@ -79,6 +79,7 @@ public sealed class CliJsonTests
             AudioHash: null,
             Checkpoints: [],
             Warnings: [],
+            Notes: [],
             CheatCount: 2,
             CheatWrites: 1234,
             CheatPath: "/data/cheats/ABCD1234.json",

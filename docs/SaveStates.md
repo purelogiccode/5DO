@@ -219,8 +219,10 @@ Loading a state written by a newer format version is rejected with
    a version-1 state is ~25 MB).
 2. Verifies the magic and format version. Versions 1, 2, and 3 are accepted.
 3. Reads the header strings and frame count.
-4. Adds a warning when the writer's emulator version differs from the current
-   `FiveDoVersion.Version`.
+4. Adds an informational **note** when the writer's emulator version differs from the
+   current `FiveDoVersion.Version`. The section table decides compatibility, so version
+   drift alone is not a warning; the desktop shell logs it at Information and shows the
+   normal success message.
 5. Compares the stored BIOS MD5 with the currently loaded BIOS; adds
    `State BIOS hash differs from the loaded BIOS.` when they differ. The load
    continues.
@@ -236,6 +238,13 @@ Loading a state written by a newer format version is rejected with
    contents keep their original addresses.
 9. Sets `_framesExecuted` from the header and clears `LastFrameCycles`.
 10. Calls `AudioSink.Reset()` so live audio drops the old timeline.
+
+**Notes versus warnings:** `StateNotes` records benign differences that do not affect
+the load — currently only the writer's emulator version. `StateWarnings` records
+differences the player should verify (BIOS or disc hash, option mismatches, ignored
+unknown sections). The shell shows notes as a success message and logs them at
+Information; warnings keep the warning toast and Warning log entry. The CLI `run` JSON
+exposes both `warnings` and `notes`.
 
 **Disc hash:** the header stores `discHash`, and the slot manager uses it as the
 displayed game ID. When the host supplies the inserted disc's game ID and it differs,
