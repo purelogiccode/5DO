@@ -29,6 +29,17 @@
                                ToolTip.Tip="Start emulation and use the configured input bindings." />
                 </StackPanel>
             </Border>
+
+            <Border x:Name="DiscoveredBiosPanel" IsVisible="False"
+                    Background="#17301D" CornerRadius="3" Padding="10"
+                    ToolTip.Tip="A BIOS image was found in a standard folder.">
+                <StackPanel Spacing="6">
+                    <TextBlock x:Name="DiscoveredBiosText" TextWrapping="Wrap" Opacity="0.9" />
+                    <Button Content="Use this BIOS" Click="OnUseDiscoveredBios"
+                            HorizontalAlignment="Left"
+                            ToolTip.Tip="Load the discovered BIOS and continue." />
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,18,0,0">

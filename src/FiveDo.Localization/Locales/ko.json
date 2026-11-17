@@ -2,6 +2,10 @@
   "locale": "ko",
   "displayName": "한국어",
   "strings": {
+    "ui.use_this_bios": "이 BIOS 사용",
+    "ui.found_bios_on_this_computer": "이 컴퓨터에서 3DO BIOS를 찾았습니다: {0} ({1}) - {2}",
+    "ui.tip.load_the_discovered_bios_and_continue": "찾은 BIOS를 불러오고 계속합니다.",
+    "ui.tip.a_bios_image_was_found_in_a_standard_folder": "표준 폴더에서 BIOS 이미지를 찾았습니다.",
     "ui.bios_nvram_manager": "BIOS / NVRAM 관리자",
     "ui.bios_images": "BIOS 이미지",
     "ui.folder": "폴더",

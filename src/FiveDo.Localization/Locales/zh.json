@@ -2,6 +2,10 @@
   "locale": "zh",
   "displayName": "简体中文",
   "strings": {
+    "ui.use_this_bios": "使用此 BIOS",
+    "ui.found_bios_on_this_computer": "在这台计算机上找到 3DO BIOS：{0} ({1}) - {2}",
+    "ui.tip.load_the_discovered_bios_and_continue": "加载找到的 BIOS 并继续。",
+    "ui.tip.a_bios_image_was_found_in_a_standard_folder": "在标准文件夹中找到 BIOS 映像。",
     "ui.bios_nvram_manager": "BIOS / NVRAM 管理器",
     "ui.bios_images": "BIOS 镜像",
     "ui.folder": "文件夹",

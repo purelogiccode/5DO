@@ -2,6 +2,10 @@
   "locale": "en",
   "displayName": "English",
   "strings": {
+    "ui.use_this_bios": "Use this BIOS",
+    "ui.found_bios_on_this_computer": "Found a 3DO BIOS on this computer: {0} ({1}) - {2}",
+    "ui.tip.load_the_discovered_bios_and_continue": "Load the discovered BIOS and continue.",
+    "ui.tip.a_bios_image_was_found_in_a_standard_folder": "A BIOS image was found in a standard folder.",
     "ui.bios_nvram_manager": "BIOS / NVRAM Manager",
     "ui.bios_images": "BIOS images",
     "ui.folder": "Folder",

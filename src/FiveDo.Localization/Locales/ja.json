@@ -2,6 +2,10 @@
   "locale": "ja",
   "displayName": "日本語",
   "strings": {
+    "ui.use_this_bios": "この BIOS を使用",
+    "ui.found_bios_on_this_computer": "このコンピューターで 3DO BIOS が見つかりました: {0} ({1}) - {2}",
+    "ui.tip.load_the_discovered_bios_and_continue": "見つかった BIOS を読み込んで続行します。",
+    "ui.tip.a_bios_image_was_found_in_a_standard_folder": "標準フォルダーで BIOS イメージが見つかりました。",
     "ui.bios_nvram_manager": "BIOS / NVRAM マネージャー",
     "ui.bios_images": "BIOS イメージ",
     "ui.folder": "フォルダー",

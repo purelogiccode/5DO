@@ -10,6 +10,7 @@ and the symptom checklist in [`Troubleshooting.md`](Troubleshooting.md).
 
 | Question | Tool |
 |---|---|
+| Is this host set up correctly at all? | `5do doctor [--json]`, then the support bundle |
 | Did the machine boot and what state is it in? | `run --json`, `--progress`, `--frame-out` |
 | What is the CPU doing? | `trace`, `--stop-pc`, `--stop-invalid`, instruction ring |
 | What is the guest printing? | `--kprint`, `--kprint-pc`, `trace --stop-kprint` |
@@ -249,6 +250,32 @@ default 2048-byte transfer.
 
 `disc tracks game.chd` lists the CHD track table; `info game.chd` shows the volume
 header and game ID. `disc dump` writes raw 2048-byte sectors for manual inspection.
+
+## 5.2 Host check (`doctor`)
+
+`doctor` answers "is this machine set up correctly" before anything is emulated. It is
+read-only apart from a write probe in the data folder, and it never opens a window or
+contacts the network, so it is safe over SSH and in issue reports.
+
+```powershell
+dotnet run --project src/FiveDo.Cli -- doctor
+dotnet run --project src/FiveDo.Cli -- doctor --json
+dotnet run --project src/FiveDo.Cli -- doctor --strict   # exit 1 on a warning
+```
+
+| Check | What it reports |
+|---|---|
+| Data folder | Resolved XDG/AppData path, write access, and `FIVEDO_DATA_DIR`/`FIVEDO_PROFILE`/portable overrides |
+| Display session | `XDG_SESSION_TYPE`, `DISPLAY`, `WAYLAND_DISPLAY`; warns on headless and Wayland-only sessions |
+| Disk space | Free space on the data volume (warns below 2 GB) |
+| OpenGL / Vulkan / OpenAL | Whether each native library loads through the platform loader |
+| Input devices | Linux `/dev/input/event*` count and readability, with the `usermod -aG input` hint, and `/dev/uinput` |
+| Optical drive | Linux `/dev/sr*` devices |
+| Settings | Whether the settings file is readable |
+| BIOS | The best image found by `bios discover`, or the searched folders when none exist |
+
+Paste the text output (or the JSON) into a bug report. `doctor --strict` is suitable for
+CI and packaging smoke tests: it returns 1 when any check is a warning or failure.
 
 ---
 

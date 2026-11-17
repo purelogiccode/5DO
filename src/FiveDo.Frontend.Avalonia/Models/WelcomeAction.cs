@@ -13,4 +13,7 @@ public enum WelcomeAction
 
     /// <summary>Open a disc image.</summary>
     OpenDisc,
+
+    /// <summary>Use a BIOS image that discovery already found.</summary>
+    UseDiscoveredBios,
 }

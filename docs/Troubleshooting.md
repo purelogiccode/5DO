@@ -10,14 +10,18 @@ are in [`KnownIssues.md`](KnownIssues.md).
 
 1. **Check the version.** `5do --version` or **Help > About**. This documentation
    describes the `1.0.0` documented-compatibility release.
-2. **Check the Logs.** The desktop **Logs** dock and **Log Viewer** show renderer
+2. **Run `5do doctor`.** It reports the session type, data-folder access, native
+   libraries, input devices, optical drives, and BIOS discovery in one read-only pass.
+   Paste the text output (or `doctor --json`) into an issue; `doctor --strict` returns 1
+   on a warning for scripts.
+3. **Check the Logs.** The desktop **Logs** dock and **Log Viewer** show renderer
    initialization/fallback, BIOS/disc loads, save/load, screenshots, input changes, and
    faults.
-3. **Reproduce with `--json`.** A CLI run gives machine-readable state (`pc`, `frameHash`,
+4. **Reproduce with `--json`.** A CLI run gives machine-readable state (`pc`, `frameHash`,
    `cdStatus`, `cdPoll`, DSP fields, warnings) without guessing.
-4. **Try a minimal case.** BIOS-only boot, then BIOS+disc, then a state load. This
+5. **Try a minimal case.** BIOS-only boot, then BIOS+disc, then a state load. This
    separates BIOS, disc, and state problems.
-5. **Check the known issues.** The five showcase titles have documented per-title
+6. **Check the known issues.** The five showcase titles have documented per-title
    limitations; do not assume every behavior is a regression.
 
 ---

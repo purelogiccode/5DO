@@ -53,6 +53,19 @@ body:
       required: true
 
   - type: textarea
+    id: doctor
+    attributes:
+      label: Host report
+      description: Paste `5do doctor` (or `5do doctor --json`) and the diagnostics bundle. Both are read-only; the JSON is privacy-safe.
+      placeholder: |
+        $ 5do doctor
+        5DO 1.12.0 doctor
+          summary: ok
+          ...
+    validations:
+      required: false
+
+  - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce

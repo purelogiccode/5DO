@@ -129,6 +129,7 @@ internal static class Program
                     "movie" => MovieCommand(args),
                     "audio" => AudioCommand(args),
                     "diagnostics" => DiagnosticsCommand(args),
+                    "doctor" => DoctorCommand.Run(args),
                     "state" => State(args),
                     "bench" => Bench(args),
                     "selftest" => SelfTest(args),
@@ -213,7 +214,7 @@ internal static class Program
 
     private static bool IsDiagnosticCommand(string command)
     {
-        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb" or "metadata";
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb" or "metadata" or "doctor";
     }
 
     private sealed record BiosLoadResult(
@@ -3635,9 +3636,10 @@ internal static class Program
             "info" => BiosInfo(args),
             "list" => BiosList(args),
             "scan" => BiosList(args),
+            "discover" => BiosDiscover(args),
             "select" => BiosSelect(args),
             _ => throw new ArgumentException(
-                $"Unknown bios subcommand '{args[1]}'. Supported: info, list, scan, select.",
+                $"Unknown bios subcommand '{args[1]}'. Supported: info, list, scan, discover, select.",
                 nameof(args)),
         };
     }
@@ -3735,6 +3737,54 @@ internal static class Program
             }
         }
 
+        return 0;
+    }
+
+    private static int BiosDiscover(string[] args)
+    {
+        ParsedOptions options = Parse(args, startIndex: 2);
+        var recursive = HasFlag(args, "--recursive");
+        var folder = options.Get("--folder");
+        BiosDiscoveryResult discovery = folder is null
+            ? BiosDiscovery.DiscoverDefault(recursive)
+            : BiosDiscovery.Discover(
+                [new BiosDiscoveryLocation(folder, "--folder")],
+                recursive);
+        CliBiosDiscoveryResult result = CliBiosDiscoveryResult.From(discovery);
+
+        if (options.Json)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(
+                result,
+                CliJsonContext.Default.CliBiosDiscoveryResult));
+            return 0;
+        }
+
+        foreach (CliBiosDiscoveryFolder discovered in result.Folders)
+        {
+            if (!discovered.Exists)
+            {
+                Console.WriteLine($"{discovered.Path} ({discovered.Source}): missing");
+                continue;
+            }
+
+            Console.WriteLine(
+                $"{discovered.Path} ({discovered.Source}): {discovered.PrimaryCount} primary, {discovered.SecondaryCount} secondary");
+            foreach (CliBiosProfileResult profile in discovered.Primaries)
+            {
+                Console.WriteLine(
+                    $"  {profile.Kind,-9} {profile.Md5}  {profile.Region,-18} {profile.Name}  ({profile.Path})");
+            }
+
+            foreach (var error in discovered.Errors)
+            {
+                Console.WriteLine($"  error: {error}");
+            }
+        }
+
+        Console.WriteLine(result.HasBios
+            ? $"preferred: {result.PreferredName} ({result.PreferredRegion}) at {result.PreferredPath}"
+            : "preferred: none; open File > BIOS or set FIVEDO_BIOS_DIR");
         return 0;
     }
 
@@ -6347,7 +6397,11 @@ internal static class Program
         Console.WriteLine("                                       Extract files from a 3DO disc image.");
         Console.WriteLine("  bios info <path> [--json]            BIOS size, MD5, region, and Anvil detection.");
         Console.WriteLine("  bios list|scan <folder> [--recursive] [--json]  List and validate BIOS images.");
+        Console.WriteLine("  bios discover [--folder dir] [--recursive] [--json]");
+        Console.WriteLine("                                       Search the default BIOS folders and report the best image.");
         Console.WriteLine("  bios select <disc> --folder <dir> [--allow-unsigned-discs] [--json]      Auto-select a BIOS for a disc.");
+        Console.WriteLine("  doctor [--json] [--strict] [--folder dir] [--recursive]");
+        Console.WriteLine("                                       Host, session, library, input, and BIOS diagnostics; paste into an issue.");
         Console.WriteLine("  nvram path [disc] [--mode global|per-game] [--version 0-9] [--dir path] [--json]");
         Console.WriteLine("                                       Resolve the NVRAM image for a game.");
         Console.WriteLine("  nvram list [--dir path] [--json]    List global and per-game NVRAM images.");

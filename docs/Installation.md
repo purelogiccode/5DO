@@ -72,7 +72,9 @@ dotnet run --project src/FiveDo.Cli -- --help
 ## First run
 
 1. Start the desktop app.
-2. Choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
+2. Choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`. If 5DO already
+   finds a BIOS in one of the [default folders](#bios-management), the guide offers a
+   one-click **Use this BIOS** button instead.
 3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, or NRG image.
 4. Press **Play**.
 5. Configure controllers in **Input** and video/audio in **Settings** if needed.
@@ -106,9 +108,21 @@ The CLI exposes the same catalog:
 
 ```powershell
 dotnet run --project src/FiveDo.Cli -- bios scan bios --json
+dotnet run --project src/FiveDo.Cli -- bios discover --json
 dotnet run --project src/FiveDo.Cli -- bios select game.chd --folder bios --json
 dotnet run --project src/FiveDo.Cli -- run game.chd --bios-auto bios --frames 600
 ```
+
+`bios discover` searches these folders in order and reports the best image:
+
+1. `FIVEDO_BIOS_DIR`, when set
+2. `<data folder>/bios` (on Linux, `~/.local/share/5DO/bios`)
+3. `bios` next to the executable
+4. `~/BIOS`
+5. `<Documents>/BIOS`
+
+Discovery only reads files you already have; 5DO never downloads a BIOS. A missing
+folder is reported as missing, not as an error.
 
 ## Data locations
 
@@ -148,11 +162,17 @@ Named profiles live under `profiles/<name>/` and can be selected with
 
 - Use a current desktop with OpenGL 3.3 or GLES 3.0/3.1 drivers.
 - evdev gamepads are supported; the user normally needs membership in the `input`
-  group.
-- The `build-deb.sh`/`build-rpm.sh` scripts install to `/opt/5do` and register the
-  desktop entry and `application/x-3do-disc` MIME type.
-- The local validation target is a Linux Mint virtual machine. Full distribution
-  coverage is still post-1.0 work.
+  group. `5do doctor` reports unreadable `/dev/input/event*` nodes and prints the
+  `usermod` command.
+- `packaging/linux/build-deb.sh`, `build-rpm.sh`, and `build-appimage.sh` produce the
+  `.deb`, `.rpm`, and portable AppImage; CI builds, signs, and publishes them as release
+  assets. Signing, direct installation, verification, and the optional mirror tooling are
+  in [Linux distribution and signing](LinuxDistribution.md).
+- X11 works directly. On a Wayland session the shell runs under XWayland; a
+  Wayland-only session without `DISPLAY` falls back to the slower offscreen presenter.
+  `5do doctor` reports which case applies.
+- The portable tarball includes a `packaging/` folder with the desktop entry, MIME
+  definition, AppStream metainfo, and icons for third-party packagers.
 - The self-contained `linux-x64` and `linux-arm64` bundles are produced by CI.
 
 ### macOS

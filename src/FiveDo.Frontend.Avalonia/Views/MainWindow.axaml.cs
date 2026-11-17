@@ -368,6 +368,8 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        ReportWaylandSession();
+
         if (!_settings.FirstRunCompleted
             && string.IsNullOrWhiteSpace(_settings.BiosPath)
             && Program.StartupBiosPath is null)
@@ -472,7 +474,7 @@ public partial class MainWindow : Window, IDisposable
     {
         try
         {
-            var welcome = new WelcomeWindow();
+            var welcome = new WelcomeWindow(DiscoverBiosForWelcome());
             welcome.Closed += (_, _) =>
             {
                 IsEnabled = true;
@@ -493,6 +495,17 @@ public partial class MainWindow : Window, IDisposable
                                 LoadConfiguredPaths();
                             }
                         }, "opening a BIOS");
+                        break;
+                    case WelcomeAction.UseDiscoveredBios:
+                        if (!string.IsNullOrWhiteSpace(welcome.DiscoveredBiosPath))
+                        {
+                            OpenBiosPath(welcome.DiscoveredBiosPath);
+                            if (Program.StartupDiscPath is not null && _disc is null)
+                            {
+                                LoadConfiguredPaths();
+                            }
+                        }
+
                         break;
                     case WelcomeAction.OpenDisc:
                         OnOpenDiscAsync(null, new RoutedEventArgs());
@@ -519,6 +532,50 @@ public partial class MainWindow : Window, IDisposable
             StatusText.Text = $"Welcome error: {exception.Message}";
             _logger.ForCategory(LogCategory.Host).Error(exception, "Welcome dialog failed.");
         }
+    }
+
+    /// <summary>
+    /// Finds a BIOS in the standard folders so the first-run dialog can offer it
+    /// instead of sending a new user into a file picker. Never throws: discovery is a
+    /// convenience, and a failure must not block the guide.
+    /// </summary>
+    private static BiosProfile? DiscoverBiosForWelcome()
+    {
+        try
+        {
+            return BiosDiscovery.DiscoverDefault().PreferredPrimary;
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Surfaces the one Linux display case that silently degrades presentation: a
+    /// Wayland session without an X11 display. The Vulkan child window needs X11, so
+    /// 5DO falls back to the offscreen presenter.
+    /// </summary>
+    private void ReportWaylandSession()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var wayland = Environment.GetEnvironmentVariable("WAYLAND_DISPLAY");
+        var display = Environment.GetEnvironmentVariable("DISPLAY");
+        if (string.IsNullOrWhiteSpace(wayland) || !string.IsNullOrWhiteSpace(display))
+        {
+            return;
+        }
+
+        _logger.ForCategory(LogCategory.Host).WithoutBugReport().Warning(
+            "Wayland-only session detected: the Vulkan child window needs X11, so 5DO uses the offscreen presenter. Install XWayland or run '5do doctor' for details.");
+        StatusText.Text = "Wayland-only session: install XWayland for GPU presentation (see '5do doctor').";
     }
 
     private void OnWelcome(object? sender, RoutedEventArgs e)

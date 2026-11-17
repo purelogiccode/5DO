@@ -76,6 +76,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, CHD, CDI, or NRG). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, Anvil, and RSA-patch detection. |
 | `bios list\|scan <folder>` | Scan and validate a BIOS folder. |
+| `bios discover [--folder <dir>] [--recursive] [--json]` | Search the default BIOS folders (`FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, `<Documents>/BIOS`) and report the best primary image. |
 | `bios select <disc> --folder <dir>` | Choose a region-appropriate BIOS for a disc; `--allow-unsigned-discs` prefers No-RSA images. |
 | `nvram path [disc]` | Resolve the shared or per-game NVRAM image. |
 | `nvram list` | List global and per-game NVRAM images. |
@@ -89,6 +90,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `metadata media <disc>` | Add, remove, or list manual media attachments. |
 | `audio devices [--json]` | List OpenAL playback devices. |
 | `diagnostics bundle [--out path]` | Write a privacy-scrubbed support zip. Options: `--state`, `--frame`, `--movie`, `--settings`, `--logs`, `--notes`, `--json`. |
+| `doctor [--json] [--strict] [--folder <dir>] [--recursive]` | Read-only host report: OS/session, data-folder write access, disk space, OpenGL/Vulkan/OpenAL loading, evdev and optical devices, settings access, and BIOS discovery. `--strict` exits 1 on a warning. |
 | `state diff <a> <b> [--json]` | Compare two states section by section (presence, version, length, hash, first difference). |
 | `audio analyze <wav>` | WAV format, peak, RMS, clipping, silence, DC offset. |
 | `state inspect <path>` | Save-state header and section table (full CRC validation, including Brotli sections). |
