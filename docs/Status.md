@@ -40,11 +40,16 @@ published `5do-archive-keyring.gpg`. The packages are published as **GitHub rele
 assets**; users install them with `sudo apt install ./5do_<version>_amd64.deb` or
 `sudo dnf install ./5do-<version>-1.x86_64.rpm`, and no package repository is hosted.
 `build-apt-repo.sh`/`build-rpm-repo.sh` remain available for operators who mirror the
-files (`REL-05`). `linux-packages.yml` runs from `release.yml` and installs the `.deb`
-in CI to verify the desktop integration; CI builds the unsigned path on every push.
-Evidence is pending the first tagged run with `LINUX_GPG_PRIVATE_KEY`; the runbook,
-verification steps, and announcement channels are in
-[LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages and the
+files (`REL-05`). `linux-packages.yml` runs from `release.yml` and installs both the
+`.deb` and the `.rpm` in CI to verify the desktop integration and that the packaged
+apphosts start; CI builds the unsigned path on every push.
+**Validated 2026-11-17** by CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44193278546>: native x86_64/aarch64
+builds, desktop/MIME/AppStream validation, `.deb` and `.rpm` install tests (both
+apphosts start), AppImage self-check, and checksums. The run is unsigned because
+`LINUX_GPG_PRIVATE_KEY` is not configured; the signing path activates on the first
+tagged run with the secret. The runbook, verification steps, and announcement channels
+are in [LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages and the
 AUR/AppImageHub/itch.io/Flatpak channels stay open as `REL-08`..`REL-10`.
 
 **2026-11-17, UX-34/UX-35:** **BIOS discovery and `5do-cli doctor` remove the two biggest

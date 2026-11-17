@@ -68,7 +68,10 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 The Linux packaging and signing scripts are in `packaging/linux/` and run from
 `.github/workflows/linux-packages.yml`. This gate turns them into release evidence; the
 runbook and verification commands are in
-[LinuxDistribution.md](LinuxDistribution.md).
+[LinuxDistribution.md](LinuxDistribution.md). The unsigned build/install path was
+validated by CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44193278546> (2026-11-17); the boxes
+below still apply to the signed release.
 
 - [ ] `LINUX_GPG_PRIVATE_KEY` and `LINUX_GPG_KEY_ID` are configured; only the signing
       subkey is stored, and its fingerprint matches `LinuxDistribution.md` §4.

@@ -55,6 +55,37 @@ the same path the shell passes from a file association.
 
 No certificate, Apple account, or private key is committed to this repository.
 
+## Linux packaging validation (2026-11-17, unsigned)
+
+CI run <https://github.com/purelogiccode/5DO/actions/runs/44193278546> built, validated,
+installed, and packaged the Linux set from the 1.12.0 bundles:
+
+- **Artifacts:** `5do_1.12.0_amd64.deb` 83.5 MB, `5do_1.12.0_arm64.deb` 76.3 MB,
+  `5do-1.12.0-1.x86_64.rpm` 83.6 MB, `5do-1.12.0-1.aarch64.rpm` 100.3 MB,
+  `5do-x86_64.AppImage` 97.6 MB with a `.zsync`; the AppImage ran its `--version`
+  self-check through `--appimage-extract-and-run` during the build.
+- **Native builds:** x86_64 on `ubuntu-latest`, aarch64 on `ubuntu-24.04-arm`. The
+  earlier cross-build failed because `rpmbuild` rejects a foreign target.
+- **Metadata:** `desktop-file-validate`, `appstreamcli validate --no-net`, and
+  `update-mime-database` pass; `dpkg-deb`/`rpm -qlp` confirm the desktop entry, MIME
+  XML, AppStream metainfo, 256 px icon, and copyright.
+- **Install tests:** `apt-get install ./5do_1.12.0_amd64.deb` succeeded on the Ubuntu
+  runner, `5do --version`, `5do-cli selftest --json`, and `5do-cli doctor` ran, and
+  `apt-get remove` cleaned up `/usr/bin/5do`. The x86_64 RPM installed with
+  `rpm -i --nodeps`; `/opt/5do/FiveDo --version` and `/opt/5do/FiveDo.Cli --version`
+  ran; `rpm -e` removed `/opt/5do`.
+- **RPM strip fix:** the first green build produced a 13.2 MB RPM with a 36 MB installed
+  size. `brp-strip` had rewritten the self-contained apphosts and dropped the appended
+  .NET bundle. The spec now sets `%global __os_install_post %{nil}`, and the RPM
+  install test guards the regression; the corrected package installs 273 MB (x86_64) /
+  301 MB (aarch64).
+- **Signing:** `LINUX_GPG_PRIVATE_KEY` was not configured for this run, so the packages
+  are unsigned and the `.asc`/keyring files are absent. The workflow logs a warning;
+  signing activates when the secret exists.
+- **Checksums:** `SHA256SUMS-linux.txt` lists all four packages and the AppImage; the
+  per-file `.sha256` outputs verify. The publish job's install test is the release
+  gate for the unsigned path.
+
 ## Validation evidence (2026-11-10)
 
 Windows x64, Inno Setup 6.7.1, unsigned 1.6.0 bundle:
