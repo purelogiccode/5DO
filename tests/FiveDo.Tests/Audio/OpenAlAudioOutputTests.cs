@@ -62,7 +62,9 @@ public sealed class OpenAlAudioOutputTests
 
             Thread.Sleep(200);
             Assert.False(replacement.DeviceFailed);
-            Assert.Equal(0, replacement.AlErrors);
+            Assert.True(
+                replacement.AlErrors == 0,
+                $"{replacement.AlErrors} OpenAL error(s); last={replacement.LastAlError}.");
             Assert.True(replacement.SamplesPushed > 40_000, $"Only {replacement.SamplesPushed} samples were accepted.");
             Assert.True(replacement.SamplesDropped < 5_000, $"{replacement.SamplesDropped} samples were dropped.");
             Assert.True(

@@ -39,6 +39,7 @@ using FiveDo.Machine;
 using FiveDo.Storage;
 using FiveDo.Tas;
 using FiveDo.Video;
+using FiveDo.Video.Vulkan;
 using AvaloniaPixelFormat = Avalonia.Platform.PixelFormat;
 
 namespace FiveDo.Frontend.Avalonia.Views;
@@ -116,7 +117,7 @@ public partial class MainWindow : Window, IDisposable
     private NvramStorageMode _nvramMode;
     private int _nvramVersion;
     private string _nvramDirectory;
-    private CpuVideoRenderer? _cpuVideo;
+    private ICpuFrameRenderer? _cpuVideo;
     private VideoRendererKind _rendererKind;
     private string _rendererLabel = string.Empty;
     private volatile bool _vulkanPresenter;
@@ -5531,15 +5532,18 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var filter = _settings.ResolveFilter(_gameId);
-        var filterText = _cpuVideo is null
-            ? FormatVideoFilter(filter)
-            : filter switch
+        var filterText = _cpuVideo switch
+        {
+            null => FormatVideoFilter(filter),
+            VulkanOffscreenRenderer => $"{FormatVideoFilter(filter)} (GPU)",
+            _ => filter switch
             {
                 VideoFilter.Accurate or VideoFilter.Nearest => "Nearest (CPU)",
                 VideoFilter.Bicubic => "Bicubic (CPU)",
                 VideoFilter.Mmpx => "MMPX (CPU)",
                 _ => "Bilinear (CPU)",
-            };
+            },
+        };
         RendererText.Text = $"{_rendererLabel} · {filterText}";
     }
 
@@ -5728,9 +5732,9 @@ public partial class MainWindow : Window, IDisposable
     /// Maps renderer kinds that cannot present on the current platform.
     /// </summary>
     /// <remarks>
-    /// Vulkan presentation needs a native window surface. Windows and Linux/X11 have
-    /// one; macOS needs a Metal surface that is not implemented yet, so Vulkan requests
-    /// fall back to OpenGL instead of throwing at surface start.
+    /// Avalonia's macOS backend has no OpenGL control and the native Vulkan child
+    /// surface is Win32/X11-only. macOS instead uses the offscreen Vulkan renderer
+    /// (MoltenVK over Metal) and copies its readback into the bitmap presenter.
     /// </remarks>
     private static VideoRendererKind NormalizeRendererKind(VideoRendererKind kind)
     {
@@ -5738,7 +5742,7 @@ public partial class MainWindow : Window, IDisposable
         if (normalized != kind)
         {
             Serilog.Log.Information(
-                "Vulkan presentation is not implemented on macOS; using OpenGL.");
+                "macOS has no Avalonia OpenGL presenter; using Vulkan/MoltenVK.");
         }
 
         return normalized;
@@ -5750,9 +5754,17 @@ public partial class MainWindow : Window, IDisposable
     /// <returns>The renderer to use.</returns>
     internal static VideoRendererKind NormalizeRendererKind(VideoRendererKind kind, bool isMacOs)
     {
-        return kind == VideoRendererKind.Vulkan && isMacOs
-            ? VideoRendererKind.OpenGl
-            : kind;
+        if (!isMacOs)
+        {
+            return kind;
+        }
+
+        return kind switch
+        {
+            VideoRendererKind.OpenGl => VideoRendererKind.Vulkan,
+            VideoRendererKind.Direct3D11 => VideoRendererKind.Vulkan,
+            _ => kind,
+        };
     }
 
     private void ApplyRendererSelection()
@@ -5812,6 +5824,34 @@ public partial class MainWindow : Window, IDisposable
             parent.Children.Remove(Video);
             parent.Children.Insert(0, Video);
             _logger.ForCategory(LogCategory.Video).Information("OpenGL surface reattached.");
+        }
+    }
+
+    /// <summary>
+    /// Creates the macOS GPU presenter. Avalonia's macOS backend has no
+    /// <c>OpenGlControlBase</c> implementation, so the Vulkan renderer draws offscreen
+    /// through MoltenVK/Metal and the shell copies its readback into the bitmap path.
+    /// </summary>
+    private ICpuFrameRenderer CreateMacVulkanPresenter(RendererSettings settings, int width, int height)
+    {
+        VulkanOffscreenRenderer? vulkan = null;
+        try
+        {
+            vulkan = new VulkanOffscreenRenderer
+            {
+                CaptureToFrame = true,
+                Settings = settings,
+            };
+            vulkan.Initialize(width, height);
+            return vulkan;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            vulkan?.Dispose();
+            _logger.ForCategory(LogCategory.Video).Warning(
+                exception,
+                "The Vulkan/MoltenVK presenter is unavailable; using the CPU presenter.");
+            return new CpuVideoRenderer { Settings = settings };
         }
     }
 
@@ -5884,7 +5924,9 @@ public partial class MainWindow : Window, IDisposable
             }
         }
 
-        if (allowGpuPresenters && _rendererKind == VideoRendererKind.Vulkan)
+        if (allowGpuPresenters
+            && _rendererKind == VideoRendererKind.Vulkan
+            && !OperatingSystem.IsMacOS())
         {
             try
             {
@@ -5937,9 +5979,21 @@ public partial class MainWindow : Window, IDisposable
             }
         }
 
-        var renderer = new CpuVideoRenderer { Settings = rendererSettings };
+        ICpuFrameRenderer renderer;
+        if (allowGpuPresenters
+            && OperatingSystem.IsMacOS()
+            && _rendererKind == VideoRendererKind.Vulkan)
+        {
+            renderer = CreateMacVulkanPresenter(rendererSettings, width, height);
+        }
+        else
+        {
+            renderer = new CpuVideoRenderer { Settings = rendererSettings };
+        }
+
         renderer.Initialize(width, height);
         _cpuVideo = renderer;
+        var vulkanOffscreen = renderer is VulkanOffscreenRenderer;
         _cpuPixels = new byte[width * height * 4];
         _cpuBitmap = CreateBitmap(width, height);
         CpuVideo.Source = _cpuBitmap;
@@ -5951,22 +6005,39 @@ public partial class MainWindow : Window, IDisposable
         _cpuTimer.Tick += (_, _) => RenderCpuFrame();
         _cpuTimer.Start();
         ApplyDisplayRefreshRate();
-        _logger.ForCategory(LogCategory.Video).Information(
-            "CPU presenter active ({Reason}).",
-            _rendererKind == VideoRendererKind.Software
-                ? "software renderer selected"
-                : exception.Message);
+        if (vulkanOffscreen)
+        {
+            _logger.ForCategory(LogCategory.Video).Information(
+                "Vulkan presenter active through MoltenVK ({Renderer}).",
+                renderer.Capabilities.Name);
+        }
+        else
+        {
+            _logger.ForCategory(LogCategory.Video).Information(
+                "CPU presenter active ({Reason}).",
+                _rendererKind == VideoRendererKind.Software
+                    ? "software renderer selected"
+                    : exception.Message);
+        }
+
         var softwareSelected = _rendererKind == VideoRendererKind.Software;
         var vulkanSelected = _rendererKind == VideoRendererKind.Vulkan;
         var direct3DSelected = _rendererKind == VideoRendererKind.Direct3D11;
-        SetRendererLabel(softwareSelected ? "Software (CPU)" : "CPU fallback");
-        StatusText.Text = softwareSelected
-            ? "Software renderer active (CPU)."
-            : direct3DSelected
-                ? $"Direct3D 11 unavailable ({exception.Message}); using the CPU renderer."
-                : vulkanSelected
-                    ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
-                    : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
+        SetRendererLabel(
+            vulkanOffscreen
+                ? "Vulkan (Metal)"
+                : softwareSelected
+                    ? "Software (CPU)"
+                    : "CPU fallback");
+        StatusText.Text = vulkanOffscreen
+            ? "Vulkan renderer active through MoltenVK (Metal)."
+            : softwareSelected
+                ? "Software renderer active (CPU)."
+                : direct3DSelected
+                    ? $"Direct3D 11 unavailable ({exception.Message}); using the CPU renderer."
+                    : vulkanSelected
+                        ? $"Vulkan unavailable ({exception.Message}); using the CPU renderer."
+                        : $"OpenGL unavailable ({exception.Message}); using the CPU renderer.";
     }
 
     private void StopCpuFallback(bool showVideo = true)

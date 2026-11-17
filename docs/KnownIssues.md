@@ -302,8 +302,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
   probe timed out in the VM's SSH/llvmpipe session, so that VM could not validate GPU
   presentation. macOS x64 and arm64, Linux arm64, and Windows arm64 now pass the native
-  CLI/frontend runtime smoke (2026-11-10); macOS GPU presentation remains best-effort. A
-  bare-metal Linux Mint
+  CLI/frontend runtime smoke (2026-11-10). On 2026-11-17 macOS arm64 was validated with
+  the offscreen Vulkan/MoltenVK presenter (2,394 tests, a packaged 60 fps Wolfenstein 3D
+  session, and all eight filters); macOS OpenGL presentation remains unavailable because
+  Avalonia's backend has no OpenGL control. A bare-metal Linux Mint
   22.3 host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`,
   1920x1080 X11, HDA audio) is now the Linux GPU target (2026-11-16). Its GL probe
   passes at 61 fps (1920x1080, `GLX_EXT_swap_control`), and Vulkan runs on the real
@@ -389,10 +391,14 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside `OpenGlRenderer.Present`
   and comes from the Avalonia UI/compositor loop; the renderer/mailbox path itself is
   zero-allocation after warm-up.
-- Linux/macOS OpenGL GPU presentation is not fully validated; the native runtime smoke
-  hides the GL surface and validates startup/XAML/settings instead. On the 2026-11-16
-  bare-metal Linux host the X11 GPU probe and Vulkan shell pass, so Linux GL/Vulkan
-  presentation is validated for that device while macOS remains best-effort.
+- Linux OpenGL GPU presentation is validated on the 2026-11-16 bare-metal host: the X11
+  GL probe and Vulkan shell pass. **macOS OpenGL presentation is not implemented by
+  Avalonia**: its macOS backend is Metal-only and never initializes `OpenGlControlBase`,
+  so `--gl-probe` fails fast with that explanation. The macOS shell instead uses the
+  offscreen Vulkan renderer through MoltenVK/Metal and copies the readback into the
+  bitmap presenter; that path passes on a NoMac Apple M5 Pro (Virtual) host (2026-11-17).
+  The paravirtual GPU exposes only `Apple Software Renderer` OpenGL 4.1, not accelerated
+  OpenGL.
 - Display-sleep inhibition is implemented for Windows and Linux. Linux holds an
   `org.freedesktop.ScreenSaver` inhibitor through a small `python3-dbus` helper for as
   long as an unpaused game runs; hosts without `python3-dbus` fall back silently. macOS
@@ -445,7 +451,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
   smoke on macOS x64, macOS arm64, Linux arm64, and Windows arm64 (run 42770783778,
   2026-11-10). The smoke hides the GL surface, so GPU presentation is not covered.
-- macOS physical gamepad detection and Linux/macOS GPU presentation remain unvalidated.
+- macOS GPU presentation is now validated through Vulkan/MoltenVK on a paravirtual Apple
+  M5 Pro (2026-11-17), including the packaged `.app`/`.dmg`. macOS physical gamepad
+  detection remains unvalidated, and accelerated OpenGL is not available on that host.
+  Bundles need MoltenVK and a Vulkan loader installed by the user; without them the
+  shell falls back to the CPU presenter.
 - **Release bundles are framework-dependent and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishTrimmed=false`); the .NET 11 runtime must be
   installed on the host and is **not** bundled. PDB and XML documentation files are
@@ -491,6 +501,13 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   mid-run.
 - Frontend NativeAOT audio is validated on Windows with the null and default playback
   devices (0 drops/0 underruns, 600 s each); Linux/macOS AOT audio is not claimed.
+- **macOS live device replacement (open):** `FIVEDO_AUDIO_TESTS=1` passes basic
+  real-time playback and fully queued playback on macOS, but
+  `ReplacingOutput_WhileAnotherIsOpen_KeepsTheReplacementAlive` reports 18
+  `AL_INVALID_ENUM` errors from `SourceQueueBuffers` after the previous output is
+  disposed. It reproduces with `ALSOFT_DRIVERS=null`, so it is an OpenAL Soft context
+  lifetime issue rather than a CoreAudio device problem. Device switching still produces
+  audio, but the error counter is non-zero; this is tracked as a macOS-specific follow-up.
 
 ## Emulation
 

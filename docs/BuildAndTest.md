@@ -12,8 +12,9 @@ NativeAOT details, see [`Trimming.md`](Trimming.md). For packaging contents, see
 | Requirement | Version / notes |
 |---|---|
 | .NET SDK | **11.0.100** (pinned by `global.json` with `rollForward: latestFeature`). |
-| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. All six x64/arm64 bundles are built and architecture-validated; macOS x64/arm64, Linux arm64, and Windows arm64 pass native CLI/frontend runtime smoke (2026-11-10). |
-| GPU | OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. The CPU fallback runs without one. |
+| .NET runtime | **8.0** is also required to build: `XenoAtom.ShaderCompiler.Build` runs its `dotnet-shaderc` tool on the .NET 8 runtime. Installing only the .NET 11 SDK/runtime makes the Vulkan shader step fail with `You must install or update .NET`. Alternatively set `DOTNET_ROLL_FORWARD=LatestMajor` for the build so the tool runs on .NET 11. |
+| OS | Windows 10+ (validated), a current Linux desktop, or macOS 12+. All six x64/arm64 bundles are built and architecture-validated. macOS arm64 is validated with the Vulkan/MoltenVK presenter (2026-11-17); macOS x64/arm64 CLI/frontend runtime smoke also passes (2026-11-10). |
+| GPU | Windows/Linux: OpenGL 3.3 desktop or OpenGL ES 3.0/3.1 for the GPU presenter. macOS: Avalonia has no OpenGL control, so the shell uses the offscreen Vulkan renderer through MoltenVK/Metal (install `molten-vk` + `vulkan-loader` with Homebrew). The CPU fallback runs without a GPU backend. |
 | Audio | No system OpenAL install is required. OpenAL Soft 1.23.1 is bundled by the build. |
 | Optional | A legally obtained 3DO BIOS (1 MB) and disc images for real-content validation. Tests do not need them. |
 | Optional | `jq` for the CI allocation-gate command. |
@@ -87,7 +88,7 @@ dotnet build 5DO.sln -c Release
 dotnet test 5DO.sln -c Release
 ```
 
-The current suite is **2,365 tests** (verified 2026-11-15) and completes in a few seconds
+The current suite is **2,394 tests** (verified 2026-11-17) and completes in a few seconds
 on the development machine. The build treats warnings as errors and runs the .NET
 analyzers plus Meziantou and Roslynator analyzers.
 
@@ -524,6 +525,45 @@ Suggested flow:
 
 The Linux pass should use the same BIOS/disc set as the Windows pass. Do not commit
 BIOS or disc images.
+
+### 7.2 macOS arm64 validation (NoMac cloud host)
+
+Validated 2026-11-17 on a NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64, Apple
+Paravirtual GPU with unified memory (Metal) and 16 GB reported VRAM.
+
+The host has Xcode and Homebrew but no .NET SDK. Install both runtimes into
+`~/.dotnet`; the .NET 8 runtime is needed by the shader compiler, and
+`DOTNET_ROOT` is needed by framework-dependent apphosts:
+
+```bash
+curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+bash /tmp/dotnet-install.sh --channel 11.0 --install-dir "$HOME/.dotnet"
+bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir "$HOME/.dotnet"
+export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"
+```
+
+Avalonia's macOS backend uses Metal and does not implement `OpenGlControlBase`, so
+`--gl-probe` now fails immediately with that explanation. The desktop shell selects
+the offscreen Vulkan renderer instead. Install MoltenVK and the loader:
+
+```bash
+brew install molten-vk vulkan-loader
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --vk-probe artifacts/vk.json
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --gl-backend vulkan \
+  --bios <bios> <disc>
+```
+
+The Vulkan renderer enables `VK_KHR_portability_enumeration` and loads Homebrew's
+`/opt/homebrew/lib/libvulkan.1.dylib` directly, so `DYLD_LIBRARY_PATH` is not needed.
+Bundle packaging needs PowerShell 7 (`brew install --cask powershell@preview`) because
+`packaging/package-bundle.ps1` is PowerShell.
+
+Recorded evidence: 2,394/2,394 tests; CLI `selftest` ok; frontend smoke ok; 600-frame
+Wolfenstein 3D boot; all eight Vulkan filters (`Accurate`, `Nearest`,
+`SharpBilinear`, `Bicubic`, `xBR`, `HQx`, `MMPX`, and `FSR`) pass without fallback; the
+packaged `.app`, `.dmg`, and `.tar.gz` pass CLI and frontend smoke. The paravirtual GPU
+does not expose accelerated OpenGL — only `Apple Software Renderer` 4.1 is available,
+and Avalonia cannot host it on macOS.
 
 ---
 

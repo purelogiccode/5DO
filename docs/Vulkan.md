@@ -289,8 +289,10 @@ The SPIR-V and option-parsing tests run everywhere.
   visual, keeps Avalonia's input handling through an empty `ShapeInput` region, and is
   raised above Avalonia's render window on each present. A Wayland-only session has no
   X11 display, so the shell uses the OpenGL presenter; Wayland surfaces remain
-  unimplemented and Metal is blocked as `PLAT-08B` until a Metal-capable macOS host
-  exists. The child window is outside Avalonia's compositor, so Avalonia-drawn overlays
+  unimplemented. A Metal-capable macOS host is now available: macOS uses the offscreen
+  Vulkan renderer through MoltenVK (no native `CAMetalLayer` surface yet), and the
+  native Metal surface remains `PLAT-08B`. The child window is outside Avalonia's
+  compositor, so Avalonia-drawn overlays
   over the video rectangle (for example the diagnostic overlay) are obscured; the status
   bar and header remain visible.
 - The per-frame readback is only recorded when `CaptureToFrame` is enabled; probes and
@@ -305,9 +307,13 @@ The SPIR-V and option-parsing tests run everywhere.
 - Vulkan 1.1+ features (storage buffers in fragment shaders, timeline semaphores) are not
   required; the backend requests Vulkan 1.0 and uses sampled images and push constants.
 - Device/driver validation on Linux, macOS/MoltenVK, arm64, and integrated GPUs is
-  pending. A bare-metal Linux Mint 22.3 host is available for it: Intel HD 4000
-  (Ivy Bridge), Mesa 25.2.8, Vulkan 1.2 through `hasvk` (the driver warns that Ivy
-  Bridge Vulkan support is incomplete), 1920x1080 X11 session, HDA Intel PCH audio.
-  The headless `--vk-probe` needs no display server; X11 surfaces and the desktop shell
-  child surface are implemented (`PLAT-08A`), and the integrated/legacy device is a
-  secondary target rather than the primary Vulkan reference.
+  complete for the available hosts. A bare-metal Linux Mint 22.3 host provides Intel HD
+  4000 (Ivy Bridge), Mesa 25.2.8, Vulkan 1.2 through `hasvk` (the driver warns that Ivy
+  Bridge Vulkan support is incomplete), a 1920x1080 X11 session, and HDA Intel PCH
+  audio; X11 surfaces and the desktop shell child surface are implemented (`PLAT-08A`).
+  A NoMac Apple M5 Pro (Virtual, macOS 26.6.2, arm64) provides MoltenVK 1.4.363 and a
+  paravirtual Metal GPU. On macOS the offscreen path enables
+  `VK_KHR_portability_enumeration`, loads `/opt/homebrew/lib/libvulkan.1.dylib`
+  directly, and all eight filters pass without fallback; the packaged app presents at
+  ~60 fps. The integrated/legacy devices are secondary targets rather than the primary
+  Vulkan reference.

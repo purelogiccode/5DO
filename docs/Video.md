@@ -373,7 +373,7 @@ frame into a fixed output buffer.
 |---|---|---|---|
 | Desktop GL | OpenGL 3.3 core / GLSL 330 | Windows WGL, Linux GLX/EGL, macOS 4.1 core | Primary desktop path; `R16UI`, `usampler2D`, `texelFetch`. |
 | GLES | OpenGL ES 3.0/3.1 / GLSL ES 300 | Windows ANGLE, other desktop GLES contexts | Same two-stage pipeline. |
-| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux/macOS with a Vulkan loader and device | Optional backend and probe; embedded Win32 child surface for the desktop path; CPU readback fallback. |
+| Vulkan | Vulkan 1.0 / SPIR-V 1.0 | Windows/Linux native surfaces; macOS via MoltenVK offscreen | Optional backend and probe; embedded Win32 child surface for the Windows desktop path; macOS uses offscreen Vulkan plus a bitmap readback; CPU readback fallback. |
 | Direct3D 11 | Direct3D 11 / HLSL SM 5.0 | Windows 10/11 with feature level 11_0 | Optional Windows backend and probe; embedded Win32 child swapchain; OpenGL remains the default. |
 | CPU | `WriteableBitmap` + `FrameAssembler` | Any | Fallback when no usable GL/GLES/Vulkan/Direct3D context; accuracy oracle. |
 
@@ -392,6 +392,15 @@ mode:
 `GlBackendOption` also accepts aliases: `default`, `desktop`, `gl`, `angleegl`, `egl`,
 `gles`, `cpu`, `vk`, `dx11`, `directx`, and `d3d`. The option is wired through `Win32PlatformOptions.RenderingMode`;
 on non-Windows platforms the platform's default context selection applies.
+
+macOS is a special case: Avalonia's backend composes with Metal and does not implement
+`OpenGlControlBase`, so the OpenGL surface never initializes. The shell maps `OpenGl`,
+`Vulkan`, and `Direct3D11` selections to Vulkan and creates a
+`VulkanOffscreenRenderer` with `CaptureToFrame=true`; the readback is copied into the
+same `WriteableBitmap` used by the CPU presenter. Install MoltenVK and a Vulkan loader
+(for example `brew install molten-vk vulkan-loader`) to enable this path; without them
+the shell falls back to the CPU presenter. `--gl-probe` is not available on macOS and
+reports that immediately; use `--vk-probe` instead.
 
 `OpenGlCapabilities.Detect` parses `GL_VERSION` and reports:
 
@@ -634,7 +643,9 @@ On Windows 11, Ryzen 9 7900, RTX 4070 (OpenGL 4.0):
 - 320x240 Accurate parity: pixel-identical to the CPU oracle on both backends.
 
 These are development-machine numbers, not a hardware guarantee. Tier B desktop,
-100/150/200% DPI, and macOS/Linux GL launch validation remain open.
+100/150/200% DPI, and Linux GL launch validation remain open. macOS uses the
+Vulkan/MoltenVK offscreen path (validated 2026-11-17) and has no Avalonia OpenGL launch
+path.
 
 ---
 
@@ -693,7 +704,8 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 ## 12. Limitations
 
 - GLES 3.1, Tier B desktop timing, and DPI validation are not complete. Raspberry Pi is out of scope.
-- Linux/macOS OpenGL launch validation is not complete.
+- Linux OpenGL launch validation is complete on the 2026-11-16 bare-metal host; macOS
+  has no Avalonia OpenGL launch path and uses Vulkan/MoltenVK offscreen instead.
 - The Avalonia compositor may pace presentation independently of the requested vsync.
 - The GPU probe's residual ~2.3 KB/frame allocation is outside
   `OpenGlRenderer.Present` and comes from the Avalonia UI/compositor loop; the

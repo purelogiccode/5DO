@@ -110,6 +110,17 @@ public sealed unsafe partial class VulkanOffscreenRenderer
 
     private string[] GetInstanceExtensions()
     {
+        if (OperatingSystem.IsMacOS())
+        {
+            // MoltenVK is a portability driver. Offscreen instances still need the
+            // portability extension so the loader can enumerate it; window surfaces
+            // on macOS are not implemented yet.
+            return _windowHandle == 0
+                ? ["VK_KHR_portability_enumeration"]
+                : throw new PlatformNotSupportedException(
+                    "macOS Vulkan window surfaces are not implemented yet.");
+        }
+
         if (_windowHandle == 0)
         {
             return [];

@@ -97,6 +97,15 @@ internal sealed class GlProbeWindow : Window, IDisposable
 
     private void OnOpened(object? sender, EventArgs e)
     {
+        if (OperatingSystem.IsMacOS())
+        {
+            // Avalonia's macOS backend renders with Metal and does not implement
+            // OpenGlControlBase, so the control never initializes a context. Report
+            // that immediately instead of waiting for the probe timeout.
+            Finish(false, "Avalonia's OpenGL control is not available on macOS; use --vk-probe.");
+            return;
+        }
+
         // The requested size is in physical pixels. Convert it to Avalonia's logical
         // units so a 150/200% DPI desktop still measures a true 4K framebuffer. An
         // offscreen probe keeps the window small and renders the requested size into

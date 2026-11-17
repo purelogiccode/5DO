@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using FiveDo.Core;
+using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using VkApi = Silk.NET.Vulkan.Vk;
@@ -499,10 +501,49 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         }
     }
 
+    private static VkApi CreateVkApi()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return VkApi.GetApi();
+        }
+
+        // Homebrew installs libvulkan outside dyld's default search path. Silk.NET's
+        // default loader names are tried last so a system Vulkan SDK still works.
+        string[] candidates =
+        [
+            "/opt/homebrew/lib/libvulkan.1.dylib",
+            "/opt/homebrew/lib/libvulkan.dylib",
+            "/usr/local/lib/libvulkan.1.dylib",
+            "/usr/local/lib/libvulkan.dylib",
+        ];
+        foreach (string candidate in candidates)
+        {
+            if (!File.Exists(candidate))
+            {
+                continue;
+            }
+
+            try
+            {
+                return new VkApi(new DefaultNativeContext(candidate));
+            }
+            catch (Exception exception) when (
+                exception is DllNotFoundException
+                    or FileNotFoundException
+                    or InvalidOperationException)
+            {
+                // Try the next known installation path.
+            }
+        }
+
+        return VkApi.GetApi();
+    }
+
     private void CreateDevice()
     {
         _vk?.Dispose();
-        _vk = VkApi.GetApi();
+        _vk = CreateVkApi();
         var applicationName = SilkMarshal.StringToPtr("5DO Vulkan");
         var engineName = SilkMarshal.StringToPtr("5DO");
         string[] instanceExtensions = GetInstanceExtensions();
@@ -531,6 +572,11 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
                     PApplicationInfo = &application,
                     EnabledExtensionCount = (uint)instanceExtensions.Length,
                     PpEnabledExtensionNames = (byte**)extensionPointer,
+                    // MoltenVK is a portability driver. macOS instances must opt in to
+                    // portability enumeration or the loader reports ErrorIncompatibleDriver.
+                    Flags = OperatingSystem.IsMacOS()
+                        ? InstanceCreateFlags.EnumeratePortabilityBitKhr
+                        : default,
                 };
                 Check(_vk.CreateInstance(&instanceCreate, null, out _instance), "vkCreateInstance");
             }
