@@ -719,8 +719,11 @@ a `python3-dbus` helper; acquire and release were traced with matching cookies
 the same pass was traced to the bundled OpenAL Soft 1.23.1 PipeWire backend being
 unloaded by Silk.NET before its `atexit` handler ran; `OpenAlAudioOutput` now pins the
 library on Linux, and software, OpenGL, and Vulkan sessions close with exit code 0
-(2026-11-17). The real-device audio soak and acceptance pass remain open as `AUD-02`
-and `PLAT-10`. Reproducible commands and numbers are in
+(2026-11-17). The same pass fixed the evdev ioctl encoding, so the Linux gamepad backend
+now detects a virtual uinput pad (`connected=1`, `buttons=South`) and the two-second
+`--gamepad-probe`; the 600 s real-device audio soak reports 0 dropped samples and 0
+underruns on the default PipeWire endpoint. Only the full acceptance pass (`PLAT-10`)
+remains open. Reproducible commands and numbers are in
 [TestCorpus.md](TestCorpus.md) 1.1cm.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)

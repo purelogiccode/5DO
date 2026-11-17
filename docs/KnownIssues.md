@@ -310,9 +310,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   device through `hasvk`: the X11 window probe matches the CPU oracle with 0 different
   pixels and `--gl-backend vulkan` presents in the desktop shell through a depth-24 X11
   child window (`PLAT-02`, `PLAT-08A`). Wayland-only sessions fall back to the offscreen
-  path (documented unsupported). The real-device audio soak and the full acceptance pass
-  remain open as `AUD-02` and `PLAT-10`; the CLI/frontend stay **preview/best-effort** on
-  Linux until that acceptance pass. The Hyper-V `LinuxMint` VM
+  path (documented unsupported). The 600 s real-device audio soak reports 0 dropped
+  samples and 0 underruns, and evdev gamepads are detected after the ioctl-encoding fix.
+  The full acceptance pass remains open as `PLAT-10`; the CLI/frontend stay
+  **preview/best-effort** on Linux until that acceptance pass. The Hyper-V `LinuxMint` VM
   (`D:\Hyper-V\VMs\LinuxMint`) remains the headless build/test target.
 - The project is **donationware** (non-commercial, source-available). Legal/attribution
   sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial

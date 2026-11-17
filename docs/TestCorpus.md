@@ -4169,6 +4169,23 @@ OpenGL, and Vulkan sessions (default drivers, PipeWire) each close with `exit=0`
 still reports `OpenAL audio ready (44100 Hz stereo)`, the display-sleep inhibitor still
 acquires and releases, and `--smoke-test` reports `FRONTEND SMOKE OK 1.10.2`.
 
+**Linux evdev gamepad (`PLAT-11`).** Validation with a virtual uinput pad found that
+`EvdevGamepadSource.EventIoctl` encoded the request number in the ioctl **type** bits
+and `'E'` in the number bits (`(number << 8) | 'E'` instead of
+`('E' << 8) | number`). Every `EVIOCGBIT` therefore returned an error and the backend
+rejected every device. After the fix, `--gamepad-probe` reports
+`source=EvdevGamepadSource`, `connected=1`, and `pad0: buttons=South ...` for a virtual
+pad with eight buttons, `ABS_X`/`ABS_Y`, and a hat. The probe now samples for two
+seconds and merges the peak buttons/axes, because a single poll misses a press that
+happens just after the device opens. `EvdevGamepadSourceTests` locks the kernel
+encodings (`0x80604521`, `0x80084523`, `0x80144540`). The desktop user still needs the
+`input` group (or a udev rule), as documented in [Installation.md](Installation.md).
+
+**Linux real-device audio soak (`AUD-02`).** The framework-dependent frontend ran
+`--audio-soak 600` with the Joypad Test disc on the default PipeWire endpoint:
+600.04 s, 35,966 frames, 26,461,445 samples pushed, **0 dropped**, **0 underruns**,
+0 OpenAL errors, DSP running, `ok: true`. This closes the AUD-01 VM hardware limitation.
+
 **Defect found and fixed: GL swap-interval backend.** The GL probe reported
 `vsyncBackend: "WGL_EXT_swap_control"` on Linux because Mesa's GLX proc-address loader
 returns a non-null stub for `wglSwapIntervalEXT`. `SwapInterval.TryCreate` now probes

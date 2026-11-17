@@ -62,8 +62,8 @@ The remaining non-playable rows are three non-retail/add-on images: `Joypad Test
 The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
 REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **ACC-04**,
 **PLAT-01**, **PLAT-02**,
-**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-08A**, **PLAT-09**, **PLAT-12**, **PLAT-13**,
-**TEST-06/07/08**,
+**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-08A**, **PLAT-09**, **PLAT-11**, **PLAT-12**,
+**PLAT-13**, **AUD-02**, **TEST-06/07/08**,
 **CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
 **SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-29**,
 **UX-30**, **UX-31**, **UX-32**, **VID-04/12/16/17/18**, **VID-19** items. `SYS-21` and `SYS-23` are code-complete but remain open
@@ -122,7 +122,7 @@ capture proves a reachable scene; see §4.
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
 | **AUD-01** | **Done** | S | Run a 10-minute real-time audio soak on Windows and Linux with the null device and one real device; confirm zero dropped samples and zero underruns. | The counters, sync offset, and device-recreation tests already exist; only the platform soak was missing. | Windows: null and real devices pass with 0 drops/0 underruns (600.6 s each). Linux: null driver passes with 0 drops/0 underruns (600.6 s). The Hyper-V VM had no PCM playback endpoint, so the Linux real-device soak was a hardware limitation; `AUD-02` now covers it on bare metal. Evidence: [Audio.md](Audio.md) §9. |
-| **AUD-02** | Open | S | **Linux real-device audio soak on bare metal**: repeat the 600 s soak against a physical PCM endpoint. | `AUD-01` left this as a hardware limitation; the bare-metal Linux Mint host (HDA Intel PCH, CS4206 Analog/Digital and HDMI playback) now provides a real device. | A 600 s Linux real-device soak reports 0 dropped samples and 0 underruns in [Audio.md](Audio.md) §9, with the device name and backend recorded. |
+| **AUD-02** | **Done** | S | **Linux real-device audio soak on bare metal**: repeat the 600 s soak against a physical PCM endpoint. **Result (2026-11-17):** default PipeWire endpoint, 35,966 frames, 26,461,445 samples, **0 dropped**, **0 underruns**, 0 OpenAL errors, DSP running. | `AUD-01` left this as a hardware limitation; the bare-metal host provides a real device. | Evidence: [Audio.md](Audio.md) §9, [TestCorpus.md](TestCorpus.md) 1.1cm. |
 
 The quality-ledger gate remains enforced after this work:
 `tools/verify-playability-grades.py` and `compat-baseline.yml` require a dated batch entry
@@ -141,7 +141,7 @@ and a linked capture for every promotion or documented limit.
 | **PLAT-08A — Done (2026-11-16)** | L | **Vulkan Linux surfaces and device selection**: `VK_KHR_xlib_surface` creation, swapchain/present-mode selection, resize/`OUT_OF_DATE` recreation, the X11 probe window, the Linux `VulkanVideoSurface` child surface, and physical-device ranking. Wayland surfaces are documented as unsupported (a Wayland-only session falls back to the offscreen/readback path); XCB is intentionally omitted because Xlib covers X11. | The Vulkan renderer, shaders, and offscreen/readback path existed and the Win32 swapchain was a working reference; the bare-metal host has hardware Vulkan 1.2, a live X11 session, and a physical display. | X11 window probe presents on the real GPU with FIFO (60.1 fps at 1080p, 0 renderer bytes/frame); a 320x240 Accurate capture matches the CPU oracle with 0 different pixels (`0x5DD1D7C5`); device ranking selects the Intel device without `VK_ICD_FILENAMES`; `--gl-backend vulkan` runs in the Linux shell through a depth-24 X11 child window with no per-frame readback (1060x466 at 60 Hz, viewport 370,113 320x240, resize to 1400x820 scales the viewport); Wayland-only sessions fall back cleanly. Evidence: [Vulkan.md](Vulkan.md), [TestCorpus.md](TestCorpus.md) 1.1cm. |
 | **PLAT-09** | M | **Done (2026-11-10).** Full PAL library validation: eight PAL-sensitive titles captured with the documented PAL BIOS, plus a PAL2 presentation probe. | PAL1/PAL2, 50 Hz pacing, and per-game BIOS selection are implemented. | Evidence: [PalValidation.md](PalValidation.md) and `docs/data/pal-validation.csv`. |
 | **PLAT-10** | M | **Real-machine acceptance**: install the shipped framework-dependent bundle on clean physical machines (the bare-metal Linux Mint host and a physical Windows x64 desktop) and exercise the player path: image boot, GL presentation at 720p/1080p, real audio device, gamepad, fullscreen, DPI change, pause/resume, save states, screenshots, and library metadata. | Every subsystem exists and is smoke-tested; a clean non-developer run and a dated pass are the only missing pieces. The Linux host is available with hardware GL 4.2 and a 1920x1080 display. | A dated acceptance record in [Compatibility.md](Compatibility.md) §10.3 lists every check with pass/fail, bundle version, GPU/driver, and audio device for both hosts; each failure becomes a named defect item instead of an undocumented limitation. |
-| **PLAT-11** | S | **Linux evdev gamepad hardware validation**: detect and map a physical controller through `EvdevGamepadSource`, including the `input` group/udev permission path. | The source (`EvdevGamepadSource`) and the `--gamepad-probe` diagnostic already exist; only a physical pad and the permission check are missing. | `--gamepad-probe` reports the evdev backend with raw samples from a physical pad mapped through the eight-player profile, and the `input`-group/udev requirement is documented in [Installation.md](Installation.md). |
+| **PLAT-11 — Done (2026-11-17)** | S | **Linux evdev gamepad validation**: detect and map a controller through `EvdevGamepadSource`, including the `input` group/udev permission path. The pass found and fixed a real defect: `EventIoctl` encoded the ioctl **type and request number in the wrong bit positions**, so no evdev device was ever accepted. `--gamepad-probe` now samples for two seconds so a press is not missed. | The source and diagnostic existed but the ioctl encoding made the backend inert on every Linux host; a virtual uinput pad reproduces the same kernel evdev path as physical hardware. | A virtual 8-button/4-axis uinput pad is detected (`connected=1`), its South button maps to `buttons=South`, and the `input`-group/udev requirement is documented in [Installation.md](Installation.md). Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm, `EvdevGamepadSourceTests`. |
 | **PLAT-12 — Done (2026-11-16)** | S | **Linux display-sleep inhibit**: replace `NullDisplaySleepBackend` on Linux with the freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`), held by a persistent `python3-dbus` helper for the connection lifetime. | `DisplaySleepPolicy` and its lifecycle already existed; only the Linux backend was null, and the host has a session bus and a real desktop to test it. | A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit` and `UnInhibit` with the same cookie, and closing the window released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip the lock cleanly, and `DisplaySleepPolicyTests` cover the run/pause/release transitions. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
 | **PLAT-13 — Done (2026-11-17)** | S | **Linux desktop exit segfault**: closing the window after a game session crashed in a native `atexit` handler when `XDG_RUNTIME_DIR` was set. | The host reproduced it deterministically; forcing `ALSOFT_DRIVERS=pulse,alsa` avoided it, which bounded the root cause to the bundled OpenAL Soft 1.23.1 PipeWire backend. | Root cause: Silk.NET unloads `libopenal.so` when the last context is disposed, leaving the PipeWire backend's `atexit` handler pointing at unmapped code. `OpenAlAudioOutput` now keeps one reference to the library on Linux; software, OpenGL, and Vulkan sessions close with exit code 0 and `--smoke-test` still passes. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
 
@@ -165,9 +165,10 @@ HD 4000 (Ivy Bridge), Mesa 25.2.8 with hardware OpenGL 4.2 (crocus) and Vulkan 1
 (`hasvk`), a live Cinnamon/X11 session at 1920x1080, and HDA Intel PCH audio. `PLAT-02`
 is done (hardware GL 4.2 probe); `PLAT-08A` is done (X11 surface, device ranking, and
 Linux shell child surface; Wayland documented unsupported), `PLAT-12` is done (D-Bus
-screen-saver inhibitor), and `PLAT-13` is done (the OpenAL PipeWire exit segfault found
-during the `PLAT-12` pass). `PLAT-10` (real-machine acceptance) and `PLAT-11` (evdev
-hardware) remain; `AUD-02` closes the remaining Linux audio hardware gap. `hasvk` reports "Ivy Bridge Vulkan support is incomplete", so this host is
+screen-saver inhibitor), `PLAT-13` is done (the OpenAL PipeWire exit segfault found
+during the `PLAT-12` pass), `PLAT-11` is done (the evdev ioctl fix validated with a
+virtual pad), and `AUD-02` is done (600 s real-device soak with 0 drops/underruns).
+`PLAT-10` (real-machine acceptance) is the remaining Linux item. `hasvk` reports "Ivy Bridge Vulkan support is incomplete", so this host is
 the legacy/integrated validation target, not the primary Vulkan reference. Do not treat
 CI `Xvfb` smokes as GPU evidence: they run `llvmpipe` without a swapchain.
 
@@ -308,17 +309,16 @@ documented limitation, not that it is unachievable.
 1. **P0 quality:** `QUAL-03A`…`QUAL-03D` and `QUAL-05A` are complete (BladeForce,
    Jurassic Park, Off-world, PGA Tour, and Alone). `QUAL-05B` (full Road Rash race) is in
    §4 as a driving/autopilot limit.
-2. **P0 evidence:** `AUD-01` is complete on Windows (null + real) and Linux (null); the
-   Linux real-device path was a hardware limitation and is now `AUD-02` on the
-   bare-metal host. Keep the quality-ledger gate green after every batch.
+2. **P0 evidence:** `AUD-01` and `AUD-02` are complete: Windows null/real and the
+   Linux bare-metal real-device soak all report 0 dropped samples and 0 underruns over
+   600 s. Keep the quality-ledger gate green after every batch.
 3. **P1 platform:** the bare-metal Linux host (HD 4000, Mesa 25.2.8, hardware GL 4.2)
    unblocks the Linux workstream. `PLAT-02` is **done** (hardware GL 4.2 probe plus the
    GLX swap-interval fix); `PLAT-08A` is **done** (X11 `VK_KHR_xlib_surface`, X11 probe
    window, device ranking, and the Linux shell child surface; Wayland documented as
    unsupported). `PLAT-12` (D-Bus display-sleep) and `PLAT-13` (OpenAL PipeWire exit
-   segfault) are **done**. Next is `AUD-02` (real-device soak); `PLAT-10` is the
-   end-to-end acceptance pass and `PLAT-11` needs a physical evdev pad. `PLAT-03` and
-   `PLAT-04` are **done** via
+   segfault) are **done**, as are `AUD-02` and `PLAT-11`. `PLAT-10` is the remaining
+   end-to-end acceptance pass. `PLAT-03` and `PLAT-04` are **done** via
    `.github/workflows/platform-runtime.yml`; `PLAT-05` needs physical macOS controller
    detection; `PLAT-06` is documented in Performance §8.8 (DPI math validated; GLES 3.1
    hardware and Tier B timing remain best-effort); `PLAT-07` and `PLAT-09` are **done**;
