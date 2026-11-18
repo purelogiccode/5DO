@@ -4231,6 +4231,39 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cv Signed Linux artifacts and release key (2026-11-18)
+
+**Scope (`REL-04`).** Publish a release keyring plus detached signatures for every Linux
+artifact, and prove the chain from a clean download.
+
+**Key.** ed25519 `Pure Logic Code (5DO releases) <admin@purelogiccode.com>`, fingerprint
+`E69FF266D1FB01D3411578775C4C1E8EAFD44075` (key ID `5C4C1E8EAFD44075`), created
+2026-11-18, expires 2029-11-18, no passphrase so CI signs unattended. The private key
+exists only as the `LINUX_GPG_PRIVATE_KEY` repository secret; `LINUX_GPG_KEY_ID` holds the
+fingerprint. `linux-packages.yml` now signs on every CI push (`secrets: inherit` in
+`ci.yml`) and `release.yml` publishes the signatures with the tag.
+
+**Run.** CI run <https://github.com/purelogiccode/5DO/actions/runs/44343039532> on
+`bfe7af7`: both architectures built, the "Sign artifacts" step signed the two `.deb`, two
+`.rpm`, both AppImages, both Flatpaks, both portable tarballs, and
+`SHA256SUMS-linux.txt`, and the publish job verified the signed APT/RPM mirror trees and
+installed the `.deb`/`.rpm` (including `5do-cli doctor`, which now exists in the
+bundles).
+
+**Local verification (Windows, GnuPG 2.4.8, fresh keyring).**
+
+- Importing `5do-archive-keyring.gpg` yields exactly the fingerprint above; the keyring
+  is 266 bytes and each detached signature is 228 bytes.
+- `gpg --verify` reports `Good signature` (exit 0) for `SHA256SUMS-linux.txt`,
+  `5do_1.12.0_amd64.deb`, `5do-aarch64.flatpak`, and `5do-x86_64.AppImage`.
+- Recomputing the manifest gives **8/8 matching** SHA-256 hashes.
+
+**Notes.** The key is a single sign key rather than an offline primary plus signing
+subkey; rotation therefore publishes a new key and keeps the old keyring available
+([LinuxDistribution.md](LinuxDistribution.md) §4). A `workflow_dispatch` run against the
+v1.12.0 release bundles also signed correctly but failed later at `5do-cli doctor`,
+because those released bundles predate the command; that is unrelated to signing.
+
 ### 1.1cu Void-color scanout fill on the GPU presenters (2026-11-18)
 
 **Scope (`UX-33`, option 4, color slice).** Paint the letterbox/pillarbox bars that the GPU
