@@ -1,5 +1,11 @@
 # Project Status and Next Steps
 
+**2026-11-18, v1.13.1 release:** a naming and documentation update. The RPM, AppImage, and
+Flatpak assets now include the version and `linux` in their file names
+(`5do-1.13.1-1.linux.x86_64.rpm`, `5do-1.13.1-linux-x86_64.AppImage`,
+`5do-1.13.1-linux-x86_64.flatpak`), while the `.deb` keeps the Debian convention, and
+every release page opens with a per-platform download table. `jb inspectcode` is clean.
+
 **2026-11-18, v1.13.0 release:** 5DO 1.13.0 ships the native macOS Metal surface, the
 four Phoenix/4DO presentation options (audio channel swap, named void patterns, GPU void
 color, and the emulation-health badge), and a signed Linux release chain. The release is

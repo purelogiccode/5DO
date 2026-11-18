@@ -1,7 +1,27 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.13.0, the native Metal surface
-and signed Linux release.
+All notable changes are recorded here. The project is at v1.13.1, the signed Linux release
+with per-platform asset names.
+
+## [1.13.1] - 2026-11-18
+
+### Changed
+
+- **Linux artifacts say what they are.** The RPM, AppImage, and Flatpak files now carry
+  the version and the platform in their names — `5do-1.13.1-1.linux.x86_64.rpm`,
+  `5do-1.13.1-linux-x86_64.AppImage`, `5do-1.13.1-linux-x86_64.flatpak` — instead of
+  names like `5do-1.13.0-1.x86_64.rpm` and `5do-x86_64.flatpak`. The `.deb` keeps the
+  Debian `package_version_arch.deb` convention, and every `.asc`/`.zsync` follows its
+  artifact.
+- **The release page starts with a download table.** [ReleaseNotes-1.13.1.md](docs/ReleaseNotes-1.13.1.md)
+  maps each platform to the one file it needs and marks the `.asc`, `.zsync`, and
+  `SHA256SUMS` files as verification support rather than downloads.
+
+### Fixed
+
+- **Linux discovery tested two non-nullable folder paths for null**, kept an unused
+  OpenAL device pointer, and passed a redundant alpha argument to the Direct3D clears;
+  `jb inspectcode` is clean again.
 
 ## [1.13.0] - 2026-11-18
 

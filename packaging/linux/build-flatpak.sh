@@ -13,7 +13,7 @@
 # Options:
 #   --arch <x86_64|aarch64>     Flatpak arch (default: derived from --rid)
 #   --runtime-version <branch>  org.freedesktop.Platform branch (default 26.08)
-#   --name <file>               Output name (default 5do-<arch>.flatpak)
+#   --name <file>               Output name (default 5do-<version>-linux-<arch>.flatpak)
 #   --repo-dir <dir>            Keep the exported OSTree repository, for
 #                               flatpak build-update-repo (replaces the directory)
 #   --deps-remote <name>        Remote that supplies runtime/SDK (default flathub)
@@ -169,7 +169,7 @@ if [[ "$install_deps" == "true" ]]; then
 fi
 flatpak-builder "${builder_args[@]}" "$work/build" "$manifest"
 
-output="$output_dir/5do-${arch}.flatpak"
+output="$output_dir/5do-${version}-linux-${arch}.flatpak"
 if [[ -n "$name" ]]; then
     output="$output_dir/$name"
 fi

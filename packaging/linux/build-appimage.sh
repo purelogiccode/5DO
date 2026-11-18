@@ -14,7 +14,7 @@
 # Optional:
 #   --sign-key <gpg-key-id>   Embed an AppImage signature (appimagetool --sign).
 #   --zsync-url <url>         Embed update information and write a .zsync file.
-#   --name <file>             Output file name (default 5do-<version>-<arch>.AppImage).
+#   --name <file>             Output file name (default 5do-<version>-linux-<arch>.AppImage).
 #
 set -euo pipefail
 
@@ -165,7 +165,7 @@ if [[ -n "$sign_key" ]]; then
     arguments+=(--sign --sign-key "$sign_key")
 fi
 
-output="$output_dir/5do-${version}-${arch}.AppImage"
+output="$output_dir/5do-${version}-linux-${arch}.AppImage"
 if [[ -n "$name" ]]; then
     output="$output_dir/$name"
 fi

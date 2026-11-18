@@ -44,7 +44,7 @@
       "fivedo.audio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.13.0, )",
+          "FiveDo.Core": "[1.13.1, )",
           "Serilog": "[4.4.0, )",
           "Silk.NET.OpenAL": "[2.23.0, )",
           "Silk.NET.OpenAL.Soft.Native": "[1.23.1, )"
@@ -56,23 +56,23 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.13.0, )"
+          "FiveDo.Core": "[1.13.1, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
-          "CDISharp": "[1.13.0, )",
+          "CDISharp": "[1.13.1, )",
           "CHDSharp": "[1.7.0, )",
-          "FiveDo.Core": "[1.13.0, )",
-          "NRGSharp": "[1.13.0, )",
+          "FiveDo.Core": "[1.13.1, )",
+          "NRGSharp": "[1.13.1, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.13.0, )"
+          "FiveDo.Core": "[1.13.1, )"
         }
       },
       "nrgsharp": {

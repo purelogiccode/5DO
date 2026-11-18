@@ -199,7 +199,7 @@ if [[ -z "$rpm_file" ]]; then
     exit 1
 fi
 
-archive="$output_dir/5do-${version}-1.${rpm_arch}.rpm"
+archive="$output_dir/5do-${version}-1.linux.${rpm_arch}.rpm"
 cp "$rpm_file" "$archive"
 
 if [[ -n "$sign_key" ]]; then

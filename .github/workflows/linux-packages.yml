@@ -230,7 +230,7 @@ jobs:
           fi
           chmod +x "$tool_dir/appimagetool.AppImage"
           (cd "$tool_dir" && ./appimagetool.AppImage --appimage-extract >/dev/null)
-          name="5do-${IMAGE_ARCH}.AppImage"
+          name="5do-${VERSION}-linux-${IMAGE_ARCH}.AppImage"
           bash packaging/linux/build-appimage.sh \
             --bundle "artifacts/bundle/${{ matrix.rid }}" \
             --version "$VERSION" \
@@ -254,7 +254,7 @@ jobs:
             --version "$VERSION" \
             --output artifacts/installers
 
-          bundle="artifacts/installers/5do-${IMAGE_ARCH}.flatpak"
+          bundle="artifacts/installers/5do-${VERSION}-linux-${IMAGE_ARCH}.flatpak"
           test -f "$bundle"
 
           # Install the shipped bundle and run the CLI inside the sandbox: this proves

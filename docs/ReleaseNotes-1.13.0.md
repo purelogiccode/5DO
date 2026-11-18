@@ -8,6 +8,30 @@ options, and a **signed Linux release chain**. macOS arm64 now presents frames t
 emulation health, and the Linux artifacts ship with GPG signatures and a published
 keyring.
 
+## Which file do I need?
+
+| Your system | Download |
+|---|---|
+| Windows 10/11 (x64) | `5do-1.13.0-win-x64.zip` |
+| Windows on ARM | `5do-1.13.0-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.13.0-osx-arm64.dmg` |
+| Debian, Ubuntu, Linux Mint (x64) | `5do_1.13.0_amd64.deb` |
+| Debian, Ubuntu, Linux Mint (arm64) | `5do_1.13.0_arm64.deb` |
+| Fedora, RHEL, openSUSE (x64) | `5do-1.13.0-1.x86_64.rpm` |
+| Fedora, RHEL, openSUSE (arm64) | `5do-1.13.0-1.aarch64.rpm` |
+| Any Linux, no install (x64) | `5do-x86_64.AppImage` |
+| Any Linux, no install (arm64) | `5do-aarch64.AppImage` |
+| Any Linux, sandboxed (x64) | `5do-x86_64.flatpak` |
+| Any Linux, sandboxed (arm64) | `5do-aarch64.flatpak` |
+| Any Linux, portable folder | `5do-1.13.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+
+The `.asc` files are detached signatures, the `.zsync` files feed `AppImageUpdate`, and
+`SHA256SUMS-linux.txt` / `SHA256SUMS.txt` list hashes; you only need those to verify a
+download. `5do-archive-keyring.gpg` is the public key they use.
+
+> The next release renames the RPM, AppImage, and Flatpak files to include the version
+> and `linux`, so this table becomes self-explanatory on the page itself.
+
 ## Highlights
 
 ### macOS arm64 presents through Metal

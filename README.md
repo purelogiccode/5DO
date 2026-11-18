@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.13.0-orange" alt="Version 1.13.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.13.1-orange" alt="Version 1.13.1"></a>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.13.0**. macOS arm64 presents through a **native `CAMetalLayer` surface**
+> 5DO is at **v1.13.1**. macOS arm64 presents through a **native `CAMetalLayer` surface**
 > (`VK_EXT_metal_surface`) at 60 fps with no per-frame readback, and all eight filters are
 > available. The release also adds the Phoenix/4DO presentation options — audio channel
 > swap, named void patterns, the void color on the GPU presenters, and an
@@ -85,7 +85,7 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.13.0` release (GitHub Releases) |
+| Version | `1.13.1` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
 | Automated tests | **2,439 tests** in the current test assembly |
@@ -110,29 +110,32 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.13.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.13.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.13.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.13.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-linux-arm64.tar.gz) |
-| macOS arm64 | [`5do-1.13.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.13.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.1/5do-1.13.1-win-x64.zip) |
+| Windows arm64 | [`5do-1.13.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.1/5do-1.13.1-win-arm64.zip) |
+| Linux x64 | [`5do-1.13.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.1/5do-1.13.1-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.13.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.1/5do-1.13.1-linux-arm64.tar.gz) |
+| macOS arm64 | [`5do-1.13.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.13.1/5do-1.13.1-osx-arm64.dmg) |
 
-The 1.13.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
+The 1.13.1 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
 bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux
 bundles ship the same OpenAL Soft runtime and do not require a system OpenAL install.
 
 The apps are **self-contained single-file executables**: the .NET 11 runtime is
 embedded, so no separate runtime install is required. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.13.0)
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.13.1)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 Linux users can also install the `.deb`/`.rpm` packages, run the portable AppImage, or
 install the single-file Flatpak bundle; all four are built for x64 and arm64 from the
-same bundles. Verification commands, the signing model, and the optional mirror
-setup are in the
+same bundles. The Linux files carry the platform and version in their names, for example
+`5do_1.13.1_amd64.deb`, `5do-1.13.1-1.linux.x86_64.rpm`,
+`5do-1.13.1-linux-x86_64.AppImage`, and `5do-1.13.1-linux-x86_64.flatpak`; the release
+page opens with a table that maps each system to the one file it needs. Verification
+commands, the signing model, and the optional mirror setup are in the
 [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.13.0-win-arm64.zip`
-or `5do-1.13.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.13.1-win-arm64.zip`
+or `5do-1.13.1-osx-arm64.dmg`.
 
 ## Features
 

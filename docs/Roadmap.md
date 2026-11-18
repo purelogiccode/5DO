@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.13.0 native Metal and signed Linux release** (published on GitHub).
+The project is at the **v1.13.1 native Metal and signed Linux release** (published on GitHub).
 Windows x64 and Linux x64 remain validated, and macOS arm64 now renders through
 Vulkan/MoltenVK. The compatibility plan is complete:
 
@@ -38,7 +38,7 @@ Vulkan/MoltenVK. The compatibility plan is complete:
   optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
   display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
 
-## Post-1.13.0
+## Post-1.13.1
 
 **Playability depth (in progress):**
 

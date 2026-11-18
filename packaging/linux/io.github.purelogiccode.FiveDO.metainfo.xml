@@ -77,6 +77,14 @@
   </languages>
 
   <releases>
+    <release version="1.13.1" date="2026-11-18">
+      <description>
+        <p>
+          Linux artifacts carry the platform and version in their file names, and the
+          release lists a per-platform download table.
+        </p>
+      </description>
+    </release>
     <release version="1.13.0" date="2026-11-18">
       <description>
         <p>

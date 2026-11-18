@@ -1,7 +1,7 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.13.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.13.1 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
 v1.2.x. macOS is published as a DMG. v1.13.0 adds the native Metal surface, the
 Phoenix/4DO presentation options, and GPG-signed Linux artifacts.
