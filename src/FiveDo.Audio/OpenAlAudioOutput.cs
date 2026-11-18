@@ -68,7 +68,6 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
     private readonly int _prefillFrames;
     private readonly ALContext _alc;
     private readonly AL _al;
-    private readonly Device* _device;
     private readonly Context* _context;
     private readonly delegate* unmanaged<Context*, byte> _setThreadContext;
     private readonly SharedOutputContext _shared;
@@ -142,7 +141,6 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
         _sharedKey = sharedKey;
         _alc = shared.Alc;
         _al = shared.Al;
-        _device = shared.Device;
         _context = shared.Context;
         _setThreadContext = shared.SetThreadContext;
         _ring = ring;

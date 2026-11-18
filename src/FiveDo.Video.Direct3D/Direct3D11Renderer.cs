@@ -691,7 +691,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             sharpness: (1f - _settings.FsrSharpness) * 2f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
         var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue, 1f));
+        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue));
         _context.PSSetShaderResource(0, _fsr!.View);
         _context.Draw(3, 0);
     }
@@ -719,7 +719,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             bloom: _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
         var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue, 1f));
+        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue));
         _context.PSSetShaderResource(0, source);
         _context.Draw(3, 0);
     }

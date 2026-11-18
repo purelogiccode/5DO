@@ -93,8 +93,8 @@ public static class BiosDiscovery
         Add(candidates, overrideDirectory, BiosDirectoryEnvironmentVariable);
         Add(candidates, dataDirectory is null ? null : Path.Combine(dataDirectory, "bios"), "5DO data folder");
         Add(candidates, applicationDirectory is null ? null : Path.Combine(applicationDirectory, "bios"), "next to the executable");
-        Add(candidates, userProfile is null ? null : Path.Combine(userProfile, "BIOS"), "home folder");
-        Add(candidates, documentsDirectory is null ? null : Path.Combine(documentsDirectory, "BIOS"), "documents folder");
+        Add(candidates, string.IsNullOrEmpty(userProfile) ? null : Path.Combine(userProfile, "BIOS"), "home folder");
+        Add(candidates, string.IsNullOrEmpty(documentsDirectory) ? null : Path.Combine(documentsDirectory, "BIOS"), "documents folder");
 
         return Distinct(candidates);
     }
