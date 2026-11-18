@@ -13,6 +13,7 @@ layout(push_constant) uniform PushConstants
     float bloom;
     float bloomThreshold;
     float sharpness;
+    vec4 voidColor;
 } pc;
 
 float pickWeight(vec4 weights, int index)
@@ -28,7 +29,7 @@ void main()
     vec2 uv = (gl_FragCoord.xy - pc.rect.xy) / pc.rect.zw;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
     {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        fragColor = vec4(pc.voidColor.rgb, 1.0);
         return;
     }
 
@@ -99,7 +100,7 @@ void main()
         uv = centered * 0.5 + 0.5;
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
         {
-            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            fragColor = vec4(pc.voidColor.rgb, 1.0);
             return;
         }
     }

@@ -40,6 +40,23 @@ public sealed record RendererSettings
     /// <summary>Gets the output resolution used for the final presentation pass.</summary>
     public OutputResolution OutputResolution { get; init; } = OutputResolution.Window;
 
+    /// <summary>Gets the color drawn outside the video viewport, as <c>0xAARRGGBB</c>.</summary>
+    /// <remarks>
+    /// The software presenter fills this area with the Avalonia void brush. The GPU
+    /// presenters use it as the clear color of their final pass, so the letterbox and
+    /// pillarbox match the configured backdrop instead of staying black.
+    /// </remarks>
+    public uint VoidAreaColor { get; init; } = DefaultVoidAreaColor;
+
+    /// <summary>The default void color, matching <c>AppSettings.DefaultVoidAreaColor</c>.</summary>
+    public const uint DefaultVoidAreaColor = 0xFF101010;
+
+    /// <summary>Gets the void color as normalized red, green, and blue components.</summary>
+    public (float Red, float Green, float Blue) VoidAreaColorRgb => (
+        ((VoidAreaColor >> 16) & 0xFF) / 255f,
+        ((VoidAreaColor >> 8) & 0xFF) / 255f,
+        (VoidAreaColor & 0xFF) / 255f);
+
     /// <summary>Validates the settings.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a value is out of range.</exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

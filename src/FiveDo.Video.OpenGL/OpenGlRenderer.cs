@@ -90,6 +90,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _uScaleScanline;
     private int _uScaleBloom;
     private int _uScaleBloomThreshold;
+    private int _uVoidColor;
     private int _uXbrSource;
     private int _uXbrOutput;
     private int _uXbrRect;
@@ -263,6 +264,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _uScaleScanline = gl.GetUniformLocation(_scaleProgram, "uScanline");
         _uScaleBloom = gl.GetUniformLocation(_scaleProgram, "uBloom");
         _uScaleBloomThreshold = gl.GetUniformLocation(_scaleProgram, "uBloomThreshold");
+        _uVoidColor = gl.GetUniformLocation(_scaleProgram, "uVoidColor");
 
         gl.UseProgram(_xbrProgram);
         _uXbrPalette = gl.GetUniformLocation(_xbrProgram, "uPalette");
@@ -446,7 +448,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
             gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-            gl.ClearColor(0f, 0f, 0f, 1f);
+            var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
+            gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
             gl.Clear(ClearBufferMask.ColorBufferBit);
             gl.UseProgram(_fsrRcasProgram);
             gl.Uniform4(
@@ -542,7 +545,8 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
             gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-            gl.ClearColor(0f, 0f, 0f, 1f);
+            var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
+            gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
             gl.Clear(ClearBufferMask.ColorBufferBit);
             gl.UseProgram(_scaleProgram);
             gl.Uniform2(_uScaleSource, filterSourceWidth, filterSourceHeight);
@@ -557,6 +561,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
             gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
             gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
+            gl.Uniform3(_uVoidColor, voidRed, voidGreen, voidBlue);
 
             gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, filterSource);

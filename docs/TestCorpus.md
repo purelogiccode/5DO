@@ -4231,6 +4231,52 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cu Void-color scanout fill on the GPU presenters (2026-11-18)
+
+**Scope (`UX-33`, option 4, color slice).** Paint the letterbox/pillarbox bars that the GPU
+presenters own with the configured void color instead of hard-coded black, so
+`VoidAreaColor` stops being a software-presenter-only setting.
+
+**Change.** `RendererSettings.VoidAreaColor` (`0xAARRGGBB`, default `#FF101010`) is filled
+from `AppSettings.ResolveVoidAreaColor()` by `ToRendererSettings()`. Every backend now
+clears its final target with that color: the Vulkan scale and FSR-RCAS passes, the OpenGL
+FSR and scale branches (`uVoidColor`), and the Direct3D 11 FSR-RCAS and scale passes
+(`VoidColor` in the constant buffer). The Vulkan and D3D11 scale shaders also use the color
+for the out-of-rect fragments they already rendered, which is where most of the visible bar
+comes from; the pattern stays shell-composited.
+
+**Push-constant alignment.** The Vulkan color is a `vec4` that follows five floats, so
+std430 places it at offset 64 rather than 52. `PushConstants` carries explicit
+`Pad2`/`Pad3`/`Pad4` fields to keep the C# layout identical for every shader that shares
+the block; without them the shader read uninitialized bytes and painted
+`(255,0,0)` in the bars.
+
+**Tests.** `RendererSettingsTests` covers the default, the packed-ARGB to float conversion,
+and the black/white/default extremes. `AppSettingsStoreTests` gained `ParseColorArgb`
+(`#RRGGBB` and `#AARRGGBB`) and a `ToRendererSettings` wiring case.
+
+**GPU evidence (Windows 11, RTX 4070, Debug build).** A 320x240 synthetic frame was
+rendered into an 800x450 target with 4:3 letterboxing on all three backends; left and right
+bars read exactly `(16,16,16)` in the Vulkan, OpenGL, and Direct3D 11 captures while the
+video rectangle keeps its own pixels. Repeating the run with the default temporarily set
+to `#FF3366CC` and `#FF00FF00` produced `(51,102,204)` and `(0,255,0)` in every backend, so
+the configured value, not a constant, reaches each clear. The probes normally render with
+`AspectMode.Stretch` (no bars); the capture run built them with `AspectMode.FourThree` and
+the shipped defaults are unchanged.
+
+**Reproduce.** Set `Aspect = AspectMode.FourThree` in `VkProbeRunner`, `D3dProbeRunner`, and
+`GlProbeWindow` (the shipped probes use `Stretch`), rebuild, then:
+
+```powershell
+dotnet build src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Debug
+./src/FiveDo.Frontend.Avalonia/bin/Debug/net11.0/FiveDo.exe `
+  --vk-probe artifacts/void-vk.json --vk-probe-size 800x450 --vk-probe-capture artifacts/void-vk.png --vk-probe-frames 3
+./src/FiveDo.Frontend.Avalonia/bin/Debug/net11.0/FiveDo.exe `
+  --gl-probe artifacts/void-gl.json --gl-probe-size 800x450 --gl-probe-capture artifacts/void-gl.png --gl-probe-frames 3
+./src/FiveDo.Frontend.Avalonia/bin/Debug/net11.0/FiveDo.exe `
+  --d3d-probe artifacts/void-d3d.json --d3d-probe-size 800x450 --d3d-probe-capture artifacts/void-d3d.png --d3d-probe-frames 3
+```
+
 ### 1.1ct macOS presentation and Retina matrix (2026-11-18)
 
 **Scope (`PLAT-17`).** Validate the macOS presentation matrix — windowed, live resize,

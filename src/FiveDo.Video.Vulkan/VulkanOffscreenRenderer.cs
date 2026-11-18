@@ -2320,7 +2320,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     private void RecordFsrRcasPass(ViewportRect viewport)
     {
-        ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
+        ClearValue clear = new() { Color = new ClearColorValue(_settings.VoidAreaColorRgb.Red, _settings.VoidAreaColorRgb.Green, _settings.VoidAreaColorRgb.Blue, 1f) };
         RenderPassBeginInfo begin = new()
         {
             SType = StructureType.RenderPassBeginInfo,
@@ -2404,7 +2404,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         ViewportY = viewport.Y;
         ViewportWidth = viewport.Width;
         ViewportHeight = viewport.Height;
-        ClearValue clear = new() { Color = new ClearColorValue(0f, 0f, 0f, 1f) };
+        ClearValue clear = new() { Color = new ClearColorValue(_settings.VoidAreaColorRgb.Red, _settings.VoidAreaColorRgb.Green, _settings.VoidAreaColorRgb.Blue, 1f) };
         RenderPassBeginInfo begin = new()
         {
             SType = StructureType.RenderPassBeginInfo,
@@ -2459,6 +2459,11 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             Scanline = _settings.ScanlineStrength,
             Bloom = filter == VideoFilter.Crt ? _settings.Bloom : 0f,
             BloomThreshold = _settings.BloomThreshold,
+            VoidColor = new System.Numerics.Vector4(
+                _settings.VoidAreaColorRgb.Red,
+                _settings.VoidAreaColorRgb.Green,
+                _settings.VoidAreaColorRgb.Blue,
+                1f),
         };
         _vk.CmdPushConstants(
             _commandBuffer,
@@ -3004,5 +3009,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         public float Bloom;
         public float BloomThreshold;
         public float Sharpness;
+        // std430 aligns a vec4 to 16 bytes, so the color starts at offset 64 while
+        // the fields above end at 52. These pads keep the C# layout identical for
+        // every shader that shares this block.
+        public int Pad2;
+        public int Pad3;
+        public int Pad4;
+        public System.Numerics.Vector4 VoidColor;
     }
 }

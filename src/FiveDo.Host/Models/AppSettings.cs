@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -421,6 +422,25 @@ public sealed class AppSettings
         }
 
         return true;
+    }
+
+    /// <summary>Parses a supported hex color into <c>0xAARRGGBB</c>.</summary>
+    /// <param name="value">Candidate color (<c>#RRGGBB</c> or <c>#AARRGGBB</c>).</param>
+    /// <returns>The parsed color, or the default void color when the value is invalid.</returns>
+    public static uint ParseColorArgb(string? value)
+    {
+        if (!IsValidColor(value))
+        {
+            value = DefaultVoidAreaColor;
+        }
+
+        string hex = value![1..];
+        if (hex.Length == 6)
+        {
+            hex = "FF" + hex;
+        }
+
+        return uint.Parse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
     }
 
     /// <summary>Gets or sets the aspect policy.</summary>
@@ -1608,6 +1628,7 @@ public sealed class AppSettings
             Bloom = Bloom,
             FsrSharpness = FsrSharpness,
             OutputResolution = OutputResolution,
+            VoidAreaColor = ParseColorArgb(ResolveVoidAreaColor()),
         };
         settings.Validate();
         return settings;

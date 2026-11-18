@@ -20,6 +20,7 @@ internal static class Direct3D11Shaders
             int FilterMode;
             int Pad0;
             float2 Pad1;
+            float4 VoidColor;
         };
 
         struct PSInput
@@ -120,7 +121,7 @@ internal static class Direct3D11Shaders
             float2 uv = (input.position.xy - Rect.xy) / Rect.zw;
             if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
             {
-                return float4(0.0, 0.0, 0.0, 1.0);
+                return float4(VoidColor.rgb, 1.0);
             }
 
             if (FilterMode == 3)
@@ -190,7 +191,7 @@ internal static class Direct3D11Shaders
                 uv = (centered * 0.5) + 0.5;
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 {
-                    return float4(0.0, 0.0, 0.0, 1.0);
+                    return float4(VoidColor.rgb, 1.0);
                 }
             }
 

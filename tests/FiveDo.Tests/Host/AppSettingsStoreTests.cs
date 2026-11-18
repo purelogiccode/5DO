@@ -516,6 +516,34 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void RendererSettings_CarryTheConfiguredVoidAreaColor()
+    {
+        var settings = new AppSettings { VoidAreaColor = "#FF2040" };
+
+        RendererSettings renderer = settings.ToRendererSettings();
+
+        Assert.Equal(0xFFFF2040u, renderer.VoidAreaColor);
+        Assert.Equal(0xFF / 255f, renderer.VoidAreaColorRgb.Red);
+        Assert.Equal(0x20 / 255f, renderer.VoidAreaColorRgb.Green);
+        Assert.Equal(0x40 / 255f, renderer.VoidAreaColorRgb.Blue);
+
+        settings.VoidAreaColor = "not-a-color";
+        Assert.Equal(
+            RendererSettings.DefaultVoidAreaColor,
+            settings.ToRendererSettings().VoidAreaColor);
+    }
+
+    [Theory]
+    [InlineData("#101010", 0xFF101010u)]
+    [InlineData("#FF101010", 0xFF101010u)]
+    [InlineData("#ff2040", 0xFFFF2040u)]
+    [InlineData("bad", 0xFF101010u)]
+    public void ParseColorArgb_AcceptsBothSupportedForms(string value, uint expected)
+    {
+        Assert.Equal(expected, AppSettings.ParseColorArgb(value));
+    }
+
+    [Fact]
     public void AudioDeviceAndBuffer_RoundtripAndClamp()
     {
         using var temp = new TemporaryDirectory();

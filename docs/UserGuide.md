@@ -446,11 +446,13 @@ the same crop, and per-game profiles can store their own crop. **Auto-crop borde
 detects blank edges on the presented frame (up to 25% per edge, matching 4DO), waits
 one second before accepting a larger crop, and is disabled by any manual or per-game
 crop. **Void border** draws a
-0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image;
-the adjacent **pattern** selector draws solid, checkerboard, grid, scanline, a 4DO-style
-blue diagonal gradient, soft bumps, or brushed-metal fills in the same color. Patterns are
-shell-composited, so they sit behind OpenGL, GLES, Vulkan, and Direct3D 11 output
-identically.
+0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image.
+The same color fills the letterbox and pillarbox bars inside the OpenGL, GLES, Vulkan, and
+Direct3D 11 presenters, so a wide or tall window shows the backdrop instead of black. The
+adjacent **pattern** selector draws solid, checkerboard, grid, scanline, a 4DO-style blue
+diagonal gradient, soft bumps, or brushed-metal fills in the same color; the pattern is
+shell-composited behind the video control, so it shows in the border ring and behind the
+software presenter, while the GPU presenters keep the plain void color in their bars.
 Crop, border, and auto-crop options change presentation only, not emulation, input,
 audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter

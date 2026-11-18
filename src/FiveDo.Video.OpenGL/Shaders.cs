@@ -160,6 +160,7 @@ internal static class Shaders
         uniform float uScanline;
         uniform float uBloom;
         uniform float uBloomThreshold;
+        uniform vec3 uVoidColor;      // letterbox/pillarbox fill outside the video rect
         out vec4 fragColor;
 
         float pickWeight(vec4 weights, int index)
@@ -243,7 +244,7 @@ internal static class Shaders
                 uv = centered * 0.5 + 0.5;
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 {
-                    fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                    fragColor = vec4(uVoidColor, 1.0);
                     return;
                 }
             }

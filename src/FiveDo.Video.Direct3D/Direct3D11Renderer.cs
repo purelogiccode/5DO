@@ -690,7 +690,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             filterMode: 1,
             sharpness: (1f - _settings.FsrSharpness) * 2f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(0f, 0f, 0f));
+        var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
+        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue, 1f));
         _context.PSSetShaderResource(0, _fsr!.View);
         _context.Draw(3, 0);
     }
@@ -717,7 +718,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             filterMode,
             bloom: _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(0f, 0f, 0f));
+        var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
+        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue, 1f));
         _context.PSSetShaderResource(0, source);
         _context.Draw(3, 0);
     }
@@ -755,6 +757,11 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             SourceWidth = sourceWidth,
             SourceHeight = sourceHeight,
             FilterMode = filterMode,
+            VoidColor = new Vector4(
+                _settings.VoidAreaColorRgb.Red,
+                _settings.VoidAreaColorRgb.Green,
+                _settings.VoidAreaColorRgb.Blue,
+                1f),
         };
         _context!.UpdateSubresource(in _constants, _constantBuffer!);
     }
@@ -1029,5 +1036,6 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         public int FilterMode;
         public int Pad0;
         public Vector2 Pad1;
+        public Vector4 VoidColor;
     }
 }
