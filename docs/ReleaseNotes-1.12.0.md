@@ -87,4 +87,4 @@ means no system OpenAL install is required.
 - [Compatibility.md](Compatibility.md) §10.4 - dated macOS arm64 validation table.
 - [KnownIssues.md](KnownIssues.md) - macOS OpenGL and packaging limitations.
 - [Vulkan.md](Vulkan.md) - MoltenVK portability and loader details.
-- [ImplementationPlan.md](ImplementationPlan.md) §3.3 - `PLAT-14`..`PLAT-18`.
+- [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §12 - `PLAT-15`, `PLAT-16`, and `PLAT-18` evidence; `PLAT-14`/`PLAT-17` remain open in [ImplementationPlan.md](ImplementationPlan.md) §3.1.

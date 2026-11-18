@@ -1,8 +1,9 @@
-> **Archived 2026-11-08; merged 2026-11-09.** This is the former implementation plan. It is
-> kept for traceability, stable IDs, evidence, and completed history. Do not add new tasks
-> here. The consolidated actionable plan is
-> [ImplementationPlan.md](ImplementationPlan.md); this file is the raw evidence and
-> completed-log store.
+> **Archived 2026-11-08; merged 2026-11-09; consolidated 2026-11-17.** This file is the
+> evidence and completed-history store. Do not add open tasks here. The active backlog is
+> [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
+> **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
+> baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
+> history through v1.12.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -637,3 +638,189 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 - [High-resolution CEL research](HighResolutionCelResearch.md) — VID-01/02/03.
 - [Release checklist](ReleaseChecklist.md) — release gate.
 - [Porting notes](PortingNotes.md) — intentional divergences.
+
+---
+
+# Part II — Consolidated baseline and completed backlog (2026-11-09 → 2026-11-17)
+
+> **Added 2026-11-17.** The active plan was reduced to missing features only. This part
+> receives the completed baseline, results, completed backlog rows, stable-ID index,
+> platform workstream records, and release history that used to live in
+> [ImplementationPlan.md](ImplementationPlan.md). Open work stays in the active plan and is
+> never added here.
+
+## 10. Completed baseline (through v1.12.0)
+
+### 10.1 Compatibility definition (retained)
+
+A title is **Playable** when all four are true:
+
+1. It boots from its canonical image with a supported BIOS.
+2. It renders at least one non-black frame.
+3. A standard input script reaches a distinct interactive or content screen beyond the
+   title/attract loop.
+4. It does not hang or crash before that screen is captured.
+
+Deep gameplay, ending validation, full-game completion, and frame-perfect peer parity are
+not required. Claims are measured on the **378 unique games**; the remaining images are
+loadability and duplicate coverage.
+
+### 10.2 Results
+
+| Area | Completed result | Evidence |
+|---|---|---|
+| Corpus | 1,371 images → 414 unique titles → **378 game test set** | `artifacts/corpus/inventory.json`, `docs/data/unique-corpus.csv` |
+| 5DO playability | **375 / 378 Playable**; 2 `Title-only`; 1 `No video` | `docs/data/beyond-title-results.csv`, [BeyondTitleEvidence.md](BeyondTitleEvidence.md) |
+| Peer comparison | **0 `Behind`**, **0 `Regression`**; strict superset of the **252-title** peer union (4DO **167**, Phoenix **233**) | [CompatibilityComparison.md](CompatibilityComparison.md) |
+| Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom). Jurassic Park reaches in-park gameplay; its remaining item is default CEL pacing, recorded in the active plan §4. | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
+| Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
+| High-resolution CEL | Opt-in `--true-2x` prototype: independent 480-line CEL fields, validated on Jurassic Park's Raptor Maze and Family Feud; native hashes unchanged | [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
+| Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
+| Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
+| Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
+| Platform | Windows x64 validated; macOS arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux x64 GL/Vulkan/audio/input/acceptance validated on the bare-metal HD 4000 host (2026-11-16/17); macOS arm64 Vulkan/MoltenVK presentation, all eight GPU filters, packaged DMG, and a 60 fps Wolfenstein session validated on a NoMac Apple M5 Pro (2026-11-17). Intel macOS was dropped in 1.12.0 because no Intel Mac is available for GPU validation; Wayland surfaces, accelerated macOS OpenGL, and non-Intel GPUs remain best-effort | [Compatibility.md](Compatibility.md) §10.3/§10.4, [KnownIssues.md](KnownIssues.md) |
+| RetroAchievements | Managed rcheevos evaluation, 3DO `rc_hash_3do` parity with RAHasher 1.8.3, hardcore rules, durable offline unlock queue, hardcore-only leaderboard submission, rich presence, OSD, and achievement window; hardcore credit pending RA approval | [RetroAchievements.md](RetroAchievements.md), [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md) |
+| Localization | Nine embedded UI catalogs (English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, Simplified Chinese); `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
+| Metadata | External metadata lookup with deterministic cache and manual media attachments | [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
+
+The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
+(static pad card), `LameNES Emulator` (minimal "HELLO, WORLD!" frame), and the standalone
+*Return Fire – Maps O' Death* data disc (static box-art card).
+
+Release history for v1.9.1–v1.12.0 is in §14.
+
+## 11. Completed stable IDs
+
+**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, QUAL-01 … QUAL-04,
+QUAL-03A … QUAL-03D, QUAL-05A, ACC-01 … ACC-04, AUD-01, AUD-02, PLAT-01 … PLAT-04,
+PLAT-07 … PLAT-13, PLAT-15, PLAT-16, PLAT-18, TEST-06/07/08, CORE-11/16, FND-05, ECO-04,
+ENG-01/09, SYS-06/07/08/12/17/18/22/24, UX-09, UX-25, UX-26, UX-28 … UX-32, UX-34, UX-35,
+VID-04/12/16/17/18, and VID-19.
+
+`SYS-21` and `SYS-23` are code-complete but remain open for their named hardware evidence.
+`PLAT-08B` closed on 2026-11-17; its native-surface remainder became `PLAT-14`.
+`UX-16` is complete for the unsigned installer/package scaffolding; signing and
+notarization remain blocked.
+
+`ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
+the active plan §4. `ACC-04` is closed with the in-park gameplay script and a
+default-CEL-pacing residual. `VID-19` is closed as the tested opt-in `--true-2x` path; its
+remaining production items stay under `VID-01`. `QUAL-03` and `QUAL-04` closed the first
+quality pass; `QUAL-03A`…`QUAL-03D` and `QUAL-05A` completed the follow-on scripts, and
+`QUAL-05B` (the full Road Rash race) stays blocked. The full completed-ID index, milestone
+aliases, old gates, and dated evidence entries are in Part I. Do not reopen a completed ID
+without new measurement.
+
+## 12. Completed backlog rows (2026-11-09 → 2026-11-17)
+
+| ID | Priority | Completed result | Evidence |
+|---|---|---|---|
+| **QUAL-03A** | P0 | **BladeForce**: reached the Training Mission, Recon Maps, and Supply Depot at 70,000/80,000/90,000 frames; promoted to `Good`. | [TestCorpus.md](TestCorpus.md) 1.1bp |
+| **QUAL-03B** | P0 | **Jurassic Park Interactive**: opened **Security Systems / Security Tracking** at 42,000/52,000 frames. No in-park gameplay at that point; superseded by `ACC-04`. | [TestCorpus.md](TestCorpus.md) 1.1bp |
+| **QUAL-03C** | P0 | **Off-world Interceptor**: passed the pre-mission shop, launched the first mission at 12,000 frames, and held 3D vehicle/HUD gameplay through 16,000; promoted to `Good`. | [TestCorpus.md](TestCorpus.md) 1.1bp |
+| **QUAL-03D** | P0 | **PGA Tour 96**: broke the Golf Bag → Pro Info cycle, reached **Hole 1** at 64,000 frames, and held golf gameplay through 80,000; promoted to `Good`. | [TestCorpus.md](TestCorpus.md) 1.1bp |
+| **QUAL-05A** | P0 | **Alone in the Dark**: extended the script through room exploration at 30,000-35,000 frames and the **Actions** menu (`Fight`/`Open/Search`/`Close`/`Push`); the monster encounter is visible at 34,000. | [TestCorpus.md](TestCorpus.md) 1.1bp |
+| **AUD-01** | P0 | 10-minute real-time audio soak: Windows null and real devices pass with 0 drops/0 underruns (600.6 s each); Linux null driver passes 0/0 (600.6 s). The Hyper-V VM had no PCM playback endpoint, so the Linux real-device soak was left to `AUD-02`. | [Audio.md](Audio.md) §9 |
+| **AUD-02** | P0 | Linux real-device soak on bare metal: default PipeWire endpoint, 35,966 frames, 26,461,445 samples, **0 dropped**, **0 underruns**, 0 OpenAL errors, DSP running. | [Audio.md](Audio.md) §9, [TestCorpus.md](TestCorpus.md) 1.1cm |
+| **PLAT-02** | P1 | Linux x64 GPU presentation: 1920x1080 sharp-bilinear probe `ok: true` at 61.0-61.6 fps (present mean 1.9-2.5 ms, GPU 1.2-1.3 ms, `filterFallback: false`) and 1280x720 vsync `vsyncActive: true` via `GLX_EXT_swap_control`. The pass found and fixed the Linux WGL/GLX swap-interval misdetection. | [Compatibility.md](Compatibility.md) §10.3, [TestCorpus.md](TestCorpus.md) 1.1cm |
+| **PLAT-03** | P1 | macOS arm64 runtime validation: the arm64 bundle starts, runs `selftest`, and passes the frontend `--smoke-test`. | `platform-runtime.yml` run 42770783778 (2026-11-10), [Compatibility.md](Compatibility.md) §10.4 |
+| **PLAT-04** | P1 | Windows/Linux arm64 hardware validation: CLI and frontend smoke pass on both arm64 targets. | `platform-runtime.yml` run 42770783778 (2026-11-10) |
+| **PLAT-07** | P1 | Frontend NativeAOT audio validation: the real machine/CoreRunner/OpenAL path ran 600 s on the null device and the NVIDIA endpoint, both 0 drops/0 underruns. | [Audio.md](Audio.md) §9 |
+| **PLAT-08A** | P1 | Vulkan Linux surfaces and device selection: `VK_KHR_xlib_surface`, swapchain/present-mode selection, resize/`OUT_OF_DATE` recreation, the X11 probe window, the Linux `VulkanVideoSurface` child surface, and physical-device ranking. X11 probe presents FIFO at 60.1 fps/1080p with 0 renderer bytes/frame; a 320x240 Accurate capture matches the CPU oracle (`0x5DD1D7C5`); device ranking selects the Intel device without `VK_ICD_FILENAMES`; `--gl-backend vulkan` runs in the shell through a depth-24 X11 child window (1060x466 at 60 Hz, viewport 370,113 320x240, resize to 1400x820); Wayland-only sessions fall back cleanly. | [Vulkan.md](Vulkan.md), [TestCorpus.md](TestCorpus.md) 1.1cm |
+| **PLAT-09** | P1 | Full PAL library validation: eight PAL-sensitive titles captured with `panafz10e-anvil.bin`, plus a PAL2 presentation probe (384x288 at 50 Hz). | [PalValidation.md](PalValidation.md), `docs/data/pal-validation.csv` |
+| **PLAT-10** | P1 | Real-machine acceptance on the bare-metal Linux host: boot on all three backends, `F11` fullscreen round-trip, `F5`/`F8` slot save/load, `Escape` pause, `F12` 320x240 PNG, real-device audio 0/0, virtual evdev pad driving the 3DO, inhibitor acquire/release, library listing, and exit code 0. The pass found and fixed the 1x1 screenshot bug. Optical drive N/A (no `/dev/sr*`). | [TestCorpus.md](TestCorpus.md) 1.1cm, [Compatibility.md](Compatibility.md) §10.3 |
+| **PLAT-11** | P1 | Linux evdev gamepad validation. Found and fixed a real defect: `EventIoctl` encoded the ioctl **type and request number in the wrong bit positions**, so no evdev device was ever accepted. `--gamepad-probe` now samples for two seconds. A virtual 8-button/4-axis uinput pad is detected (`connected=1`), its South button maps to `buttons=South`, and the `input`-group/udev requirement is documented. | [TestCorpus.md](TestCorpus.md) 1.1cm, `EvdevGamepadSourceTests` |
+| **PLAT-12** | P1 | Linux display-sleep inhibit: freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`) held by a persistent `python3-dbus` helper. A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit`/`UnInhibit` with the same cookie, and closing released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip cleanly. | [TestCorpus.md](TestCorpus.md) 1.1cm, `DisplaySleepPolicyTests` |
+| **PLAT-13** | P1 | Linux desktop exit segfault: Silk.NET unloaded `libopenal.so` when the last context was disposed, leaving the PipeWire backend's `atexit` handler pointing at unmapped code. `OpenAlAudioOutput` keeps one reference to the library on Linux; software, OpenGL, and Vulkan sessions close with exit code 0 and `--smoke-test` still passes. | [TestCorpus.md](TestCorpus.md) 1.1cm |
+| **PLAT-15** | P1 | macOS GPU runtime packaging: the arm64 tarball/DMG contains `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both Apache-2.0 notices. A self-contained bundle with no `DOTNET_ROOT` loads `/tmp/.../libvulkan.1.dylib` and `/tmp/.../libMoltenVK.dylib` (`DYLD_PRINT_LIBRARIES`), and `--vk-probe` returns `ok: true`. | [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md) |
+| **PLAT-16** | P1 | macOS OpenAL live-switch fix: 18 `AL_INVALID_ENUM` errors when a second output replaced an open one. macOS has no `ALC_EXT_thread_local_context`, so the output now shares one context per device and clears it only after the last output. `FIVEDO_AUDIO_TESTS=1` passes all three audio tests on macOS; Windows passes; a live switch reports 0 AL errors. | [Audio.md](Audio.md), [Compatibility.md](Compatibility.md) §10.4 |
+| **PLAT-18** | P1 | macOS NoMac release gate: [BuildAndTest.md](BuildAndTest.md) §7.2 is the runbook. The 2026-11-17 run reproduced the [Compatibility.md](Compatibility.md) §10.4 table from a clean checkout, including the self-contained DMG, bundled MoltenVK, and the 60 fps game session. | [BuildAndTest.md](BuildAndTest.md) §7.2, [Compatibility.md](Compatibility.md) §10.4 |
+| **ACC-03** | P2 | CD subcode support: 2352+96 wire size and Q packing (control/track/index/MSF/CRC) into `READ_DATA`, with the 10-byte `READ SUB-Q` response. A synthetic subcode test decodes the same values. | `CdromMultiTrackTests` (2026-11-10), [TestCorpus.md](TestCorpus.md) 1.1bs |
+| **ACC-04** | P2 | Jurassic Park Interactive CEL timing: `benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` moves the pointer hand onto Robert Muldoon, cycles to the Rest Room, and starts the in-park **Raptor Maze** at 63,000 frames; the raptor encounter and **SECURITY BREACH** render at 65,000/65,500. 5DO and OperaCore frame hashes match at 40,000/42,000/57,000/62,000/63,000. The first visual divergence is the 65,000 checkpoint: the default FreeDO CEL model is ahead of the reference's static corridor, while `--cel-timing opera` produces the reference hash `0xD5D6A993` exactly. The residual is the default CEL busy model. | `artifacts/acc04`, `benchmarks/diff/acc04-jurassic-cel.json`, [TestCorpus.md](TestCorpus.md) 1.1ck |
+| **SYS-22** | P3 | Disc image conversion between ISO/BIN/CUE/CHD from the CLI. Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`. | [TestCorpus.md](TestCorpus.md) 1.1bs |
+| **SYS-24** | P3 | CDI/NRG disc image support: the standalone `CDISharp` and `NRGSharp` libraries plus `CdiDiscImage`/`NrgDiscImage`; `DiscImageFactory`, the game library, File > Open Disc, and the CLI accept both. 21 tests cover the 2353/2368/2448/2449-byte and raw Mode 1/2 variants; malformed images fail cleanly. | `CdiNrgDiscImageTests`, `ParserFuzzTests`, [TestCorpus.md](TestCorpus.md) 1.1ch, [Compatibility.md](Compatibility.md) §10.3 |
+| **UX-09** | P3 | Localization: nine embedded catalogs, a General settings tab, and `--locale`/`--list-locales` in both executables; the translated smoke marker records `firstMenuHeader=Datei`, and switching back to English restores labels immediately. | `LocalizationTests`, `LocalizationCoverageTests`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
+| **UX-25** | P3 | Session focus behavior: focus loss pauses or releases input per the setting; tests cover the transition. | `FocusPausePolicyTests` (2026-11-10), [TestCorpus.md](TestCorpus.md) 1.1bs |
+| **VID-17** | P3 | Void-area patterns: selectable checker, grid, and scanline brushes render behind OpenGL/GLES/Vulkan/D3D11 and round-trip through settings. | `VoidPatternTests` (2026-11-10) |
+| **VID-16** | P3 | VDLP pixel formats: 0RGB1555, RGB565, and XRGB8888 conversion paths, each matching the CPU reference on a synthetic frame with no default hash change. | `FrameAssemblerTests` (2026-11-10), [TestCorpus.md](TestCorpus.md) 1.1bs |
+| **UX-28** | P3 | Metadata providers and media: external lookup with a deterministic cache, clean failure fallback, and manual media attachments. Uses the existing `library-metadata.json` schema as the provider format, writes a canonical `metadata-cache.json`, and manages manual media paths through `5do metadata media`. | `MetadataCatalogClient`, `metadata lookup`/`metadata media`, `MetadataCatalogClientTests`, [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
+| **UX-29** | P3 | TAS Lua scripting and input timeline: sandboxed `frame`/`hold`/`press`/`release`, a Lua-authored movie that replays deterministically, and timeline export/set/apply with **Emulation > Input Timeline...**. | `FiveDo.Scripting`, `LuaInputScript`, `InputTimeline`, `LuaTimelineTests` (5) and the CLI tests (2026-11-13), [Tas.md](Tas.md) §8-9 |
+| **UX-30** | P3 | 4DO `.4dosav` import/export (best-effort): imports with warnings where fields are unsupported and round-trips in 5DO. Native 4DO state compatibility is explicitly not a goal. | `FourDoSaveState`, `FourDoStateConverter`, `state import-4do`/`state export-4do`, `FourDoStateTests` (5) and the CLI round-trip test (2026-11-13), [SaveStates.md](SaveStates.md) §9 |
+| **UX-31** | P3 | Controller preview: Input Bindings draws a 3DO pad, selecting a row highlights its button, and a pressed key/gamepad control lights the mapped button; the dialog still round-trips the profile. | `ControllerPadPreview` (2026-11-13), `ControllerPreviewTests`, [TestCorpus.md](TestCorpus.md) 1.1bu |
+| **UX-32** | P3 | Screen-saver/display-sleep inhibit: a running unpaused game keeps the display awake on Windows and releases it on pause/stop/exit, with the platform caveats documented. | `DisplaySleepPolicy` (2026-11-13), `DisplaySleepPolicyTests`, [TestCorpus.md](TestCorpus.md) 1.1bv |
+| **VID-18** | P3 | Automatic blank-border crop: detects black borders with a one-second hysteresis, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and reproduces the 4DO border on the capture set. | `AutoCropDetector` (2026-11-13), `AutoCropTests`, [TestCorpus.md](TestCorpus.md) 1.1bv |
+| **VID-19** | P3 | True 2× CEL high-resolution spike, shipped as the opt-in `--true-2x` machine option: independent 480-line fields, arbitrary CEL geometry at 640x480, and 2x2 packed/scaled 2D CELs. Jurassic Park's Raptor Maze renders at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale); Family Feud matches a clean 2x scale (0.00%); native hashes unchanged (`0xD5D6A993`); true 2× costs about 30% more emulation time (177 fps versus 232 fps, two-run average). The host gates the mode to game IDs `18036597` and `55f8ccf1`; other titles fall back with a warning. | `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`, [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
+| **UX-34** | P3 | BIOS discovery and first-run offer: `BiosDiscovery` searches `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`; `5do-cli bios discover [--json]` exposes the result; the welcome dialog offers the image with **Use this BIOS**. | `BiosDiscoveryTests` (4) (2026-11-17) |
+| **UX-35** | P3 | `5do-cli doctor` host report: read-only OS/session, data-folder, disk-space, OpenGL/Vulkan/OpenAL, evdev/optical, settings, and BIOS-discovery report with `--json` and `--strict`. | `DoctorReport`, `DoctorCommand`, `DoctorReportTests` (3) (2026-11-17) |
+
+`UX-16` unsigned scaffolding is also complete: the Windows Inno Setup installer with
+`.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, the Linux `.deb`/`.rpm` with desktop and
+MIME entries, and the macOS `.app`/`.dmg`/`.pkg` are built on native CI runners. Signing
+and notarization remain blocked; see the active plan §4.
+
+The requested 4DO parity order (`UX-09` → `SYS-21` → `SYS-23`) is complete in code
+(2026-11-13). `UX-09` shipped; `SYS-21` and `SYS-23` keep their `Done when` lines open only
+for a physical host drive and a physical DirectInput-only pad, tracked in the active plan
+§3.5.
+
+## 13. Platform workstreams (2026-11-16/17)
+
+**Linux workstream (2026-11-16).** A bare-metal Linux Mint 22.3 host removed the hardware
+blocker that kept Linux at preview/best-effort: Intel Core i7-3615QM, Intel HD 4000 (Ivy
+Bridge), Mesa 25.2.8 with hardware OpenGL 4.2 (crocus) and Vulkan 1.2 (`hasvk`), a live
+Cinnamon/X11 session at 1920x1080, and HDA Intel PCH audio. `PLAT-02` (hardware GL 4.2
+probe), `PLAT-08A` (X11 surface, device ranking, and Linux shell child surface), `PLAT-12`
+(D-Bus screen-saver inhibitor), `PLAT-13` (the OpenAL PipeWire exit segfault found during
+the `PLAT-12` pass), `PLAT-11` (the evdev ioctl fix validated with a virtual pad), `AUD-02`
+(600 s real-device soak with 0 drops/underruns), and `PLAT-10` (full acceptance pass,
+including the 1x1 screenshot fix) are done. The Linux workstream has no remaining §3 items;
+GLES 3.1/Tier B timing stays in `PLAT-06`. `hasvk` reports "Ivy Bridge Vulkan support is
+incomplete", so this host is the legacy/integrated validation target, not the primary
+Vulkan reference. CI `Xvfb` smokes run `llvmpipe` without a swapchain and are not GPU
+evidence.
+
+**macOS full-support workstream (2026-11-17).** A rented NoMac Apple M5 Pro (Virtual,
+macOS 26.6.2, arm64) unblocked macOS GPU work. The first pass validated the offscreen
+Vulkan/MoltenVK presenter (all eight filters, a 60 fps packaged Wolfenstein session, and
+2,394/2,394 tests) and removed the external .NET 8 build requirement. Full support is
+defined as: a native Metal/MoltenVK surface with no per-frame readback; a packaged GPU
+runtime or actionable first-run guidance; working macOS audio live-switch; Retina/DPI;
+physical gamepad detection; and a signed/notarized DMG. Intel macOS is out of scope
+(dropped in 1.12.0), so the target is Apple Silicon only. `PLAT-15` (GPU runtime
+packaging), `PLAT-16` (audio live-switch), and `PLAT-18` (NoMac release gate) are done;
+`PLAT-14` (native surface), `PLAT-17` (Retina/DPI), and `PLAT-05` (physical controller)
+remain in the active plan. Credentials and start/stop commands are in the gitignored
+`AGENTS.local.md`; stop the Mac after each run to end billing. Signing and notarization
+(`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
+remains unsigned.
+
+## 14. Release history (v1.9.1 → v1.12.0)
+
+- **v1.12.0 (2026-11-17):** macOS GPU presentation — arm64 Vulkan/MoltenVK presenter, all
+  eight filters, 2,394 tests, packaged DMG, and a .NET 8-free build; macOS full-support
+  backlog tracked as `PLAT-14`..`PLAT-18`.
+- **v1.11.0:** Linux validation and stability — hardware OpenGL/Vulkan X11, 600 s
+  real-device audio, evdev gamepads, display sleep, full acceptance, true 2x CEL, and the
+  Linux gamepad/exit/screenshot fixes; six framework-dependent bundles (macOS as DMG) with
+  `SHA256SUMS.txt`.
+- **v1.10.2:** CDI/NRG disc images and the Windows OpenAL runtime fix.
+- **v1.10.1:** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename,
+  deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading
+  overlay.
+- **v1.10.0:** managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore
+  rules, leaderboards, rich presence, OSD notifications, and the achievement window.
+- **v1.9.1:** nine UI catalogs, reversible locale switching, two-step Escape, metadata,
+  optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input
+  scripting, input timeline, and 4DO state interop.
+
+The v1.12.0 release page is
+<https://github.com/purelogiccode/5DO/releases/tag/v1.12.0>; the v1.11.0 evidence remains at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.11.0>.
+
+## 15. Plan rewrites and retirements
+
+| Date | Rewrite | Effect |
+|---|---|---|
+| 2026-11-08 | Feasibility revision | Cut 49 open IDs and eight gates to nine release-blocking entries; replaced the full differential with the 414-title unique corpus. |
+| 2026-11-09 | Merge | Folded the active plan into the consolidated plan; this archive became the evidence and completed-log store. |
+| 2026-11-17 | Missing-features rewrite | The active plan now lists missing work only. The completed baseline, results table, 37 completed backlog rows, stable-ID index, platform workstreams, and release history moved here. Open at rewrite: `PLAT-05`, `PLAT-06`, `PLAT-14`, `PLAT-17`, `REL-04`..`REL-10`, `SYS-21`, `SYS-23`, `UX-33`, `SYS-25`. |

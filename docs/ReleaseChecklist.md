@@ -50,7 +50,7 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] macOS arm64: packaged `.dmg`/`.pkg`/`.tar.gz`; CLI and frontend smoke pass from the
       tarball and the mounted DMG; SHA-256 checksums verify.
 - [x] macOS evidence and limits recorded in `Compatibility.md` §10.4, `KnownIssues.md`,
-      `Video.md`, `Vulkan.md`, and `ImplementationPlan.md` §3.3.
+      `Video.md`, `Vulkan.md`, and `ImplementationPlanArchive.md` §12.
 - [x] Release apphosts switched to **self-contained** single files
       (`--self-contained true -p:PublishSingleFile=true`); the .NET 11 runtime is
       embedded and no runtime folder is staged.

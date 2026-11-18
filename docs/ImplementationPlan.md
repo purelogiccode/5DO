@@ -1,14 +1,11 @@
-# 5DO — Consolidated Implementation Plan
+# 5DO — Missing Features
 
 **Snapshot:** 2026-11-17
 **Release:** v1.12.0
-**Status:** the compatibility program is complete. This file is the single actionable plan;
-it tracks only **achievable post-1.11.0 work**. The macOS full-support workstream is
-active: arm64 GPU presentation is validated through Vulkan/MoltenVK on the rented NoMac
-host, and the remaining macOS items are tracked in §3.3 as `PLAT-14`..`PLAT-19`.
-**Merged from:** the former active plan and
-[ImplementationPlanArchive.md](ImplementationPlanArchive.md). The archive remains the raw
-evidence store, completed log, stable-ID index, and appendices.
+**Status:** the compatibility program is complete. This file tracks **missing work only**;
+completed items, their evidence, and the full stable-ID history are in
+[ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
+**Open items:** 15 — 4 platform, 7 release/packaging, 2 product, 2 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -16,70 +13,18 @@ evidence store, completed log, stable-ID index, and appendices.
 > research are listed in §4 and are **not** checkboxes.
 >
 > **Evidence rule.** A task is complete only when its **Done when** line is satisfied and
-> the capture, hash, frame count, BIOS/disc identity, test, or release artifact is committed.
+> the capture, hash, frame count, BIOS/disc identity, test, or release artifact is
+> committed. Completed rows move to the archive; they are not kept here.
 
 ---
 
 ## 1. Completed baseline
 
-### 1.1 Compatibility definition (retained)
-
-A title is **Playable** when all four are true:
-
-1. It boots from its canonical image with a supported BIOS.
-2. It renders at least one non-black frame.
-3. A standard input script reaches a distinct interactive or content screen beyond the
-   title/attract loop.
-4. It does not hang or crash before that screen is captured.
-
-Deep gameplay, ending validation, full-game completion, and frame-perfect peer parity are
-not required. Claims are measured on the **378 unique games**; the remaining images are
-loadability and duplicate coverage.
-
-### 1.2 Results
-
-| Area | Completed result | Evidence |
-|---|---|---|
-| Corpus | 1,371 images → 414 unique titles → **378 game test set** | `artifacts/corpus/inventory.json`, `docs/data/unique-corpus.csv` |
-| 5DO playability | **375 / 378 Playable**; 2 `Title-only`; 1 `No video` | `docs/data/beyond-title-results.csv`, [BeyondTitleEvidence.md](BeyondTitleEvidence.md) |
-| Peer comparison | **0 `Behind`**, **0 `Regression`**; strict superset of the **252-title** peer union (4DO **167**, Phoenix **233**) | [CompatibilityComparison.md](CompatibilityComparison.md) |
-| Quality ledger | **101 rows: 91 `Good`, 10 `Playable`**; seven are media/reference/add-on discs, three are game leads (DeathKeep, Jurassic Park, Kingdom). Jurassic Park now reaches in-park gameplay; its remaining item is default CEL pacing, recorded in §4. | `docs/data/playability-grades.csv`, `playability-grades-baseline.json` |
-| Accuracy panel | **50/50 frame hashes**, **150/150 audio fields** at frames 60/120/300 | [DifferentialHarness.md](DifferentialHarness.md) §8 |
-| High-resolution CEL | Opt-in `--true-2x` prototype: independent 480-line CEL fields, validated on Jurassic Park's Raptor Maze and Family Feud; native hashes unchanged | [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
-| Long-run sample | 4/5 titles match at 3,000 frames; Road Rash first diverges at frame 600 | `artifacts/diff/roadrash-acc1-timers` |
-| Release | **v1.12.0** macOS GPU presentation: arm64 Vulkan/MoltenVK presenter, all eight filters, 2,394 tests, packaged DMG, and a .NET 8-free build; the macOS full-support backlog is `PLAT-14`..`PLAT-18`; **v1.11.0** Linux validation and stability: hardware OpenGL/Vulkan X11, 600 s real-device audio, evdev gamepads, display sleep, full acceptance, true 2x CEL, and the Linux gamepad/exit/screenshot fixes, as six framework-dependent bundles (macOS as DMG) with `SHA256SUMS.txt`; **v1.10.2** added CDI/NRG disc images and the Windows OpenAL runtime fix; **v1.10.1** RetroAchievements save-state hit persistence, the `FiveDo` apphost rename, deferred/ReadyToRun startup, the fullscreen pause/Escape flow, and the localized loading overlay; the v1.10.0 managed rcheevos engine, 3DO hashing, durable offline unlocks, hardcore rules, leaderboards, rich presence, OSD notifications, and achievement window; the v1.9.1 nine UI catalogs, reversible locale switching, two-step Escape, metadata, optical-drive boot, DirectInput gamepads, auto-crop, display-sleep inhibition, Lua input scripting, input timeline, and 4DO state interop remain | [GitHub release](https://github.com/purelogiccode/5DO/releases/tag/v1.11.0) |
-| Build gate | Debug build, full test suite, format, InspectCode, docs checks green | [Status.md](Status.md), [ReleaseChecklist.md](ReleaseChecklist.md) |
-| Regression gates | Weekly beyond-title baseline and quality-ledger gate run unattended | `.github/workflows/compat-baseline.yml` |
-| Platform | Windows x64 validated; macOS arm64, Linux arm64, and Windows arm64 native runtime smoke passed; Linux x64 GL/Vulkan/audio/input/acceptance validated on the bare-metal HD 4000 host (2026-11-16/17); macOS arm64 Vulkan/MoltenVK presentation, all eight GPU filters, packaged DMG, and a 60 fps Wolfenstein session validated on a NoMac Apple M5 Pro (2026-11-17). Intel macOS support was dropped in 1.12.0 because no Intel Mac is available for GPU validation; Wayland surfaces, accelerated macOS OpenGL, and non-Intel GPUs remain best-effort | [Compatibility.md](Compatibility.md) §10.3/§10.4, [KnownIssues.md](KnownIssues.md) |
-| RetroAchievements | Managed rcheevos evaluation, 3DO `rc_hash_3do` parity with RAHasher 1.8.3, hardcore rules, durable offline unlock queue, hardcore-only leaderboard submission, rich presence, OSD, and achievement window; hardcore credit pending RA approval | [RetroAchievements.md](RetroAchievements.md), [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md) |
-| Localization | Nine embedded UI catalogs (English, German, Brazilian Portuguese, French, Spanish, Italian, Japanese, Korean, Simplified Chinese); `--locale`/`--list-locales`; translated smoke marker `firstMenuHeader=Datei` | [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw |
-| Metadata | External metadata lookup with deterministic cache and manual media attachments | [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx |
-
-The remaining non-playable rows are three non-retail/add-on images: `Joypad Test v1.0`
-(static pad card), `LameNES Emulator` (minimal “HELLO, WORLD!” frame), and the standalone
-*Return Fire – Maps O' Death* data disc (static box-art card).
-
-### 1.3 Completed stable IDs
-
-The compatibility and release plan is closed: **COMPAT-01 … COMPAT-16**, **REL-01 …
-REL-03**, **QUAL-01 … QUAL-04**, **ACC-01**, **ACC-02**, **ACC-03**, **ACC-04**,
-**PLAT-01**, **PLAT-02**,
-**PLAT-03**, **PLAT-04**, **PLAT-07**, **PLAT-08A**, **PLAT-09**, **PLAT-10**, **PLAT-11**,
-**PLAT-12**, **PLAT-13**, **AUD-02**, **TEST-06/07/08**,
-**CORE-11/16**, **FND-05**, **ECO-04**, **ENG-01/09**, and the shipped
-**SYS-06/07/08/12/17/18/22**, **UX-09**, **UX-25**, **UX-26**, **UX-28**, **UX-29**,
-**UX-30**, **UX-31**, **UX-32**, **VID-04/12/16/17/18**, **VID-19** items. `SYS-21` and `SYS-23` are code-complete but remain open
-for their named hardware evidence.
-
-`ACC-01` and `ACC-02` are closed as documented residuals; their revisit conditions are in
-§4. `ACC-04` is closed with the new in-park gameplay script and a default-CEL-pacing
-residual in §4. `VID-19` is closed as the tested opt-in `--true-2x` path; its remaining
-production items stay in §4 under VID-01. `QUAL-03` and `QUAL-04` closed the first quality pass. The follow-on scripts
-`QUAL-03A`…`QUAL-03D` and `QUAL-05A` are now complete; `QUAL-05B` (the full Road Rash
-race) is blocked in §4. The full completed-ID index, milestone aliases, old gates, and
-dated evidence entries are in
-[ImplementationPlanArchive.md](ImplementationPlanArchive.md). Do not reopen a completed ID
-without new measurement.
+Nothing in §3 is closed. The 375/378 playability result, the 101-row quality ledger, the
+50/50 accuracy panel, the v1.9.1–v1.12.0 release history, the 37 completed
+`QUAL`/`AUD`/`PLAT`/`ACC`/`SYS`/`UX`/`VID` rows, and every completed stable ID are recorded
+in [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §10–§15. Do not reopen a
+completed ID without new measurement.
 
 ---
 
@@ -88,6 +33,9 @@ without new measurement.
 - **Priority:** **P0** player-visible quality/evidence, **P1** release/platform hardening,
   **P2** accuracy features, **P3** product features.
 - **Effort:** **S** under 3 developer-days, **M** 3–10, **L** 10–30, **XL** 30–90+.
+- **Status:** **Open** (not started or in progress), **Partial** (a usable subset ships),
+  **Candidate** (probe first, commit only on evidence), **Awaiting hardware** (code and
+  tests are complete; only the named device evidence is missing).
 - **One feature per change.** Do not mix accuracy, rendering, and UX work in one change.
 - **One root cause per fix.** Every fix starts from a failing title, test, or panel row.
 - **No speculative work.** If a task cannot change a status, a gate, or a release artifact,
@@ -100,301 +48,111 @@ without new measurement.
 
 ## 3. Missing features — achievable backlog
 
-### 3.1 P0 — Quality closure
+### 3.1 P1 — macOS platform
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **QUAL-03A** | **Done** | M | **BladeForce**: reach an interactive mission from `START NEW GAME` beyond the intro/cutscene loop. | The reference reaches the same Main Options menu; the remaining gap was a title-specific input path, not a proven core defect. | Reached the Training Mission, Recon Maps, and Supply Depot mission at 70,000/80,000/90,000 frames; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
-| **QUAL-03B** | **Done** | M | **Jurassic Park Interactive**: break the Operations hub / pause-menu session loop and open a terminal or gameplay scene. | Input scripting and save states already exist; no core defect was found in triage. | Opened **Security Systems / Security Tracking** at 42,000/52,000 frames. No in-park gameplay yet; stays `Playable`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
-| **QUAL-03C** | **Done** | S | **Off-world Interceptor**: pass the pre-mission shop into a mission. | Menu navigation only; no core defect is known. | Launched the first mission at 12,000 frames; 3D vehicle/HUD gameplay through 16,000; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
-| **QUAL-03D** | **Done** | S | **PGA Tour 96**: break the Golf Bag → Pro Info cycle and start a round. | The game already reaches its menus; the gap was script/state sequencing. | Reached **Hole 1** at 64,000 frames; golf gameplay through 80,000; promoted to `Good`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
-| **QUAL-05A** | **Done** | M | **Alone in the Dark long-play evidence**: extend the room sequence through exploration and the interaction menu. | The intro, save states, and scripted input already exist; this is script tuning and evidence capture. | Room exploration at 30,000-35,000 frames and the **Actions** menu (`Fight`/`Open/Search`/`Close`/`Push`) are scripted; the monster encounter is visible at 34,000. Evidence: [TestCorpus.md](TestCorpus.md) 1.1bp. |
+| **PLAT-14** | Open | L | **Native Metal/Vulkan surface**: replace the offscreen Vulkan plus bitmap-readback shell path with a native `CAMetalLayer`/`NSView` surface (through `VK_EXT_metal_surface`/MoltenVK or a native Metal presenter), including swapchain creation, resize/`OUT_OF_DATE`, present-mode selection, and no per-frame CPU readback. | The NoMac host has a Metal device; the Linux X11 native surface and the macOS offscreen renderer are working references; MoltenVK ships with the bundle. | `--vk-window-probe` on macOS presents natively (`ok: true`), 1080p FIFO at >=60 fps with 0 renderer bytes/frame; a 320x240 Accurate capture matches the CPU oracle with 0 different pixels; the desktop shell uses the surface through resize and fullscreen. Evidence: [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md). |
+| **PLAT-17** | Open | M | **macOS Retina/DPI and presentation matrix**: validate 1x/2x Retina scaling, logical versus physical pixel sizing, fullscreen, window resize, 320x240 screenshot dimensions, and 4K offscreen output on the NoMac host. | `PixelSizeTests` cover the math and the shell already handles size/scale; NoMac provides a 1920x1080 desktop and Metal GPU. | A dated matrix records windowed/fullscreen and 1x/2x results, screenshots have the expected pixel size, the video rectangle is not stretched, and the results are labeled in [Performance.md](Performance.md) §8.8. |
+| **PLAT-05** | Awaiting hardware | S | **macOS gamepad backend**: physical detection for the IOKit HID source. `MacOsGamepadSource`, `MacOsHidGamepadMapper`, and 21 mapping/profile tests are complete. | Only the physical check needs a macOS host with a connected controller; the mapping is already unit-tested. | A macOS gamepad is detected and mapped through the existing eight-player profile. |
 
-`QUAL-05B` (the full 5.5-mile Road Rash race) moved to §4. The current autopilot still
-ends with the rider off the bike after 150,000 frames; it is a driving/start-line and
-traffic-avoidance limit, not the old CD wait.
+`PLAT-15` (bundled MoltenVK/loader), `PLAT-16` (OpenAL live-switch), and `PLAT-18`
+(NoMac release gate) are closed; see the archive. `PLAT-14` is the only open item that
+changes how the macOS build presents every frame, so it runs first.
 
-The two reference-limited leads are **not** in this backlog: **DeathKeep** (Start Game is
-black on both 5DO and OperaCore) and **Kingdom** (intro returns to the title on both
-engines) have no known input path to gameplay. They stay documented until a reference
-capture proves a reachable scene; see §4.
-
-### 3.2 P0 — Evidence and validation
+### 3.2 P1 — Presentation and performance validation
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **AUD-01** | **Done** | S | Run a 10-minute real-time audio soak on Windows and Linux with the null device and one real device; confirm zero dropped samples and zero underruns. | The counters, sync offset, and device-recreation tests already exist; only the platform soak was missing. | Windows: null and real devices pass with 0 drops/0 underruns (600.6 s each). Linux: null driver passes with 0 drops/0 underruns (600.6 s). The Hyper-V VM had no PCM playback endpoint, so the Linux real-device soak was a hardware limitation; `AUD-02` now covers it on bare metal. Evidence: [Audio.md](Audio.md) §9. |
-| **AUD-02** | **Done** | S | **Linux real-device audio soak on bare metal**: repeat the 600 s soak against a physical PCM endpoint. **Result (2026-11-17):** default PipeWire endpoint, 35,966 frames, 26,461,445 samples, **0 dropped**, **0 underruns**, 0 OpenAL errors, DSP running. | `AUD-01` left this as a hardware limitation; the bare-metal host provides a real device. | Evidence: [Audio.md](Audio.md) §9, [TestCorpus.md](TestCorpus.md) 1.1cm. |
+| **PLAT-06** | Partial | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: finish the presentation/performance matrix on real hardware. DPI math (100/125/150/200%), GLES 3.0/ANGLE, and 4K WGL are already validated. | The renderer and benchmark harness exist; only real GLES 3.1 hardware and a real Tier B device are missing. | Results are recorded in [Performance.md](Performance.md) §8.8, with every residual labeled `validated` or `best-effort`. |
 
-The quality-ledger gate remains enforced after this work:
-`tools/verify-playability-grades.py` and `compat-baseline.yml` require a dated batch entry
-and a linked capture for every promotion or documented limit.
+### 3.3 P1 — Release and packaging
 
-### 3.3 P1 — Platform validation
+| ID | Status | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|---|
+| **REL-04** | Open | S | **Linux release signing**: publish `5do-archive-keyring.gpg`, a signed `SHA256SUMS-linux.txt`, and a detached `.asc` per artifact. Implemented in `packaging/linux/sign-artifacts.sh` and wired into `linux-packages.yml`; it activates when `LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID` exist. | Linux has no OS-level binary signature, so the release key signs the checksum manifest and repository metadata; the scripts and workflow already exist. | One tagged release publishes the keyring, a signed manifest, and a `.asc` for every `.deb`/`.rpm`/`.AppImage`; the fingerprint is recorded in [LinuxDistribution.md](LinuxDistribution.md) §4 and the release notes; `gpg --verify` and `sha256sum -c` pass from a clean download. |
+| **REL-05** | Open (implemented) | S | **Optional signed repository tooling**: verify `build-apt-repo.sh`/`build-rpm-repo.sh` produce an installable `apt`/`dnf` tree for operators who mirror 5DO. The project publishes GitHub release assets only; `apt install ./…deb` and `dnf install ./…rpm` cover normal users. | The scripts are pure bash and any HTTPS host can serve the generated tree, so no project hosting or token is required. | The scripts produce `InRelease`/`Release.gpg` and `repomd.xml.asc` for a mirror, the optional path is documented in [LinuxDistribution.md](LinuxDistribution.md) §5.1, and the release assets install directly on stock Debian/Ubuntu/Mint/Fedora. |
+| **REL-06** | Open (CI-validated) | S | **Package metadata quality**: confirm in a real software center that the AppStream metainfo (id, screenshots, releases, OARS, categories, languages), 256 px + SVG icons, MIME `sub-class-of` without the ISO-9660 magic override, translated desktop `Name`/`Comment`, `StartupWMClass`, and the self-contained dependency list render correctly. `desktop-file-validate`, `appstreamcli validate --no-net`, and `update-mime-database` already pass in CI. | The desktop entry, MIME XML, and metainfo already ship; only the end-user appearance check is missing. | GNOME Software / KDE Discover show the name, summary, icon, and screenshots from the `.deb`/`.rpm`, not a generic placeholder; a plain `.iso` keeps `application/x-iso9660-image`. |
+| **REL-07** | Open (CI-built) | S | **AppImage with zsync update information**: run the x64 and arm64 images on matching hosts, verify `AppImageUpdate` finds the next release through the published `.zsync`, and verify `--appimage-signature` when signed. `build-appimage.sh` and the per-architecture CI steps already build both images with embedded update info. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged; the aarch64 build runs on `ubuntu-24.04-arm`. | `5do-x86_64.AppImage` and `5do-aarch64.AppImage` run `--version` and the frontend smoke on their matching hosts (with FUSE 2 or `--appimage-extract-and-run`), the build self-check runs each image on its own runner, and `AppImageUpdate` finds the next release through the published `.zsync`. |
+| **REL-08** | Open | M | **Third-party channel listings**: publish the AUR `5do-bin` package (PKGBUILD ships in `packaging/linux/aur/`), an AppImageHub entry, and an itch.io project page. The packager-facing files (desktop entry, MIME XML, metainfo, both icons) already ship in the Linux bundle and are verified by `build-bundle.yml`. | These channels accept a repackaged upstream release and need no licence change; the catalog entries are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
+| **REL-09** | Open (bundles in CI) | L | **Flatpak distribution**: keep the single-file `.flatpak` bundles for x64 and arm64, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
+| **REL-10** | Partial | S | **Steam Deck and EmuDeck integration**: a Deck-sized first-run BIOS offer on top of `bios discover` (`UX-34` closed), documented non-Steam-game setup, and an upstream EmuDeck/RetroDeck entry. The `--fullscreen` desktop action already ships. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the work is packaging and presentation, not emulation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
 
-| ID | Effort | Missing work | Why it is achievable | Done when |
-|---|---|---|---|---|
-| **PLAT-02 — Done (2026-11-16)** | S | **Linux x64 GPU presentation**: run the GL probe on a real Linux GPU host, not llvmpipe over SSH. Host: bare-metal Linux Mint 22.3, i7-3615QM, Intel HD 4000 (Ivy Bridge), Mesa 25.2.8 (crocus GL, hasvk Vulkan 1.2). | The renderer and probe already existed; the GPU host is now available. | 1920x1080 sharp-bilinear probe `ok: true` at 61.0-61.6 fps (present mean 1.9-2.5 ms, GPU 1.2-1.3 ms, `filterFallback: false`) and 1280x720 vsync `vsyncActive: true` via `GLX_EXT_swap_control`. The pass also found and fixed the Linux WGL/GLX swap-interval misdetection. Evidence: [Compatibility.md](Compatibility.md) §10.3, [TestCorpus.md](TestCorpus.md) 1.1cm. |
-| **PLAT-03 - Done** | M | **macOS arm64 runtime validation**: execute the arm64 bundle on macOS and run CLI/frontend smoke. | Hosted macOS runners run the arm64 bundle natively; Intel macOS was dropped in 1.12.0. | The arm64 bundle starts, runs `selftest`, and passes the frontend `--smoke-test`; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10), [Compatibility.md](Compatibility.md) §10.4. |
-| **PLAT-04 — Done** | M | **Windows/Linux arm64 hardware validation**: run the bundles on arm64 hosts or CI runners. | Hosted arm64 runners run both bundles natively. | CLI and frontend smoke pass on both arm64 targets; results are recorded. Evidence: `platform-runtime.yml` run 42770783778 (2026-11-10). |
-| **PLAT-05** | S | **macOS gamepad backend**: physical detection for the new IOKit HID source. The source and pure mapping layer are implemented; 21 mapping/profile tests pass. | The remaining check needs a macOS host with a connected controller. | A macOS gamepad is detected and mapped through the existing eight-player profile; the mapping is already unit-tested. |
-| **PLAT-06 — Partial (documented)** | M | **GLES 3.1, DPI 100/150/200%, and Tier B timing validation**: complete the missing presentation/performance matrix. | The renderer and benchmark harness exist; the work is measurement on available hardware. | Results are recorded in [Performance.md](Performance.md) §8.8, with every residual labeled `validated` or `best-effort`. DPI math is validated by `PixelSizeTests` at 100/125/150/200%; GLES 3.0/ANGLE and 4K WGL are validated; real GLES 3.1 hardware and a real Tier B device remain best-effort. |
-| **PLAT-07** | S | **Done (2026-11-10).** Frontend NativeAOT audio validation: both 600 s soaks report 0 drops and 0 underruns. | CLI AOT and trimmed IL audio were already validated; the frontend AOT path is now validated too. | Evidence recorded in [Audio.md](Audio.md) §9. |
-| **PLAT-08A — Done (2026-11-16)** | L | **Vulkan Linux surfaces and device selection**: `VK_KHR_xlib_surface` creation, swapchain/present-mode selection, resize/`OUT_OF_DATE` recreation, the X11 probe window, the Linux `VulkanVideoSurface` child surface, and physical-device ranking. Wayland surfaces are documented as unsupported (a Wayland-only session falls back to the offscreen/readback path); XCB is intentionally omitted because Xlib covers X11. | The Vulkan renderer, shaders, and offscreen/readback path existed and the Win32 swapchain was a working reference; the bare-metal host has hardware Vulkan 1.2, a live X11 session, and a physical display. | X11 window probe presents on the real GPU with FIFO (60.1 fps at 1080p, 0 renderer bytes/frame); a 320x240 Accurate capture matches the CPU oracle with 0 different pixels (`0x5DD1D7C5`); device ranking selects the Intel device without `VK_ICD_FILENAMES`; `--gl-backend vulkan` runs in the Linux shell through a depth-24 X11 child window with no per-frame readback (1060x466 at 60 Hz, viewport 370,113 320x240, resize to 1400x820 scales the viewport); Wayland-only sessions fall back cleanly. Evidence: [Vulkan.md](Vulkan.md), [TestCorpus.md](TestCorpus.md) 1.1cm. |
-| **PLAT-09** | M | **Done (2026-11-10).** Full PAL library validation: eight PAL-sensitive titles captured with the documented PAL BIOS, plus a PAL2 presentation probe. | PAL1/PAL2, 50 Hz pacing, and per-game BIOS selection are implemented. | Evidence: [PalValidation.md](PalValidation.md) and `docs/data/pal-validation.csv`. |
-| **PLAT-10 — Done (2026-11-17)** | M | **Real-machine acceptance**: install the shipped framework-dependent bundle on the bare-metal Linux host and exercise the player path: image boot, GPU presentation, real audio device, gamepad, fullscreen, pause, save states, screenshots, display sleep, and library metadata. | The self-contained `linux-x64` 1.10.2 frontend ran on the bare-metal host with hardware GL 4.2 and a 1920x1080 display. | Dated record: boot on all three backends, `F11` fullscreen round-trip, `F5`/`F8` slot save/load, `Escape` pause, `F12` 320x240 PNG, real-device audio 0/0, virtual evdev pad driving the 3DO, inhibitor acquire/release, library listing, and exit code 0. The pass also found and fixed the 1x1 screenshot bug. Optical drive is N/A (no `/dev/sr*`) and the DPI matrix stays in `PLAT-06`. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm, [Compatibility.md](Compatibility.md) §10.3. |
-| **PLAT-11 — Done (2026-11-17)** | S | **Linux evdev gamepad validation**: detect and map a controller through `EvdevGamepadSource`, including the `input` group/udev permission path. The pass found and fixed a real defect: `EventIoctl` encoded the ioctl **type and request number in the wrong bit positions**, so no evdev device was ever accepted. `--gamepad-probe` now samples for two seconds so a press is not missed. | The source and diagnostic existed but the ioctl encoding made the backend inert on every Linux host; a virtual uinput pad reproduces the same kernel evdev path as physical hardware. | A virtual 8-button/4-axis uinput pad is detected (`connected=1`), its South button maps to `buttons=South`, and the `input`-group/udev requirement is documented in [Installation.md](Installation.md). Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm, `EvdevGamepadSourceTests`. |
-| **PLAT-12 — Done (2026-11-16)** | S | **Linux display-sleep inhibit**: replace `NullDisplaySleepBackend` on Linux with the freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`), held by a persistent `python3-dbus` helper for the connection lifetime. | `DisplaySleepPolicy` and its lifecycle already existed; only the Linux backend was null, and the host has a session bus and a real desktop to test it. | A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit` and `UnInhibit` with the same cookie, and closing the window released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip the lock cleanly, and `DisplaySleepPolicyTests` cover the run/pause/release transitions. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
-| **PLAT-13 — Done (2026-11-17)** | S | **Linux desktop exit segfault**: closing the window after a game session crashed in a native `atexit` handler when `XDG_RUNTIME_DIR` was set. | The host reproduced it deterministically; forcing `ALSOFT_DRIVERS=pulse,alsa` avoided it, which bounded the root cause to the bundled OpenAL Soft 1.23.1 PipeWire backend. | Root cause: Silk.NET unloads `libopenal.so` when the last context is disposed, leaving the PipeWire backend's `atexit` handler pointing at unmapped code. `OpenAlAudioOutput` now keeps one reference to the library on Linux; software, OpenGL, and Vulkan sessions close with exit code 0 and `--smoke-test` still passes. Evidence: [TestCorpus.md](TestCorpus.md) 1.1cm. |
-| **PLAT-14 - Open (2026-11-17)** | L | **macOS native Metal/Vulkan surface**: replace the offscreen Vulkan plus bitmap-readback shell path with a native `CAMetalLayer`/`NSView` surface (through `VK_EXT_metal_surface`/MoltenVK or a native Metal presenter), including swapchain creation, resize/`OUT_OF_DATE`, present-mode selection, and no per-frame CPU readback. | The NoMac host has a Metal device; the Linux X11 native surface and the macOS offscreen renderer are working references; MoltenVK is installed. | `--vk-window-probe` on macOS presents natively (`ok: true`), 1080p FIFO at >=60 fps with 0 renderer bytes/frame; a 320x240 Accurate capture matches the CPU oracle with 0 different pixels; the desktop shell uses the surface through resize and fullscreen. Evidence: [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md). |
-| **PLAT-15 - Done (2026-11-17)** | M | **macOS GPU runtime packaging**: remove the manual `brew install molten-vk vulkan-loader` requirement by bundling the loader/ICD with notices. | MoltenVK is redistributable and `packaging/package-bundle.ps1` stages the Homebrew loader, MoltenVK, and a generated ICD JSON. | The macOS arm64 tarball/DMG contains `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both Apache-2.0 notices; a self-contained bundle run with no `DOTNET_ROOT` loads `/tmp/.../libvulkan.1.dylib` and `/tmp/.../libMoltenVK.dylib` (verified with `DYLD_PRINT_LIBRARIES`), and `--vk-probe` returns `ok: true`. Evidence: [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md). |
-| **PLAT-16 - Done (2026-11-17)** | S | **macOS OpenAL live-switch fix**: eliminate the 18 `AL_INVALID_ENUM` errors when a second output replaces an open one; validate context/device lifetime and ref-counting. | The failure reproduced deterministically with bundled OpenAL Soft 1.23.1, including `ALSOFT_DRIVERS=null`; macOS has no `ALC_EXT_thread_local_context`, so the output now shares one context per device and clears it only after the last output. | `FIVEDO_AUDIO_TESTS=1` passes all three audio tests on macOS; Windows audio tests pass; a live switch reports 0 AL errors. Evidence: [Audio.md](Audio.md), [Compatibility.md](Compatibility.md) §10.4. |
-| **PLAT-17 - Open (2026-11-17)** | M | **macOS Retina/DPI and presentation matrix**: validate 1x/2x Retina scaling, logical versus physical pixel sizing, fullscreen, window resize, 320x240 screenshot dimensions, and 4K offscreen output on the NoMac host. | `PixelSizeTests` cover the math and the shell already handles size/scale; NoMac provides a 1920x1080 desktop and Metal GPU. | A dated matrix records windowed/fullscreen and 1x/2x results, screenshots have the expected pixel size, the video rectangle is not stretched, and the results are labeled in [Performance.md](Performance.md) §8.8. |
-| **PLAT-18 - Done (2026-11-17)** | S | **macOS NoMac release gate**: make the rented host the repeatable validation target for every macOS change: full suite, CLI self-test, frontend smoke, all Vulkan probes, a 600-frame real-game boot, the packaged DMG, a screenshot, and a clean `nomac stop`. | The NoMac CLI and host are available; the 2026-11-17 run produced this evidence set and the commands are host-agnostic. | [BuildAndTest.md](BuildAndTest.md) §7.2 is the runbook; the 2026-11-17 run reproduced the [Compatibility.md](Compatibility.md) §10.4 table from a clean checkout, including the self-contained DMG, bundled MoltenVK, and the 60 fps game session. |
-
-`PLAT-05` code is complete: `MacOsGamepadSource` uses IOKit HID Manager for Generic
-Desktop joystick/gamepad/multi-axis devices, and `MacOsHidGamepadMapper` plus
-`MacOsGamepadMapperTests` cover face buttons, sticks, triggers, hats, button-only
-d-pads, and the default eight-player profile. Only physical detection on a macOS host
-remains. `PLAT-07` is closed: the NativeAOT frontend ran the real machine/CoreRunner/
-OpenAL path for 600 s on the null device and on the NVIDIA playback endpoint, both with
-0 dropped samples and 0 underruns ([Audio.md](Audio.md) §9). `PLAT-09` is closed:
-all eight Europe-only/PAL-sensitive titles produced dated PAL1 captures with
-`panafz10e-anvil.bin`, and a Battle Chess PAL2 probe rendered 384x288 at 50 Hz
-([PalValidation.md](PalValidation.md)). `PLAT-03` and `PLAT-04` are closed by
-`.github/workflows/platform-runtime.yml`: macOS arm64, Linux arm64, and Windows arm64
-each publish the framework-dependent CLI/frontend, run `selftest`, and pass the
-frontend `--smoke-test` (run 42770783778, 2026-11-10). Intel macOS was dropped in
-1.12.0 because no Intel Mac is available for GPU validation.
-
-**Linux workstream (2026-11-16).** A bare-metal Linux Mint 22.3 host removes the
-hardware blocker that kept Linux at preview/best-effort: Intel Core i7-3615QM, Intel
-HD 4000 (Ivy Bridge), Mesa 25.2.8 with hardware OpenGL 4.2 (crocus) and Vulkan 1.2
-(`hasvk`), a live Cinnamon/X11 session at 1920x1080, and HDA Intel PCH audio. `PLAT-02`
-is done (hardware GL 4.2 probe); `PLAT-08A` is done (X11 surface, device ranking, and
-Linux shell child surface; Wayland documented unsupported), `PLAT-12` is done (D-Bus
-screen-saver inhibitor), `PLAT-13` is done (the OpenAL PipeWire exit segfault found
-during the `PLAT-12` pass), `PLAT-11` is done (the evdev ioctl fix validated with a
-virtual pad), `AUD-02` is done (600 s real-device soak with 0 drops/underruns), and
-`PLAT-10` is done (full acceptance pass, including the 1x1 screenshot fix). The Linux
-workstream has no remaining §3 items; GLES 3.1/Tier B timing stays in `PLAT-06`. `hasvk` reports "Ivy Bridge Vulkan support is incomplete", so this host is
-the legacy/integrated validation target, not the primary Vulkan reference. Do not treat
-CI `Xvfb` smokes as GPU evidence: they run `llvmpipe` without a swapchain.
-
-**macOS full-support workstream (2026-11-17).** A rented NoMac Apple M5 Pro (Virtual,
-macOS 26.6.2, arm64) unblocks macOS GPU work. The first pass validated the offscreen
-Vulkan/MoltenVK presenter (all eight filters, a 60 fps packaged Wolfenstein session, and
-2,394/2,394 tests) and removed the external .NET 8 build requirement. Full support is
-defined as: a native Metal/MoltenVK surface with no per-frame readback; a packaged GPU
-runtime or actionable first-run guidance; working macOS audio live-switch; Retina/DPI;
-physical gamepad detection; and a signed/notarized DMG. Intel macOS is out of scope
-(dropped in 1.12.0), so the target is Apple Silicon only. `PLAT-14`..`PLAT-18` track the
-achievable arm64 items. Every item is validated on NoMac and recorded in
-[Compatibility.md](Compatibility.md) §10.4.
-Credentials and start/stop commands are in the gitignored `AGENTS.local.md`; stop the
-Mac after each run to end billing. `PLAT-06`'s macOS Retina portion is tracked as
-`PLAT-17`; GLES 3.1 hardware and Tier B timing are not macOS targets. Signing and
-notarization (`UX-16`) are intentionally out of scope for this release by owner
-decision; the DMG remains unsigned.
-
-### 3.4 P1 - Release and packaging
-
-| ID | Effort | Missing work | Why it is achievable | Done when |
-|---|---|---|---|---|
-| **UX-16** | L | **Installer/package scaffolding (partial)**: Windows Inno Setup installer + associations, Linux `.deb`/`.rpm` + desktop entry/MIME, macOS `.app`/`.dmg`/`.pkg`. Signing/notarization remains conditional. | The unsigned Windows installer built, installed, launched, and association-checked; Linux packages built and metadata/MIME-validated; macOS `.app`/`.dmg`/`.pkg` are built natively in CI on 2026-11-10. | The unsigned artifacts install, launch, and associate `.iso`/`.cue`/`.chd` where built; a signed/notarized release remains in §4 until certificates/accounts exist. |
-| **REL-04** | S | **Linux release signing**: GPG signing subkey, detached `.asc` for every Linux artifact, `SHA256SUMS-linux.txt.asc`, published `5do-archive-keyring.gpg`, and verification instructions. Scripted in `packaging/linux/sign-artifacts.sh` and wired into `linux-packages.yml`; it activates when `LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID` exist. | Linux has no OS-level binary signature, so the release key signs the checksum manifest and repository metadata; the CI already has an Ubuntu runner and the scripts are pure bash + GnuPG. | One tagged release publishes the keyring, a signed `SHA256SUMS-linux.txt`, and a `.asc` for every `.deb`/`.rpm`/`.AppImage`; the fingerprint is recorded in [LinuxDistribution.md](LinuxDistribution.md) §4 and the release notes; `gpg --verify` and `sha256sum -c` pass from a clean download. |
-| **REL-05** | S | **Optional signed repository tooling (not a project service)**: `build-apt-repo.sh`/`build-rpm-repo.sh` generate an `apt`/`dnf` tree from downloaded release files for operators who mirror 5DO. The project itself publishes GitHub release assets only; `apt install ./…deb` and `dnf install ./…rpm` cover normal users, so no second repository and no hosted index are required. | The packages are self-contained, the scripts are pure bash, and any HTTPS host can serve the generated tree; the decision to avoid a project-hosted repository removes the hosting and token requirements entirely. | The scripts still build `InRelease`/`Release.gpg` and `repomd.xml.asc` for a mirror, the optional path is documented in [LinuxDistribution.md](LinuxDistribution.md) §5.1, and the release assets install directly on stock Debian/Ubuntu/Mint/Fedora. |
-| **REL-06** | S | **Package metadata quality**: AppStream metainfo (id, screenshots, releases, OARS, categories, languages), 256 px + SVG icons in `hicolor`, MIME `sub-class-of` without the ISO-9660 magic override, translated desktop `Name`/`Comment`, `StartupWMClass`, and a self-contained dependency list (no `dotnet-runtime`). | The desktop entry, MIME XML, and packages already existed; software centers need metainfo before they show anything beyond a bare launcher, and the dependency list was a real install blocker for self-contained bundles. | `appstreamcli validate --no-net`, `desktop-file-validate`, and `update-mime-database` pass in CI; GNOME Software / KDE Discover show the name, summary, icon, and screenshots from the `.deb`/`.rpm`, not a generic placeholder; a plain `.iso` keeps `application/x-iso9660-image`. |
-| **REL-07** | S | **AppImage with zsync update information**: portable single file, `AppRun` and `usr/bin` wrappers, embedded update info, `.zsync`, optional embedded signature. Implemented in `build-appimage.sh` and the CI job. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged. | `5do-x86_64.AppImage` runs `--version` and the frontend smoke on a stock Ubuntu host (with FUSE 2 or `--appimage-extract-and-run`), `--appimage-signature` verifies when signed, and `AppImageUpdate` finds the next release through the published `.zsync`. |
-| **REL-08** | M | **Third-party channel listings**: publish the AUR `5do-bin` package, an AppImageHub entry, and an itch.io project page. The packager-facing files now ship inside the Linux bundle (`packaging/5do.desktop`, `5do.xml`, the AppStream metainfo, and both icons), and `build-bundle.yml` verifies them. | These channels accept a repackaged upstream release and need no licence change; the PKGBUILD and catalog entry are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
-| **REL-09** | L | **Flatpak distribution**: a self-hosted signed Flatpak repository first, then a Flathub submission once the licence position is settled. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest is packaging only. | `flatpak install` from the project repository launches 5DO with gamepad, audio, and display-sleep inhibit working; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
-| **REL-10** | S | **Steam Deck and EmuDeck integration**: `--fullscreen` desktop action (now in `5do.desktop`), a Deck-sized first-run BIOS prompt, documented non-Steam-game setup, and an upstream EmuDeck/RetroDeck entry. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the work is packaging and presentation, not emulation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
-
-The packaging scaffolding is implemented and reproducible from `packaging/`. The Windows
-installer, Linux packages, desktop entry, MIME/registry associations, and the macOS
-`.app`/`.dmg`/`.pkg` are unsigned by default and built on their native CI runners.
-Linux signing and repository generation are implemented in
-`.github/workflows/linux-packages.yml` and activate when the release key secrets exist.
-Signing and notarization require valid certificates/accounts; if those are unavailable,
-the unsigned installers and portable bundles remain the release artifacts and the signing
-item stays in §4 until the credentials exist. Evidence: [Installers.md](Installers.md),
+The unsigned Windows installer, Linux `.deb`/`.rpm`, desktop entry, MIME associations, and
+macOS `.app`/`.dmg`/`.pkg` scaffolding are complete and built on native CI runners; only
+signing/notarization is blocked (§4). The packages ship as GitHub release assets and
+install with `apt install ./…deb` / `dnf install ./…rpm` / `flatpak install ./…flatpak`;
+no repository is hosted. Evidence: [Installers.md](Installers.md),
 [LinuxDistribution.md](LinuxDistribution.md).
 
-### 3.5 P2 — Optional accuracy features
+### 3.4 P3 — Product features
 
-| ID | Effort | Missing work | Why it is achievable | Done when |
-|---|---|---|---|---|
-| **ACC-03 — Done** | M | **CD subcode support**: expose Q/subcode data and validate it with a synthetic test. | The CD sector path already existed; the 2352+96 wire size and Q packing are now implemented. | A synthetic subcode test passes and the Q payload decodes to the same control/track/index/MSF values. Evidence: `CdromMultiTrackTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **ACC-04 — Done** | M | **Jurassic Park Interactive CEL-timing investigation**: compare 5DO, Phoenix, and Opera through the Operations hub into an in-park terminal or gameplay scene. Determine whether the remaining gap is input scripting, CEL cycle accounting, or rendering. | 5DO already reaches the hub and Security Tracking, the CEL timing model and scripted input exist, and Phoenix's compatibility list reports 100%. | **Result (2026-11-16): the gap was input scripting.** `benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` moves the pointer hand onto Robert Muldoon, cycles to the Rest Room, and starts the in-park **Raptor Maze** at 63,000 frames; the raptor encounter and **SECURITY BREACH** outcome render at 65,000/65,500. 5DO and OperaCore frame hashes match at 40,000/42,000/57,000/62,000/63,000. The first observed visual divergence is the 65,000 checkpoint: the default FreeDO CEL model is ahead of the reference's static corridor, while `--cel-timing opera` produces the reference hash `0xD5D6A993` exactly. The renderer and input path are clean; the residual is the default CEL busy model (§4). Evidence: `artifacts/acc04`, `benchmarks/diff/acc04-jurassic-cel.json`; [TestCorpus.md](TestCorpus.md) 1.1ck. |
+| ID | Status | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|---|
+| **UX-33** | Open | S | **Minor Phoenix/4DO presentation options**: audio channel swap, background expansion/scanout borders, named void patterns (4DO/Bumps/Metal) alongside the existing solid/checker/grid/scanline set, and an emulation-health badge for frame pacing/underrun state. Land each option as its own change. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | Each option has a settings round-trip test; audio swap changes left/right output without changing frame/state/audio hashes; borders/patterns render across the presenters; the health badge reflects existing counters and is documented in the UserGuide. |
+| **SYS-25** | Candidate | M | **Live CPU-clock changes**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×–4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
 
-`SYS-01` is now in §4: the FZ-10 BIOS CD player lists the audio-only TOC after the
-subcode fix, but its transport controls remain inert and the 4DO reference documents
-the same BIOS limitation. `ACC-03` is complete; no matrix title requires subcode.
-`ACC-04` closed on 2026-11-16 with a working in-park script and a reference-selected
-CEL-pacing residual; its `Good` promotion remains gated on the default CEL model or a
-per-game Opera-busy profile, not on reachability.
+### 3.5 P3 — Hardware evidence awaited
 
-### 3.6 P3 — Product features
-
-| ID | Effort | Missing work | Why it is achievable | Done when |
-|---|---|---|---|---|
-| **SYS-21** | M | **Physical CD-ROM drive support**: boot from a host optical drive. **Implemented 2026-11-13** in `PhysicalDiscSource`, `File > Boot Optical Drive...`, and the CLI drive-root path. The remaining check is hardware evidence on a machine with an attached drive and a 3DO disc. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
-| **SYS-22 — Done** | M | **Disc image conversion**: convert between ISO/BIN/CUE/CHD from the CLI. | The readers and CHD encoder are available; conversion is orchestration. | `disc convert` round-trips a known image and the output boots with the same hash. Evidence: Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`; [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **SYS-24 — Done** | M | **CDI/NRG disc image support**: DiscJuggler `.cdi` and Nero `.nrg` readers, including the 2353/2368/2448/2449-byte sector variants. **Implemented 2026-11-15** in the standalone `CDISharp` and `NRGSharp` libraries plus `CdiDiscImage`/`NrgDiscImage`; `DiscImageFactory`, the game library, File > Open Disc, and the CLI accept both formats. | Phoenix documents these formats, and 5DO already has ISO/BIN/CUE/CHD readers, header sniffing, sector normalization, and unattended disc tests. This is format parsing and validation, not new emulation. | A CDI and an NRG image open through the CLI and File > Open Disc, report sector/TOC metadata, and produce the same game ID as the equivalent ISO; malformed images fail cleanly. Evidence: `CdiNrgDiscImageTests` (21 tests, including 2353/2368/2448/2449 and raw Mode 1/2 variants), `ParserFuzzTests`, [TestCorpus.md](TestCorpus.md) 1.1ch, [Compatibility.md](Compatibility.md) §10.3. |
-| **UX-09 — Done** | L | **Localization**: externalize user-facing strings and add at least one non-English locale. | The UI is string-literal based today; the work is extraction plus resources. | The shell and CLI load a locale without changing emulation behavior; a translated smoke pass is recorded. Evidence: `LocalizationTests` and `LocalizationCoverageTests` (2026-11-13; expanded 2026-11-14 to nine catalogs), `--locale de` smoke marker `firstMenuHeader=Datei`, [Localization.md](Localization.md), [TestCorpus.md](TestCorpus.md) 1.1bw. |
-| **UX-25 — Done** | S | **Session focus behavior**: pause/unpause and input-capture behavior when the window loses or gains focus. | The desktop shell and input loop already existed; the policy and setting are implemented. | Focus loss pauses or releases input per the setting; tests cover the transition. Evidence: `FocusPausePolicyTests` and the Settings > Emulation checkbox (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **VID-17 — Done** | S | **Void-area patterns**: replace the solid void color with selectable patterns (checker, grid, scanline). | The shell already owns the void background; patterns are a presentation brush shared by every renderer. | Patterns render behind OpenGL/GLES/Vulkan/D3D11 and are covered by `VoidPatternTests` and the settings round-trip; because the brush is outside the GL surface, no GL probe capture is required (2026-11-10). |
-| **VID-16 — Done** | M | **VDLP pixel formats**: support 0RGB1555, RGB565, and XRGB8888 presentation paths. | The VDLP frame path already exposes pixel data; the formats are additive conversion paths. | Each format matches the CPU reference on a synthetic frame; no default hash changes. Evidence: `FrameAssemblerTests` (2026-11-10); [TestCorpus.md](TestCorpus.md) 1.1bs. |
-| **UX-28 — Done** | M | **Additional metadata providers and media**: add at least one external metadata source and support manual media attachments. | The offline metadata editor and cover resolver already exist; providers are additive. | A lookup populates metadata offline/online with a deterministic cache; failures fall back cleanly. Evidence: `MetadataCatalogClient` and `metadata lookup`/`metadata media` (2026-11-13), `MetadataCatalogClientTests`, [Metadata.md](Metadata.md), [TestCorpus.md](TestCorpus.md) 1.1bx. |
-| **UX-29 — Done** | L | **TAS Lua scripting and input timeline**: script input/movies and edit an input timeline in the shell. | The deterministic movie container, editor, and PBUS packet format already exist. | A Lua-authored movie replays deterministically; the timeline edits and round-trips a movie. Evidence: `FiveDo.Scripting` + `LuaInputScript` (sandboxed `frame`/`hold`/`press`/`release`), `InputTimeline`, `run`/`movie record --input-lua`, `movie timeline export`, `movie timeline set`, `movie timeline apply`, **Emulation > Input Timeline...**, `LuaTimelineTests` (5) and the CLI tests (2026-11-13); [Tas.md](Tas.md) §8-9. |
-| **UX-30 — Done** | M | **4DO `.4dosav` import/export (best-effort)**: map the native state to/from 4DO’s format. | The native state sections are versioned and documented; the mapping is additive and optional. | A 4DO image imports with warnings where fields are unsupported and export round-trips in 5DO. Evidence: `FourDoSaveState`, `FourDoStateConverter`, `state import-4do`/`state export-4do`, `FourDoStateTests` (5 tests) and the CLI round-trip test (2026-11-13); [SaveStates.md](SaveStates.md) §9. |
-| **UX-31 — Done** | S | **Controller preview**: show a 3DO pad diagram in Input Bindings with the selected button highlighted and mapped/pressed controls lit. | `ControllerState` already exposes the button bits, the eight-player profile is editable, and Avalonia can draw the diagram without new assets or core work. | Input Bindings shows the pad diagram; selecting a row highlights its 3DO button and a pressed key/gamepad control lights the mapped button; `ControllerPreviewTests` cover the button-bit mapping and the dialog still round-trips the profile. Evidence: `ControllerPadPreview` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bu. |
-| **UX-32 — Done** | S | **Screen-saver/display-sleep inhibit**: keep the display awake while a game is running and unpaused; release it on pause, stop, and exit. | It is a host-level call with no core or state impact; the run/pause transitions are already centralized. | Running a game inhibits display sleep on Windows (best-effort on macOS/Linux) and releases it on pause/stop/exit; a policy test covers the transitions and the platform limitation is documented. Evidence: `DisplaySleepPolicy` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
-| **VID-18 — Done** | S | **Automatic blank-border crop**: detect black borders on the presented frame and crop them with hysteresis; keep manual overscan as the override. | The presentation crop (`CropInsets`) and per-game overscan profiles already exist; only detection, a setting, and the hysteresis policy are missing. | Auto-crop reproduces the 4DO border on the capture set, never changes frame/state/audio hashes, respects a manual crop and per-game profile, and `AutoCropTests` cover detection and the 1-second hysteresis window. Evidence: `AutoCropDetector` (2026-11-13); [TestCorpus.md](TestCorpus.md) 1.1bv. |
-| **VID-19 — Done** | L | **True 2× CEL high-resolution spike**: prototype a 640×480 CEL path behind a non-default option, following Opera's four-plane high-resolution approach and Phoenix's hardware-renderer behavior. Keep the current line-doubled mode as the fallback. | Opera's `opera_high_resolution` and Phoenix's hardware renderer provide a concrete reference; 5DO already has high-resolution VRAM planes, CEL parsing, and renderer settings. This is a bounded spike, not the full production feature. | **Result (2026-11-16): implemented as the opt-in `--true-2x` machine option, gated to validated titles.** The four-plane layout now carries independent 480-line fields: CEL writes select planes 0/1 for even lines and 2/3 for odd lines, arbitrary CEL geometry evaluates at 640x480, and packed/scaled 2D CELs expand to 2x2 blocks. Jurassic Park's Raptor Maze renders the full corridor at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale), while Family Feud matches a clean 2x scale exactly (0.00%). Native hashes are unchanged (`0xD5D6A993` at 63,000), the full suite passes, and true 2× costs about 30% more emulation time (177 fps versus 232 fps, two-run average) over the same 10,000-frame segment. **Validation gate:** Road Rash (`d7672550`) shows stale/rainbow rows at the bottom of the presented frame during scene transitions even though its CPU frame is clean. The host therefore enables the mode only for game IDs `18036597` (Jurassic Park) and `55f8ccf1` (Family Feud); every other title falls back to native 320x240 with a warning. The presentation/bitmap residual is in §4. Evidence: `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`, [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1. |
-| **UX-33** | S | **Minor Phoenix/4DO presentation options**: audio channel swap, background expansion/scanout borders, named void patterns (4DO/Bumps/Metal) alongside the existing solid/checker/grid/scanline set, and an emulation-health badge for frame pacing/underrun state. Land each option as its own change. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | Each option has a settings round-trip test; audio swap changes left/right output without changing frame/state/audio hashes; borders/patterns render across the presenters; the health badge reflects existing counters and is documented in the UserGuide. |
-| **UX-34** | S | **BIOS discovery and first-run offer**: search `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`; expose `5do-cli bios discover [--json]`; offer the discovered image from the first-run guide. **Implemented 2026-11-17** in `BiosDiscovery`, `bios discover`, and the **Use this BIOS** button. | BIOS classification (`BiosLibrary`), the welcome dialog, and the settings persistence already existed; the missing piece was a deterministic search order and a one-click path. | Discovery finds a primary and secondary image in a temp folder, reports missing folders without throwing, prefers the first folder in priority order, and the welcome dialog offers the image; `BiosDiscoveryTests` (4) cover the cases. |
-| **UX-35** | S | **`5do-cli doctor` host report**: a read-only report of OS/session, data-folder access, disk space, OpenGL/Vulkan/OpenAL loading, evdev and optical devices, settings access, and BIOS discovery, with `--json` and `--strict`. **Implemented 2026-11-17** in `DoctorReport` and `DoctorCommand`. | The probes (GL/Vulkan load, evdev readability, data paths) are host calls with no emulator state; `doctor` turns them into one support artifact. | The report renders text and JSON, `--strict` returns 1 on a warning, and the BIOS line uses the provided discovery result; `DoctorReportTests` (3) cover collection, the BIOS row, and text rendering. |
-| **SYS-25** | M | **Live CPU-clock changes (candidate)**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×-4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
-| **SYS-23** | M | **Windows DirectInput/generic HID gamepad backend**: enumerate DirectInput/HID pads, including axes, POV hats, and triggers, alongside XInput. **Implemented 2026-11-13**: `DirectInputGamepadSource` and `WindowsGamepadSource` enumerate devices every ten seconds, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as the fallback. Axis/POV/trigger tests pass; a physical DirectInput-only pad check remains hardware evidence. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
-
-**Reference audit (2026-11-15).** 4DO, FreeDO, opera-libretro, and Phoenix were
-re-read for player-visible gaps. `VID-19` (true 2× CEL spike) closed on 2026-11-16 as the
-opt-in `--true-2x` path; the remaining candidates are `UX-33` (minor presentation
-options) and `SYS-25` (live CPU clock, candidate).
-`ACC-04` (Jurassic Park Interactive CEL timing) closed on 2026-11-16 with the in-park
-Raptor Maze script and a default-CEL-pacing residual; `SYS-24` (CDI/NRG) closed on
-2026-11-15. Everything else
-in those references is already implemented, intentionally out of scope, or blocked:
-embedded boot ROM (licensing), GUI debugger (developer tooling), netplay (out of
-scope), multi-system/Android support (out of scope), and additional physical-hardware
-evidence. Phoenix is closed source; its claims are compared through the local
-compatibility list and public package behavior, not source.
-
-`UX-30` is explicitly best-effort; native 4DO state compatibility is **not** a goal.
-`UX-28` uses the existing `library-metadata.json` schema as its provider format, writes a
-canonical `metadata-cache.json`, and manages manual media paths through
-`5do metadata media`; see [Metadata.md](Metadata.md).
-
-### 3.7 P3 — Requested 4DO parity order (2026-11-11)
-
-The agreed implementation order is below. These are references to the canonical rows above;
-do not add a second entry for the same work. The order is a product priority, not a release
-gate, and each item is still one change with its own tests and evidence.
-
-1. **UX-09** — localization.
-2. **SYS-21** — physical CD-ROM drive support.
-3. **SYS-23** — Windows DirectInput/generic HID gamepad backend.
-
-**UX-31, VID-18, and UX-32 are done (2026-11-13).** Input Bindings draws a live 3DO
-pad (mapped/selected/pressed states), Settings > Video > Overscan has a 4DO-compatible
-auto-crop with a one-second hysteresis, and a running game keeps the Windows display
-awake. `ControllerPreviewTests`, `AutoCropTests`, and `DisplaySleepPolicyTests` cover
-the logic; see [TestCorpus.md](TestCorpus.md) 1.1bu and 1.1bv.
-
-**UX-09, SYS-21, and SYS-23 (the requested parity order) are implemented (2026-11-13).**
-UX-09 is complete with nine catalogs (English, German, Brazilian Portuguese, French,
-Spanish, Italian, Japanese, Korean, and Simplified Chinese), a General settings tab, and
-`--locale`/`--list-locales` in both executables; the translated smoke marker records
-`firstMenuHeader=Datei`. Changing back to English in Settings restores the English
-labels immediately. SYS-21 and SYS-23 are code-complete with automated tests, but
-their `Done when` lines still require a physical host drive and a physical DirectInput
-pad respectively. `--gamepad-probe` records the active backend and raw samples for that
-hardware check; the physical drive is reachable from **File > Boot Optical Drive...** or
-a drive-root CLI argument. See [Localization.md](Localization.md),
-[Configuration.md](Configuration.md) §3.1 and §6, and [TestCorpus.md](TestCorpus.md)
-1.1bw.
+| ID | Status | Effort | Missing work | Why it is achievable | Done when |
+|---|---|---|---|---|---|
+| **SYS-21** | Awaiting hardware | M | **Physical CD-ROM drive support**: boot from a host optical drive. `PhysicalDiscSource`, **File > Boot Optical Drive...**, and the CLI drive-root path are implemented; only the hardware pass is missing. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
+| **SYS-23** | Awaiting hardware | M | **Windows DirectInput/generic HID gamepad backend**: `DirectInputGamepadSource`/`WindowsGamepadSource` enumerate devices, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as fallback; axis/POV/trigger tests pass. Only a physical DirectInput-only pad check is missing. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 ---
+
 ## 4. Blocked, residual, or not achievable (do not add checkboxes)
 
-These items stay out of §3 until the named condition changes. They are recorded here so the
-plan does not silently lose them. “Residual” means the item was measured and closed with a
-documented limitation, not that it is unachievable.
+These items stay out of §3 until the named condition changes. “Residual” means the item
+was measured and closed with a documented limitation, not that it is unachievable.
 
 | Item | Why it is not in the achievable backlog | Revisit if |
 |---|---|---|
 | **SYS-05 embedded boot ROM** | GPL-2.0-only licensing risk; no distributable ROM exists. Retail titles still need a user BIOS. | Legal sign-off and a distributable ROM exist. |
 | **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
 | **Official Linux archives (Debian, Ubuntu, Fedora, openSUSE)** | The FreeDO notice forbids commercial use without the rights holders' approval, which fails the Debian DFSG and Fedora legal tests; the archive builders also run without network access, so the NuGet graph must be vendored. Direct downloads plus the optional mirror tooling (`REL-05`) and Fedora COPR/Ubuntu PPAs are the interim paths. | The FreeDO rights holders grant written commercial-use permission (or clarify the licence) **and** a network-free, vendored source build exists. |
-| **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project now supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
+| **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
-| **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player now lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
+| **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
 | **CORE-05 threaded DSP** | Closed: DSP is ~14% of frame time; handoff/validation cost exceeds the work. | A title spends >30% of frame time in DSP. |
 | **PERF-08 managed JIT** | Closed: the interpreter remains faster on real titles and is the accuracy oracle. | A measured 1.5× end-to-end win on a real title. |
-| **VID-01 true 640×480 / 4K internal CEL** | Open-ended production research. **VID-19 delivered the bounded opt-in CEL path** (`--true-2x`): independent 480-line fields, 2x2 packed/scaled sprites, and a validated 3D/2D pair. Remaining production work is bitmap/SPORT high-resolution sampling, framebuffer-read semantics, per-title validation, and a full-collection sweep; 4K output upscaling already ships. | A `VID-19` prototype shows a compatibility or visual win on a named title (met 2026-11-16), or a hardware/reference capture proves the production path is bounded. |
+| **VID-01 true 640×480 / 4K internal CEL** | Open-ended production research. `VID-19` delivered the bounded opt-in CEL path (`--true-2x`): independent 480-line fields, 2x2 packed/scaled sprites, and a validated 3D/2D pair. Remaining production work is bitmap/SPORT high-resolution sampling, framebuffer-read semantics, per-title validation, and a full-collection sweep; 4K output upscaling already ships. | A `VID-19` prototype shows a compatibility or visual win on a named title (met 2026-11-16), or a hardware/reference capture proves the production path is bounded. |
 | **Full 594/1,371-image differential** | Replaced by the 378-title unique corpus; regional copies add noise, not signal. | A region-specific defect is suspected. |
 | **Top-100 audit** | Replaced by Tier A (378) + Tier B (~100) + Tier C (50). | The matrix shows a blind spot outside Tier B. |
 | **Hardware test ROM suite** | Dropped; the differential oracle, 2,000+ tests, and fuzz targets already catch the regressions a ROM suite would. | A hardware-only defect appears that the oracle cannot reproduce. |
-| **WebAssembly/browser, Android/iOS, Raspberry Pi, Steam Deck, libretro core** | Explicitly out of scope for the desktop product. | Product scope changes. |
-| **Netplay, achievements, full debugger UI** | Out of scope for v1. | A post-compatibility product roadmap opens. |
+| **WebAssembly/browser, Android/iOS, Raspberry Pi, libretro core** | Explicitly out of scope for the desktop product. Steam Deck is covered by the Linux packaging path (`REL-10`), not a native port. | Product scope changes. |
+| **Netplay, full debugger UI** | Out of scope for the 1.x desktop product. (RetroAchievements shipped in v1.10.0.) | A post-compatibility product roadmap opens. |
 | **QUAL-05B Road Rash full race** | A fresh 150,000-frame `--autopilot road` run still ends with the rider off the bike on the sidewalk; the remaining work is driving/start-line and traffic avoidance, not emulation. Evidence: `artifacts/p0-rr-auto-boot`. | A scripted driver completes the 5.5-mile race without a wreck, or a new autopilot strategy proves it can. |
 | **ACC-01 Road Rash long-run divergence** | Documented residual: first behavioral divergence is frame 600 (guest read-request ordering); no game-visible impact has been shown. | A Road Rash gameplay scene (not intro/attract) diverges, or a matrix title changes status. |
 | **ACC-04 Jurassic Park default CEL pacing** | Documented residual: the default FreeDO CEL model advances the Raptor Maze ahead of the reference; at 65,000 the reference is still on the 63,000 corridor frame, while `--cel-timing opera` matches the OperaCore frame hash `0xD5D6A993` exactly. Reachability and rendering are fixed. | A per-game Opera-busy profile is adopted, the default CEL model is retuned against a CEL-heavy panel, or a player-visible pacing defect appears outside the Raptor Maze. |
 | **VID-19 true 2x presentation residual** | Documented blocker: Road Rash and other unvalidated titles show stale/rainbow rows at the bottom of the presented frame during scene transitions, while the CPU frame is clean. The host gates `--true-2x` to Jurassic Park Interactive and Family Feud and falls back to native 320x240 elsewhere. | The bitmap/SPORT bottom-row presentation path is corrected and Road Rash passes a frame-by-frame visual comparison, or the mode is retired. |
 | **CORE-04 CD command-cadence residual** | Documented residual: 11/50 panel titles still differ in CD command cadence at frame 300; video/audio match. | A title shows a player-visible CD/audio effect, or a matrix title changes status. |
 | **Crash 'n Burn (Japan)** | The Japan dump/BIOS pair is the limit; every tested BIOS stays on the Anvil boot screen. USA/Korea revisions work. | A verified Japan dump/BIOS pair renders the game. |
-| **DeathKeep / Kingdom gameplay** | Both match the reference’s black/title screen; no known input reaches gameplay. | A reference gameplay capture proves a reachable scene. |
+| **DeathKeep / Kingdom gameplay** | Both match the reference's black/title screen; no known input reaches gameplay. | A reference gameplay capture proves a reachable scene. |
 | **480i real-title validation** | No local title is confirmed 480i; only synthetic processor tests exist. | A confirmed 480i title or hardware capture is available. |
 | **Exact peer frame parity after beyond-title** | Not required by the playable definition. | A player-visible regression is traced to a peer divergence. |
 | **Deep playthrough of all 378 titles** | The compatibility claim is beyond-title, not full-game completion. | A title's status or quality grade depends on deeper play. |
-
-**2026-11-17 unblock:** `PLAT-08B` left this table. A NoMac Metal host and a working
-offscreen Vulkan/MoltenVK path now exist, so the native-surface remainder is tracked as
-`PLAT-14` in §3.3. Intel macOS was dropped because the project cannot validate it; only
-Apple Silicon macOS is supported.
 
 ---
 
 ## 5. Execution order
 
-1. **P0 quality:** `QUAL-03A`…`QUAL-03D` and `QUAL-05A` are complete (BladeForce,
-   Jurassic Park, Off-world, PGA Tour, and Alone). `QUAL-05B` (full Road Rash race) is in
-   §4 as a driving/autopilot limit.
-2. **P0 evidence:** `AUD-01` and `AUD-02` are complete: Windows null/real and the
-   Linux bare-metal real-device soak all report 0 dropped samples and 0 underruns over
-   600 s. Keep the quality-ledger gate green after every batch.
-3. **P1 platform:** the bare-metal Linux host (HD 4000, Mesa 25.2.8, hardware GL 4.2)
-   unblocks the Linux workstream. `PLAT-02` is **done** (hardware GL 4.2 probe plus the
-   GLX swap-interval fix); `PLAT-08A` is **done** (X11 `VK_KHR_xlib_surface`, X11 probe
-   window, device ranking, and the Linux shell child surface; Wayland documented as
-   unsupported). `PLAT-12` (D-Bus display-sleep) and `PLAT-13` (OpenAL PipeWire exit
-   segfault) are **done**, as are `AUD-02`, `PLAT-11`, and `PLAT-10` (the full
-   acceptance pass). `PLAT-03` and `PLAT-04` are **done** via
-   `.github/workflows/platform-runtime.yml`; `PLAT-05` needs physical macOS controller
-   detection; `PLAT-06` is documented in Performance §8.8 (DPI math validated; GLES 3.1
-   hardware and Tier B timing remain best-effort); `PLAT-07` and `PLAT-09` are **done**;
-   The macOS workstream is unblocked by the rented NoMac host: `PLAT-15` (GPU runtime
-   packaging), `PLAT-16` (audio live-switch), and `PLAT-18` (NoMac release gate) are
-   **done**; `PLAT-14` (native Metal/Vulkan surface) and `PLAT-17` (Retina/DPI) are the
-   remaining P1 items, and `PLAT-05` still needs a physical controller. `PLAT-08B` remains documented in §4.
-4. **P1 packaging:** `UX-16` unsigned scaffolding is done, and `REL-04`..`REL-07`
-   (Linux signing, optional mirror tooling, package metadata, AppImage) are implemented
-   in `packaging/linux/` and `.github/workflows/linux-packages.yml`; they produce
-   evidence on the first tagged run with the `LINUX_GPG_PRIVATE_KEY` secret. The
-   packages ship as GitHub release assets and install with `apt install ./…deb` /
-   `dnf install ./…rpm`; no repository is hosted. `REL-08`..`REL-10`
-   (AUR/AppImageHub/itch.io, Flatpak, Steam Deck) are the next distribution steps.
-   Signed/notarized Windows and macOS installers stay blocked until
-   certificates/accounts exist. The macOS DMG is a required release artifact and is
-   smoke-tested from the mounted image; notarization is the remaining distribution
-   blocker. Official Linux archives stay in §4 on licence grounds.
-5. **P2 accuracy:** `ACC-03` and `ACC-04` are **done**. `ACC-04` is a working
-   in-park script plus a default-CEL-pacing residual in §4. `SYS-01` moved to §4 after
-   the BIOS CD player listed the TOC but stayed inert. The `ACC-01` and `CORE-04`
-   residuals stay in §4 until their revisit conditions are met.
-6. **P3 product:** `SYS-22`, `SYS-24`, `UX-09`, `UX-25`, `UX-28`, `UX-29`, `UX-30`,
-   `UX-31`, `VID-16`, `VID-17`, `VID-18`, `VID-19`, and `UX-32` are **done**. `SYS-21` and
-   `SYS-23` are implemented and tested but keep
-   their `Done when` lines open until a physical optical drive and a physical
-   DirectInput-only pad are available. The requested 4DO parity order `UX-09` →
-   `SYS-21` → `SYS-23` is complete in code (see §3.7). After those hardware checks,
-   prioritize the remaining reference-audit candidates: `UX-33` (minor presentation
-   options) and the `SYS-25` live-clock probe (candidate only).
+1. **macOS platform:** `PLAT-14` (native surface) → `PLAT-17` (Retina/DPI matrix) →
+   `PLAT-05` (physical controller). `PLAT-14` removes the per-frame readback on every
+   macOS frame and is the prerequisite for calling macOS fully supported.
+2. **Release evidence:** `REL-04` first — one tagged run with the signing key proves the
+   signing chain. Then validate the artifacts from that run with `REL-06` and `REL-07`,
+   verify the mirror scripts with `REL-05`, publish the channel listings (`REL-08`,
+   `REL-10`), and finish with the hosted Flatpak repository and Flathub review (`REL-09`).
+3. **Product:** `UX-33` as one change per option, then the `SYS-25` live-clock probe. Close
+   `SYS-25` with evidence if the probe is not clean; do not keep it open as a wish.
+4. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a
+   DirectInput-only pad are available; both are code-complete and tested.
+5. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
 
-**Stop rule:** P0 is closed except for the blocked `QUAL-05B`; do not start P2/P3 while a
-P1 platform smoke is failing.
+**Stop rule:** do not start P3 product work while a P1 platform or packaging smoke is
+failing. §4 items stay blocked until their revisit condition is met.
 
 ---
 
@@ -407,55 +165,34 @@ dotnet test 5DO.sln -c Debug --no-build --no-restore
 dotnet format 5DO.sln --verify-no-changes --no-restore
 jb inspectcode 5DO.sln --severity=WARNING --no-updates --no-build --output=inspectcode.sarif
 
-# Unique corpus and 3-way comparison
-python tools/corpus-inventory.py --jobs 8 --out artifacts/corpus/inventory.json
-python tools/generate-compat-comparison.py --inventory artifacts/corpus/inventory.json --sweep artifacts/compat-full/summary-merged.csv --sweep artifacts/compat-unique/summary.csv
-python tools/generate-compat-comparison.py --check --inventory artifacts/corpus/inventory.json --sweep artifacts/compat-full/summary-merged.csv --sweep artifacts/compat-unique/summary.csv
-
-# Beyond-title playability and quality gates
-python tools/beyond-title-sweep.py --scope peer-gap --jobs 10 --out artifacts/beyond-title --ledger docs/data/beyond-title-results.csv
-python tools/beyond-title-report.py --ledger docs/data/beyond-title-results.csv
-python tools/verify-beyond-title-ledger.py --ledger docs/data/beyond-title-results.csv
-python tools/beyond-title-baseline.py --ledger docs/data/beyond-title-results.csv --check --require-count 378
-python tools/verify-playability-grades.py
-
-# Input-script parser and pointer-device tests
-dotnet test 5DO.sln -c Debug --filter FullyQualifiedName~InputScriptTests
-
-# Accuracy panel (frame/audio)
-dotnet run --project tools/FiveDo.DiffHarness -c Release -- run benchmarks/diff/panel50.json --core artifacts/diff/opera-build/out/OperaCore.dll
-
-# Frontend smoke
+# Frontend smoke and host diagnostics
 dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test
-
-# Host diagnostics and BIOS discovery
 dotnet run --project src/FiveDo.Cli -c Debug -- doctor --strict
 dotnet run --project src/FiveDo.Cli -c Debug -- bios discover --json
 
 # Native platform runtime smoke (macOS arm64, Linux arm64, Windows arm64)
 gh workflow run platform-runtime.yml
 
-# Disc conversion round-trip
-5do disc convert game.chd --out game.iso --json
-5do disc convert game.chd --out game.chd --format chd --json
-
 # Release bundles
 pwsh -NoProfile -File packaging/package-bundle.ps1
 ```
 
 ```bash
-# Linux packages, signatures, and repositories (Linux or WSL)
+# Linux packages, signatures, AppImage, and Flatpak (Linux or WSL)
 bash packaging/linux/build-deb.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-rpm.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-appimage.sh --bundle artifacts/bundle/linux-x64 --name 5do-x86_64.AppImage
+bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/sign-artifacts.sh --key-id "$LINUX_GPG_KEY_ID" \
   --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
-sudo apt install ./artifacts/installers/5do_1.12.0_amd64.deb
 ```
 
-For a release, also run the commands in [ReleaseChecklist.md](ReleaseChecklist.md). Keep a
-local copy of each bundle in `src/FiveDo.Frontend.Avalonia/bin/Release`, remove PDB/XML
-files, and publish `SHA256SUMS.txt`.
+The macOS runbook is [BuildAndTest.md](BuildAndTest.md) §7.2. Compatibility and quality
+regression gates stay enforced by `compat-baseline.yml` and
+`tools/verify-playability-grades.py`; the full release gate is
+[ReleaseChecklist.md](ReleaseChecklist.md). Keep a local copy of each bundle in
+`src/FiveDo.Frontend.Avalonia/bin/Release`, remove PDB/XML files, and publish
+`SHA256SUMS.txt`.
 
 ---
 
@@ -489,8 +226,8 @@ ship copyrighted BIOS or game content; document intentional divergence in
 - [DifferentialHarness.md](DifferentialHarness.md) — Opera comparison and panel evidence.
 - [TestCorpus.md](TestCorpus.md) — test inventory and dated batches.
 - [ReleaseChecklist.md](ReleaseChecklist.md) — release gate.
-- [ImplementationPlanArchive.md](ImplementationPlanArchive.md) — merged historical plan,
-  completed log, stable-ID index, retired aliases, and appendices.
+- [ImplementationPlanArchive.md](ImplementationPlanArchive.md) — completed baseline,
+  results, completed backlog rows, stable IDs, retired aliases, and appendices.
 
-The archive is retained for traceability only. New work goes in this file; completed work
-moves to §1 or the archive, not into a second backlog.
+The archive is retained for traceability only. New work belongs in this file; an item
+leaves this file when its **Done when** line is satisfied, not when it is implemented.

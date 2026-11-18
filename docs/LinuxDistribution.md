@@ -3,7 +3,7 @@
 This page covers how the Linux artifacts are built, signed, published, and announced,
 and what else can move Linux adoption. It is the working reference for
 [Installers.md](Installers.md) and the Linux rows in
-[ImplementationPlan.md](ImplementationPlan.md) §3.4.
+[ImplementationPlan.md](ImplementationPlan.md) §3.3.
 
 **Snapshot:** 2026-11-17, v1.12.0. Linux x64 is a validated target (hardware
 OpenGL/Vulkan, real-device audio, evdev gamepads, display-sleep inhibit, full
@@ -290,7 +290,7 @@ flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json
 
 Record the results in [TestCorpus.md](TestCorpus.md) and
 [Installers.md](Installers.md), per the evidence rule in
-[ImplementationPlan.md](ImplementationPlan.md) §2.
+[ImplementationPlan.md](ImplementationPlan.md).
 
 ---
 
