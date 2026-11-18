@@ -160,6 +160,10 @@ if [[ "$install_deps" == "true" ]]; then
 fi
 
 builder_args=(--user --force-clean --disable-rofiles-fuse --arch="$arch" --repo="$work/repo")
+# flatpak-builder exports to "master" unless told otherwise, while build-bundle below
+# asks for $branch. Pin both to the same ref or build-bundle fails with
+# "Refspec app/<id>/<arch>/<branch> not found".
+builder_args+=(--default-branch="$branch")
 if [[ "$install_deps" == "true" ]]; then
     builder_args+=(--install-deps-from="$deps_remote")
 fi
