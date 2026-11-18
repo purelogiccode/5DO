@@ -230,7 +230,7 @@ workflow.
 |---|---|---|
 | 320x240 NTSC | Yes | |
 | **OpenGL/GLES renderer** | **Required desktop path** | |
-| Optional Vulkan renderer | Offscreen/readback backend and `--vk-probe`; accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX | Native Vulkan surface/swapchain, vsync |
+| Optional Vulkan renderer | Native Win32/X11/Metal swapchain for the shell and `--vk-window-probe`, offscreen `--vk-probe`; accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX; FIFO vsync | Mailbox/immediate as a user setting |
 | GPU palette expansion | Yes (exact CPU parity in Accurate mode) | |
 | 4:3 aspect ratio, letterbox | Yes | |
 | Nearest / integer scaling | Yes | |
@@ -732,7 +732,7 @@ capture branch and wrote a 1x1 PNG. Optical-drive boot is N/A on this host (no
 `/dev/sr*`); the DPI matrix remains `PLAT-06`. Reproducible commands and numbers are in
 [TestCorpus.md](TestCorpus.md) 1.1cm.
 
-### 10.4 macOS arm64 validation (2026-11-17)
+### 10.4 macOS arm64 validation (2026-11-17/18)
 
 Validated on a NoMac cloud Mac: Apple M5 Pro (Virtual), macOS 26.6.2 (build 25G83),
 arm64, Apple Paravirtual GPU with unified memory and 16 GB reported VRAM. The host is
@@ -744,7 +744,7 @@ CHD were uploaded over SSH.
 
 | Check | Result |
 |---|---|
-| Full test suite | `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: **2,394/2,394 passed** in 10 s |
+| Full test suite | `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: **2,403/2,403 passed** in 11 s (native-surface build, 2026-11-18) |
 | CLI version / self-test | `5DO 1.12.0 (FiveDo)`; `selftest --json` reports `ok: true` |
 | 600-frame Wolfenstein boot | 0.888 s (~676 fps), 320x240, non-black final frame written to `artifacts/macos/wolf-frame.png` |
 | Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.12.0`; real Avalonia window opened and shut down cleanly |
@@ -752,7 +752,10 @@ CHD were uploaded over SSH.
 | Metal | `MTLCreateSystemDefaultDevice()` returns `Apple Paravirtual device`, unified memory, 1024x1024x1024 max threadgroup |
 | Vulkan / MoltenVK | Homebrew `vulkan-loader` 1.4.363 + MoltenVK 1.4; `--vk-probe` reports `ok: true`, `Apple Paravirtual device`, Vulkan 1.0, max texture 16,384, 0 managed bytes/frame |
 | Vulkan filters | `Accurate`, `Nearest`, `SharpBilinear`, `Bicubic`, `xBR`, `HQx`, `MMPX`, and `FSR` all pass with `filterFallback: false` at 640x480 (529-975 fps offscreen) |
-| Desktop presentation | `--gl-backend vulkan` selects `Vulkan (Metal)` and presents Wolfenstein at 59.8-60.1 fps; the status bar reports `SharpBilinear (GPU)` |
+| Native Metal surface | `--vk-window-probe` at 1920x1080, 60 measured frames after 10 warm-up: `ok: true`, `offscreen: false`, `Apple Paravirtual device`, **60.1 fps**, `vsyncActive: true` (`fifo`), **0 renderer bytes/frame** |
+| Native surface parity | 320x240 Accurate window-probe capture: `matches: true`, `differentPixels: 0`, CPU and GPU hash `4167670981` |
+| Desktop presentation | `--gl-backend vulkan` runs the shell through the native `CAMetalLayer` (`VK_EXT_metal_surface`); the status bar reports `Vulkan · SharpBilinear · 59.9 fps (auto)` and gameplay renders in the window |
+| Resize / fullscreen | Live resize 1060x466 → 900x438 → 1250x524 recreated the swapchain each time (`Vulkan surface resized` log) with the 4:3 viewport recomputed; `Emulation > Fullscreen` moved the swapchain to 1440x900 with a 960x720 viewport and the title screen rendered full-screen |
 | Bundle / DMG | `5do-1.12.0-osx-arm64.dmg`, `.pkg`, and `.tar.gz` built on the Mac; the 104 MB tarball is self-contained, contains `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both Apache-2.0 notices; CLI `selftest` and frontend `--smoke-test` pass without `DOTNET_ROOT` from the tarball **and** the mounted DMG; SHA-256 verifies |
 | Bundled Vulkan | With no `DYLD_LIBRARY_PATH`, `DYLD_PRINT_LIBRARIES=1` loads `/tmp/5do-self2/libvulkan.1.dylib` and `/tmp/5do-self2/libMoltenVK.dylib`; `--vk-probe` returns `ok: true` with `Apple Paravirtual device` |
 | Audio | All three `FIVEDO_AUDIO_TESTS=1` cases pass, including live output replacement: outputs share one OpenAL context per device because macOS lacks `ALC_EXT_thread_local_context`; Windows audio tests also pass |
@@ -761,14 +764,17 @@ The macOS-specific renderer changes are:
 
 - Vulkan instances on macOS enable `VK_KHR_portability_enumeration` with
   `InstanceCreateFlags.EnumeratePortabilityBitKhr`; without it MoltenVK is not
-  enumerated and `vkCreateInstance` returns `ErrorIncompatibleDriver`.
+  enumerated and `vkCreateInstance` returns `ErrorIncompatibleDriver`. Device creation
+  also enables `VK_KHR_portability_subset` whenever MoltenVK advertises it.
 - Silk.NET prefers the bundled `libvulkan.1.dylib`/`libMoltenVK.dylib`; the
   `MoltenVK_icd.json` path is installed from the renderer's static constructor so the
   loader never falls back to Homebrew. `DYLD_LIBRARY_PATH` is not required.
-- The desktop shell maps OpenGL/Vulkan/Direct3D selections to an offscreen
-  `VulkanOffscreenRenderer` (`CaptureToFrame=true`) and copies the readback into the
-  existing `WriteableBitmap` presenter; a CPU presenter remains the fallback when
-  MoltenVK is absent.
+- The desktop shell presents through a native `CAMetalLayer` view
+  (`VK_EXT_metal_surface`) added above Avalonia's content view; the view is click-through
+  (`hitTest:` returns `nil`), tracks the video rectangle in points, and sizes its drawable
+  from the backing scale. The swapchain is recreated on resize and `OUT_OF_DATE`.
+- The offscreen `VulkanOffscreenRenderer` (`CaptureToFrame=true`) and the CPU presenter
+  remain as fallbacks when the native surface cannot start.
 - `--gl-probe` fails fast on macOS instead of waiting for the 30 s timeout. OpenGL is
   therefore **not** a macOS presentation path in this release; the validated macOS GPU
   path is Vulkan over MoltenVK/Metal.

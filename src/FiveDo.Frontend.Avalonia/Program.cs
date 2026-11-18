@@ -58,7 +58,7 @@ internal static class Program
 
     /// <summary>
     /// Gets the optional Vulkan probe request. When set, the process runs the offscreen
-    /// pipeline (or the native Win32/X11 swapchain for <c>--vk-window-probe</c>) and
+    /// pipeline (or the native Win32/X11/Metal swapchain for <c>--vk-window-probe</c>) and
     /// exits without initializing Avalonia.
     /// </summary>
     internal static VkProbeOptions? VkProbe { get; private set; }

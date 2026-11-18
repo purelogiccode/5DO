@@ -546,29 +546,36 @@ export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"
 ```
 
 Avalonia's macOS backend uses Metal and does not implement `OpenGlControlBase`, so
-`--gl-probe` now fails immediately with that explanation. The desktop shell selects
-the offscreen Vulkan renderer instead. Release bundles already include MoltenVK and the
-loader; for a local development build install them once:
+`--gl-probe` now fails immediately with that explanation. The desktop shell presents
+through the native `CAMetalLayer` surface (`VK_EXT_metal_surface`), and
+`--vk-window-probe` opens an `NSWindow` for the same path; the offscreen MoltenVK
+presenter remains the fallback. Release bundles already include MoltenVK and the loader;
+for a local development build install them once:
 
 ```bash
 brew install molten-vk vulkan-loader
 ./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --vk-probe artifacts/vk.json
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo \
+  --vk-window-probe artifacts/vk-window.json --vk-window-probe-size 1920x1080
 ./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --gl-backend vulkan \
   --bios <bios> <disc>
 ```
 
-The Vulkan renderer enables `VK_KHR_portability_enumeration` and prefers the bundled
-`libvulkan.1.dylib`/`libMoltenVK.dylib`; Homebrew's `/opt/homebrew/lib` is the
+The Vulkan renderer enables `VK_KHR_portability_enumeration` (and
+`VK_KHR_portability_subset` on the device when MoltenVK advertises it) and prefers the
+bundled `libvulkan.1.dylib`/`libMoltenVK.dylib`; Homebrew's `/opt/homebrew/lib` is the
 development fallback, so `DYLD_LIBRARY_PATH` is not needed.
 Bundle packaging needs PowerShell 7 (`brew install --cask powershell@preview`) because
 `packaging/package-bundle.ps1` is PowerShell.
 
-Recorded evidence: 2,394/2,394 tests; CLI `selftest` ok; frontend smoke ok; 600-frame
-Wolfenstein 3D boot; all eight Vulkan filters (`Accurate`, `Nearest`,
+Recorded evidence: 2,403/2,403 tests (2026-11-18); CLI `selftest` ok; frontend smoke ok;
+600-frame Wolfenstein 3D boot; all eight Vulkan filters (`Accurate`, `Nearest`,
 `SharpBilinear`, `Bicubic`, `xBR`, `HQx`, `MMPX`, and `FSR`) pass without fallback; the
-packaged `.app`, `.dmg`, and `.tar.gz` pass CLI and frontend smoke. The paravirtual GPU
-does not expose accelerated OpenGL — only `Apple Software Renderer` 4.1 is available,
-and Avalonia cannot host it on macOS.
+native Metal window probe presents 1080p FIFO at 60.1 fps with 0 bytes/frame and a
+320x240 Accurate capture matches the CPU oracle; the shell resizes and goes fullscreen
+through the same surface; the packaged `.app`, `.dmg`, and `.tar.gz` pass CLI and
+frontend smoke. The paravirtual GPU does not expose accelerated OpenGL — only
+`Apple Software Renderer` 4.1 is available, and Avalonia cannot host it on macOS.
 
 ---
 

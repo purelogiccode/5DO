@@ -383,6 +383,21 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-18 - PLAT-14 macOS native Metal surface.** Replaced the macOS offscreen
+  Vulkan plus bitmap-readback shell path with a native `CAMetalLayer` surface. The
+  renderer gained `VulkanSurfaceKind.Metal`, `VK_EXT_metal_surface`, portability
+  enumeration, and `VK_KHR_portability_subset`; the frontend gained an Objective-C
+  interop surface (`NSView` + `CAMetalLayer`, click-through `hitTest:`, flipped-view
+  aware point conversion, backing-scale drawable) used by `VulkanVideoSurface` and a new
+  macOS `--vk-window-probe` window. On a NoMac Apple M5 Pro (macOS 26.6.2, MoltenVK
+  1.4.363) the 1080p probe reports `ok: true`, 60.144 fps, FIFO, and 0 renderer
+  bytes/frame; a 320x240 Accurate capture matches the CPU oracle (0 different pixels,
+  hash `4167670981`); the shell presents Wolfenstein 3D at 59.9 fps, resizes live
+  (1060x466→900x438→1250x524), and goes fullscreen (1440x900 / viewport 960x720). The
+  suite passes 2,403/2,403 and the frontend smoke passes. Evidence:
+  [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md),
+  [TestCorpus.md](TestCorpus.md) 1.1co.
+
 - **2026-11-17 - REL-05 signed mirror repositories.** `build-apt-repo.sh` and
   `build-rpm-repo.sh` now publish `5do-archive-keyring.gpg` (plus `.asc` and
   `.fingerprint`) at the repository root, because the generated `5do.list`/`5do.repo`
@@ -746,6 +761,7 @@ without new measurement.
 | **PLAT-11** | P1 | Linux evdev gamepad validation. Found and fixed a real defect: `EventIoctl` encoded the ioctl **type and request number in the wrong bit positions**, so no evdev device was ever accepted. `--gamepad-probe` now samples for two seconds. A virtual 8-button/4-axis uinput pad is detected (`connected=1`), its South button maps to `buttons=South`, and the `input`-group/udev requirement is documented. | [TestCorpus.md](TestCorpus.md) 1.1cm, `EvdevGamepadSourceTests` |
 | **PLAT-12** | P1 | Linux display-sleep inhibit: freedesktop screen-saver inhibitor (`org.freedesktop.ScreenSaver.Inhibit`/`UnInhibit`) held by a persistent `python3-dbus` helper. A running game logged the acquired cookie, `dbus-monitor` observed `Inhibit`/`UnInhibit` with the same cookie, and closing released it (`307216972`, `1192968952`, `1965464518`). Hosts without a session bus skip cleanly. | [TestCorpus.md](TestCorpus.md) 1.1cm, `DisplaySleepPolicyTests` |
 | **PLAT-13** | P1 | Linux desktop exit segfault: Silk.NET unloaded `libopenal.so` when the last context was disposed, leaving the PipeWire backend's `atexit` handler pointing at unmapped code. `OpenAlAudioOutput` keeps one reference to the library on Linux; software, OpenGL, and Vulkan sessions close with exit code 0 and `--smoke-test` still passes. | [TestCorpus.md](TestCorpus.md) 1.1cm |
+| **PLAT-14** | P1 | macOS native Metal surface: `VulkanSurfaceKind.Metal` + `MacMetalSurface` build an `NSView` backed by a `CAMetalLayer` (Objective-C interop, click-through `hitTest:`, points→Cocoa conversion, backing-scale drawable) and pass it through `VK_EXT_metal_surface`; the renderer also enables `VK_KHR_portability_enumeration`/`_subset`. `--vk-window-probe` presents 1080p FIFO at 60.1 fps with 0 renderer bytes/frame, a 320x240 Accurate capture matches the CPU oracle with 0 different pixels, and the shell resizes (1060x466→900x438→1250x524) and goes fullscreen (1440x900) through the same surface. The offscreen MoltenVK and CPU presenters remain fallbacks. | [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md), [TestCorpus.md](TestCorpus.md) 1.1co |
 | **PLAT-15** | P1 | macOS GPU runtime packaging: the arm64 tarball/DMG contains `libvulkan.1.dylib`, `libMoltenVK.dylib`, `MoltenVK_icd.json`, and both Apache-2.0 notices. A self-contained bundle with no `DOTNET_ROOT` loads `/tmp/.../libvulkan.1.dylib` and `/tmp/.../libMoltenVK.dylib` (`DYLD_PRINT_LIBRARIES`), and `--vk-probe` returns `ok: true`. | [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md) |
 | **PLAT-16** | P1 | macOS OpenAL live-switch fix: 18 `AL_INVALID_ENUM` errors when a second output replaced an open one. macOS has no `ALC_EXT_thread_local_context`, so the output now shares one context per device and clears it only after the last output. `FIVEDO_AUDIO_TESTS=1` passes all three audio tests on macOS; Windows passes; a live switch reports 0 AL errors. | [Audio.md](Audio.md), [Compatibility.md](Compatibility.md) §10.4 |
 | **PLAT-18** | P1 | macOS NoMac release gate: [BuildAndTest.md](BuildAndTest.md) §7.2 is the runbook. The 2026-11-17 run reproduced the [Compatibility.md](Compatibility.md) §10.4 table from a clean checkout, including the self-contained DMG, bundled MoltenVK, and the 60 fps game session. | [BuildAndTest.md](BuildAndTest.md) §7.2, [Compatibility.md](Compatibility.md) §10.4 |

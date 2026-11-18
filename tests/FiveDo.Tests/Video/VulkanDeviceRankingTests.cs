@@ -1,3 +1,4 @@
+using System;
 using FiveDo.Video.Vulkan;
 using Silk.NET.Vulkan;
 
@@ -52,5 +53,37 @@ public sealed class VulkanDeviceRankingTests
         Assert.Equal(VulkanSurfaceKind.Xlib, xlib.Kind);
         Assert.Equal(0x9ABC, xlib.Window);
         Assert.Equal(0x5678, xlib.Display);
+
+        VulkanSurface metal = VulkanSurface.ForMetal(0xDEF0);
+        Assert.Equal(VulkanSurfaceKind.Metal, metal.Kind);
+        Assert.Equal(0xDEF0, metal.Window);
+        Assert.Equal(0, metal.Display);
+    }
+
+    [Fact]
+    public void InitializeSurface_RejectsMetalOnNonMacOsHosts()
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            // The Metal path needs a real CAMetalLayer, which only macOS can provide.
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer();
+        Assert.Throws<PlatformNotSupportedException>(
+            () => renderer.InitializeSurface(VulkanSurface.ForMetal(0xDEF0), 320, 240));
+    }
+
+    [Fact]
+    public void InitializeSurface_RejectsWin32OnNonWindowsHosts()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var renderer = new VulkanOffscreenRenderer();
+        Assert.Throws<PlatformNotSupportedException>(
+            () => renderer.InitializeSurface(VulkanSurface.ForWin32(0x1234), 320, 240));
     }
 }

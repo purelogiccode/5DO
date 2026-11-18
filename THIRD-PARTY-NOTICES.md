@@ -160,7 +160,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Microsoft.NET.Test.Sdk | Tests | MIT |
 | coverlet.collector | Coverage | MIT |
 | BenchmarkDotNet | Benchmarks | MIT |
-| Silk.NET.Vulkan 2.23.0 + Silk.NET.Vulkan.Extensions.KHR 2.23.0 | Optional offscreen Vulkan backend, native Win32 swapchain probe, and `--vk-probe`/`--vk-window-probe` | MIT |
+| Silk.NET.Vulkan 2.23.0 + Silk.NET.Vulkan.Extensions.KHR/EXT 2.23.0 | Optional Vulkan backend, native Win32/X11/Metal swapchain, and `--vk-probe`/`--vk-window-probe` | MIT |
 | Vortice.Direct3D11 3.8.3 + Vortice.DXGI 3.8.3 + Vortice.D3DCompiler 3.8.3 | Optional Direct3D 11 presenter, DXGI swapchain, and runtime HLSL compilation; SharpGen.Runtime is a transitive dependency | MIT |
 | XenoAtom.ShaderCompiler.Build 1.2.2 | Build-time GLSL-to-SPIR-V compilation for the Vulkan backend; not distributed at runtime | BSD-2-Clause |
 | Vulkan Loader 1.4.363 (macOS only) | `libvulkan.1.dylib` bundled beside the macOS arm64 app | Apache-2.0 |

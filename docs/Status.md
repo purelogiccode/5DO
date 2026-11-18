@@ -1,22 +1,31 @@
 # Project Status and Next Steps
 
-**2026-11-17, v1.12.0 macOS GPU release:** **macOS arm64 renders through Vulkan/MoltenVK
-on Metal.** On a rented NoMac Apple M5 Pro (Virtual, macOS 26.6.2), the desktop shell
-selects the offscreen Vulkan presenter, reports `Vulkan (Metal)`, and plays Wolfenstein
-3D at 59.8-60.1 fps; all eight filters pass the Vulkan probe without fallback. The full
-suite is **2,394/2,394**, CLI `selftest` and frontend `--smoke-test` pass, and the
-native `.dmg`/`.pkg`/`.tar.gz` smoke-test from both the extracted tarball and the mounted
-DMG with matching SHA-256. The macOS audio live-switch fix passes all three audio tests
-after outputs were made to share one OpenAL context per device. The build now runs the
-net8.0 shader compiler on the
-installed .NET 9/10/11 runtime, so only the .NET 11 SDK is required for builds. Release
-bundles are self-contained: the .NET 11 runtime is embedded and no separate runtime
-install is required. macOS OpenGL is not
-a presentation path (Avalonia has no macOS OpenGL control); `--gl-probe` fails fast and
-points at `--vk-probe`. Intel macOS support was dropped in 1.12.0; Apple Silicon is the
-only supported macOS target. Remaining macOS work is tracked as `PLAT-14`..`PLAT-18`:
-native Metal/Vulkan surface, GPU runtime packaging, audio live-switch, Retina/DPI, and
-the NoMac release gate. Evidence: [Compatibility.md](Compatibility.md) §10.4,
+**2026-11-18, native macOS Metal surface:** **macOS arm64 now presents through a native
+`CAMetalLayer` surface (`VK_EXT_metal_surface`), with no per-frame CPU readback.** On a
+rented NoMac Apple M5 Pro (Virtual, macOS 26.6.2, MoltenVK 1.4.363) `--vk-window-probe`
+reports `ok: true`, 60.1 fps at 1080p FIFO, and 0 renderer bytes/frame; a 320x240
+Accurate capture matches the CPU oracle with 0 different pixels. The desktop shell plays
+Wolfenstein 3D at 59.9 fps and follows live resize and fullscreen through the same
+surface. The full suite is **2,403/2,403**, and CLI `selftest` plus frontend
+`--smoke-test` pass. The offscreen MoltenVK presenter remains the fallback. macOS OpenGL
+is still not a presentation path (Avalonia has no macOS OpenGL control); `--gl-probe`
+fails fast and points at `--vk-probe`. Remaining macOS work is `PLAT-17` (Retina/DPI
+matrix) and `PLAT-05` (physical gamepad). Evidence:
+[Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md),
+[TestCorpus.md](TestCorpus.md) §1.1co.
+
+**2026-11-17, v1.12.0 macOS GPU release:** macOS arm64 renders through Vulkan/MoltenVK
+on Metal. The v1.12.0 desktop shell used the offscreen presenter (since replaced by the
+native surface above), reported `Vulkan (Metal)`, and played Wolfenstein 3D at
+59.8-60.1 fps; all eight filters pass the Vulkan probe without fallback. The full suite
+was **2,394/2,394**, CLI `selftest` and frontend `--smoke-test` passed, and the
+native `.dmg`/`.pkg`/`.tar.gz` smoke-tested from both the extracted tarball and the
+mounted DMG with matching SHA-256. The macOS audio live-switch fix passes all three audio
+tests after outputs were made to share one OpenAL context per device. The build now runs
+the net8.0 shader compiler on the installed .NET 9/10/11 runtime, so only the .NET 11 SDK
+is required for builds. Release bundles are self-contained: the .NET 11 runtime is
+embedded and no separate runtime install is required. Intel macOS support was dropped in
+1.12.0; Apple Silicon is the only supported macOS target.
 [KnownIssues.md](KnownIssues.md), [ReleaseNotes-1.12.0.md](ReleaseNotes-1.12.0.md).
 
 **v1.12.0 release evidence:** five self-contained bundles and `SHA256SUMS.txt` are

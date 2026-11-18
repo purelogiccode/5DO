@@ -1,14 +1,16 @@
 using System;
 using System.Runtime.InteropServices;
 using Silk.NET.Core;
+using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
 using VkApi = Silk.NET.Vulkan.Vk;
 
 namespace FiveDo.Video.Vulkan;
 
 /// <summary>
-/// Optional Win32 swapchain presentation for <see cref="VulkanOffscreenRenderer"/>.
+/// Optional native swapchain presentation for <see cref="VulkanOffscreenRenderer"/>.
 /// </summary>
 /// <remarks>
 /// The offscreen pipeline remains unchanged: it renders into a sampled output image at
@@ -101,6 +103,17 @@ public sealed unsafe partial class VulkanOffscreenRenderer
             ArgumentOutOfRangeException.ThrowIfZero(window.Display, nameof(window));
         }
 
+        switch (window.Kind)
+        {
+            case VulkanSurfaceKind.Win32 when !OperatingSystem.IsWindows():
+                throw new PlatformNotSupportedException("The Win32 Vulkan surface is Windows-only.");
+            case VulkanSurfaceKind.Xlib when !OperatingSystem.IsLinux():
+                throw new PlatformNotSupportedException("The X11 Vulkan surface is Linux-only.");
+            case VulkanSurfaceKind.Metal when !OperatingSystem.IsMacOS():
+                throw new PlatformNotSupportedException(
+                    "The Metal Vulkan surface needs macOS and MoltenVK.");
+        }
+
         _surfaceKind = window.Kind;
         _surfaceDisplay = window.Display;
         _windowHandle = window.Window;
@@ -112,13 +125,11 @@ public sealed unsafe partial class VulkanOffscreenRenderer
     {
         if (OperatingSystem.IsMacOS())
         {
-            // MoltenVK is a portability driver. Offscreen instances still need the
-            // portability extension so the loader can enumerate it; window surfaces
-            // on macOS are not implemented yet.
+            // MoltenVK is a portability driver: the instance must opt in to portability
+            // enumeration, and a native surface needs VK_EXT_metal_surface.
             return _windowHandle == 0
                 ? ["VK_KHR_portability_enumeration"]
-                : throw new PlatformNotSupportedException(
-                    "macOS Vulkan window surfaces are not implemented yet.");
+                : ["VK_KHR_surface", "VK_EXT_metal_surface", "VK_KHR_portability_enumeration"];
         }
 
         if (_windowHandle == 0)
@@ -134,6 +145,8 @@ public sealed unsafe partial class VulkanOffscreenRenderer
                 ["VK_KHR_surface", "VK_KHR_xlib_surface"],
             VulkanSurfaceKind.Win32 => throw new PlatformNotSupportedException(
                 "The Win32 Vulkan surface is Windows-only."),
+            VulkanSurfaceKind.Metal => throw new PlatformNotSupportedException(
+                "The Metal Vulkan surface needs macOS and MoltenVK."),
             _ => throw new PlatformNotSupportedException(
                 "The X11 Vulkan surface is Linux-only; Wayland surfaces are not implemented yet."),
         };
@@ -141,7 +154,45 @@ public sealed unsafe partial class VulkanOffscreenRenderer
 
     private string[] GetDeviceExtensions()
     {
-        return _windowHandle == 0 ? [] : ["VK_KHR_swapchain"];
+        if (_windowHandle == 0)
+        {
+            return [];
+        }
+
+        // MoltenVK advertises VK_KHR_portability_subset and the specification requires
+        // enabling it when present.
+        return SupportsDeviceExtension("VK_KHR_portability_subset")
+            ? ["VK_KHR_swapchain", "VK_KHR_portability_subset"]
+            : ["VK_KHR_swapchain"];
+    }
+
+    private bool SupportsDeviceExtension(string name)
+    {
+        uint count = 0;
+        if (_vk!.EnumerateDeviceExtensionProperties(_physicalDevice, (string?)null, &count, null) != Result.Success
+            || count == 0)
+        {
+            return false;
+        }
+
+        var properties = stackalloc ExtensionProperties[(int)count];
+        if (_vk.EnumerateDeviceExtensionProperties(_physicalDevice, (string?)null, &count, properties) != Result.Success)
+        {
+            return false;
+        }
+
+        for (uint i = 0; i < count; i++)
+        {
+            if (string.Equals(
+                    SilkMarshal.PtrToString((nint)properties[i].ExtensionName),
+                    name,
+                    StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void CreateSurface()
@@ -165,6 +216,22 @@ public sealed unsafe partial class VulkanOffscreenRenderer
                 Hwnd = _windowHandle,
             };
             Check(win32Surface.CreateWin32Surface(_instance, &create, null, out _surface), "vkCreateWin32SurfaceKHR");
+        }
+        else if (_surfaceKind == VulkanSurfaceKind.Metal)
+        {
+            if (!_vk!.TryGetInstanceExtension(_instance, out ExtMetalSurface metalSurface))
+            {
+                throw new NotSupportedException("VK_EXT_metal_surface is unavailable.");
+            }
+
+            MetalSurfaceCreateInfoEXT create = new()
+            {
+                SType = StructureType.MetalSurfaceCreateInfoExt,
+                PLayer = (nint*)_windowHandle,
+            };
+            Check(
+                metalSurface.CreateMetalSurface(_instance, &create, null, out _surface),
+                "vkCreateMetalSurfaceEXT");
         }
         else
         {

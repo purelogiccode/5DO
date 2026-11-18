@@ -1,12 +1,13 @@
 # Optional Vulkan Backend
 
 **Status:** implemented as an optional offscreen presenter, a validation probe, a
-native Win32/X11 swapchain probe, and an embedded Win32/X11 child surface for the
-desktop shell. OpenGL/GLES remains the required desktop presenter; Vulkan is not a v1 release
-gate. The backend now implements xBR-lv2, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and
-MMPX 2x in addition to accurate, nearest, sharp-bilinear, bicubic, and CRT.
-Native Linux X11 surfaces are implemented for both the probe and the desktop shell;
-Wayland and Metal remain unimplemented, and Wayland-only sessions use the OpenGL
+native Win32/X11/Metal swapchain probe, and an embedded native child surface (Win32,
+X11, or macOS Metal) for the desktop shell. OpenGL/GLES remains the required desktop
+presenter; Vulkan is not a v1 release gate. The backend now implements xBR-lv2, FSR 1.0
+(EASU + RCAS), HQx 2x/3x/4x, and MMPX 2x in addition to accurate, nearest,
+sharp-bilinear, bicubic, and CRT.
+Native Linux X11 and macOS Metal surfaces are implemented for both the probe and the
+desktop shell; Wayland remains unimplemented, and Wayland-only sessions use the OpenGL
 presenter.
 
 ## What it is
@@ -35,7 +36,7 @@ VdlFrame
         |
         +--> host readback buffer (offscreen probe and captures)
         |
-        +--> Win32 / X11 swapchain (desktop child surface on Windows, window probe)
+        +--> Win32 / X11 / Metal swapchain (native child surface, window probe)
 ```
 
 The palette shader is a direct port of `FrameAssembler`/`GpuPalette`: pixel zero uses
@@ -45,16 +46,17 @@ bit 15, and the per-line CLUT uses independent red, green, and blue indices. A 3
 
 The renderer is offscreen by default. It does not create an instance surface, swapchain,
 or presentation queue unless `InitializeSurface` is called. `--vk-window-probe` creates
-a Win32 window on Windows or an X11 window on Linux, enables
-`VK_KHR_surface` with `VK_KHR_win32_surface` or `VK_KHR_xlib_surface`, plus
-`VK_KHR_swapchain`, and blits the rendered output image into the current swapchain image
-before presenting. The desktop shell hosts a native child window (Win32 `HWND` or X11
-window) inside the Avalonia window through `VulkanVideoSurface`
+a Win32 window on Windows, an X11 window on Linux, or an `NSWindow`/`CAMetalLayer` on
+macOS, enables `VK_KHR_surface` with `VK_KHR_win32_surface`, `VK_KHR_xlib_surface`, or
+`VK_EXT_metal_surface`, plus `VK_KHR_swapchain`, and blits the rendered output image into
+the current swapchain image before presenting. The desktop shell hosts a native child
+surface (Win32 `HWND`, X11 window, or a click-through `NSView` backed by a
+`CAMetalLayer`) inside the Avalonia window through `VulkanVideoSurface`
 (`--gl-backend vulkan`), so the steady-state desktop path has no GPU-to-CPU readback
-and no `WriteableBitmap` upload on Windows and Linux/X11. The offscreen readback path
-remains for the headless probe, screenshots, and fallback if the child surface cannot
-be created; the shell falls back to OpenGL when no native surface is available. The
-headless probe remains the primary parity tool.
+and no `WriteableBitmap` upload on Windows, Linux/X11, and macOS. The offscreen readback
+path remains for the headless probe, screenshots, and fallback if the child surface
+cannot be created; the shell falls back to the offscreen presenter on macOS and to
+OpenGL on Windows/Linux. The headless probe remains the primary parity tool.
 
 Physical devices are ranked so a hardware GPU wins over a software rasterizer:
 discrete > integrated > virtual > other > CPU, with queue and surface support required.
@@ -116,8 +118,8 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --gl-backend vulkan --disc "game.chd"
 ```
 
-Native Win32 swapchain probe (opens a real window, presents through a Vulkan
-swapchain, and writes the same JSON report):
+Native swapchain probe (opens a real Win32, X11, or macOS Metal window, presents through
+a Vulkan swapchain, and writes the same JSON report):
 
 ```powershell
 dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
@@ -236,6 +238,25 @@ window to 1400x820 scales the viewport up and presents through the recreated swa
 The child is a depth-24 window raised above Avalonia's render window; a Wayland-only
 session uses the OpenGL presenter instead.
 
+### macOS Metal window probe (2026-11-18)
+
+NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64, Apple Paravirtual GPU, MoltenVK
+1.4.363 from Homebrew. `--vk-window-probe` creates an `NSWindow` with a click-through
+`NSView` whose backing layer is a `CAMetalLayer`, then presents through
+`VK_EXT_metal_surface` with FIFO.
+
+| Case | FPS | Present mode | Managed bytes/frame |
+|---|---:|---|---:|
+| 1920x1080 sharp-bilinear, 60 frames | 60.1 | `fifo` | 0 |
+| 320x240 accurate, 10 frames | 67.0 | `fifo` | 0 |
+
+The 320x240 accurate capture matches the CPU oracle exactly: `differentPixels: 0`, no
+vertical flip, CPU and GPU hash `4167670981`. The desktop shell presents the same way:
+`--gl-backend vulkan` logs `Vulkan surface presented its first frame (swapchain
+1060x466, output 1060x466, viewport 370,113 320x240)`, a live resize to 900x438 and
+1250x524 recreates the swapchain, and `Emulation > Fullscreen` moves it to 1440x900
+(viewport 960x720).
+
 ## Build and packaging
 
 - `Silk.NET.Vulkan` 2.23.0 provides the Vulkan bindings.
@@ -284,19 +305,18 @@ The SPIR-V and option-parsing tests run everywhere.
 
 ## Limitations and next steps
 
-- The window probe and the desktop shell surface support Win32 and Linux/X11
-  (`VK_KHR_xlib_surface`). The X11 child is created with an opaque 24-bit TrueColor
-  visual, keeps Avalonia's input handling through an empty `ShapeInput` region, and is
-  raised above Avalonia's render window on each present. A Wayland-only session has no
-  X11 display, so the shell uses the OpenGL presenter; Wayland surfaces remain
-  unimplemented. A Metal-capable macOS host is now available: macOS uses the offscreen
-  Vulkan renderer through MoltenVK (no native `CAMetalLayer` surface yet), and the
-  native Metal surface remains `PLAT-08B`. The child window is outside Avalonia's
-  compositor, so Avalonia-drawn overlays
-  over the video rectangle (for example the diagnostic overlay) are obscured; the status
-  bar and header remain visible.
+- The window probe and the desktop shell surface support Win32, Linux/X11
+  (`VK_KHR_xlib_surface`), and macOS Metal (`VK_EXT_metal_surface`). The X11 child is
+  created with an opaque 24-bit TrueColor visual, keeps Avalonia's input handling through
+  an empty `ShapeInput` region, and is raised above Avalonia's render window on each
+  present. The macOS child is a click-through `NSView` (`hitTest:` returns `nil`) backed
+  by a `CAMetalLayer`; it is repositioned in points and its drawable is sized from the
+  backing scale. A Wayland-only session has no X11 display, so the shell uses the OpenGL
+  presenter; Wayland surfaces remain unimplemented. The child surface is outside
+  Avalonia's compositor, so Avalonia-drawn overlays over the video rectangle (for
+  example the diagnostic overlay) are obscured; the status bar and header remain visible.
 - The per-frame readback is only recorded when `CaptureToFrame` is enabled; probes and
-  screenshots use a one-shot copy. The embedded Win32 surface does not read back at all.
+  screenshots use a one-shot copy. The embedded native surfaces do not read back at all.
   The offscreen fallback still needs the readback every frame and remains slower than
   the direct OpenGL presenter.
 - xBR, FSR 1.0, HQx 2x/3x/4x, and MMPX are GPU passes. HQx uses the shared 256x32
@@ -312,8 +332,9 @@ The SPIR-V and option-parsing tests run everywhere.
   Bridge Vulkan support is incomplete), a 1920x1080 X11 session, and HDA Intel PCH
   audio; X11 surfaces and the desktop shell child surface are implemented (`PLAT-08A`).
   A NoMac Apple M5 Pro (Virtual, macOS 26.6.2, arm64) provides MoltenVK 1.4.363 and a
-  paravirtual Metal GPU. On macOS the offscreen path enables
-  `VK_KHR_portability_enumeration`, prefers the bundled `libvulkan.1.dylib`/
-  `libMoltenVK.dylib` (with Homebrew as a development fallback), and all eight filters
-  pass without fallback; the packaged app presents at ~60 fps. The integrated/legacy devices are secondary targets rather than the primary
-  Vulkan reference.
+  paravirtual Metal GPU. On macOS the renderer enables `VK_KHR_portability_enumeration`
+  (and `VK_KHR_portability_subset` on the device when advertised), prefers the bundled
+  `libvulkan.1.dylib`/`libMoltenVK.dylib` (with Homebrew as a development fallback), and
+  presents through a native `CAMetalLayer`; all eight filters pass without fallback and
+  the packaged app presents at 60 fps. The integrated/legacy devices are secondary
+  targets rather than the primary Vulkan reference.

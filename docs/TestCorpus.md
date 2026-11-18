@@ -4231,6 +4231,63 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1co macOS native Metal surface (2026-11-18)
+
+**Scope (`PLAT-14`).** Replace the macOS offscreen Vulkan plus bitmap-readback shell path
+with a native `CAMetalLayer`/`NSView` surface through `VK_EXT_metal_surface`, including
+swapchain creation, resize/`OUT_OF_DATE`, present-mode selection, and no per-frame CPU
+readback.
+
+**Host/build.** NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64, Apple Paravirtual GPU;
+MoltenVK 1.4.363 and `vulkan-loader` 1.4 from Homebrew; .NET 11.0.100 SDK in `~/.dotnet`.
+Release build of `src/FiveDo.Frontend.Avalonia` from the synced working tree.
+
+**Native window probe.** `--vk-window-probe /tmp/vk-window.json --vk-window-probe-size
+1920x1080 --vk-window-probe-frames 60 --vk-window-probe-warmup 10` reports `ok: true`,
+`offscreen: false`, renderer `Apple Paravirtual device`, **60.144 fps**, `vsyncActive:
+true`, `vsyncBackend: "fifo"`, and `rendererAllocatedBytesPerFrame: 0`.
+
+**CPU parity.** `--vk-window-probe-size 320x240 --vk-window-probe-filter accurate
+--vk-window-probe-capture /tmp/vk-320.png` reports `parity: { compared: true, matches:
+true, differentPixels: 0, cpuHash: 4167670981, gpuHash: 4167670981, verticalFlip: false }`;
+the 3,811-byte PNG is written.
+
+**Desktop shell.** `--gl-backend vulkan --bios bios/panafz10.bin "games/Wolfenstein 3D
+(USA).chd"` logs `Vulkan renderer ready: Apple Paravirtual device.` and `Vulkan surface
+presented its first frame (swapchain 1060x466, output 1060x466, viewport 370,113
+320x240)`, and the game renders in the window at `59.9 fps (auto)`. A live resize via
+System Events to 900x620 then 1250x706 logs `Vulkan surface resized (swapchain 900x438 …)`
+and `… (swapchain 1250x524, output 1250x524, viewport 305,22 640x480)`; `Emulation >
+Fullscreen` logs `Vulkan surface resized (swapchain 1440x900, output 1440x900, viewport
+240,90 960x720)` and the title screen fills the display with 4:3 pillarboxing.
+Screenshots: windowed boot, resized gameplay, and fullscreen title screen.
+
+**Suite and smoke.** `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`:
+**2,403/2,403 passed** in 11 s (includes the new `ForMetal` and platform-guard tests).
+`--smoke-test` writes `FRONTEND SMOKE OK 1.12.0`, `locale=en`, `firstMenuHeader=File`,
+`windowState=Normal`.
+
+**Implementation notes.** `VulkanSurfaceKind.Metal` carries a `CAMetalLayer*`;
+`MacMetalSurface` builds an `NSView` + `CAMetalLayer` via Objective-C interop, keeps it
+click-through with a runtime `hitTest:` subclass, converts top-left points to Cocoa
+coordinates (and respects a flipped superview), and sizes the drawable from the backing
+scale. The layer is not `framebufferOnly` because the presenter blits into the drawable.
+The renderer enables `VK_EXT_metal_surface` and `VK_KHR_portability_enumeration` on the
+instance and `VK_KHR_portability_subset` on the device when advertised. The offscreen
+MoltenVK presenter and the CPU presenter remain fallbacks.
+
+**Reproduce.**
+
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"
+dotnet build src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo \
+  --vk-window-probe /tmp/vk-window.json --vk-window-probe-size 1920x1080 \
+  --vk-window-probe-frames 60 --vk-window-probe-warmup 10
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --gl-backend vulkan \
+  --bios bios/panafz10.bin "games/Wolfenstein 3D (USA).chd"
+```
+
 ### 1.1cn Signed mirror repositories: APT and RPM (2026-11-17)
 
 **Scope (`REL-05`).** Verify that `packaging/linux/build-apt-repo.sh` and

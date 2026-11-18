@@ -290,8 +290,13 @@ internal static class VkProbeRunner
             return new X11ProbeWindow(width, height);
         }
 
+        if (OperatingSystem.IsMacOS())
+        {
+            return new MacProbeWindow(width, height);
+        }
+
         throw new PlatformNotSupportedException(
-            "The Vulkan window probe supports Windows and Linux/X11; use --vk-probe offscreen here.");
+            "The Vulkan window probe supports Windows, Linux/X11, and macOS; use --vk-probe offscreen here.");
     }
 
     private static bool IsParityCandidate(VkProbeOptions options)

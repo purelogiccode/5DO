@@ -10,8 +10,9 @@ namespace FiveDo.Frontend.Avalonia;
 /// <remarks>
 /// The probe renders the same synthetic frames as the OpenGL probe through the
 /// optional <c>FiveDo.Video.Vulkan</c> backend and writes timing, capability, and parity
-/// JSON. <c>--vk-probe</c> runs headless; <c>--vk-window-probe</c> opens a Win32 window
-/// and presents through a native swapchain. Neither path requires Avalonia's render loop.
+/// JSON. <c>--vk-probe</c> runs headless; <c>--vk-window-probe</c> opens a Win32, X11, or
+/// macOS Metal window and presents through a native swapchain. Neither path requires
+/// Avalonia's render loop.
 /// </remarks>
 internal sealed record VkProbeOptions(
     string OutputPath,

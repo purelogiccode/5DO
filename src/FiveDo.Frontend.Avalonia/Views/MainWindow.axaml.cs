@@ -5668,12 +5668,21 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var exception = e.Exception;
-        _logger.ForCategory(LogCategory.Video).Information(
-            exception,
-            "Vulkan surface failed; switching to OpenGL.");
         _vulkanPresenter = false;
         VulkanVideo.Stop();
         VulkanVideo.IsVisible = false;
+        if (OperatingSystem.IsMacOS())
+        {
+            _logger.ForCategory(LogCategory.Video).Warning(
+                exception,
+                "The native Metal surface failed; falling back to the MoltenVK offscreen presenter.");
+            StartCpuFallback(exception, allowGpuPresenters: true, allowNativeVulkan: false);
+            return;
+        }
+
+        _logger.ForCategory(LogCategory.Video).Information(
+            exception,
+            "Vulkan surface failed; switching to OpenGL.");
         _rendererKind = VideoRendererKind.OpenGl;
         _openGlDisabled = false;
         Video.IsVisible = true;
@@ -5789,9 +5798,8 @@ public partial class MainWindow : Window, IDisposable
     /// Maps renderer kinds that cannot present on the current platform.
     /// </summary>
     /// <remarks>
-    /// Avalonia's macOS backend has no OpenGL control and the native Vulkan child
-    /// surface is Win32/X11-only. macOS instead uses the offscreen Vulkan renderer
-    /// (MoltenVK over Metal) and copies its readback into the bitmap presenter.
+    /// Avalonia's macOS backend has no OpenGL control, so macOS uses the native Metal
+    /// surface (MoltenVK) through the same Vulkan video control Windows and Linux use.
     /// </remarks>
     private static VideoRendererKind NormalizeRendererKind(VideoRendererKind kind)
     {
@@ -5799,7 +5807,7 @@ public partial class MainWindow : Window, IDisposable
         if (normalized != kind)
         {
             Serilog.Log.Information(
-                "macOS has no Avalonia OpenGL presenter; using Vulkan/MoltenVK.");
+                "macOS has no Avalonia OpenGL presenter; using the native Vulkan/MoltenVK surface.");
         }
 
         return normalized;
@@ -5885,9 +5893,9 @@ public partial class MainWindow : Window, IDisposable
     }
 
     /// <summary>
-    /// Creates the macOS GPU presenter. Avalonia's macOS backend has no
-    /// <c>OpenGlControlBase</c> implementation, so the Vulkan renderer draws offscreen
-    /// through MoltenVK/Metal and the shell copies its readback into the bitmap path.
+    /// Creates the macOS fallback GPU presenter. The native Metal surface is preferred;
+    /// when it cannot start, MoltenVK still renders offscreen and the shell copies the
+    /// readback into the bitmap presenter.
     /// </summary>
     private ICpuFrameRenderer CreateMacVulkanPresenter(RendererSettings settings, int width, int height)
     {
@@ -5912,7 +5920,10 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void StartCpuFallback(Exception exception, bool allowGpuPresenters = true)
+    private void StartCpuFallback(
+        Exception exception,
+        bool allowGpuPresenters = true,
+        bool allowNativeVulkan = true)
     {
         if (_cpuVideo is not null || _vulkanPresenter || _direct3DPresenter || _shuttingDown)
         {
@@ -5983,7 +5994,7 @@ public partial class MainWindow : Window, IDisposable
 
         if (allowGpuPresenters
             && _rendererKind == VideoRendererKind.Vulkan
-            && !OperatingSystem.IsMacOS())
+            && (allowNativeVulkan || !OperatingSystem.IsMacOS()))
         {
             try
             {
@@ -6023,6 +6034,17 @@ public partial class MainWindow : Window, IDisposable
             {
                 VulkanVideo.Stop();
                 VulkanVideo.IsVisible = false;
+                if (OperatingSystem.IsMacOS())
+                {
+                    // macOS has no Avalonia OpenGL presenter; keep MoltenVK, but fall
+                    // back to its offscreen readback presenter instead of the CPU path.
+                    _logger.ForCategory(LogCategory.Video).Warning(
+                        vulkanException,
+                        "The native Metal surface is unavailable; using the MoltenVK offscreen presenter.");
+                    StartCpuFallback(vulkanException, allowGpuPresenters, allowNativeVulkan: false);
+                    return;
+                }
+
                 _logger.ForCategory(LogCategory.Video).Information(
                     vulkanException,
                     "Vulkan is unavailable; switching to OpenGL.");

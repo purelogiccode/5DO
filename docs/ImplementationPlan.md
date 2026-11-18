@@ -5,7 +5,7 @@
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
-**Open items:** 14 — 4 platform, 6 release/packaging, 2 product, 2 awaiting hardware.
+**Open items:** 13 — 3 platform, 6 release/packaging, 2 product, 2 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -52,13 +52,12 @@ completed ID without new measurement.
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **PLAT-14** | Open | L | **Native Metal/Vulkan surface**: replace the offscreen Vulkan plus bitmap-readback shell path with a native `CAMetalLayer`/`NSView` surface (through `VK_EXT_metal_surface`/MoltenVK or a native Metal presenter), including swapchain creation, resize/`OUT_OF_DATE`, present-mode selection, and no per-frame CPU readback. | The NoMac host has a Metal device; the Linux X11 native surface and the macOS offscreen renderer are working references; MoltenVK ships with the bundle. | `--vk-window-probe` on macOS presents natively (`ok: true`), 1080p FIFO at >=60 fps with 0 renderer bytes/frame; a 320x240 Accurate capture matches the CPU oracle with 0 different pixels; the desktop shell uses the surface through resize and fullscreen. Evidence: [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md). |
 | **PLAT-17** | Open | M | **macOS Retina/DPI and presentation matrix**: validate 1x/2x Retina scaling, logical versus physical pixel sizing, fullscreen, window resize, 320x240 screenshot dimensions, and 4K offscreen output on the NoMac host. | `PixelSizeTests` cover the math and the shell already handles size/scale; NoMac provides a 1920x1080 desktop and Metal GPU. | A dated matrix records windowed/fullscreen and 1x/2x results, screenshots have the expected pixel size, the video rectangle is not stretched, and the results are labeled in [Performance.md](Performance.md) §8.8. |
 | **PLAT-05** | Awaiting hardware | S | **macOS gamepad backend**: physical detection for the IOKit HID source. `MacOsGamepadSource`, `MacOsHidGamepadMapper`, and 21 mapping/profile tests are complete. | Only the physical check needs a macOS host with a connected controller; the mapping is already unit-tested. | A macOS gamepad is detected and mapped through the existing eight-player profile. |
 
-`PLAT-15` (bundled MoltenVK/loader), `PLAT-16` (OpenAL live-switch), and `PLAT-18`
-(NoMac release gate) are closed; see the archive. `PLAT-14` is the only open item that
-changes how the macOS build presents every frame, so it runs first.
+`PLAT-14` (native Metal surface), `PLAT-15` (bundled MoltenVK/loader), `PLAT-16`
+(OpenAL live-switch), and `PLAT-18` (NoMac release gate) are closed; see the archive.
+`PLAT-17` is the remaining presentation item and runs next.
 
 ### 3.2 P1 — Presentation and performance validation
 
@@ -137,9 +136,9 @@ was measured and closed with a documented limitation, not that it is unachievabl
 
 ## 5. Execution order
 
-1. **macOS platform:** `PLAT-14` (native surface) → `PLAT-17` (Retina/DPI matrix) →
-   `PLAT-05` (physical controller). `PLAT-14` removes the per-frame readback on every
-   macOS frame and is the prerequisite for calling macOS fully supported.
+1. **macOS platform:** `PLAT-17` (Retina/DPI matrix) → `PLAT-05` (physical controller).
+   The native Metal surface (`PLAT-14`) is complete, so the macOS build no longer reads
+   back every frame.
 2. **Release evidence:** `REL-04` first — one tagged run with the signing key proves the
    signing chain. Then validate the artifacts from that run with `REL-06` and `REL-07`,
    publish the channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak

@@ -302,10 +302,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   audio, and the frontend `--smoke-test` pass on Linux Mint 22.3 (Mesa llvmpipe). The GL
   probe timed out in the VM's SSH/llvmpipe session, so that VM could not validate GPU
   presentation. macOS arm64, Linux arm64, and Windows arm64 now pass the native
-  CLI/frontend runtime smoke (2026-11-10). On 2026-11-17 macOS arm64 was validated with
-  the offscreen Vulkan/MoltenVK presenter (2,394 tests, a packaged 60 fps Wolfenstein 3D
-  session, and all eight filters); macOS OpenGL presentation remains unavailable because
-  Avalonia's backend has no OpenGL control. A bare-metal Linux Mint
+  CLI/frontend runtime smoke (2026-11-10). On 2026-11-17/18 macOS arm64 was validated with
+  the native Metal surface (2,403 tests, a native 1080p FIFO window probe at 60 fps with
+  0 bytes/frame, exact 320x240 CPU parity, a 60 fps Wolfenstein 3D session with live
+  resize and fullscreen, and all eight filters); macOS OpenGL presentation remains
+  unavailable because Avalonia's backend has no OpenGL control. A bare-metal Linux Mint
   22.3 host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`,
   1920x1080 X11, HDA audio) is now the Linux GPU target (2026-11-16). Its GL probe
   passes at 61 fps (1920x1080, `GLX_EXT_swap_control`), and Vulkan runs on the real
@@ -394,9 +395,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - Linux OpenGL GPU presentation is validated on the 2026-11-16 bare-metal host: the X11
   GL probe and Vulkan shell pass. **macOS OpenGL presentation is not implemented by
   Avalonia**: its macOS backend is Metal-only and never initializes `OpenGlControlBase`,
-  so `--gl-probe` fails fast with that explanation. The macOS shell instead uses the
-  offscreen Vulkan renderer through MoltenVK/Metal and copies the readback into the
-  bitmap presenter; that path passes on a NoMac Apple M5 Pro (Virtual) host (2026-11-17).
+  so `--gl-probe` fails fast with that explanation. The macOS shell instead presents
+  through the native `CAMetalLayer` surface (`VK_EXT_metal_surface`) and keeps the
+  offscreen MoltenVK presenter as its fallback; that path passes on a NoMac Apple M5 Pro
+  (Virtual) host (2026-11-18), including live resize and fullscreen.
   The paravirtual GPU exposes only `Apple Software Renderer` OpenGL 4.1, not accelerated
   OpenGL.
 - Display-sleep inhibition is implemented for Windows and Linux. Linux holds an
