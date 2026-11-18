@@ -525,9 +525,10 @@ settled.
 
 Expected permissions: `--share=network` (RetroAchievements, metadata lookup),
 `--socket=pulseaudio`, `--socket=x11`, `--socket=wayland`, `--device=all` (gamepads,
-optical drives), `--filesystem=home` (BIOS and images), `--filesystem=removable-media`
-(disc images on USB drives), `--talk-name=org.freedesktop.ScreenSaver` (display-sleep
-inhibit).
+optical drives), `--filesystem=home` (BIOS and images), `--filesystem=/media` and
+`--filesystem=/run/media` (disc images on USB drives; `removable-media` is a
+`flatpak override` nickname that the finish-args metadata parser rejects), and
+`--talk-name=org.freedesktop.ScreenSaver` (display-sleep inhibit).
 
 ### 8.4 Snap
 

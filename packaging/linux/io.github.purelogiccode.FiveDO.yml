@@ -31,7 +31,10 @@ finish-args:
   - --device=all
   # BIOS images, disc images, and the existing 5DO data folder.
   - --filesystem=home
-  - --filesystem=removable-media
+  # Optical drives on the FHS removable mounts. `removable-media` is a
+  # `flatpak override` nickname only; the finish-args metadata parser rejects it.
+  - --filesystem=/media
+  - --filesystem=/run/media
   # Display-sleep inhibit through the desktop portal.
   - --talk-name=org.freedesktop.ScreenSaver
 

@@ -46,7 +46,7 @@ bundle set.** `linux-packages.yml` builds `5do-x86_64.AppImage` and
 `5do-x86_64.flatpak` and `5do-aarch64.flatpak` from the published apphosts. The manifest
 (`packaging/linux/io.github.purelogiccode.FiveDO.yml`) repackages the self-contained
 apphosts, disables stripping, and declares the network, X11/Wayland, PulseAudio, device,
-home, removable-media, and screen-saver permissions. CI installs each bundle and runs
+home, `/media` + `/run/media`, and screen-saver permissions. CI installs each bundle and runs
 `5do-cli selftest --json` inside the sandbox; evidence is pending the next CI run. The
 runbook is in [LinuxDistribution.md](LinuxDistribution.md).
 
