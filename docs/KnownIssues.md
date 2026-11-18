@@ -467,6 +467,13 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   output — is validated on that host (2026-11-18); the 2x math is covered by
   `PixelSizeTests` and `MacMetalSurface` only. See
   [Performance.md](Performance.md) §8.8 and [TestCorpus.md](TestCorpus.md) §1.1ct.
+- **The Linux arm64 AppImage has not run on arm64 Linux hardware.** CI builds
+  `5do-aarch64.AppImage` on the native ARM runner and self-checks it there, but no
+  arm64 Linux desktop was available for a `--version`/frontend run at release time.
+- **Linux artifacts are signed but not served from a repository.** Each release carries
+  the keyring, a signed checksum manifest, and per-artifact `.asc` files; there is no
+  hosted `apt`/`dnf` server and no Flathub listing. Rotation of the single release key
+  is documented in [LinuxDistribution.md](LinuxDistribution.md) §4.
 - **Release bundles are self-contained and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishSingleFile=true`,
   `PublishTrimmed=false`) with the .NET 11 runtime embedded; no separate runtime install

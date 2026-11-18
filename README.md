@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.12.0-orange" alt="Version 1.12.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.13.0-orange" alt="Version 1.13.0"></a>
 </p>
 
 <p align="center">
@@ -27,15 +27,17 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.12.0**, the macOS GPU presentation release. Windows x64 and Linux x64
-> remain validated targets, and **macOS arm64** now renders through Vulkan/MoltenVK
-> (offscreen presenter with Metal acceleration) at 60 fps, including all eight filters.
-> The macOS arm64 bundle includes the Vulkan loader and MoltenVK, so no Homebrew
-> install is required; the OpenGL probe reports that Avalonia has no macOS OpenGL
-> control. macOS arm64, Linux arm64, and Windows arm64
-> also pass the native CLI/frontend runtime smoke. Intel macOS is no longer supported.
-> The build now works with only the
-> .NET 11 SDK: the shader compiler rolls forward instead of requiring the .NET 8 runtime.
+> 5DO is at **v1.13.0**. macOS arm64 presents through a **native `CAMetalLayer` surface**
+> (`VK_EXT_metal_surface`) at 60 fps with no per-frame readback, and all eight filters are
+> available. The release also adds the Phoenix/4DO presentation options — audio channel
+> swap, named void patterns, the void color on the GPU presenters, and an
+> emulation-health badge — plus **GPG-signed Linux artifacts** (keyring fingerprint
+> `E69FF266D1FB01D3411578775C4C1E8EAFD44075`).
+> Windows x64 and Linux x64 remain validated targets; macOS arm64, Linux arm64, and
+> Windows arm64 pass the native CLI/frontend runtime smoke. Intel macOS is no longer
+> supported. The macOS arm64 bundle includes the Vulkan loader and MoltenVK, so no
+> Homebrew install is required. The build works with only the .NET 11 SDK: the shader
+> compiler rolls forward instead of requiring the .NET 8 runtime.
 > No BIOS ROMs, game images, or extracted game assets are included. You must supply
 > legally obtained files.
 
@@ -83,10 +85,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.12.0` release (GitHub Releases) |
+| Version | `1.13.0` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,394 tests** in the current test assembly |
+| Automated tests | **2,439 tests** in the current test assembly |
 | macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
@@ -108,19 +110,19 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.12.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-win-x64.zip) |
-| Windows arm64 | [`5do-1.12.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-win-arm64.zip) |
-| Linux x64 | [`5do-1.12.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.12.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-linux-arm64.tar.gz) |
-| macOS arm64 | [`5do-1.12.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.13.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.13.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.13.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.13.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-linux-arm64.tar.gz) |
+| macOS arm64 | [`5do-1.13.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.13.0/5do-1.13.0-osx-arm64.dmg) |
 
-The 1.12.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
+The 1.13.0 Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the
 bundled OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux
 bundles ship the same OpenAL Soft runtime and do not require a system OpenAL install.
 
 The apps are **self-contained single-file executables**: the .NET 11 runtime is
 embedded, so no separate runtime install is required. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.12.0)
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.13.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 Linux users can also install the `.deb`/`.rpm` packages, run the portable AppImage, or
@@ -129,8 +131,8 @@ same bundles. Verification commands, the signing model, and the optional mirror
 setup are in the
 [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.12.0-win-arm64.zip`
-or `5do-1.12.0-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.13.0-win-arm64.zip`
+or `5do-1.13.0-osx-arm64.dmg`.
 
 ## Features
 

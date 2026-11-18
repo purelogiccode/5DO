@@ -1,12 +1,28 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.12.0, the macOS GPU
-presentation release.
+All notable changes are recorded here. The project is at v1.13.0, the native Metal surface
+and signed Linux release.
 
-## [Unreleased]
+## [1.13.0] - 2026-11-18
 
 ### Added
 
+- **Native macOS Metal surface.** macOS arm64 presents through an `NSView` +
+  `CAMetalLayer` surface (`VK_EXT_metal_surface`) instead of reading every frame back.
+  The window probe reports 60.1 fps at 1080p FIFO with 0 renderer bytes/frame, live
+  resize and fullscreen keep a 4:3 viewport, and a 320x240 Accurate capture matches the
+  CPU oracle with 0 different pixels. The 1x presentation matrix (windowed, resize,
+  fullscreen, 320x240 capture, 4K offscreen) is validated on a NoMac host; Retina 2x
+  stays open because that host only advertises 1:1 display modes.
+- **Presentation options from Phoenix and 4DO.** Audio channel swap (live output only,
+  also `--audio-swap`), named void patterns 4DO/Bumps/Metal, the void color on the GPU
+  presenters, and an emulation-health badge in the status bar. All four are
+  presentation-only: frame hashes, audio hashes, and save states are unchanged.
+- **Signed Linux releases.** The ed25519 release key (`Pure Logic Code (5DO releases)`,
+  fingerprint `E69FF266D1FB01D3411578775C4C1E8EAFD44075`, expires 2029-11-18) signs
+  every `.deb`, `.rpm`, AppImage, Flatpak, and portable tarball, plus
+  `SHA256SUMS-linux.txt` and the published `5do-archive-keyring.gpg`. CI signs on every
+  push so the chain stays covered; `release.yml` publishes it with the tag.
 - **Linux arm64 AppImage and x64/arm64 Flatpak bundles.** `linux-packages.yml` now builds
   `5do-aarch64.AppImage` next to the x64 image on the native ARM runner, and
   `build-flatpak.sh` plus `io.github.purelogiccode.FiveDO.yml` produce
@@ -52,6 +68,31 @@ presentation release.
 - **`application/x-3do-disc` no longer claims every ISO 9660 image.** The MIME magic
   rule matched the shared `CD001` signature at offset 32769 and retyped all ISOs; the
   type is now a subclass of `application/x-cd-image` with extension globs only.
+- **The Flatpak manifest failed at `flatpak build-finish`.** `finish-args` rejected the
+  `--filesystem=removable-media` nickname, which only exists for `flatpak override`; the
+  manifest now grants `/media` and `/run/media`.
+- **`flatpak build-bundle` could not find the app ref.** `flatpak-builder` exports to
+  `master` by default while the script requested `stable`; the build now passes
+  `--default-branch` so both agree.
+- **The arm64 AppImage could silently disappear from a release.** The `appimagetool`
+  download intermittently fails on the ARM runner and the step exited successfully; it
+  now retries five times before warning.
+- **The publish job failed before verifying the mirror trees.** It runs on a fresh
+  runner and never installed `dpkg-dev`, `apt-utils`, `createrepo-c`, or `rpm`; it does
+  now.
+- **The documentation build failed on the new screenshots.** Three links used
+  `../assets/...`, which escapes `docs_dir`; they are relative to `docs/` now.
+
+### Known limits
+
+- macOS Retina 2x presentation is unvalidated; the NoMac host advertises only 1:1 modes.
+- The Linux arm64 AppImage is built and smoke-tested in CI but not run on arm64 Linux
+  hardware.
+- 5DO publishes GitHub release assets and optional signed mirror tooling; it does not
+  host a package repository or a Flathub listing yet.
+- The release key is a single sign key stored only as a repository secret; rotation
+  publishes a new key and keeps the old keyring available.
+- Intel macOS remains unsupported.
 
 ## [1.12.0] - 2026-11-17
 

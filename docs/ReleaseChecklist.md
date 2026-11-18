@@ -1,10 +1,10 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.12.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.13.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.12.0 adds macOS arm64 Vulkan/MoltenVK
-presentation, drops Intel macOS, and removes the external .NET 8 build requirement.
+v1.2.x. macOS is published as a DMG. v1.13.0 adds the native Metal surface, the
+Phoenix/4DO presentation options, and GPG-signed Linux artifacts.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -38,6 +38,27 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.13.0 native Metal and signed Linux gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.13.0`.
+- [x] macOS: native `CAMetalLayer` presentation, windowed/resize/fullscreen, 320x240
+      capture parity, and 3840x2160 offscreen output recorded in
+      [Performance.md](Performance.md) §8.8 and [TestCorpus.md](TestCorpus.md) §1.1ct.
+- [ ] macOS Retina 2x: unvalidated, blocked by the 1x-only NoMac display
+      ([ImplementationPlan.md](ImplementationPlan.md) §4).
+- [x] Presentation options: audio channel swap, named void patterns, GPU void color, and
+      the emulation-health badge, each with settings round-trip tests.
+- [x] Release key configured (`LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID`), fingerprint
+      recorded in [LinuxDistribution.md](LinuxDistribution.md) §4.
+- [x] CI signs every push, installs the `.deb`/`.rpm`, runs the sandboxed Flatpak
+      `selftest`, and verifies the signed APT/RPM mirror trees.
+- [x] Full suite green (2,439 tests), `dotnet format`, `jb inspectcode`, and
+      `mkdocs build --strict`.
+- [ ] Tagged release publishes the bundles and the signed Linux assets, and the download
+      verification in [LinuxDistribution.md](LinuxDistribution.md) §3 passes from a clean
+      machine.
 
 ## 1.12.0 macOS GPU gate
 

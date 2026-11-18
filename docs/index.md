@@ -16,13 +16,15 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.12.0 macOS GPU release"
-    5DO is at v1.12.0, the macOS GPU presentation release. **Windows x64, Linux x64,
-    and macOS arm64** are validated targets: macOS renders through Vulkan/MoltenVK on
-    Metal at 60 fps, with all eight filters and a packaged DMG. The macOS arm64 bundle
-    includes MoltenVK and the Vulkan loader; the CPU presenter is the fallback. Linux arm64
-    and Windows arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game images,
-    or extracted game assets are distributed here; supply legally obtained files.
+!!! important "v1.13.0 native Metal and signed Linux release"
+    5DO is at v1.13.0. **Windows x64, Linux x64, and macOS arm64** are validated
+    targets: macOS presents through a native `CAMetalLayer` surface at 60 fps, with all
+    eight filters and a packaged DMG. The release adds the Phoenix/4DO presentation
+    options and GPG-signed Linux artifacts (keyring fingerprint
+    `E69FF266D1FB01D3411578775C4C1E8EAFD44075`). The macOS arm64 bundle includes MoltenVK
+    and the Vulkan loader; the CPU presenter is the fallback. Linux arm64 and Windows
+    arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game
+    images, or extracted game assets are distributed here; supply legally obtained files.
 
 ## Start here
 
@@ -76,17 +78,22 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.12.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.13.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-17, v1.12.0 macOS GPU release (GitHub Releases).**
+**2026-11-18, v1.13.0 native Metal and signed Linux release (GitHub Releases).**
 
-- **2,394 tests** are present in the current test assembly.
-- **macOS arm64 GPU presentation** is validated through Vulkan/MoltenVK: the shell
-  reports `Vulkan (Metal)`, renders a packaged Wolfenstein 3D session at 60 fps, passes
-  all eight filters, and builds/smoke-tests the DMG, PKG, and tar.gz.
+- **2,439 tests** are present in the current test assembly.
+- **macOS arm64 presents through a native Metal surface** (`CAMetalLayer`,
+  `VK_EXT_metal_surface`) with 0 renderer bytes/frame at 1080p FIFO, live resize and
+  fullscreen, 320x240 capture parity, and 4K offscreen output. Retina 2x remains
+  unvalidated because the validation host only advertises 1:1 display modes.
+- **Presentation options:** audio channel swap, 4DO/Bumps/Metal void patterns, the void
+  color on the GPU presenters, and an emulation-health badge.
+- **Linux artifacts are signed:** keyring, per-artifact `.asc`, and a signed checksum
+  manifest; CI builds and installs both `.deb`/`.rpm` sets and both Flatpak bundles.
 - Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI, and
   Nero NRG. The CDI and NRG readers accept cooked 2048-byte, 2336-byte Mode 2, raw
   2352-byte, and the 2353/2368/2448/2449-byte raw variants, and expose the same track
@@ -136,7 +143,7 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.12.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.12.0)
+- v1.13.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.13.0)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
   desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 11
   runtime is embedded in the self-contained apphosts. The release adds macOS arm64 GPU

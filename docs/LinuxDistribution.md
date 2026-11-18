@@ -139,52 +139,49 @@ yourself; both disable the only integrity check APT/dnf perform.
 
 ## 4. Key setup runbook (one time)
 
-Create an offline primary key with an online signing subkey. Only the signing subkey
-goes into CI; the primary key stays off the network and is used to extend or revoke
-the subkey.
-
-```sh
-export GNUPGHOME="$HOME/.gnupg-5do"
-mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
-
-# Primary (certify-only) key + signing subkey, no passphrase on the subkey so CI can
-# use it unattended. Keep the primary key offline.
-gpg --batch --quick-generate-key "5DO release signing <release@5do.invalid>" \
-  ed25519 cert 2y
-fpr="$(gpg --batch --with-colons --fingerprint | awk -F: '/^fpr:/ { print $10; exit }')"
-gpg --batch --quick-add-key "$fpr" ed25519 sign 1y
-
-gpg --batch --list-secret-keys --with-subkey-fingerprint
-```
-
-Export the **signing subkey only** for GitHub Actions:
-
-```sh
-# Replace SIGNING_SUBKEY_FPR with the `ssb` fingerprint from the listing above.
-gpg --batch --armor --export-secret-subkeys "$SIGNING_SUBKEY_FPR"! > 5do-signing-subkey.asc
-gh secret set LINUX_GPG_PRIVATE_KEY < 5do-signing-subkey.asc
-gh secret set LINUX_GPG_KEY_ID --body "$SIGNING_SUBKEY_FPR"
-shred -u 5do-signing-subkey.asc
-```
-
-Rules:
-
-- Never commit a private key, and never put the primary key in a repository secret.
-- Rotate the signing subkey before it expires; publish the new fingerprint in the
-  release notes. The old signatures remain verifiable with the old keyring.
-- If a key is compromised, publish a revocation certificate and a new keyring. Do not
-  silently replace `5do-archive-keyring.gpg`.
-- Record the fingerprint here and in `docs/ReleaseNotes-<version>.md`:
+The release key is a single **sign-only ed25519 key**. Its only copy is the
+`LINUX_GPG_PRIVATE_KEY` repository secret: there is no offline primary key to extend or
+revoke with, which suits a one-maintainer project but means rotation replaces the key
+instead of adding a subkey.
 
 | Item | Value |
 |---|---|
-| Key ID | _to be recorded when the first signed release runs_ |
-| Fingerprint | _to be recorded when the first signed release runs_ |
-| Expires | _to be recorded when the first signed release runs_ |
+| User ID | `Pure Logic Code (5DO releases) <admin@purelogiccode.com>` |
+| Key ID | `5C4C1E8EAFD44075` |
+| Fingerprint | `E69FF266D1FB01D3411578775C4C1E8EAFD44075` |
+| Algorithm | ed25519, sign and certify, no passphrase (CI signs unattended) |
+| Created | 2026-11-18 |
+| Expires | 2029-11-18 |
 
-Without the secret the release still builds: `linux-packages.yml` logs a warning,
-publishes unsigned packages, and skips the signature files. The release evidence must
-then say "unsigned".
+Reproduce the setup on any machine with GnuPG 2.2+ and an authenticated `gh`:
+
+```sh
+export GNUPGHOME="$(mktemp -d)"
+gpg --batch --pinentry-mode loopback --passphrase '' \
+  --quick-generate-key "Pure Logic Code (5DO releases) <admin@purelogiccode.com>" ed25519 sign 3y
+fpr="$(gpg --batch --with-colons --fingerprint | awk -F: '/^fpr:/ { print $10; exit }')"
+gpg --batch --armor --output 5do-release.asc --export-secret-keys "$fpr"
+gh secret set LINUX_GPG_PRIVATE_KEY < 5do-release.asc
+gh secret set LINUX_GPG_KEY_ID --body "$fpr"
+shred -u 5do-release.asc
+rm -rf "$GNUPGHOME"
+```
+
+`linux-packages.yml` signs on every CI push and on releases; without the secret it logs
+a warning and publishes unsigned packages.
+
+Rules:
+
+- Never commit a private key, and never print it. The secret is the only copy.
+- The keyring users install is exported by `sign-artifacts.sh` as
+  `5do-archive-keyring.gpg` (+ `.asc`) and published with each release.
+- Rotate before 2029-11-18: generate a new key, publish the new fingerprint in the
+  release notes, and keep the old keyring downloadable so earlier signatures still
+  verify.
+- If the secret leaks, revoke with the stored key (`gpg --gen-revoke` needs it, so do
+  that before deleting the secret), publish the revocation, then rotate. Do not
+  silently replace `5do-archive-keyring.gpg`.
+- Record the fingerprint here and in `ReleaseNotes-<version>.md`.
 
 ---
 

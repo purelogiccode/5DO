@@ -1,5 +1,15 @@
 # Project Status and Next Steps
 
+**2026-11-18, v1.13.0 release:** 5DO 1.13.0 ships the native macOS Metal surface, the
+four Phoenix/4DO presentation options (audio channel swap, named void patterns, GPU void
+color, and the emulation-health badge), and a signed Linux release chain. The suite is
+**2,439/2,439**; CI builds and signs both Linux architectures, installs the `.deb`/`.rpm`
+and the Flatpak bundles, runs the sandboxed `selftest`, and verifies the signed APT/RPM
+mirror trees. Release key: ed25519 `Pure Logic Code (5DO releases)`, fingerprint
+`E69FF266D1FB01D3411578775C4C1E8EAFD44075`, expires 2029-11-18; the fingerprint and the
+rotation rules are in [LinuxDistribution.md](LinuxDistribution.md) §4. Release notes:
+[ReleaseNotes-1.13.0.md](ReleaseNotes-1.13.0.md).
+
 **2026-11-18, native macOS Metal surface:** **macOS arm64 now presents through a native
 `CAMetalLayer` surface (`VK_EXT_metal_surface`), with no per-frame CPU readback.** On a
 rented NoMac Apple M5 Pro (Virtual, macOS 26.6.2, MoltenVK 1.4.363) `--vk-window-probe`

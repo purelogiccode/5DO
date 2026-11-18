@@ -1,63 +1,72 @@
-# What's new in 5DO 1.12.0
+# What's new in 5DO 1.13.0
 
-**Released:** 2026-11-17
+**Released:** 2026-11-18
 
-5DO 1.12.0 is the **macOS GPU presentation** update. macOS arm64 now renders the 3DO
-through Vulkan/MoltenVK on Metal instead of falling back to a blank OpenGL surface,
-with all eight filters, a packaged DMG, and a full validation pass on a rented NoMac
-host. The build also no longer requires the .NET 8 runtime.
+5DO 1.13.0 brings the **native Metal presenter** to macOS, four **presentation options**
+borrowed from Phoenix and 4DO, and a **signed Linux release chain**. No BIOS, game images,
+or extracted assets are included; you must supply legally obtained files.
 
 ## Highlights
 
-### macOS arm64 renders at 60 fps
+### macOS presents through Metal
 
-Validated on a NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64:
+The macOS arm64 shell now presents frames through an `NSView` + `CAMetalLayer` surface
+instead of copying every frame back to the CPU:
 
-- **Vulkan/MoltenVK presenter** - offscreen Vulkan renders into the shared bitmap
-  presenter; the status bar reports `Vulkan (Metal)`.
-- **60 fps gameplay** - Wolfenstein 3D ran at 59.8-60.1 fps in the packaged app.
-- **All eight filters** - Accurate, Nearest, SharpBilinear, Bicubic, xBR, HQx, MMPX,
-  and FSR 1.0 pass the Vulkan probe with no fallback.
-- **2,394/2,394 tests** pass, plus CLI `selftest` and frontend `--smoke-test`.
-- **DMG/PKG/tar.gz** - built natively; smoke tests pass from the tarball and mounted
-  DMG; SHA-256 verifies.
+- **1080p FIFO at 60.1 fps** with **0 bytes/frame** allocated by the renderer.
+- **Window resize and fullscreen** keep a 4:3 picture: 900x620 and 1250x706 windows,
+  1440x900 fullscreen with 960x720 and black-free pillarboxes.
+- **4K offscreen output** (3840x2160) at 843 fps, and a 320x240 capture that matches the
+  CPU oracle exactly.
+- **Retina 2x** is not validated yet: the rented validation host only exposes 1:1 display
+  modes, so the 2x row stays open.
 
-### Self-contained bundles
+### Four presentation options
 
-Every bundle embeds the .NET 11 runtime in its single-file apphosts, so no separate
-runtime install is required. The macOS arm64 bundle also includes the Vulkan loader and
-MoltenVK, with no Homebrew dependency.
+Settings > Video and Settings > Audio gain options that change the picture or the live
+sound without touching emulation state, frame hashes, audio hashes, or save states:
 
-### macOS fixes
+- **Swap left and right audio channels** (`--audio-swap` in the CLI). WAV captures and the
+  audio hash keep the emulated channel order.
+- **Named void patterns**: 4DO, Bumps, and Metal, next to solid, checkerboard, grid, and
+  scanline.
+- **Void color on the GPU presenters**: the letterbox and pillarbox use your
+  `#RRGGBB`/`#AARRGGBB` color on OpenGL, GLES, Vulkan, and Direct3D 11 instead of black.
+- **Emulation-health badge**: Idle, OK, Watch, or Issue from the counters the FPS overlay
+  already collects, with a tooltip that explains the verdict.
 
-- `VK_KHR_portability_enumeration` is enabled for MoltenVK.
-- The bundled Vulkan loader and MoltenVK are preferred; Homebrew is a development fallback.
-- The OpenGL probe fails immediately with an explanation instead of timing out.
-- OpenGL/Vulkan/Direct3D selections use the Vulkan presenter on macOS, with a CPU
-  fallback if MoltenVK is missing.
-- The status bar shows `(GPU)` for the Vulkan readback path.
+### Signed Linux downloads
 
-### Builds no longer need .NET 8
+- **Every Linux artifact is signed**: `.deb`, `.rpm`, AppImage, Flatpak, and the portable
+  tarballs carry a detached `.asc`, and `SHA256SUMS-linux.txt` is signed too.
+- **Published keyring**: `5do-archive-keyring.gpg` ships with the release. Check it
+  against fingerprint `E69FF266D1FB01D3411578775C4C1E8EAFD44075` before trusting it.
+- **Verify in three commands**: `gpg --verify SHA256SUMS-linux.txt.asc`, then
+  `sha256sum -c SHA256SUMS-linux.txt`.
+- **Flatpak for both architectures**, an arm64 AppImage, and GNOME Software metadata
+  (name, developer, summary, screenshots, Open button).
 
-`XenoAtom.ShaderCompiler.Build` ships a net8.0 tool. The build now rolls it forward to
-the installed .NET 9/10/11 runtime when .NET 8 is absent; when .NET 8 is present it is
-still preferred. This fixes the `You must install or update .NET` build failure on
-clean machines.
+### Fixes
 
-## Install
+- Flatpak builds now finish and bundle correctly (`/media` + `/run/media` permissions,
+  `stable` branch).
+- The arm64 AppImage no longer disappears when the tool download flakes.
+- The Linux publish job installs the mirror tools it needs before verifying the signed
+  APT/RPM trees.
+- The documentation site builds cleanly again.
 
-The bundles are **self-contained**: the .NET 11 runtime is embedded, so no separate
-runtime install is required. The macOS arm64 bundle also includes the Vulkan loader and
-MoltenVK. No system OpenAL install is required.
+## Verification
+
+- **2,439/2,439 tests** pass; `dotnet format` and `mkdocs --strict` are clean.
+- **CI**: Windows x64/arm64, Linux x64/arm64, macOS arm64 bundles; `.deb`/`.rpm` install
+  tests; Flatpak install plus sandboxed `selftest`; signed mirror verification.
 
 ## Known limits
 
-- Native Metal surface not implemented yet (`PLAT-14`).
-- MoltenVK is bundled with the macOS arm64 DMG; no Homebrew install is required.
-- macOS audio live-switch is fixed; all three audio tests pass.
-- Retina/DPI and physical gamepads are not yet validated. Intel macOS support was
-  dropped in this release; Apple Silicon is the only supported macOS target.
-- The DMG is unsigned; Gatekeeper may require an explicit exception.
-
-See the [1.12.0 release notes](ReleaseNotes-1.12.0.md), [compatibility evidence](Compatibility.md)
-§10.4, and [known issues](KnownIssues.md).
+- macOS Retina 2x remains unvalidated (no HiDPI host).
+- The Linux arm64 AppImage is built and smoke-tested in CI but not run on arm64 hardware.
+- 5DO does not host a package repository or a Flathub listing; releases are GitHub assets
+  plus optional signed mirror tooling.
+- The release key is a single sign key kept only as a repository secret; rotation
+  publishes a new key and keeps the old keyring available.
+- Intel macOS is unsupported.

@@ -77,6 +77,14 @@
   </languages>
 
   <releases>
+    <release version="1.13.0" date="2026-11-18">
+      <description>
+        <p>
+          Native Metal surface on macOS, Phoenix/4DO presentation options, and
+          GPG-signed Linux artifacts with a published keyring.
+        </p>
+      </description>
+    </release>
     <release version="1.12.0" date="2026-11-17">
       <description>
         <p>
