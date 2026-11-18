@@ -5,7 +5,7 @@
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
-**Open items:** 12 — 3 platform, 5 release/packaging, 2 product, 2 awaiting hardware.
+**Open items:** 11 — 3 platform, 4 release/packaging, 2 product, 2 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -70,17 +70,17 @@ open (§4).
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **REL-04** | Partial | S | **Linux release signing**: the key exists (fingerprint `E69FF266D1FB01D3411578775C4C1E8EAFD44075`, 2029-11-18), CI signs every push, and `sign-artifacts.sh` covers the artifacts, `SHA256SUMS-linux.txt`, and the mirror metadata. Missing work is the **tagged release** that publishes the keyring and the signatures as release assets. | The key is in `LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID`, so `release.yml` signs automatically on the next tag; no code is missing. | One tagged release publishes the keyring, a signed manifest, and a `.asc` for every `.deb`/`.rpm`/`.AppImage`; the fingerprint is recorded in [LinuxDistribution.md](LinuxDistribution.md) §4 and the release notes; `gpg --verify` and `sha256sum -c` pass from a clean download. |
 | **REL-07** | Open (CI-built) | S | **AppImage with zsync update information**: run the x64 and arm64 images on matching hosts, verify `AppImageUpdate` finds the next release through the published `.zsync`, and verify `--appimage-signature` when signed. `build-appimage.sh` and the per-architecture CI steps already build both images with embedded update info. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged; the aarch64 build runs on `ubuntu-24.04-arm`. | `5do-x86_64.AppImage` and `5do-aarch64.AppImage` run `--version` and the frontend smoke on their matching hosts (with FUSE 2 or `--appimage-extract-and-run`), the build self-check runs each image on its own runner, and `AppImageUpdate` finds the next release through the published `.zsync`. |
 | **REL-08** | Open | M | **Third-party channel listings**: publish the AUR `5do-bin` package (PKGBUILD ships in `packaging/linux/aur/`), an AppImageHub entry, and an itch.io project page. The packager-facing files (desktop entry, MIME XML, metainfo, both icons) already ship in the Linux bundle and are verified by `build-bundle.yml`. | These channels accept a repackaged upstream release and need no licence change; the catalog entries are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
 | **REL-09** | Open (bundles in CI) | L | **Flatpak distribution**: keep the single-file `.flatpak` bundles for x64 and arm64, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
 | **REL-10** | Partial | S | **Steam Deck and EmuDeck integration**: a Deck-sized first-run BIOS offer on top of `bios discover` (`UX-34` closed), documented non-Steam-game setup, and an upstream EmuDeck/RetroDeck entry. The `--fullscreen` desktop action already ships. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the work is packaging and presentation, not emulation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
 
-The unsigned Windows installer, Linux `.deb`/`.rpm`, desktop entry, MIME associations, and
-macOS `.app`/`.dmg`/`.pkg` scaffolding are complete and built on native CI runners; only
-signing/notarization is blocked (§4). The packages ship as GitHub release assets and
-install with `apt install ./…deb` / `dnf install ./…rpm` / `flatpak install ./…flatpak`;
-no repository is hosted. Evidence: [Installers.md](Installers.md),
+The unsigned Windows installer, the Linux `.deb`/`.rpm` (now signed), the desktop entry,
+MIME associations, and the macOS `.app`/`.dmg`/`.pkg` scaffolding are complete and built
+on native CI runners; only Windows code signing and macOS notarization are still blocked
+(§4). The packages ship as GitHub release assets and install with
+`apt install ./…deb` / `dnf install ./…rpm` / `flatpak install ./…flatpak`; no repository
+is hosted. Evidence: [Installers.md](Installers.md),
 [LinuxDistribution.md](LinuxDistribution.md).
 
 ### 3.4 P3 — Product features
@@ -141,12 +141,12 @@ was measured and closed with a documented limitation, not that it is unachievabl
    display (§4), and `PLAT-05` needs a physical controller, so nothing on macOS is
    runnable until one of those devices is attached. The native Metal surface (`PLAT-14`)
    is complete, so the macOS build no longer reads back every frame.
-2. **Release evidence:** `REL-04` needs one tagged run — the key is configured and CI
-   signs every push, so a tag publishes the keyring and signatures. Then validate the
-   artifacts from that run with `REL-07`, publish the channel listings (`REL-08`,
-   `REL-10`), and finish with the hosted Flatpak repository and Flathub review
-   (`REL-09`). The mirror trees and the software-center metadata are already verified
-   ([LinuxDistribution.md](LinuxDistribution.md) §5.1–§5.2).
+2. **Release evidence:** `REL-04` is closed by the v1.13.0 release, which published the
+   keyring and signatures. Next validate the AppImages from that release with `REL-07`,
+   publish the channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak
+   repository and Flathub review (`REL-09`). The mirror trees and the software-center
+   metadata are already verified ([LinuxDistribution.md](LinuxDistribution.md)
+   §5.1–§5.2).
 3. **Product:** `UX-33` as one change per option, then the `SYS-25` live-clock probe. Close
    `SYS-25` with evidence if the probe is not clean; do not keep it open as a wish.
 4. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a

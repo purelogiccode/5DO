@@ -56,9 +56,10 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `selftest`, and verifies the signed APT/RPM mirror trees.
 - [x] Full suite green (2,439 tests), `dotnet format`, `jb inspectcode`, and
       `mkdocs build --strict`.
-- [ ] Tagged release publishes the bundles and the signed Linux assets, and the download
+- [x] Tagged release publishes the bundles and the signed Linux assets, and the download
       verification in [LinuxDistribution.md](LinuxDistribution.md) §3 passes from a clean
-      machine.
+      machine (v1.13.0: keyring imported to `E69F…4075`, good signatures on the manifest
+      and the `.deb`, manifest hash matched).
 
 ## 1.12.0 macOS GPU gate
 

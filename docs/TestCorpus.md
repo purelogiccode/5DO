@@ -4258,6 +4258,14 @@ bundles).
   `5do_1.12.0_amd64.deb`, `5do-aarch64.flatpak`, and `5do-x86_64.AppImage`.
 - Recomputing the manifest gives **8/8 matching** SHA-256 hashes.
 
+**Release verification (v1.13.0, 2026-11-18).** Downloading `5do-archive-keyring.gpg`,
+`SHA256SUMS-linux.txt` (and `.asc`), and `5do_1.13.0_amd64.deb` (and `.asc`) from
+<https://github.com/purelogiccode/5DO/releases/tag/v1.13.0> into an empty directory
+reproduced the fingerprint, reported `Good signature` on the manifest and on the `.deb`,
+and matched the manifest hash `0cd394904b84588f82ec710b3f54fa734db17bda29526a4ffd7e90f6dfa274a5`.
+The release carries the five bundles, both Flatpaks, both AppImages with `.zsync`, both
+`.deb`/`.rpm` sets, the keyring, the signed manifest, and a `.asc` per Linux artifact.
+
 **Notes.** The key is a single sign key rather than an offline primary plus signing
 subkey; rotation therefore publishes a new key and keeps the old keyring available
 ([LinuxDistribution.md](LinuxDistribution.md) §4). A `workflow_dispatch` run against the
