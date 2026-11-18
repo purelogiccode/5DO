@@ -460,6 +460,13 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   OpenGL is not available on that host. The macOS arm64 bundle includes MoltenVK and the
   Vulkan loader (with notices); if the bundled runtime is unavailable, the shell falls
   back to the CPU presenter.
+- **macOS Retina 2x is unvalidated.** The rented NoMac display advertises 11 modes that
+  are all 1:1, and a private `CGVirtualDisplay` created with `hiDPI` was also handed 1x
+  modes, so `NSScreen.backingScaleFactor` stays 1.0 and the drawable never doubles. The
+  1x matrix — windowed, live resize, fullscreen, the 320x240 capture, and 4K offscreen
+  output — is validated on that host (2026-11-18); the 2x math is covered by
+  `PixelSizeTests` and `MacMetalSurface` only. See
+  [Performance.md](Performance.md) §8.8 and [TestCorpus.md](TestCorpus.md) §1.1ct.
 - **Release bundles are self-contained and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishSingleFile=true`,
   `PublishTrimmed=false`) with the .NET 11 runtime embedded; no separate runtime install

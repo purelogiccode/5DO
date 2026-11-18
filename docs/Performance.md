@@ -993,3 +993,33 @@ the same shader and texture path. A synthetic Tier A proxy (`bench --frames 120`
 measured 313.9 fps / 3.19 ms per emulated frame, under the 12 ms Tier B core budget, but
 this is not a substitute for a real Tier B percentile run. Both residues are recorded as
 **best-effort**; `PLAT-06` remains a measurement item rather than a correctness risk.
+
+#### macOS arm64 presentation and Retina matrix (PLAT-17, 2026-11-18)
+
+Measured on the rented NoMac Apple M5 Pro (Virtual), macOS 26.6.2, Apple Paravirtual GPU,
+one 1440x900 display, MoltenVK 1.4.2, .NET 11.0.100. The window column is the AppKit
+size in points, the drawable column is the `CAMetalLayer` pixel size, and the viewport is
+the `Vulkan surface presented/resized` log line from the shell:
+
+| Surface | Window (points) | Drawable (pixels) | Scale | Viewport | Result |
+|---|---:|---:|---:|---|---|
+| Windowed boot | 1060x466 | 1060x466 | 1.0 | 370,113 320x240 | pass |
+| Resize | 900x620 | 900x438 | 1.0 | 290,99 320x240 | pass (1x integer) |
+| Resize | 1250x706 | 1250x524 | 1.0 | 305,22 640x480 | pass (2x integer, 4:3) |
+| Fullscreen (`--fullscreen`) | 1440x900 | 1440x900 | 1.0 | 240,90 960x720 | pass (4:3, pillarboxed) |
+| Window probe 320x240 | 320x240 | 320x240 | 1.0 | 320x240 | pass; CPU parity, 0 different pixels, PNG 320x240 |
+| Offscreen probe 4K | n/a | 3840x2160 | n/a | full frame | pass; 843.7 fps, 0 bytes/frame |
+
+The viewport stays 4:3 in every row, so the video rectangle is letterboxed or pillarboxed,
+never stretched: fullscreen 1440x900 shows 960x720 with 240 px side bars, and the
+1250x524 window shows 640x480. A screenshot saved by the shell while the window was
+1250x706 is a 320x240 PNG, so the capture path stays at the emulated resolution. The
+window probe reproduces the CPU oracle hash (`643038405`) and writes a 320x240 PNG. The
+suite reports 2,429/2,429 on the same host.
+
+**Retina 2x is not observable on this host.** The paravirtual display advertises 11 modes
+and every one is 1:1 (points equal pixels); `NSScreen.backingScaleFactor` is 1.0 for all
+attached screens, including a private `CGVirtualDisplay` created with `hiDPI` set, so the
+shell never receives scale 2. The 2x code path is covered by `PixelSizeTests` and by
+`MacMetalSurface`, which sizes the drawable as points × backing scale, but it is not
+hardware-validated. `PLAT-17` therefore keeps only that row open.

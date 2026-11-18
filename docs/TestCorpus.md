@@ -4231,6 +4231,62 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1ct macOS presentation and Retina matrix (2026-11-18)
+
+**Scope (`PLAT-17`).** Validate the macOS presentation matrix — windowed, live resize,
+fullscreen, 1x/2x Retina scaling, logical versus physical pixels, the 320x240 capture
+size, and 4K offscreen output — on the rented NoMac host.
+
+**Host/build.** NoMac Apple M5 Pro (Virtual), macOS 26.6.2, arm64, Apple Paravirtual GPU,
+one 1440x900 display, MoltenVK 1.4.2 and `vulkan-loader` 1.4.363 from Homebrew, .NET
+11.0.100 SDK in `~/.dotnet`. Release build of the synced `master` tree.
+
+**Presentation matrix.** `--gl-backend vulkan --bios bios/panafz10.bin "games/Wolfenstein
+3D (USA).chd"`; sizes are AppKit points, drawables are `CAMetalLayer` pixels, and every
+row keeps a 4:3 viewport:
+
+| Surface | Window (points) | Drawable (pixels) | Scale | Viewport | Result |
+|---|---:|---:|---:|---|---|
+| Windowed boot | 1060x466 | 1060x466 | 1.0 | 370,113 320x240 | pass |
+| Resize | 900x620 | 900x438 | 1.0 | 290,99 320x240 | pass |
+| Resize | 1250x706 | 1250x524 | 1.0 | 305,22 640x480 | pass |
+| Fullscreen (`--fullscreen`) | 1440x900 | 1440x900 | 1.0 | 240,90 960x720 | pass |
+
+Fullscreen fills the 1440x900 display with 240 px pillarboxes and the title screen is
+not stretched. `--vk-window-probe-size 320x240 --vk-window-probe-filter accurate
+--vk-window-probe-capture /tmp/vk-320.png` reports `ok: true`, 60.0 fps, 0 bytes/frame,
+and `parity { compared: true, matches: true, differentPixels: 0, cpuHash: 643038405,
+gpuHash: 643038405 }`; the PNG is 320x240. `--vk-probe-size 3840x2160 --vk-probe-frames
+60` reports `ok: true`, 3840x2160 output, 843.7 fps, and 0 bytes/frame.
+
+**320x240 capture.** With the window at 1250x706, F12 saved
+`Wolfenstein 3d-20261118-132736-f001561.png` as a 320x240 PNG plus its metadata sidecar,
+so the screenshot path stays at the emulated resolution instead of the window size:
+
+![Native 320x240 capture](assets/screenshots/macos-native-320x240.png)
+
+**Tests.** `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release --no-build`:
+**2,429/2,429 passed** in 10 s.
+
+**Retina 2x limitation.** The virtual display exposes 11 modes and every one is 1:1
+(`CGDisplayCopyAllDisplayModes` reports `pixelWidth == width` for all of them);
+`NSScreen.backingScaleFactor` is 1.0. A private `CGVirtualDisplay` created with the
+`hiDPI` setting did create an extra 2560x1600 screen, but macOS also gave it only 1x
+modes, so scale 2 could not be exercised end to end. The drawable math it would drive
+is covered by `PixelSizeTests` and `MacMetalSurface`.
+
+**Reproduce.**
+
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:/opt/homebrew/bin:$PATH"
+dotnet build src/FiveDo.Frontend.Avalonia/FiveDo.Frontend.Avalonia.csproj -c Release
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo --fullscreen --gl-backend vulkan \
+  --bios bios/panafz10.bin "games/Wolfenstein 3D (USA).chd"
+./src/FiveDo.Frontend.Avalonia/bin/Release/net11.0/FiveDo \
+  --vk-window-probe /tmp/vk-320.json --vk-window-probe-size 320x240 --vk-window-probe-filter accurate \
+  --vk-window-probe-capture /tmp/vk-320.png
+```
+
 ### 1.1cs Emulation-health badge (2026-11-18)
 
 **Scope (`UX-33`, option 3 of 4).** Surface frame pacing and audio underrun state as a

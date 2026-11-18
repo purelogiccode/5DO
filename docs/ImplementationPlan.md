@@ -52,12 +52,13 @@ completed ID without new measurement.
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **PLAT-17** | Open | M | **macOS Retina/DPI and presentation matrix**: validate 1x/2x Retina scaling, logical versus physical pixel sizing, fullscreen, window resize, 320x240 screenshot dimensions, and 4K offscreen output on the NoMac host. | `PixelSizeTests` cover the math and the shell already handles size/scale; NoMac provides a 1920x1080 desktop and Metal GPU. | A dated matrix records windowed/fullscreen and 1x/2x results, screenshots have the expected pixel size, the video rectangle is not stretched, and the results are labeled in [Performance.md](Performance.md) §8.8. |
+| **PLAT-17** | Partial | S | **macOS Retina 2x row**: windowed, live resize, fullscreen, the 320x240 capture, and 4K offscreen output are validated on the NoMac host (2026-11-18). Only 2x Retina is missing: the paravirtual display advertises 11 modes that are all 1:1, so `backingScaleFactor` stays 1.0 even for a `CGVirtualDisplay` created with `hiDPI`. | `PixelSizeTests` and the `MacMetalSurface` drawable math already cover points × backing scale; a HiDPI display would exercise the same path end to end. | A run on a HiDPI display records `scale 2.0`, a drawable at twice the points, and an unstretched 4:3 viewport in [Performance.md](Performance.md) §8.8. |
 | **PLAT-05** | Awaiting hardware | S | **macOS gamepad backend**: physical detection for the IOKit HID source. `MacOsGamepadSource`, `MacOsHidGamepadMapper`, and 21 mapping/profile tests are complete. | Only the physical check needs a macOS host with a connected controller; the mapping is already unit-tested. | A macOS gamepad is detected and mapped through the existing eight-player profile. |
 
 `PLAT-14` (native Metal surface), `PLAT-15` (bundled MoltenVK/loader), `PLAT-16`
 (OpenAL live-switch), and `PLAT-18` (NoMac release gate) are closed; see the archive.
-`PLAT-17` is the remaining presentation item and runs next.
+`PLAT-17` validated the whole 1x matrix on 2026-11-18 and keeps only its Retina 2x row
+open (§4).
 
 ### 3.2 P1 — Presentation and performance validation
 
@@ -109,6 +110,7 @@ was measured and closed with a documented limitation, not that it is unachievabl
 | **UX-16 signing/notarization** | Requires valid Windows code-signing certificates and an Apple developer account; the unsigned bundles and installer/package scaffolding are the current release artifacts. | The certificates and accounts are available. |
 | **Official Linux archives (Debian, Ubuntu, Fedora, openSUSE)** | The FreeDO notice forbids commercial use without the rights holders' approval, which fails the Debian DFSG and Fedora legal tests; the archive builders also run without network access, so the NuGet graph must be vendored. Direct downloads plus the optional mirror tooling (`packaging/linux/build-*-repo.sh`) and Fedora COPR/Ubuntu PPAs are the interim paths. | The FreeDO rights holders grant written commercial-use permission (or clarify the licence) **and** a network-free, vendored source build exists. |
 | **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
+| **PLAT-17 Retina 2x row** | The rented NoMac host's paravirtual display advertises 11 modes that are all 1:1, and a private `CGVirtualDisplay` created with `hiDPI` is also handed 1x modes, so `backingScaleFactor` stays 1.0 and the shell never sees scale 2. Every other PLAT-17 row is validated (2026-11-18). | A macOS host with a HiDPI display, or a virtual display that advertises 2x modes, is available. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
 | **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
@@ -135,9 +137,10 @@ was measured and closed with a documented limitation, not that it is unachievabl
 
 ## 5. Execution order
 
-1. **macOS platform:** `PLAT-17` (Retina/DPI matrix) → `PLAT-05` (physical controller).
-   The native Metal surface (`PLAT-14`) is complete, so the macOS build no longer reads
-   back every frame.
+1. **macOS platform:** `PLAT-17` now has only its Retina 2x row, which needs a HiDPI
+   display (§4), and `PLAT-05` needs a physical controller, so nothing on macOS is
+   runnable until one of those devices is attached. The native Metal surface (`PLAT-14`)
+   is complete, so the macOS build no longer reads back every frame.
 2. **Release evidence:** `REL-04` first — one tagged run with the signing key proves the
    signing chain. Then validate the artifacts from that run with `REL-07`, publish the
    channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak repository

@@ -784,8 +784,10 @@ unsigned drag-to-Applications DMG shape used by the release workflow. The releas
 <https://github.com/purelogiccode/5DO/actions/runs/44141799807> built all five
 self-contained bundles; the macOS job verified the bundled Vulkan/MoltenVK files, and
 every published checksum verified after download. `PLAT-15`, `PLAT-16`, and `PLAT-18`
-are closed by this pass; native Metal/Vulkan surface (`PLAT-14`) and Retina/DPI
-(`PLAT-17`) remain open.
+are closed by this pass, and so is the native Metal/Vulkan surface (`PLAT-14`).
+Retina/DPI (`PLAT-17`) is validated at 1x — windowed, resize, fullscreen, the 320x240
+capture, and 4K offscreen output — and keeps only its 2x row open because the rented
+host's display advertises 1x modes only (2026-11-18).
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

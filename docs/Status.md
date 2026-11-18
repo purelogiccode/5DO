@@ -6,13 +6,15 @@ rented NoMac Apple M5 Pro (Virtual, macOS 26.6.2, MoltenVK 1.4.363) `--vk-window
 reports `ok: true`, 60.1 fps at 1080p FIFO, and 0 renderer bytes/frame; a 320x240
 Accurate capture matches the CPU oracle with 0 different pixels. The desktop shell plays
 Wolfenstein 3D at 59.9 fps and follows live resize and fullscreen through the same
-surface. The full suite is **2,403/2,403**, and CLI `selftest` plus frontend
+surface. The full suite is **2,429/2,429**, and CLI `selftest` plus frontend
 `--smoke-test` pass. The offscreen MoltenVK presenter remains the fallback. macOS OpenGL
 is still not a presentation path (Avalonia has no macOS OpenGL control); `--gl-probe`
-fails fast and points at `--vk-probe`. Remaining macOS work is `PLAT-17` (Retina/DPI
-matrix) and `PLAT-05` (physical gamepad). Evidence:
+fails fast and points at `--vk-probe`. The macOS presentation matrix (windowed, resize,
+fullscreen, 320x240 capture, 4K offscreen) is validated at 1x; the remaining macOS work
+is the `PLAT-17` Retina 2x row, which the rented host's 1x-only display cannot exercise,
+and `PLAT-05` (physical gamepad). Evidence:
 [Compatibility.md](Compatibility.md) §10.4, [Vulkan.md](Vulkan.md),
-[TestCorpus.md](TestCorpus.md) §1.1co.
+[TestCorpus.md](TestCorpus.md) §1.1co and §1.1ct.
 
 **2026-11-17, v1.12.0 macOS GPU release:** macOS arm64 renders through Vulkan/MoltenVK
 on Metal. The v1.12.0 desktop shell used the offscreen presenter (since replaced by the
