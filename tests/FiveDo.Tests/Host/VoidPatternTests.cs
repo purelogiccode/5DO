@@ -9,6 +9,10 @@ public sealed class VoidPatternTests
     [InlineData("checker", VoidPattern.Checker)]
     [InlineData("Grid", VoidPattern.Grid)]
     [InlineData("SCANLINE", VoidPattern.Scanline)]
+    [InlineData("FourDO", VoidPattern.FourDO)]
+    [InlineData("fourdo", VoidPattern.FourDO)]
+    [InlineData("bumps", VoidPattern.Bumps)]
+    [InlineData("METAL", VoidPattern.Metal)]
     public void ResolveVoidAreaPatternParsesKnownNames(string value, VoidPattern expected)
     {
         var settings = new AppSettings { VoidAreaPattern = value };

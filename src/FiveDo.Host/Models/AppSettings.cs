@@ -329,7 +329,10 @@ public sealed class AppSettings
     /// </remarks>
     public string VoidAreaColor { get; set; } = DefaultVoidAreaColor;
 
-    /// <summary>Gets or sets the void-area pattern: <c>Solid</c>, <c>Checker</c>, <c>Grid</c>, or <c>Scanline</c>.</summary>
+    /// <summary>
+    /// Gets or sets the void-area pattern: <c>Solid</c>, <c>Checker</c>, <c>Grid</c>,
+    /// <c>Scanline</c>, <c>FourDO</c>, <c>Bumps</c>, or <c>Metal</c>.
+    /// </summary>
     public string VoidAreaPattern { get; set; } = DefaultVoidAreaPattern;
 
     /// <summary>Gets the default void-area color.</summary>

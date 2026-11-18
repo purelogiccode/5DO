@@ -4231,6 +4231,31 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cr Named void patterns: 4DO, Bumps, Metal (2026-11-18)
+
+**Scope (`UX-33`, option 2 of 4).** Add the Phoenix/4DO named backdrop patterns next to
+the existing solid/checker/grid/scanline fills.
+
+**Change.** `VoidPattern` gains `FourDO`, `Bumps`, and `Metal`. `MainWindow.CreateVoidBrush`
+now renders all three procedurally (no third-party artwork): a 32 px diagonal blue gradient
+for 4DO, a 16 px tile of soft bumps, and 16 px brushed-metal streaks. The settings combo
+lists the new values automatically and the pattern is stored as its enum name, so existing
+settings files keep loading.
+
+**Tests.** `VoidPatternTests` parses the new names case-insensitively (`FourDO`, `fourdo`,
+`bumps`, `METAL`) and still falls back to `Solid` for invalid values. `VoidBrushTests`
+asserts that Solid returns a `SolidColorBrush`, every other pattern returns a tiled
+`DrawingBrush` with a drawing, and 4DO uses the 32 px tile while the others use 16 px
+(19 pattern/brush tests pass).
+
+**Visual evidence.** With `VoidAreaPattern=FourDO`, `VoidAreaColor=#FF141414`, and a 12 px
+void border, the software presenter shows the new gradient filling the pillarbox area
+around the booting Wolfenstein 3D image (`--gl-backend software`). The native GPU
+presenters still paint their own black letterbox inside the swapchain; filling that
+scanout area is the remaining part of the "background expansion/scanout borders" option.
+
+![4DO void pattern](../assets/screenshots/void-pattern-fourdo.png)
+
 ### 1.1cq Audio channel swap (2026-11-18)
 
 **Scope (`UX-33`, option 1 of 4).** Add a Phoenix/4DO-style left/right audio channel swap

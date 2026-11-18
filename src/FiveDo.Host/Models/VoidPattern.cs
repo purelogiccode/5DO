@@ -14,4 +14,13 @@ public enum VoidPattern
 
     /// <summary>Horizontal scanlines.</summary>
     Scanline,
+
+    /// <summary>The 4DO-style blue diagonal gradient.</summary>
+    FourDO,
+
+    /// <summary>A grid of soft raised bumps.</summary>
+    Bumps,
+
+    /// <summary>Brushed-metal horizontal streaks.</summary>
+    Metal,
 }

@@ -434,9 +434,10 @@ detects blank edges on the presented frame (up to 25% per edge, matching 4DO), w
 one second before accepting a larger crop, and is disabled by any manual or per-game
 crop. **Void border** draws a
 0-64 pixel border in the selected `#RRGGBB`/`#AARRGGBB` color around the presented image;
-the adjacent **pattern** selector draws solid, checkerboard, grid, or scanline fills in
-the same color. Patterns are shell-composited, so they sit behind OpenGL, GLES, Vulkan,
-and Direct3D 11 output identically.
+the adjacent **pattern** selector draws solid, checkerboard, grid, scanline, a 4DO-style
+blue diagonal gradient, soft bumps, or brushed-metal fills in the same color. Patterns are
+shell-composited, so they sit behind OpenGL, GLES, Vulkan, and Direct3D 11 output
+identically.
 Crop, border, and auto-crop options change presentation only, not emulation, input,
 audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter

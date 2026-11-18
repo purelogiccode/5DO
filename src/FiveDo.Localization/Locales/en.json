@@ -841,6 +841,7 @@
     "ui.tip.border_thickness_in_screen_pixels_0_64": "Border thickness in screen pixels (0-64).",
     "ui.tip.void_area_and_border_color_as_rrggbb_or_aarrggbb": "Void-area and border color as #RRGGBB or #AARRGGBB.",
     "ui.tip.void_area_pattern_solid_checkerboard_grid_or_scanlines_t": "Void-area pattern: solid, checkerboard, grid, or scanlines. The pattern is presentation-only and is shared by every renderer.",
+    "ui.tip.void_area_pattern_solid_checkerboard_grid_scanlines_4do_b": "Void-area pattern: solid, checkerboard, grid, scanlines, a 4DO-style blue gradient, soft bumps, or brushed metal. The pattern is presentation-only and is shared by every renderer.",
     "ui.tip.crop_values_do_not_affect_frame_hashes_input_audio_or_sa": "Crop values do not affect frame hashes, input, audio, or save states.",
     "ui.tip.choose_how_the_two_fields_of_an_interlaced_title_are_com": "Choose how the two fields of an interlaced title are combined.",
     "ui.tip.auto_detects_480i_fields_and_weaves_them_bob_presents_ev": "Auto detects 480i fields and weaves them. Bob presents every field unchanged. Weave always combines two fields into 480 lines. Blend averages them into one flicker-free frame.",

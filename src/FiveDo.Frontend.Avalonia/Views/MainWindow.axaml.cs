@@ -6601,7 +6601,7 @@ public partial class MainWindow : Window, IDisposable
         VideoHost.Background = brush;
     }
 
-    private static IBrush CreateVoidBrush(Color color, VoidPattern pattern)
+    internal static IBrush CreateVoidBrush(Color color, VoidPattern pattern)
     {
         if (pattern == VoidPattern.Solid)
         {
@@ -6613,11 +6613,12 @@ public partial class MainWindow : Window, IDisposable
             (byte)Math.Min(255, color.R + 28),
             (byte)Math.Min(255, color.G + 28),
             (byte)Math.Min(255, color.B + 28));
+        var tileSize = pattern == VoidPattern.FourDO ? 32 : 16;
         var drawing = new DrawingGroup();
         drawing.Children.Add(new GeometryDrawing
         {
             Brush = new SolidColorBrush(color),
-            Geometry = new RectangleGeometry(new Rect(0, 0, 16, 16)),
+            Geometry = new RectangleGeometry(new Rect(0, 0, tileSize, tileSize)),
         });
 
         switch (pattern)
@@ -6665,13 +6666,82 @@ public partial class MainWindow : Window, IDisposable
                     Geometry = lines,
                 });
                 break;
+
+            case VoidPattern.FourDO:
+                // 4DO's backdrop is a diagonal blue gradient; derive it from the void color
+                // so a custom background still tints the pattern.
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new LinearGradientBrush
+                    {
+                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                        EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                        GradientStops =
+                        {
+                            new GradientStop(Color.FromArgb(0, 0, 0, 0), 0),
+                            new GradientStop(Color.FromArgb(96, 0x3A, 0x6E, 0xA5), 0.55),
+                            new GradientStop(Color.FromArgb(160, 0x1B, 0x3A, 0x5C), 1),
+                        },
+                    },
+                    Geometry = new RectangleGeometry(new Rect(0, 0, 32, 32)),
+                });
+                break;
+
+            case VoidPattern.Bumps:
+                var bumps = new GeometryGroup();
+                foreach (var (x, y) in new[] { (4, 4), (12, 4), (4, 12), (12, 12) })
+                {
+                    bumps.Children.Add(new EllipseGeometry(new Rect(x - 3, y - 3, 6, 6)));
+                }
+
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new LinearGradientBrush
+                    {
+                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                        EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                        GradientStops =
+                        {
+                            new GradientStop(Color.FromArgb(90, 255, 255, 255), 0),
+                            new GradientStop(Color.FromArgb(24, 255, 255, 255), 0.5),
+                            new GradientStop(Color.FromArgb(0, 0, 0, 0), 1),
+                        },
+                    },
+                    Geometry = bumps,
+                });
+                break;
+
+            case VoidPattern.Metal:
+                var streaks = new GeometryGroup();
+                for (var y = 0; y < 16; y += 2)
+                {
+                    streaks.Children.Add(new RectangleGeometry(new Rect(0, y, 16, 1)));
+                }
+
+                drawing.Children.Add(new GeometryDrawing
+                {
+                    Brush = new LinearGradientBrush
+                    {
+                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                        GradientStops =
+                        {
+                            new GradientStop(Color.FromArgb(70, 255, 255, 255), 0),
+                            new GradientStop(Color.FromArgb(12, 255, 255, 255), 0.35),
+                            new GradientStop(Color.FromArgb(40, 0, 0, 0), 0.7),
+                            new GradientStop(Color.FromArgb(0, 0, 0, 0), 1),
+                        },
+                    },
+                    Geometry = streaks,
+                });
+                break;
         }
 
         return new DrawingBrush
         {
             Drawing = drawing,
             TileMode = TileMode.Tile,
-            DestinationRect = new RelativeRect(0, 0, 16, 16, RelativeUnit.Absolute),
+            DestinationRect = new RelativeRect(0, 0, tileSize, tileSize, RelativeUnit.Absolute),
             Stretch = Stretch.None,
         };
     }

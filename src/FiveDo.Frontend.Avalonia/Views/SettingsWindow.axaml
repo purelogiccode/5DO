@@ -166,7 +166,7 @@
                             <TextBox x:Name="VoidAreaColorBox" Width="110"
                                      ToolTip.Tip="Void-area and border color as #RRGGBB or #AARRGGBB." />
                             <ComboBox x:Name="VoidPatternCombo" Width="110"
-                                      ToolTip.Tip="Void-area pattern: solid, checkerboard, grid, or scanlines. The pattern is presentation-only and is shared by every renderer." />
+                                      ToolTip.Tip="Void-area pattern: solid, checkerboard, grid, scanlines, a 4DO-style blue gradient, soft bumps, or brushed metal. The pattern is presentation-only and is shared by every renderer." />
                             <TextBlock Text="px / color / pattern" VerticalAlignment="Center" Opacity="0.7" />
                         </StackPanel>
                         <TextBlock Grid.Row="30" Grid.Column="1"
