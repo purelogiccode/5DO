@@ -422,7 +422,20 @@ selects the rate used to present the latest frame. **60 Hz** keeps render-on-dem
 higher values (75/90/120/144/165/240 Hz) re-present the latest frame at that rate, and
 **Match display** follows the compositor. The 3DO outputs 60 fields per second (50 for
 PAL), so a higher rate reduces presentation latency but does not create extra motion;
-emulation speed, audio, and save states are unchanged. The **Graphics API** list selects
+emulation speed, audio, and save states are unchanged.
+
+The status bar carries an **emulation-health badge** between the renderer label and the
+FPS counter. A green **OK** means the frame rate matches the audio-derived target and
+audio is clean; **Watch** (amber) means the frame rate dipped below 95% of target, the
+display fell behind the emulated rate, audio dropped a buffer/sample in the last second,
+or run-ahead disabled itself; **Issue** (red) means the frame rate is below 75% of target
+or three or more audio underruns occurred in one second; **Idle** (gray) means no game is
+running. The tooltip explains the current verdict. The badge only reads the counters the
+FPS overlay already collects, so it never changes emulation or audio.
+
+![Emulation-health badge](../assets/screenshots/health-badge.png)
+
+The **Graphics API** list selects
 **OpenGL**, **DirectX 11** (Windows only), **Vulkan**, or **Software (CPU)**; changing it
 recreates the presenter without restarting
 emulation. **Output resolution** selects the final presentation size: match the window,

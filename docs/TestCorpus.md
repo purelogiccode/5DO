@@ -4231,6 +4231,29 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cs Emulation-health badge (2026-11-18)
+
+**Scope (`UX-33`, option 3 of 4).** Surface frame pacing and audio underrun state as a
+status-bar badge that reads the existing counters.
+
+**Change.** `EmulationHealthEvaluator` (`FiveDo.Host`) turns one `CoreStatus` snapshot plus
+the OpenAL underrun/dropped totals into an `EmulationHealth` verdict: **Idle**, **Good**
+(`OK`), **Warning** (`Watch`), or **Critical** (`Issue`). Rules: red below 75% of the
+audio-derived target rate or on three underruns in one tick; amber below 95%, when the
+display shows fewer frames than the emulator produced, on any underrun/dropped delta, or
+when run-ahead disables itself; green otherwise. The status bar draws a colored dot and
+the short label between the renderer text and the FPS counter, and the tooltip carries the
+sentence. The badge is presentation-only.
+
+**Tests.** `EmulationHealthTests` (10) cover idle, good at 60 Hz, good at a 50 Hz PAL
+target, amber/critical pacing thresholds, amber on one underrun, red on three, historic
+underruns not keeping the badge amber, display-behind, and run-ahead auto-disable.
+
+**Visual evidence.** With Wolfenstein 3D running on the software presenter, the status bar
+shows the green dot and **OK** next to `59.9 fps`:
+
+![Emulation-health badge](../assets/screenshots/health-badge.png)
+
 ### 1.1cr Named void patterns: 4DO, Bumps, Metal (2026-11-18)
 
 **Scope (`UX-33`, option 2 of 4).** Add the Phoenix/4DO named backdrop patterns next to

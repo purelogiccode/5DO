@@ -160,6 +160,8 @@ public partial class MainWindow : Window, IDisposable
     private int _displayFrameGeneration;
     private long _displayPresents;
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
+    private long _lastAudioUnderruns;
+    private long _lastAudioDropped;
     private bool _runAheadAutoDisabledShown;
     private readonly FocusPausePolicy _focusPause = new();
     private readonly DisplaySleepPolicy _displaySleep = new(DisplaySleepBackend.Create());
@@ -190,6 +192,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         InitializeComponent();
+        ShowIdleHealth();
         Serilog.Log.Information("Startup timing: XAML initialized at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragOverEvent, OnWindowDragOver);
@@ -1734,6 +1737,8 @@ public partial class MainWindow : Window, IDisposable
             }
 
             _running = true;
+            _lastAudioUnderruns = _audio?.UnderrunBuffers ?? 0;
+            _lastAudioDropped = _audio?.SamplesDropped ?? 0;
             if (_runner.IsRunning)
             {
                 _runner.Resume();
@@ -1828,6 +1833,7 @@ public partial class MainWindow : Window, IDisposable
         _machine?.Reset();
         _achievements?.EndGame();
         _running = false;
+        ShowIdleHealth();
         StopDisplayRefresh();
         SetPlayState(running: false);
         ShowLibraryView();
@@ -5506,6 +5512,7 @@ public partial class MainWindow : Window, IDisposable
             ? string.Empty
             : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
         FpsText.Text = $"{status.FramesPerSecond,5:F1} fps{display}{skip}";
+        UpdateHealthBadge(status);
         if (OverlayPanel.IsVisible)
         {
             var gpu = _direct3DPresenter
@@ -5552,6 +5559,45 @@ public partial class MainWindow : Window, IDisposable
             InputButtonsText.Text =
                 $"P{status.InputPlayer} {PbusDecoder.FormatButtons(status.Player1)}";
         }
+    }
+
+    private static readonly IBrush HealthGoodBrush = new SolidColorBrush(Color.Parse("#FF3FB950"));
+    private static readonly IBrush HealthWarningBrush = new SolidColorBrush(Color.Parse("#FFD29922"));
+    private static readonly IBrush HealthCriticalBrush = new SolidColorBrush(Color.Parse("#FFF85149"));
+    private static readonly IBrush HealthIdleBrush = new SolidColorBrush(Color.Parse("#FF6E7681"));
+
+    private void UpdateHealthBadge(CoreStatus status)
+    {
+        long underruns = _audio?.UnderrunBuffers ?? 0;
+        long dropped = _audio?.SamplesDropped ?? 0;
+        EmulationHealth health = EmulationHealthEvaluator.Evaluate(
+            _running,
+            status,
+            underruns,
+            dropped,
+            _lastAudioUnderruns,
+            _lastAudioDropped);
+        _lastAudioUnderruns = underruns;
+        _lastAudioDropped = dropped;
+        ApplyHealth(health);
+    }
+
+    private void ShowIdleHealth()
+    {
+        ApplyHealth(new EmulationHealth(EmulationHealthState.Idle, "Idle", "No game is running or it is paused."));
+    }
+
+    private void ApplyHealth(EmulationHealth health)
+    {
+        HealthDot.Fill = health.State switch
+        {
+            EmulationHealthState.Good => HealthGoodBrush,
+            EmulationHealthState.Warning => HealthWarningBrush,
+            EmulationHealthState.Critical => HealthCriticalBrush,
+            _ => HealthIdleBrush,
+        };
+        HealthText.Text = health.Label;
+        ToolTip.SetTip(HealthBadge, health.Details);
     }
 
     private void OnInputDisplayChanged(object? sender, RoutedEventArgs e)
