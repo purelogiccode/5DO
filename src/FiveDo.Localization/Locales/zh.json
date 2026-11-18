@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "CD-DA 音量",
     "ui.mute_cd_da": "静音 CD-DA",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "游戏弹出光盘时插入播放列表中的下一张光盘",
+    "ui.swap_left_and_right_audio_channels": "交换左右音频声道",
     "ui.play_440_hz_test_tone": "播放 440 Hz 测试音",
     "ui.output_device": "输出设备",
     "ui.buffer_latency": "缓冲延迟",

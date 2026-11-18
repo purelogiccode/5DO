@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "CD-DA-Lautstärke",
     "ui.mute_cd_da": "CD-DA stummschalten",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "Nächste Playlist-Disc einlegen, wenn ein Spiel auswirft",
+    "ui.swap_left_and_right_audio_channels": "Linken und rechten Audiokanal tauschen",
     "ui.play_440_hz_test_tone": "440-Hz-Testton abspielen",
     "ui.output_device": "Ausgabegerät",
     "ui.buffer_latency": "Pufferlatenz",

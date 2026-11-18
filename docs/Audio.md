@@ -202,6 +202,17 @@ updates it from Settings > Audio. The CLI uses `--volume`. The OpenAL source gai
 also set to 1.0; volume is applied in the sample loop so the limiter sees the scaled
 signal.
 
+### Channel swap
+
+`ChannelSwapAudioSink` exchanges the two channels of every sample before it reaches the
+live output. The frontend wraps the OpenAL sink when **Settings > Audio > Swap left and
+right audio channels** is on, and the CLI exposes the same option as `--audio-swap`. The
+decorator sits downstream of the machine, so the audio hash (`--audio-hash`), WAV captures,
+frame hashes, and save states keep the emulated channel order; only the samples queued for
+playback are swapped. OpenAL's `ALSOFT_DRIVERS=null` backend makes the swap testable
+without a physical device, and `FIVEDO_AUDIO_TAP` records the exact queued PCM for
+comparison.
+
 ---
 
 ## 4. WAV capture

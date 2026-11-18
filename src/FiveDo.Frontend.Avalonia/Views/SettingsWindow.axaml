@@ -283,6 +283,10 @@
                                Text="OpenAL Soft 1.23.1 · 44.1 kHz stereo"
                                Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                ToolTip.Tip="Audio backend status and test-tone result." />
+                    <CheckBox x:Name="AudioSwapCheck" Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2"
+                              Content="Swap left and right audio channels"
+                              Margin="0,12,0,0"
+                              ToolTip.Tip="Exchange the stereo channels of the live output. Recordings, the audio hash, frame hashes, and save states keep the emulated channel order, and the setting applies immediately." />
                 </Grid>
             </TabItem>
 

@@ -91,6 +91,7 @@ public partial class MainWindow : Window, IDisposable
     private string _audioDevice;
     private int _audioBufferMilliseconds;
     private int _audioSyncMilliseconds;
+    private bool _audioChannelSwap;
     private GifRecorder? _gifRecorder;
     private FileStream? _gifStream;
     private string? _gifPath;
@@ -255,6 +256,7 @@ public partial class MainWindow : Window, IDisposable
         _audioDevice = _settings.AudioDevice;
         _audioBufferMilliseconds = _settings.AudioBufferMilliseconds;
         _audioSyncMilliseconds = _settings.AudioSyncMilliseconds;
+        _audioChannelSwap = _settings.AudioChannelSwap;
         _nvramMode = _settings.NvramStorageMode;
         _nvramVersion = _settings.NvramVersion;
         _nvramDirectory = _settings.NvramDirectory;
@@ -2250,9 +2252,15 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        IAudioSink? live = _audio;
+        if (live is not null && _audioChannelSwap)
+        {
+            live = new ChannelSwapAudioSink(live);
+        }
+
         _machine.AudioSink = _audioRecorder is null
-            ? _audio
-            : new TeeAudioSink(_audio, _audioRecorder);
+            ? live
+            : new TeeAudioSink(live, _audioRecorder);
     }
 
     private void OnRecordGifAsync(object? sender, RoutedEventArgs e)
@@ -4828,6 +4836,8 @@ public partial class MainWindow : Window, IDisposable
     private void ApplyAudioSettings()
     {
         AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
+        bool channelSwapChanged = _audioChannelSwap != effective.AudioChannelSwap;
+        _audioChannelSwap = effective.AudioChannelSwap;
         if (_machine is not null)
         {
             _machine.CdAudioVolume = effective.CdAudioVolume;
@@ -4835,6 +4845,10 @@ public partial class MainWindow : Window, IDisposable
         }
 
         EnsureAudioInitialized(effective);
+        if (channelSwapChanged && _machine is not null)
+        {
+            UpdateAudioSink();
+        }
     }
 
     private void EnsureAudioInitialized(AppSettings effective)

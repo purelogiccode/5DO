@@ -346,6 +346,7 @@ public partial class SettingsWindow : Window
         AudioSyncSlider.ValueChanged += (_, args) =>
             AudioSyncValueText.Text = $"{Math.Round(args.NewValue)} ms";
         AudioCheck.IsChecked = settings.AudioEnabled;
+        AudioSwapCheck.IsChecked = settings.AudioChannelSwap;
         PopulateAudioDevices(settings.AudioDevice);
         AudioBufferBox.Text = settings.AudioBufferMilliseconds.ToString(CultureInfo.InvariantCulture);
         AudioSyncSlider.Value = Math.Clamp(
@@ -1254,6 +1255,7 @@ public partial class SettingsWindow : Window
             AppSettings.MaxFrameDelayFrames);
         settings.Vrr = VrrCheck.IsChecked == true;
         settings.AudioEnabled = AudioCheck.IsChecked == true;
+        settings.AudioChannelSwap = AudioSwapCheck.IsChecked == true;
         settings.AudioDevice = AudioDeviceCombo.SelectedItem is AudioDeviceOption { Name: { } device }
             ? device
             : string.Empty;

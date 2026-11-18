@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "CD-DA 볼륨",
     "ui.mute_cd_da": "CD-DA 음소거",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "게임이 디스크를 꺼내면 재생 목록의 다음 디스크 삽입",
+    "ui.swap_left_and_right_audio_channels": "좌우 오디오 채널 바꾸기",
     "ui.play_440_hz_test_tone": "440Hz 테스트 톤 재생",
     "ui.output_device": "출력 장치",
     "ui.buffer_latency": "버퍼 지연 시간",

@@ -639,11 +639,14 @@ and the account name are replaced with placeholders. The CLI equivalent is
 The desktop app ships the OpenAL Soft 1.23.1 runtime, so live stereo output works
 without a system OpenAL installation. Use Settings > Audio to enable/disable audio,
 choose the output device, set a 20-500 ms buffer target, set the output volume, set the
-CD-DA mix level, mute CD-DA, and play a 1 s 440 Hz test tone; the test reports the
-OpenAL error when no playback device is available. Device and buffer changes recreate
-only the host audio output, so the game keeps running. If no device is present, the app
-logs a warning and continues silently; the emulated DSP still runs so games do not
-stall. **Refresh** rescans devices after plugging in a headset.
+CD-DA mix level, mute CD-DA, swap the left and right channels, and play a 1 s 440 Hz test
+tone; the test reports the OpenAL error when no playback device is available. **Swap left
+and right audio channels** exchanges the channels of the live output only: audio
+recordings, the audio hash, frame hashes, and save states keep the emulated channel
+order, and the setting applies while a game is running. Device and buffer changes
+recreate only the host audio output, so the game keeps running. If no device is present,
+the app logs a warning and continues silently; the emulated DSP still runs so games do
+not stall. **Refresh** rescans devices after plugging in a headset.
 
 CD-DA applies only while the disc is playing an audio track through PLAY_AUDIO. Most
 3DO software reads audio sectors through READ_DATA and feeds the DSP itself. The volume

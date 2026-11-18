@@ -677,7 +677,7 @@ internal static class Program
         machine.Cpu.SwiCommentTelemetryEnabled = HasFlag(args, "--swi-comments");
         machine.Clio.TimerTelemetryEnabled = clioTimerStats;
 
-        using AudioOutput audio = CreateAudio(options, audioHashEnabled);
+        using AudioOutput audio = CreateAudio(options, audioHashEnabled, HasFlag(args, "--audio-swap"));
         if (disc is not null)
         {
             machine.InsertDisc(disc);
@@ -5187,11 +5187,12 @@ internal static class Program
         return machine;
     }
 
-    private static AudioOutput CreateAudio(ParsedOptions options, bool hashAudio)
+    private static AudioOutput CreateAudio(ParsedOptions options, bool hashAudio, bool swapChannels = false)
     {
         var mode = options.Get("--audio") ?? "null";
         if (string.Equals(mode, "wav", StringComparison.OrdinalIgnoreCase))
         {
+            // WAV captures keep the emulated channel order; the swap is a live-output option.
             var path = options.Get("--wav-out") ?? "audio.wav";
             return new AudioOutput(new WavAudioSink(path), null, hashAudio);
         }
@@ -5242,7 +5243,7 @@ internal static class Program
                 output.Volume = volume;
             }
 
-            return new AudioOutput(null, output, hashAudio);
+            return new AudioOutput(null, output, hashAudio, swapChannels);
         }
 
         if (!string.Equals(mode, "null", StringComparison.OrdinalIgnoreCase))
@@ -5258,19 +5259,31 @@ internal static class Program
     {
         private readonly WavAudioSink? _wav;
         private readonly OpenAlAudioOutput? _openAl;
+        private readonly IAudioSink? _live;
         private readonly HashingAudioSink? _hashing;
 
-        internal AudioOutput(WavAudioSink? wav, OpenAlAudioOutput? openAl, bool hashAudio = false)
+        internal AudioOutput(
+            WavAudioSink? wav,
+            OpenAlAudioOutput? openAl,
+            bool hashAudio = false,
+            bool swapChannels = false)
         {
             _wav = wav;
             _openAl = openAl;
+            if (openAl is not null)
+            {
+                _live = swapChannels ? new ChannelSwapAudioSink(openAl) : openAl;
+            }
+
             if (hashAudio)
             {
-                _hashing = new HashingAudioSink((IAudioSink?)_wav ?? _openAl);
+                // Hash the raw stream: HashingAudioSink hashes the sample it receives and
+                // forwards the same sample to the (optionally swapped) output.
+                _hashing = new HashingAudioSink((IAudioSink?)_wav ?? _live);
             }
         }
 
-        internal IAudioSink? Sink => (IAudioSink?)_hashing ?? (IAudioSink?)_wav ?? _openAl;
+        internal IAudioSink? Sink => (IAudioSink?)_hashing ?? (IAudioSink?)_wav ?? _live;
 
         internal uint? Hash => _hashing?.Hash;
 
@@ -6329,7 +6342,7 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine(Localizer.Translate("cli.commands"));
         Console.WriteLine("  run [disc] [--bios path] [--bios2 path] [--bios-auto folder] [--allow-unsigned-discs] [--frames N] [--state-in path] [--state-out path]");
-        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path] [--cd-commands path] [--cd-register-trace path]");
+        Console.WriteLine("             [--frame-out path] [--audio null|wav|openal] [--audio-device name] [--audio-buffer 20..500] [--audio-sync -250..250] [--audio-swap] [--wav-out path] [--volume 0..1] [--cd-volume 0..1] [--mute-cd] [--cd-trace path] [--cd-transcript path] [--cd-commands path] [--cd-register-trace path]");
         Console.WriteLine("             [--clio-trace path] [--fiq-trace path] [--kprint path] [--kprint-pc path]");
         Console.WriteLine("             [--watch-lowmem path] [--watch-from-frame N] [--watch-start N] [--watch-end N]");
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");

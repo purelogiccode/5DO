@@ -218,6 +218,7 @@ the BIOS file.
 | `--audio-device <name>` | default | OpenAL playback device; use `audio devices` to list names. |
 | `--audio-buffer 20..500` | 100 | Target OpenAL buffer latency in milliseconds. |
 | `--audio-sync -250..250` | 0 | Host audio/video offset in milliseconds. Positive delays audio; negative advances it. |
+| `--audio-swap` | off | Swap left/right on the live `openal` output. The audio hash and WAV captures keep the emulated channel order. |
 | `--record-gif <path>` | off | Record emulated frames as an animated GIF. |
 | `--record-fps 1..60` | 30 | GIF capture rate; sources above 50 fps are decimated. |
 | `--record-frames N` | 0 | Stop the GIF after N captured frames (0 = unlimited). |

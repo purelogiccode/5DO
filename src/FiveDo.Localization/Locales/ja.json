@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "CD-DA 音量",
     "ui.mute_cd_da": "CD-DA をミュート",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "ゲームがイジェクトしたらプレイリストの次のディスクを挿入",
+    "ui.swap_left_and_right_audio_channels": "左右のオーディオチャンネルを入れ替える",
     "ui.play_440_hz_test_tone": "440 Hz のテストトーンを再生",
     "ui.output_device": "出力デバイス",
     "ui.buffer_latency": "バッファレイテンシ",

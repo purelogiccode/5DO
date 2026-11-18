@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "Volume CD-DA",
     "ui.mute_cd_da": "Couper le son CD-DA",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "Insérer le disque suivant de la playlist lorsqu'un jeu éjecte",
+    "ui.swap_left_and_right_audio_channels": "Permuter les canaux audio gauche et droit",
     "ui.play_440_hz_test_tone": "Lire une tonalité de test à 440 Hz",
     "ui.output_device": "Périphérique de sortie",
     "ui.buffer_latency": "Latence du tampon",

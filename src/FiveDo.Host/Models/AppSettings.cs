@@ -30,10 +30,10 @@ public sealed class AppSettings
     /// refresh rate. Version 4 adds the game-library card size. Version 5 adds the
     /// unsigned-disc/RSA-patch option. Version 6 adds the latency options (run-ahead,
     /// frame delay, adaptive sync, and audio sync). Version 7 adds the online cover
-    /// catalog options. Version 8 adds the UI locale. Older files load with the documented
-    /// defaults for new properties.
+    /// catalog options. Version 8 adds the UI locale. Version 9 adds the audio channel
+    /// swap. Older files load with the documented defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 8;
+    public const int CurrentVersion = 9;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -988,6 +988,14 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the OpenAL output device name, or an empty string for the default.</summary>
     public string AudioDevice { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether left and right output are swapped.</summary>
+    /// <remarks>
+    /// The swap is applied to live output only, after the DSP produced the sample. WAV
+    /// recordings, the audio hash, frame hashes, and save states keep the emulated channel
+    /// order, and the setting can be toggled while a game is running.
+    /// </remarks>
+    public bool AudioChannelSwap { get; set; }
 
     /// <summary>Gets or sets the target OpenAL buffer latency in milliseconds (20-500).</summary>
     public int AudioBufferMilliseconds { get; set; } = 100;

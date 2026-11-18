@@ -316,6 +316,7 @@
     "ui.cd_da_volume": "Volumen de CD-DA",
     "ui.mute_cd_da": "Silenciar CD-DA",
     "ui.insert_the_next_playlist_disc_when_a_game_ejects": "Insertar el siguiente disco de la lista cuando un juego expulse",
+    "ui.swap_left_and_right_audio_channels": "Intercambiar los canales de audio izquierdo y derecho",
     "ui.play_440_hz_test_tone": "Reproducir tono de prueba de 440 Hz",
     "ui.output_device": "Dispositivo de salida",
     "ui.buffer_latency": "Latencia del búfer",

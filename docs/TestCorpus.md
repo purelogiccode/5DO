@@ -4231,6 +4231,40 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cq Audio channel swap (2026-11-18)
+
+**Scope (`UX-33`, option 1 of 4).** Add a Phoenix/4DO-style left/right audio channel swap
+that changes only live output and never emulation state.
+
+**Change.** `ChannelSwapAudioSink` (`FiveDo.Audio`) exchanges the channels of every sample
+and forwards it. The frontend wraps the OpenAL sink when **Settings > Audio > Swap left
+and right audio channels** is on (applies live, no restart), and the CLI exposes
+`--audio-swap`. WAV recordings and the audio hash stay upstream of the swap by design;
+`AppSettings.AudioChannelSwap` is persisted (schema version 9).
+
+**Tests.** `ChannelSwapAudioSinkTests` (4) cover the channel exchange, mono invariance,
+reset forwarding, and hash invariance when `HashingAudioSink` wraps the swap;
+`AppSettingsStoreTests.Save_WritesTheCurrentVersionAndRoundtrips` now round-trips
+`AudioChannelSwap` (40 tests pass in the focused run).
+
+**Device-queue evidence.** With `ALSOFT_DRIVERS=null` and `FIVEDO_AUDIO_TAP` set, two
+900-frame Wolfenstein 3D runs (with and without `--audio-swap`) report the same
+`frame hash 0xb968ff55` and `audio hash 0x33c62db1`. The tap files are the exact PCM
+queued to OpenAL: 65,015 and 65,506 frames, 4,596/3,833 non-silent, and at offset 0 every
+one of the first 4,096 compared frames satisfies `swap[i] == (raw[i].Right, raw[i].Left)`
+— i.e. the queued output is exactly the raw stream with the channels exchanged.
+
+**Reproduce.**
+
+```bash
+ALSOFT_DRIVERS=null FIVEDO_AUDIO_TAP=/tmp/raw/tap \
+  5do-cli run "Wolfenstein 3D (USA).chd" --bios panafz10.bin --frames 900 \
+    --audio openal --audio-hash --audio-buffer 100
+ALSOFT_DRIVERS=null FIVEDO_AUDIO_TAP=/tmp/swap/tap \
+  5do-cli run "Wolfenstein 3D (USA).chd" --bios panafz10.bin --frames 900 \
+    --audio openal --audio-swap --audio-hash --audio-buffer 100
+```
+
 ### 1.1cp Software-center metadata and MIME typing (2026-11-18)
 
 **Scope (`REL-06`).** Confirm in a real software center that the AppStream metainfo,
