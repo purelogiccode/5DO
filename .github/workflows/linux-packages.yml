@@ -369,6 +369,16 @@ jobs:
              artifacts/signing/5do-archive-keyring.gpg.asc \
              artifacts/installers/
 
+      - name: Install mirror verification tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The mirror scripts need apt-ftparchive (dpkg-dev, apt-utils) for the APT
+          # tree and createrepo_c plus rpm for the RPM tree; the package job installs
+          # them, but this job runs on a fresh runner.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dpkg-dev apt-utils createrepo-c rpm
+
       - name: Verify the mirror repository scripts
         shell: bash
         run: |
