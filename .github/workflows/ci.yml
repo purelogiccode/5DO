@@ -220,8 +220,10 @@ jobs:
     name: Linux packages
     needs: bundle
     uses: ./.github/workflows/linux-packages.yml
-    # No secrets are passed: CI builds and validates the packages unsigned. The
-    # signed path runs from release.yml, which uses `secrets: inherit`.
+    # Sign on every push when the release key is configured, so the signed path is
+    # exercised continuously instead of first failing on a tag. Without the secret
+    # the workflow logs a warning and builds unsigned.
+    secrets: inherit
     with:
       ref: ${{ github.ref }}
 
