@@ -7,6 +7,14 @@ presentation release.
 
 ### Added
 
+- **Linux arm64 AppImage and x64/arm64 Flatpak bundles.** `linux-packages.yml` now builds
+  `5do-aarch64.AppImage` next to the x64 image on the native ARM runner, and
+  `build-flatpak.sh` plus `io.github.purelogiccode.FiveDO.yml` produce
+  `5do-x86_64.flatpak` and `5do-aarch64.flatpak` from the published self-contained
+  apphosts. The Flatpak keeps stripping disabled, exports the desktop entry, MIME type,
+  icons, and AppStream metainfo under the app ID, and CI installs each bundle and runs
+  `5do-cli selftest --json` inside the sandbox. Every architecture now has the same set
+  of Linux artifacts: tarball, `.deb`, `.rpm`, AppImage, and Flatpak.
 - **Linux distribution artifacts and signing.** `packaging/linux/` now builds `.deb`
   and `.rpm` packages with AppStream metadata, 256 px icons, translated desktop
   entries, and a corrected self-contained dependency list, plus a portable AppImage

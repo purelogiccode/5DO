@@ -75,8 +75,8 @@ below still apply to the signed release.
 
 - [ ] `LINUX_GPG_PRIVATE_KEY` and `LINUX_GPG_KEY_ID` are configured; only the signing
       subkey is stored, and its fingerprint matches `LinuxDistribution.md` §4.
-- [ ] `linux-packages.yml` builds `.deb` and `.rpm` for x64 and arm64 and an x64
-      AppImage from the release bundles.
+- [ ] `linux-packages.yml` builds `.deb`, `.rpm`, AppImage, and Flatpak for x64 and
+      arm64 from the release bundles.
 - [ ] The Linux bundle contains the packager files under `packaging/` and the
       `5do.desktop` fullscreen action validates.
 - [ ] `5do-cli doctor --strict` and `5do-cli bios discover --json` behave on the target host
@@ -94,8 +94,12 @@ below still apply to the signed release.
       `sha256sum -c SHA256SUMS-linux.txt` passes from a clean download.
 - [ ] `rpm --checksig` passes for any header-signed package, and
       `sudo dnf install ./5do-<version>-1.x86_64.rpm` succeeds on Fedora.
-- [ ] The release page lists the `.deb`/`.rpm` files, the AppImage (+ `.zsync`), the
-      keyring, and both checksum manifests; no repository is hosted or required.
+- [ ] `flatpak install --user ./5do-<arch>.flatpak` succeeds and
+      `flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json`
+      passes inside the sandbox on a matching host.
+- [ ] The release page lists the `.deb`/`.rpm` files, both AppImages (+ `.zsync`), both
+      Flatpak bundles, the keyring, and both checksum manifests; no repository is hosted
+      or required.
 - [ ] The key fingerprint, run links, and install commands are recorded in
       [Installers.md](Installers.md), [TestCorpus.md](TestCorpus.md), and the release
       notes; any unsigned run is labeled "unsigned".

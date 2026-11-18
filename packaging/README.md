@@ -156,7 +156,7 @@ Requires Inno Setup 6 (`ISCC.exe`). The output is
 `5do-<version>-win-x64-setup.exe` plus a `.sha256` file. `win-arm64` uses
 `-Architecture arm64`.
 
-### Linux (.deb, .rpm, AppImage, desktop entry, MIME, AppStream)
+### Linux (.deb, .rpm, AppImage, Flatpak, desktop entry, MIME, AppStream)
 
 The Linux packages install the apphosts under `/opt/5do`, add `/usr/bin/5do` and
 `/usr/bin/5do-cli`, install the desktop entry, a 256 px and SVG icon, the AppStream
@@ -178,11 +178,19 @@ APPIMAGETOOL=/path/to/appimagetool/AppRun \
 bash packaging/linux/build-appimage.sh \
   --bundle artifacts/bundle/linux-x64 --version 1.12.0 \
   --output artifacts/installers --name 5do-x86_64.AppImage
+
+bash packaging/linux/build-flatpak.sh \
+  --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.12.0 \
+  --output artifacts/installers
 ```
 
-The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), and `appimagetool`.
-Open the installed `5do` entry or a `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch
-the frontend with the disc path.
+The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), `appimagetool`, and
+`flatpak` plus `flatpak-builder`. `build-flatpak.sh` writes `5do-<arch>.flatpak` from
+`packaging/linux/io.github.purelogiccode.FiveDO.yml`, installs the
+`org.freedesktop.Platform//26.08` runtime/SDK from Flathub when it is missing (pass
+`--no-install-deps` to skip), and keeps the OSTree repository with `--repo-dir` for a
+self-hosted Flatpak repository. Open the installed `5do` entry or a
+`.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch the frontend with the disc path.
 
 #### Linux signing
 
@@ -264,8 +272,9 @@ the portable tarball.
 native runners and builds the macOS arm64 DMG on a macOS runner. The runners install
 .NET 11, which also proves the self-contained apphosts work.
 `.github/workflows/linux-packages.yml` turns the two Linux bundles into `.deb`, `.rpm`,
-and AppImage artifacts, validates their metadata, installs the `.deb` to verify the
-desktop integration, signs them when the GPG secret is configured, and publishes them as
+AppImage, and Flatpak artifacts for both architectures, validates their metadata,
+installs the `.deb` to verify the desktop integration and each `.flatpak` to run the CLI
+inside the sandbox, signs them when the GPG secret is configured, and publishes them as
 GitHub release assets. There is no hosted package repository.
 `.github/workflows/release.yml` publishes the bundles, the Linux packages, the
 signatures, and the checksum manifests to the GitHub release.

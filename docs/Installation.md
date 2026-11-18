@@ -164,10 +164,14 @@ Named profiles live under `profiles/<name>/` and can be selected with
 - evdev gamepads are supported; the user normally needs membership in the `input`
   group. `5do-cli doctor` reports unreadable `/dev/input/event*` nodes and prints the
   `usermod` command.
-- `packaging/linux/build-deb.sh`, `build-rpm.sh`, and `build-appimage.sh` produce the
-  `.deb`, `.rpm`, and portable AppImage; CI builds, signs, and publishes them as release
-  assets. Signing, direct installation, verification, and the optional mirror tooling are
+- `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh`, and
+  `build-flatpak.sh` produce the `.deb`, `.rpm`, portable AppImage, and single-file
+  Flatpak; CI builds, signs, and publishes them as release assets for x64 and arm64.
+  Signing, direct installation, verification, and the optional mirror tooling are
   in [Linux distribution and signing](LinuxDistribution.md).
+- `flatpak install --user ./5do-<arch>.flatpak` installs the sandboxed build. It keeps
+  its data under `~/.var/app/io.github.purelogiccode.FiveDO/`, while the file picker can
+  still read BIOS and disc images from your home directory.
 - X11 works directly. On a Wayland session the shell runs under XWayland; a
   Wayland-only session without `DISPLAY` falls back to the slower offscreen presenter.
   `5do-cli doctor` reports which case applies.

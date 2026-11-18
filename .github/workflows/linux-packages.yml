@@ -1,10 +1,11 @@
 name: Linux packages
 
 # Builds the Linux distribution artifacts from the bundles produced by
-# build-bundle.yml: .deb and .rpm for x64/arm64, an x64 AppImage, GPG signatures,
-# and a signed checksum manifest. Everything is published as GitHub release assets;
-# 5DO does not host a package-manager repository, so users install the downloaded
-# package directly (apt install ./5do_....deb).
+# build-bundle.yml: .deb, .rpm, AppImage, and single-file Flatpak bundles for
+# x64/arm64, GPG signatures, and a signed checksum manifest. Everything is published
+# as GitHub release assets; 5DO does not host a package-manager repository, so users
+# install the downloaded file directly (apt install ./5do_....deb, or
+# flatpak install ./5do-x86_64.flatpak).
 #
 # Each architecture is built on its own native runner. rpmbuild refuses to produce a
 # foreign-architecture package on an x64 host ("No compatible architectures found for
@@ -61,7 +62,7 @@ jobs:
   packages:
     name: Linux packages (${{ matrix.rid }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -70,10 +71,12 @@ jobs:
             rid: linux-x64
             deb_arch: amd64
             rpm_arch: x86_64
+            image_arch: x86_64
           - os: ubuntu-24.04-arm
             rid: linux-arm64
             deb_arch: arm64
             rpm_arch: aarch64
+            image_arch: aarch64
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,6 +91,8 @@ jobs:
           sudo apt-get install -y -qq \
             appstream \
             desktop-file-utils \
+            flatpak \
+            flatpak-builder \
             gnupg \
             rpm \
             shared-mime-info \
@@ -204,30 +209,53 @@ jobs:
           grep -q 'usr/share/applications/5do.desktop' artifacts/rpm-contents.txt
 
       - name: Build AppImage
-        if: matrix.rid == 'linux-x64'
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.value }}
+          IMAGE_ARCH: ${{ matrix.image_arch }}
         run: |
           set -euo pipefail
           tool_dir="artifacts/tools"
           mkdir -p "$tool_dir"
-          url="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          url="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${IMAGE_ARCH}.AppImage"
           if ! curl -fsSL -o "$tool_dir/appimagetool.AppImage" "$url"; then
             echo "::warning::appimagetool download failed; the AppImage is skipped for this run."
             exit 0
           fi
           chmod +x "$tool_dir/appimagetool.AppImage"
           (cd "$tool_dir" && ./appimagetool.AppImage --appimage-extract >/dev/null)
-          name="5do-x86_64.AppImage"
+          name="5do-${IMAGE_ARCH}.AppImage"
           bash packaging/linux/build-appimage.sh \
-            --bundle artifacts/bundle/linux-x64 \
+            --bundle "artifacts/bundle/${{ matrix.rid }}" \
             --version "$VERSION" \
+            --arch "$IMAGE_ARCH" \
             --output artifacts/installers \
             --appimagetool "$tool_dir/squashfs-root/AppRun" \
             --name "$name" \
             --zsync-url "https://github.com/purelogiccode/5DO/releases/latest/download/$name.zsync"
           test -x "artifacts/installers/$name"
+
+      - name: Build Flatpak bundle
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+          IMAGE_ARCH: ${{ matrix.image_arch }}
+        run: |
+          set -euo pipefail
+          bash packaging/linux/build-flatpak.sh \
+            --bundle "artifacts/bundle/${{ matrix.rid }}" \
+            --rid "${{ matrix.rid }}" \
+            --version "$VERSION" \
+            --output artifacts/installers
+
+          bundle="artifacts/installers/5do-${IMAGE_ARCH}.flatpak"
+          test -f "$bundle"
+
+          # Install the shipped bundle and run the CLI inside the sandbox: this proves
+          # the self-contained apphosts start against the Flatpak runtime.
+          flatpak install --user --noninteractive -y "$bundle"
+          flatpak run --command=5do-cli io.github.purelogiccode.FiveDO --version
+          flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json
 
       - name: Upload ${{ matrix.rid }} packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -283,7 +311,7 @@ jobs:
           set -euo pipefail
           cd artifacts/installers
           find . -maxdepth 1 -type f \
-            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) \
+            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.flatpak' \) \
             -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS-linux.txt
           cat SHA256SUMS-linux.txt
 

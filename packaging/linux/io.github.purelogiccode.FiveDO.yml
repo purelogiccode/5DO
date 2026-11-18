@@ -1,0 +1,60 @@
+# Flatpak manifest for 5DO.
+#
+# Build it through packaging/linux/build-flatpak.sh, which stages the published
+# linux bundle as `source/app` and the Flatpak-specific desktop integration files
+# as `source/desktop` before calling flatpak-builder. Building this file in place
+# does not work because those two directories are generated.
+#
+# The apphosts are self-contained single-file executables, so this manifest needs
+# no dotnet SDK extension: it packages the already-published tree. The resulting
+# .flatpak still depends on the org.freedesktop.Platform runtime, which flatpak
+# fetches from Flathub when the bundle is installed.
+app-id: io.github.purelogiccode.FiveDO
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+command: 5do
+
+# Never strip the apphosts: a self-contained single-file executable carries the
+# embedded runtime, and stripping it corrupts the bundle. There is also no symbol
+# server for the managed assemblies, so debuginfo is not useful.
+build-options:
+  strip: false
+  no-debuginfo: true
+
+finish-args:
+  - --share=network
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  # Gamepads (evdev), optical drives, and the DRI render nodes for OpenGL/Vulkan.
+  - --device=all
+  # BIOS images, disc images, and the existing 5DO data folder.
+  - --filesystem=home
+  - --filesystem=removable-media
+  # Display-sleep inhibit through the desktop portal.
+  - --talk-name=org.freedesktop.ScreenSaver
+
+modules:
+  - name: 5do
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lib/5do /app/bin /app/share/applications /app/share/metainfo /app/share/mime/packages /app/share/icons/hicolor/scalable/apps /app/share/icons/hicolor/256x256/apps /app/share/doc/5do
+      - cp -a app/. /app/lib/5do/
+      - rm -f /app/lib/5do/5do.desktop
+      - rm -rf /app/lib/5do/packaging
+      - 'find /app/lib/5do -type f \( -name "*.pdb" -o -name "*.xml" \) -delete'
+      - find /app/lib/5do -type d -exec chmod 0755 {} +
+      - find /app/lib/5do -type f -exec chmod 0644 {} +
+      - chmod 0755 /app/lib/5do/FiveDo /app/lib/5do/FiveDo.Cli
+      - ln -s ../lib/5do/FiveDo /app/bin/5do
+      - ln -s ../lib/5do/FiveDo.Cli /app/bin/5do-cli
+      - install -m 0644 desktop/io.github.purelogiccode.FiveDO.desktop /app/share/applications/
+      - install -m 0644 desktop/io.github.purelogiccode.FiveDO.metainfo.xml /app/share/metainfo/
+      - install -m 0644 desktop/5do.xml /app/share/mime/packages/
+      - install -m 0644 desktop/io.github.purelogiccode.FiveDO.svg /app/share/icons/hicolor/scalable/apps/
+      - install -m 0644 desktop/io.github.purelogiccode.FiveDO.png /app/share/icons/hicolor/256x256/apps/
+      - install -m 0644 desktop/README.md desktop/LICENSE desktop/THIRD-PARTY-NOTICES.md /app/share/doc/5do/
+    sources:
+      - type: dir
+        path: source

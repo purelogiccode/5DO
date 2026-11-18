@@ -31,6 +31,16 @@ osx-arm64 117 MB). CI run
 <https://github.com/purelogiccode/5DO/actions/runs/44141793190> passed; the macOS
 bundle job verified the bundled Vulkan/MoltenVK runtime and self-contained apphosts.
 
+**2026-11-17, REL-07/REL-09 (next release):** **Linux x64 and arm64 now have the full
+bundle set.** `linux-packages.yml` builds `5do-x86_64.AppImage` and
+`5do-aarch64.AppImage` with zsync information on their native runners, plus
+`5do-x86_64.flatpak` and `5do-aarch64.flatpak` from the published apphosts. The manifest
+(`packaging/linux/io.github.purelogiccode.FiveDO.yml`) repackages the self-contained
+apphosts, disables stripping, and declares the network, X11/Wayland, PulseAudio, device,
+home, removable-media, and screen-saver permissions. CI installs each bundle and runs
+`5do-cli selftest --json` inside the sandbox; evidence is pending the next CI run. The
+runbook is in [LinuxDistribution.md](LinuxDistribution.md).
+
 **2026-11-17, REL-04..REL-07:** **Linux packages and release signing are implemented and
 wired into the release pipeline.** `packaging/linux/` now builds `.deb`/`.rpm` packages
 with AppStream metadata, 256 px icons, translated desktop entries, and a self-contained

@@ -123,8 +123,9 @@ embedded, so no separate runtime install is required. See the
 [release page](https://github.com/purelogiccode/5DO/releases/tag/v1.12.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
-Linux users can also install the `.deb`/`.rpm` packages or the portable AppImage built
-from the same bundles; verification commands, the signing model, and the optional mirror
+Linux users can also install the `.deb`/`.rpm` packages, run the portable AppImage, or
+install the single-file Flatpak bundle; all four are built for x64 and arm64 from the
+same bundles. Verification commands, the signing model, and the optional mirror
 setup are in the
 [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 

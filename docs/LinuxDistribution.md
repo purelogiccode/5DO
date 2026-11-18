@@ -22,8 +22,9 @@ acceptance pass); Linux arm64 passes native runtime smoke.
 | `5do_<version>_arm64.deb` | `packaging/linux/build-deb.sh` | arm64 variant |
 | `5do-<version>-1.x86_64.rpm` | `packaging/linux/build-rpm.sh` | Fedora/RHEL/openSUSE install |
 | `5do-<version>-1.aarch64.rpm` | `packaging/linux/build-rpm.sh` | arm64 variant |
-| `5do-x86_64.AppImage` | `packaging/linux/build-appimage.sh` | No-install single file, zsync updates |
-| `SHA256SUMS-linux.txt` (+ `.asc`) | `linux-packages.yml` | Signed checksum manifest for the `.deb`/`.rpm`/AppImage artifacts |
+| `5do-x86_64.AppImage`, `5do-aarch64.AppImage` (+ `.zsync`) | `packaging/linux/build-appimage.sh` | No-install single file, zsync updates |
+| `5do-x86_64.flatpak`, `5do-aarch64.flatpak` | `packaging/linux/build-flatpak.sh` | Sandboxed install for software centers and Steam Deck |
+| `SHA256SUMS-linux.txt` (+ `.asc`) | `linux-packages.yml` | Signed checksum manifest for the `.deb`/`.rpm`/AppImage/Flatpak artifacts |
 | `5do-archive-keyring.gpg` (+ `.asc`) | `sign-artifacts.sh` | Public release key |
 | `SHA256SUMS.txt` | `release.yml` | Unsigned checksum manifest for the bundles and packages |
 
@@ -31,6 +32,15 @@ The `.deb`/`.rpm` packages are **self-contained**: the .NET 11 runtime is embedd
 the apphosts, so the packages never depend on `dotnet-runtime-*`. They depend on the
 X11, fontconfig, freetype, glib, and GL libraries that Avalonia and Skia load at run
 time.
+
+The `.flatpak` bundles are self-contained in the same sense, but the Flatpak sandbox
+still needs the freedesktop runtime: `flatpak install ./5do-x86_64.flatpak` fetches
+`org.freedesktop.Platform//26.08` from Flathub if it is missing. The manifest packages
+the published apphosts, so no .NET SDK extension is involved, and both bundles use the
+same `io.github.purelogiccode.FiveDO` app ID and `stable` branch. Because the sandbox
+sets `HOME` to the per-app directory, a Flatpak install keeps its settings, save states,
+and BIOS folder under `~/.var/app/io.github.purelogiccode.FiveDO/`; `--filesystem=home`
+still lets the file picker reach BIOS and disc images in the real home directory.
 
 ---
 
@@ -78,9 +88,10 @@ sha256sum -c SHA256SUMS-linux.txt
 # 3. Verify an individual artifact signature (equivalent to step 2).
 gpg --verify 5do_1.12.0_amd64.deb.asc 5do_1.12.0_amd64.deb
 
-# 4. The portable bundles carry their own detached signature; SHA256SUMS-linux.txt
-#    covers the .deb/.rpm/AppImage artifacts.
+# 4. The portable bundles and the Flatpak bundles carry their own detached signature;
+#    SHA256SUMS-linux.txt covers the .deb/.rpm/AppImage/Flatpak artifacts.
 gpg --verify 5do-1.12.0-linux-x64.tar.gz.asc 5do-1.12.0-linux-x64.tar.gz
+gpg --verify 5do-x86_64.flatpak.asc 5do-x86_64.flatpak
 ```
 
 ```sh
@@ -108,6 +119,10 @@ sudo dnf install ./5do-1.12.0-1.x86_64.rpm
 # Portable AppImage (no install, no runtime dependency)
 chmod +x 5do-x86_64.AppImage
 ./5do-x86_64.AppImage
+
+# Flatpak (sandboxed; the freedesktop runtime is fetched from Flathub if missing)
+flatpak install --user ./5do-x86_64.flatpak
+flatpak run io.github.purelogiccode.FiveDO
 ```
 
 `apt`/`dnf` accept a local path because it contains a slash; they do not need a
@@ -181,7 +196,8 @@ The Linux artifacts are **GitHub release assets**, next to the portable bundles:
 |---|---|
 | `5do_<version>_amd64.deb`, `5do_<version>_arm64.deb` | `sudo apt install ./5do_<version>_amd64.deb` |
 | `5do-<version>-1.x86_64.rpm`, `5do-<version>-1.aarch64.rpm` | `sudo dnf install ./5do-<version>-1.x86_64.rpm` |
-| `5do-x86_64.AppImage` (and `.zsync`) | `chmod +x` and run |
+| `5do-x86_64.AppImage` (and `.zsync`), `5do-aarch64.AppImage` (and `.zsync`) | `chmod +x` and run |
+| `5do-x86_64.flatpak`, `5do-aarch64.flatpak` | `flatpak install --user ./5do-<arch>.flatpak` |
 | `SHA256SUMS-linux.txt` (+ `.asc`) | `gpg --verify` + `sha256sum -c` |
 | `5do-archive-keyring.gpg` (+ `.asc`) | Trust anchor for every signature |
 
@@ -189,8 +205,9 @@ There is **no project-hosted APT/RPM repository and no second repository to main
 `apt` and `dnf` install a local file directly (a path containing `/` is treated as a
 package file), and dependency resolution still comes from the distribution's own
 archives. Release assets are immutable per tag, so the versioned packages always
-resolve; `releases/latest/download/5do-x86_64.AppImage` is the stable URL only for the
-unversioned AppImage.
+resolve; `releases/latest/download/5do-x86_64.AppImage` and
+`releases/latest/download/5do-x86_64.flatpak` are the stable URLs only for the
+unversioned single-file artifacts.
 
 ### 5.1 Optional: mirror the packages
 
@@ -230,6 +247,8 @@ bash packaging/linux/build-deb.sh  --bundle artifacts/bundle/linux-x64 --rid lin
 bash packaging/linux/build-rpm.sh  --bundle artifacts/bundle/linux-x64 --rid linux-x64
 APPIMAGETOOL=/path/to/appimagetool/AppRun bash packaging/linux/build-appimage.sh \
   --bundle artifacts/bundle/linux-x64 --output artifacts/installers --name 5do-x86_64.AppImage
+bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64 \
+  --output artifacts/installers --runtime-version 26.08
 bash packaging/linux/sign-artifacts.sh --key-id "$KEY" \
   --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
 sudo apt install ./artifacts/installers/5do_1.12.0_amd64.deb
@@ -237,13 +256,15 @@ sudo apt install ./artifacts/installers/5do_1.12.0_amd64.deb
 
 CI (`linux-packages.yml`, called by `release.yml`) already:
 
-- builds both architectures and the x64 AppImage;
+- builds AppImage and Flatpak bundles for both architectures;
 - validates `5do.desktop`, the MIME XML, the AppStream metainfo, and the package
   contents (`dpkg-deb`, `rpm -qlp`);
 - imports the signing subkey and signs every artifact and the checksum manifest;
 - installs the `.deb` with `apt-get install`, checks the generated symlinks, desktop
   entry, MIME, metainfo, and icon, runs `5do --version`, `5do-cli selftest --json`, and
   `5do-cli doctor`, then removes the package and verifies the removal;
+- installs each `.flatpak` and runs `5do-cli --version` and `5do-cli selftest --json`
+  inside the sandbox;
 - publishes `5do-linux-installers` (packages, signatures, checksums, keyring), which
   `release.yml` attaches to the GitHub release.
 
@@ -261,6 +282,10 @@ rpm --checksig ./5do-1.12.0-1.x86_64.rpm
 
 # AppImage without FUSE (containers, minimal installs)
 ./5do-x86_64.AppImage --appimage-extract-and-run --version
+
+# Flatpak bundle, including the CLI inside the sandbox
+flatpak install --user ./5do-x86_64.flatpak
+flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json
 ```
 
 Record the results in [TestCorpus.md](TestCorpus.md) and
@@ -278,12 +303,12 @@ exist before any outreach.
 |---|---|---|---|---|
 | 1 | GitHub Releases | Existing users | Done | Publishes bundles, signed packages, AppImage, keyring, and checksums |
 | 2 | Signed `.deb`/`.rpm` downloads | Distro users | Done | `apt install ./5do_<version>_amd64.deb` / `dnf install ./5do-<version>-1.x86_64.rpm` |
-| 3 | AppImage download | No-install users | Done in CI | `5do-x86_64.AppImage` + `.zsync` |
+| 3 | AppImage download | No-install users | Done in CI | `5do-x86_64.AppImage` / `5do-aarch64.AppImage` + `.zsync` |
 | 4 | [AppImageHub](https://appimage.github.io/) | AppImage browsers | S | Pull request adding a data entry to the AppImage catalog |
 | 5 | [AUR](https://aur.archlinux.org/) (`5do-bin`) | Arch/Manjaro/Endeavour, Steam Deck | S | PKGBUILD (§8.1) |
 | 6 | [itch.io](https://itch.io/) | Retro/indie players | S | Free project page; upload AppImage, Flatpak, tarball |
 | 7 | [Flathub](https://flathub.org/) | GNOME/KDE software centers, Steam Deck | L | Licence review first (§9); then a Flatpak manifest and a Flathub app submission |
-| 8 | Self-hosted Flatpak | KDE/GNOME users | M | `flatpak build-export`/`build-update-repo` with the 5DO key |
+| 8 | Self-hosted Flatpak | KDE/GNOME users | Done in CI | Single-file `5do-<arch>.flatpak`; add `flatpak build-update-repo` with the 5DO key if a hosted repository is wanted |
 | 9 | Snap Store | Ubuntu users | M | `snapcraft.yaml` with `strict` confinement, store review |
 | 10 | EmuDeck / RetroDeck / EmulationStation | Steam Deck and HTPC users | M | Upstream pull request adding 5DO as a 3DO option |
 | 11 | GamingOnLinux, Boiling Steam, Phoronix | Linux gaming readers | S | News submission; Phoronix for Vulkan/Wayland milestones, not routine releases |
@@ -389,8 +414,8 @@ stripping it can corrupt the embedded runtime.
 
 Open a pull request against the AppImage catalog repository with a data entry pointing
 at the release asset URL, license, categories, and a screenshot. The catalog is
-generated from those files, so the entry must name the exact published asset
-(`5do-x86_64.AppImage`) and its update information.
+generated from those files, so the entry must name the exact published assets
+(`5do-x86_64.AppImage`, `5do-aarch64.AppImage`) and their update information.
 
 Remember that AppImages need FUSE 2 on Ubuntu 22.04+. Document
 `--appimage-extract-and-run` for containers and minimal installs, and consider
@@ -399,17 +424,22 @@ shipping `libfuse2` as an optional dependency in the `.deb`.
 ### 8.3 Flatpak and Flathub
 
 A Flatpak is the highest-value Linux channel after AppImage, because it is what GNOME
-Software, KDE Discover, and the Steam Deck's Discover store show. Two constraints:
+Software, KDE Discover, and the Steam Deck's Discover store show. The single-file
+`5do-<arch>.flatpak` bundles are built in CI from the published apphosts
+(`packaging/linux/build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml`), so users
+can install 5DO from a file today. Two constraints still gate **Flathub**:
 
 1. Flathub's build system has no network access and expects a source build. A
    .NET app needs the `org.freedesktop.Sdk.Extension.dotnet11` SDK extension and a
-   `dotnet publish` step, or a vendored NuGet cache. PackFifty3 and similar tools do
-   this, but the manifest is real work.
+   `dotnet publish` step, or a vendored NuGet cache. The release `.flatpak` avoids
+   this by packaging the published tree, but that is not how Flathub builds.
 2. The licence must permit redistribution. See §9 before starting.
 
-Start with a self-hosted Flatpak repository (`flatpak build-export`,
+For a self-hosted repository (`flatpak build-export`,
 `flatpak build-update-repo --gpg-sign=$KEY`, served from any static host you already
-run), then submit to Flathub once the licence position is settled.
+run), keep the OSTree repository with `build-flatpak.sh --repo-dir` instead of shipping
+only the single-file bundle, then submit to Flathub once the licence position is
+settled.
 
 Expected permissions: `--share=network` (RetroAchievements, metadata lookup),
 `--socket=pulseaudio`, `--socket=x11`, `--socket=wayland`, `--device=all` (gamepads,
@@ -505,7 +535,7 @@ committed until it has an ID.
 | P0 | **Wayland guidance and fallback check** | X11/XWayland works today; Wayland-only sessions fall back to the slower offscreen path. Detect `WAYLAND_DISPLAY` without `DISPLAY`, warn once, and document the XWayland workaround. **Implemented:** `5do-cli doctor` reports the case and the shell logs it once and shows a status-line hint | S |
 | P1 | **AppImage auto-update** | Embed zsync info and surface a newer release. **Implemented:** the AppImage embeds zsync update information and the existing startup/`update` check offers the release page; remaining work is an in-app download if wanted | M |
 | P1 | **Steam Deck preset** | A Deck-friendly on-screen hint for the BIOS step and documented non-Steam-game setup. **Implemented:** the desktop entry has a **Play in fullscreen** action; the BIOS hint and EmuDeck entry stay as `REL-10` | S |
-| P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub | M |
+| P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub. **Implemented:** `build-flatpak.sh` produces `5do-<arch>.flatpak` bundles for x64 and arm64, covered by the GPG signatures; a hosted repository is optional | M |
 | P1 | **EmuDeck/RetroDeck entry** | Where Deck users actually look for emulators | S |
 | P1 | **Flatpak on Flathub** | Largest Linux app store; needs the licence decision and a network-free build | L |
 | P1 | **Snap** | Ubuntu's default store; confinement work | M |
@@ -522,7 +552,11 @@ bundle already has no runtime dependency).
 
 ## 11. Evidence checklist for a signed Linux release
 
-- [ ] `linux-packages.yml` built `.deb`/`.rpm` for x64 and arm64 and an x64 AppImage.
+- [ ] `linux-packages.yml` built `.deb`/`.rpm` and AppImage/Flatpak bundles for x64 and
+      arm64.
+- [ ] Each `.flatpak` installs with `flatpak install --user ./5do-<arch>.flatpak` and
+      `flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json`
+      passes inside the sandbox on a matching host.
 - [ ] The Linux tarball contains `packaging/5do.desktop`, `5do.xml`, the metainfo, and
       both icons, and `desktop-file-validate` accepts the fullscreen action.
 - [ ] `5do-cli doctor --strict` reports no unexpected warnings on the target host, and
@@ -544,5 +578,6 @@ bundle already has no runtime dependency).
 - [ ] `sha256sum -c SHA256SUMS.txt` passes for the five bundles.
 - [ ] The key fingerprint is recorded in §4 and in the release notes.
 - [ ] `Installers.md`, `TestCorpus.md`, and `ReleaseChecklist.md` record the run.
-- [ ] The release page lists every package, the AppImage, the keyring, and both checksum
-      manifests; no repository or extra infrastructure is required.
+- [ ] The release page lists every package, both AppImages, both Flatpak bundles, the
+      keyring, and both checksum manifests; no repository or extra infrastructure is
+      required.
