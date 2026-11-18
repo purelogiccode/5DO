@@ -286,6 +286,34 @@ the keyring the script published, and every client rejected a tampered index:
 Evidence: [TestCorpus.md](TestCorpus.md) §1.1cn. CI runs the same scripts with a
 throwaway key in `linux-packages.yml` and asserts the signed metadata and keyring.
 
+### 5.2 Software-center appearance (2026-11-18)
+
+The shipped AppStream metadata was checked in a real software center, not only with
+`appstreamcli`. `5do_1.12.0_amd64.deb` was installed on Linux Mint 22.3 (Cinnamon) with
+GNOME Software 46.0:
+
+- The **Installed** list shows *5DO* with the 256 px application icon, and the details page
+  shows the name, developer (*5DO contributors*), summary, full description, both
+  screenshots, and an **Open** button.
+- The AppStream cache picked the component up after `appstreamcli refresh --force`;
+  `appstreamcli get io.github.purelogiccode.FiveDO` reports the name, summary, homepage,
+  and `Icon: 5do`, and `appstreamcli validate --no-net` passes with one pedantic hint
+  (`cid-contains-uppercase-letter`) that is required by the existing Flatpak app ID.
+- MIME typing is unchanged for real discs: a file with the ISO-9660 `CD001` signature is
+  still typed `application/vnd.efi.iso` (the canonical name, aliased to
+  `application/x-iso9660-image` and `application/x-cd-image`), never
+  `application/x-3do-disc`. 5DO is the registered handler for `application/x-3do-disc`,
+  `application/x-cd-image`, and `application/x-iso9660-image`; `.bin` maps to the 3DO type
+  and `.cue` keeps the system `application/x-cue` type. `desktop-file-validate` accepts
+  the entry.
+- The `.rpm` installs the same five metadata files (desktop entry, 256 px PNG, SVG,
+  metainfo, MIME XML); KDE Discover was not exercised because no Plasma host was
+  available, and it reads the same AppStream data.
+
+![5DO in GNOME Software](../assets/screenshots/gnome-software-5do.png)
+
+Evidence: [TestCorpus.md](TestCorpus.md) §1.1cp.
+
 ---
 
 ## 6. Releasing and validating

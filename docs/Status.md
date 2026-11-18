@@ -61,9 +61,12 @@ assets**; users install them with `sudo apt install ./5do_<version>_amd64.deb` o
 `build-apt-repo.sh`/`build-rpm-repo.sh` build signed `apt`/`dnf` trees for operators who
 mirror the files; the path is validated on Debian 13, Ubuntu 22.04.1, Linux Mint 22.3,
 and Fedora 45 (2026-11-17, [LinuxDistribution.md](LinuxDistribution.md) §5.1 and
-[TestCorpus.md](TestCorpus.md) §1.1cn). `linux-packages.yml` runs from `release.yml` and
-installs both the `.deb` and the `.rpm` in CI to verify the desktop integration and that
-the packaged apphosts start; CI builds the unsigned path on every push.
+[TestCorpus.md](TestCorpus.md) §1.1cn). GNOME Software 46.0 on Linux Mint 22.3 renders the
+installed package with its icon and screenshots, and a real ISO keeps its ISO MIME type
+(2026-11-18, [LinuxDistribution.md](LinuxDistribution.md) §5.2). `linux-packages.yml` runs
+from `release.yml` and installs both the `.deb` and the `.rpm` in CI to verify the desktop
+integration and that the packaged apphosts start; CI builds the unsigned path on every
+push.
 **Validated 2026-11-17** by CI run
 <https://github.com/purelogiccode/5DO/actions/runs/44193278546>: native x86_64/aarch64
 builds, desktop/MIME/AppStream validation, `.deb` and `.rpm` install tests (both

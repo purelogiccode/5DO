@@ -94,6 +94,12 @@ installed, and packaged the Linux set from the 1.12.0 bundles:
   installed `5do` from the served trees and rejected tampered metadata. Details in
   [LinuxDistribution.md](LinuxDistribution.md) §5.1 and [TestCorpus.md](TestCorpus.md)
   §1.1cn.
+- **Software-center metadata (`REL-06`, 2026-11-18):** GNOME Software 46.0 on Linux Mint
+  22.3 shows *5DO* in the installed list and on its details page with the 256 px icon,
+  summary, description, both screenshots, and an Open button; a real ISO keeps
+  `application/vnd.efi.iso` (alias `application/x-iso9660-image`) and 5DO stays the handler
+  for the 3DO/CD-image types. Details in [LinuxDistribution.md](LinuxDistribution.md) §5.2
+  and [TestCorpus.md](TestCorpus.md) §1.1cp.
 
 ## Validation evidence (2026-11-10)
 

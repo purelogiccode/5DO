@@ -4231,6 +4231,53 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cp Software-center metadata and MIME typing (2026-11-18)
+
+**Scope (`REL-06`).** Confirm in a real software center that the AppStream metainfo,
+icons, desktop entry, and MIME declarations render for an installed package, and that a
+plain ISO keeps its ISO type.
+
+**Host.** Linux Mint 22.3 (Cinnamon) Hyper-V guest, `5do_1.12.0_amd64.deb` installed with
+`apt-get install ./5do_1.12.0_amd64.deb` (dwz/AppStream triggers ran), GNOME Software
+46.0-1ubuntu2 from the Mint/Ubuntu archive, AppStream 1.0.2.
+
+**Software center.** `appstreamcli refresh --force` updated the cache and
+`appstreamcli search 5do` / `appstreamcli get io.github.purelogiccode.FiveDO` report the
+component (`Name: 5DO`, `Summary: 3DO Interactive Multiplayer emulator`,
+`Icon: 5do`). GNOME Software's **Installed** list shows *5DO* first with the 256 px icon;
+its details page shows the icon, name, developer, summary, the full description, both
+screenshots (Star Control II, Battle Chess), and an **Open** button. Screenshot:
+`docs/assets/screenshots/gnome-software-5do.png`. `appstreamcli validate --no-net`
+succeeds with one pedantic hint (`cid-contains-uppercase-letter`, required by the existing
+Flatpak app ID). The GNOME Software "explore/search" catalogs do not list a locally
+installed release asset, which is expected: 5DO is distributed as a release asset and not
+through a repository.
+
+**MIME.** A 1 MB file with `CD001` at offset 32769 queries as
+`application/vnd.efi.iso`; on this shared-mime-info version that is the canonical type and
+`application/x-iso9660-image`/`application/x-cd-image` are its aliases, so the ISO is not
+retyped as a 3DO disc. `gio mime` reports 5DO as the default handler for
+`application/x-3do-disc`, `application/x-cd-image`, and `application/x-iso9660-image`;
+`.bin` queries as `application/x-3do-disc` and `.cue` keeps the system
+`application/x-cue` type; `desktop-file-validate` accepts the desktop entry.
+
+**Package contents.** The `.deb` installs `/usr/share/applications/5do.desktop`,
+`/usr/share/metainfo/io.github.purelogiccode.FiveDO.metainfo.xml`,
+`/usr/share/mime/packages/5do.xml`, `/usr/share/icons/hicolor/256x256/apps/5do.png`, and
+`/usr/share/icons/hicolor/scalable/apps/5do.svg`; `rpm -qlp` shows the same five files in
+the `.rpm`. KDE Discover was not exercised (no Plasma host); it reads the same AppStream
+data.
+
+**Reproduce.**
+
+```bash
+sudo apt-get install ./5do_1.12.0_amd64.deb gnome-software
+sudo appstreamcli refresh --force
+gnome-software --mode=installed          # Installed -> 5DO
+xdg-mime query filetype real-cd.iso      # application/vnd.efi.iso
+gio mime application/x-3do-disc
+```
+
 ### 1.1co macOS native Metal surface (2026-11-18)
 
 **Scope (`PLAT-14`).** Replace the macOS offscreen Vulkan plus bitmap-readback shell path

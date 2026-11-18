@@ -5,7 +5,7 @@
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
-**Open items:** 13 — 3 platform, 6 release/packaging, 2 product, 2 awaiting hardware.
+**Open items:** 12 — 3 platform, 5 release/packaging, 2 product, 2 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -70,7 +70,6 @@ completed ID without new measurement.
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
 | **REL-04** | Open | S | **Linux release signing**: publish `5do-archive-keyring.gpg`, a signed `SHA256SUMS-linux.txt`, and a detached `.asc` per artifact. Implemented in `packaging/linux/sign-artifacts.sh` and wired into `linux-packages.yml`; it activates when `LINUX_GPG_PRIVATE_KEY`/`LINUX_GPG_KEY_ID` exist. | Linux has no OS-level binary signature, so the release key signs the checksum manifest and repository metadata; the scripts and workflow already exist. | One tagged release publishes the keyring, a signed manifest, and a `.asc` for every `.deb`/`.rpm`/`.AppImage`; the fingerprint is recorded in [LinuxDistribution.md](LinuxDistribution.md) §4 and the release notes; `gpg --verify` and `sha256sum -c` pass from a clean download. |
-| **REL-06** | Open (CI-validated) | S | **Package metadata quality**: confirm in a real software center that the AppStream metainfo (id, screenshots, releases, OARS, categories, languages), 256 px + SVG icons, MIME `sub-class-of` without the ISO-9660 magic override, translated desktop `Name`/`Comment`, `StartupWMClass`, and the self-contained dependency list render correctly. `desktop-file-validate`, `appstreamcli validate --no-net`, and `update-mime-database` already pass in CI. | The desktop entry, MIME XML, and metainfo already ship; only the end-user appearance check is missing. | GNOME Software / KDE Discover show the name, summary, icon, and screenshots from the `.deb`/`.rpm`, not a generic placeholder; a plain `.iso` keeps `application/x-iso9660-image`. |
 | **REL-07** | Open (CI-built) | S | **AppImage with zsync update information**: run the x64 and arm64 images on matching hosts, verify `AppImageUpdate` finds the next release through the published `.zsync`, and verify `--appimage-signature` when signed. `build-appimage.sh` and the per-architecture CI steps already build both images with embedded update info. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged; the aarch64 build runs on `ubuntu-24.04-arm`. | `5do-x86_64.AppImage` and `5do-aarch64.AppImage` run `--version` and the frontend smoke on their matching hosts (with FUSE 2 or `--appimage-extract-and-run`), the build self-check runs each image on its own runner, and `AppImageUpdate` finds the next release through the published `.zsync`. |
 | **REL-08** | Open | M | **Third-party channel listings**: publish the AUR `5do-bin` package (PKGBUILD ships in `packaging/linux/aur/`), an AppImageHub entry, and an itch.io project page. The packager-facing files (desktop entry, MIME XML, metainfo, both icons) already ship in the Linux bundle and are verified by `build-bundle.yml`. | These channels accept a repackaged upstream release and need no licence change; the catalog entries are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
 | **REL-09** | Open (bundles in CI) | L | **Flatpak distribution**: keep the single-file `.flatpak` bundles for x64 and arm64, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
@@ -140,10 +139,10 @@ was measured and closed with a documented limitation, not that it is unachievabl
    The native Metal surface (`PLAT-14`) is complete, so the macOS build no longer reads
    back every frame.
 2. **Release evidence:** `REL-04` first — one tagged run with the signing key proves the
-   signing chain. Then validate the artifacts from that run with `REL-06` and `REL-07`,
-   publish the channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak
-   repository and Flathub review (`REL-09`). The mirror trees are already verified
-   ([LinuxDistribution.md](LinuxDistribution.md) §5.1).
+   signing chain. Then validate the artifacts from that run with `REL-07`, publish the
+   channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak repository
+   and Flathub review (`REL-09`). The mirror trees and the software-center metadata are
+   already verified ([LinuxDistribution.md](LinuxDistribution.md) §5.1–§5.2).
 3. **Product:** `UX-33` as one change per option, then the `SYS-25` live-clock probe. Close
    `SYS-25` with evidence if the probe is not clean; do not keep it open as a wish.
 4. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a

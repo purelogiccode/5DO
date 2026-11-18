@@ -383,6 +383,20 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-18 - REL-06 software-center metadata.** Installed `5do_1.12.0_amd64.deb` on
+  Linux Mint 22.3 with GNOME Software 46.0. After `appstreamcli refresh --force` the
+  Installed list shows *5DO* with the 256 px icon, and the details page renders the icon,
+  name, developer, summary, description, both screenshots, and an Open button.
+  `appstreamcli validate --no-net` passes with one pedantic `cid-contains-uppercase-letter`
+  hint that the existing Flatpak app ID requires. A file with the ISO-9660 `CD001`
+  signature still queries as `application/vnd.efi.iso` (the canonical alias of
+  `application/x-iso9660-image`), 5DO remains the handler for
+  `application/x-3do-disc`/`application/x-cd-image`/`application/x-iso9660-image`, `.bin`
+  maps to the 3DO type, `.cue` keeps the system type, and `desktop-file-validate` accepts
+  the entry. The `.rpm` installs the same five metadata files. Evidence:
+  [LinuxDistribution.md](LinuxDistribution.md) §5.2, [TestCorpus.md](TestCorpus.md)
+  1.1cp, `docs/assets/screenshots/gnome-software-5do.png`.
+
 - **2026-11-18 - PLAT-14 macOS native Metal surface.** Replaced the macOS offscreen
   Vulkan plus bitmap-readback shell path with a native `CAMetalLayer` surface. The
   renderer gained `VulkanSurfaceKind.Metal`, `VK_EXT_metal_surface`, portability
@@ -766,6 +780,7 @@ without new measurement.
 | **PLAT-16** | P1 | macOS OpenAL live-switch fix: 18 `AL_INVALID_ENUM` errors when a second output replaced an open one. macOS has no `ALC_EXT_thread_local_context`, so the output now shares one context per device and clears it only after the last output. `FIVEDO_AUDIO_TESTS=1` passes all three audio tests on macOS; Windows passes; a live switch reports 0 AL errors. | [Audio.md](Audio.md), [Compatibility.md](Compatibility.md) §10.4 |
 | **PLAT-18** | P1 | macOS NoMac release gate: [BuildAndTest.md](BuildAndTest.md) §7.2 is the runbook. The 2026-11-17 run reproduced the [Compatibility.md](Compatibility.md) §10.4 table from a clean checkout, including the self-contained DMG, bundled MoltenVK, and the 60 fps game session. | [BuildAndTest.md](BuildAndTest.md) §7.2, [Compatibility.md](Compatibility.md) §10.4 |
 | **REL-05** | P1 | Optional signed mirror tooling: both scripts now publish `5do-archive-keyring.gpg` with the trees, `InRelease`/`Release.gpg`/`repomd.xml.asc` verify with only that keyring, and Debian 13 (apt 3.0.3), Ubuntu 22.04.1 (apt 2.4.8), Linux Mint 22.3 (apt 2.8.3), and Fedora 45 (dnf5 5.4.6.0) installed 1.12.0 from a served tree and rejected a tampered index. A CI step rebuilds and verifies both trees with a throwaway key. | [LinuxDistribution.md](LinuxDistribution.md) §5.1, [TestCorpus.md](TestCorpus.md) 1.1cn |
+| **REL-06** | P1 | Software-center metadata: GNOME Software 46.0 on Linux Mint 22.3 lists 5DO with the 256 px icon and shows the name, developer, summary, description, both screenshots, and an Open button on the details page; `appstreamcli validate --no-net` passes (one pedantic uppercase-ID hint required by the Flatpak ID). MIME typing is unchanged for real discs (`application/vnd.efi.iso`, aliased to `application/x-iso9660-image`), and 5DO is the handler for the 3DO/CD-image types. KDE Discover not exercised (no Plasma host). | [LinuxDistribution.md](LinuxDistribution.md) §5.2, [TestCorpus.md](TestCorpus.md) 1.1cp, `docs/assets/screenshots/gnome-software-5do.png` |
 | **ACC-03** | P2 | CD subcode support: 2352+96 wire size and Q packing (control/track/index/MSF/CRC) into `READ_DATA`, with the 10-byte `READ SUB-Q` response. A synthetic subcode test decodes the same values. | `CdromMultiTrackTests` (2026-11-10), [TestCorpus.md](TestCorpus.md) 1.1bs |
 | **ACC-04** | P2 | Jurassic Park Interactive CEL timing: `benchmarks/diff/scripts/tierc/jurassic-park-raptor-maze.txt` moves the pointer hand onto Robert Muldoon, cycles to the Rest Room, and starts the in-park **Raptor Maze** at 63,000 frames; the raptor encounter and **SECURITY BREACH** render at 65,000/65,500. 5DO and OperaCore frame hashes match at 40,000/42,000/57,000/62,000/63,000. The first visual divergence is the 65,000 checkpoint: the default FreeDO CEL model is ahead of the reference's static corridor, while `--cel-timing opera` produces the reference hash `0xD5D6A993` exactly. The residual is the default CEL busy model. | `artifacts/acc04`, `benchmarks/diff/acc04-jurassic-cel.json`, [TestCorpus.md](TestCorpus.md) 1.1ck |
 | **SYS-22** | P3 | Disc image conversion between ISO/BIN/CUE/CHD from the CLI. Lemmings (USA) CHD → ISO/BIN/CUE/CHD all report the same `discHash` and a 600-frame `frameHash` of `675291253`. | [TestCorpus.md](TestCorpus.md) 1.1bs |
