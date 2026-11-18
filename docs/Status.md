@@ -49,8 +49,11 @@ bundle set.** `linux-packages.yml` builds `5do-x86_64.AppImage` and
 (`packaging/linux/io.github.purelogiccode.FiveDO.yml`) repackages the self-contained
 apphosts, disables stripping, and declares the network, X11/Wayland, PulseAudio, device,
 home, `/media` + `/run/media`, and screen-saver permissions. CI installs each bundle and runs
-`5do-cli selftest --json` inside the sandbox; evidence is pending the next CI run. The
-runbook is in [LinuxDistribution.md](LinuxDistribution.md).
+`5do-cli selftest --json` inside the sandbox; the 2026-11-18 run
+<https://github.com/purelogiccode/5DO/actions/runs/44324226502> built
+`5do-x86_64.flatpak` and `5do-aarch64.flatpak` on their own architectures, installed them
+with `flatpak install --user`, and passed the version check and the sandboxed selftest.
+The runbook is in [LinuxDistribution.md](LinuxDistribution.md).
 
 **2026-11-17, REL-04..REL-07:** **Linux packages and release signing are implemented and
 wired into the release pipeline.** `packaging/linux/` now builds `.deb`/`.rpm` packages
