@@ -4231,6 +4231,83 @@ VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_hasvk_icd.json \
   --vk-probe-warmup 5 --vk-probe-filter xbr
 ```
 
+### 1.1cn Signed mirror repositories: APT and RPM (2026-11-17)
+
+**Scope (`REL-05`).** Verify that `packaging/linux/build-apt-repo.sh` and
+`build-rpm-repo.sh` produce installable signed `apt`/`dnf` trees for operators who mirror
+5DO, and that the release assets install on stock Debian-family and Fedora clients.
+
+**Key.** The project release key does not exist yet, so the run used a throwaway
+`ed25519` certify+sign key (`3F198C116D795FA7073FA1A70EAF04E2B6C3A37B`, signing subkey
+`BCFCF1ACFAF37E875C4424D755D15A234E3B574D`) in a private `GNUPGHOME`. Clients imported
+only `5do-archive-keyring.gpg` as published by the scripts; no other key was trusted.
+
+**Artifacts.** A fresh `linux-x64` 1.12.0 bundle was published from the Windows host
+(`package-bundle.ps1`), unpacked in Ubuntu 22.04.1 under WSL, and packaged with
+`build-deb.sh` / `build-rpm.sh` (`5do_1.12.0_amd64.deb`, 95,407,852 bytes;
+`5do-1.12.0-1.x86_64.rpm`). `sign-artifacts.sh` produced the detached `.asc` files and the
+keyring.
+
+**Trees.** `build-apt-repo.sh --base-url http://127.0.0.1:8765/apt` produced
+`dists/stable/InRelease`, `dists/stable/Release`, `dists/stable/Release.gpg`,
+`dists/stable/main/binary-amd64/Packages(.gz)`, `pool/main/5/5do/5do_1.12.0_amd64.deb`,
+`5do.list`, and `5do-archive-keyring.gpg` (+ `.asc`, `.fingerprint`).
+`build-rpm-repo.sh --gpgcheck 0` produced `x86_64/5do-1.12.0-1.x86_64.rpm`,
+`x86_64/repodata/repomd.xml` + `repomd.xml.asc`, `5do.repo`, and the same keyring files.
+Both trees were served by `python3 -m http.server`.
+
+**Ubuntu 22.04.1 (apt 2.4.8).** `gpg --verify Release.gpg Release` and the clearsigned
+`InRelease` both report `Good signature` from the published keyring alone. `apt-get update`
+fetched `InRelease` and `Packages`; `apt-get install 5do` installed 1.12.0 and its
+X11/font dependencies; `/usr/bin/5do-cli --version` reports `5DO 1.12.0 (FiveDo)`,
+`5do-cli selftest --json` reports `"ok": true`, and `apt-get remove` removed `/opt/5do`.
+
+**Debian 13 (apt 3.0.3, dpkg 1.22.22).** Built with `debootstrap --variant=minbase trixie`
+and entered with `chroot`. With only `5do-archive-keyring.gpg` under
+`/etc/apt/keyrings`, `apt-get update` verified `InRelease`, `apt-cache policy 5do` reports
+candidate 1.12.0, `apt-get install 5do` pulled the X11/GL dependencies, `/usr/bin/5do-cli
+--version` reports `5DO 1.12.0 (FiveDo)`, `selftest --json` reports `"ok": true`, and
+`apt-get remove` removed `/opt/5do`.
+
+**Linux Mint 22.3 (apt 2.8.3, Mint wrapper).** The same tree, served locally in the Hyper-V
+Mint VM: `apt-get update` verified `InRelease`, `apt-get install 5do` installed 1.12.0,
+`/opt/5do/FiveDo` and `/opt/5do/FiveDo.Cli` are present with the `/usr/bin` symlinks, the
+desktop entry, metainfo, and MIME XML are installed and `desktop-file-validate` accepts the
+entry, `selftest --json` reports `"ok": true`, and `apt-get remove` removed the package and
+`/opt/5do`. A separate unprivileged run on the bare-metal Mint host verified the same
+repository and downloaded the package with `apt-get download` (95.4 MB).
+
+**Fedora 45 (dnf5 5.4.6.0, rpm 6.1.0).** Built from the official
+`Fedora-Container-Base-Generic-45-1.4` rootfs and entered with `chroot`. dnf5 fetched the
+`gpgkey` URL, reported `Importing OpenPGP key 0xB6C3A37B ... The key was successfully
+imported.`, and accepted the signed `repomd.xml` with `repo_gpgcheck=1`. `dnf install 5do`
+pulled 51 packages including the X11/GL/font dependencies, installed 1.12.0, created the
+`/usr/bin` symlinks, and `/usr/bin/5do-cli selftest --json` reports `"ok": true`. `dnf
+remove 5do` removed the package and `/opt/5do`.
+
+**Tamper checks.** Appending a package entry to `Packages` and regenerating `Packages.gz`
+makes `apt-get update` fail with `File has unexpected size ... Hashes of expected file`
+(exit 100) and `E: Some index files failed to download`. Editing `<revision>` in
+`repomd.xml` makes dnf5 print `repomd.xml GPG signature verification error: Bad PGP
+signature` and keeps the repository out of the transaction; restoring the file makes
+`dnf makecache` pass again.
+
+**Script change.** Both scripts now publish `5do-archive-keyring.gpg` (`.asc`,
+`.fingerprint`) at the repository root, because the generated `5do.list`/`5do.repo` already
+point there; `--no-keyring` opts out, and `LINUX_GPG_HOME` selects a non-default keyring.
+`linux-packages.yml` gained a "Verify the mirror repository scripts" step that builds both
+trees with a throwaway key and verifies the signatures and published keyring.
+
+**Reproduce.**
+
+```bash
+export GNUPGHOME=/tmp/mirror-gnupg   # throwaway key, or the release key
+bash packaging/linux/build-apt-repo.sh --repo-dir /srv/5do/apt \
+  --base-url https://mirror.example.internal/5do/apt --key-id "$KEY" /srv/5do/debs
+bash packaging/linux/build-rpm-repo.sh --repo-dir /srv/5do/rpm \
+  --base-url https://mirror.example.internal/5do/rpm --key-id "$KEY" --gpgcheck 0 /srv/5do/rpms
+```
+
 ### 1.1cg v1.10.1 continuity and startup release validation (2026-11-15)
 
 **Release contents.** v1.10.1 ships RetroAchievements save-state progress persistence,

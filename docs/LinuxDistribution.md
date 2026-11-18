@@ -216,8 +216,18 @@ infrastructure, build a repository from the downloaded release files with the sc
 `packaging/linux/`. This is a deployment choice, not a 5DO service, and nothing in the
 project needs to be created for it.
 
+The scripts sign the repository metadata with `LINUX_GPG_KEY_ID` and publish the matching
+public key at the repository root as `5do-archive-keyring.gpg` (plus `.asc` and
+`.fingerprint`), because that is the URL written into the generated `5do.list` and
+`5do.repo`. `LINUX_GPG_HOME` selects a non-default keyring. Pass `--no-keyring` when your
+pipeline publishes the key elsewhere.
+
 ```sh
-# Keep every release in the pool so pinned versions stay installable.
+# Build or update both trees. The scripts are additive: the package pool keeps every
+# release, so pinned versions stay installable, and the indexes are regenerated from the
+# whole pool on each run.
+export LINUX_GPG_KEY_ID=<fingerprint of the release signing key>   # §4
+
 bash packaging/linux/build-apt-repo.sh \
   --repo-dir /srv/5do/apt --suite stable \
   --base-url https://mirror.example.internal/5do/apt \
@@ -229,13 +239,52 @@ bash packaging/linux/build-rpm-repo.sh \
   --key-id "$LINUX_GPG_KEY_ID" --gpgcheck 0 /srv/5do/rpms
 ```
 
-Serve the resulting `apt/` and `rpm/` directories from any static host: a web server,
-S3/R2, an internal mirror, or a subdirectory of a Pages site you already run. The
-generated `5do.list` and `5do.repo` record the base URL; publish
-`5do-archive-keyring.gpg` next to them so clients can install it.
+| Tree | Signed metadata | Everything else |
+|---|---|---|
+| `apt/` | `dists/<suite>/InRelease` (clearsigned), `Release.gpg`, `Release` | `dists/<suite>/main/binary-<arch>/Packages(.gz)`, `pool/main/<letter>/<package>/<file>.deb`, `5do.list`, `5do-archive-keyring.gpg` (+ `.asc`, `.fingerprint`), `README.md` |
+| `rpm/` | `<arch>/repodata/repomd.xml.asc` | `<arch>/5do-<version>-1.<arch>.rpm`, `<arch>/repodata/repomd.xml` and the compressed indexes, `5do.repo`, `5do-archive-keyring.gpg` (+ `.asc`, `.fingerprint`), `README.md` |
+
+Serve the two directories from any static host — a web server, S3/R2, an internal mirror,
+or a subdirectory of a Pages site you already run — then point the client at the published
+keyring and repository file:
+
+```sh
+# Debian, Ubuntu, Linux Mint
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://mirror.example.internal/5do/apt/5do-archive-keyring.gpg \
+  | sudo tee /etc/apt/keyrings/5do-archive-keyring.gpg >/dev/null
+curl -fsSL https://mirror.example.internal/5do/apt/5do.list \
+  | sudo tee /etc/apt/sources.list.d/5do.list >/dev/null
+sudo apt update && sudo apt install 5do
+
+# Fedora, RHEL, openSUSE
+sudo rpm --import https://mirror.example.internal/5do/rpm/5do-archive-keyring.gpg
+sudo curl -fsSL https://mirror.example.internal/5do/rpm/5do.repo \
+  -o /etc/yum.repos.d/5do.repo
+sudo dnf install 5do
+```
+
+`repo_gpgcheck=1` is what makes dnf verify `repodata/repomd.xml`. The generated repo file
+sets `gpgcheck=0` because the release packages are not header-signed; passing
+`--sign-key` to `build-rpm.sh` adds that layer if you build your own packages.
 
 Both trees grow by roughly 120-160 MB per release for both architectures. Prune
 deliberately and rebuild the indexes afterwards.
+
+**Validated 2026-11-17** with the 1.12.0 packages and a throwaway ed25519 key, because the
+project release key does not exist yet (§4). APT and dnf verified the metadata with only
+the keyring the script published, and every client rejected a tampered index:
+
+| Client | OS / tool | Result |
+|---|---|---|
+| Debian | 13 (trixie), apt 3.0.3, dpkg 1.22.22 | `apt-get update` verified `InRelease`; `apt-get install 5do` installed 1.12.0 with the distro's X11/GL deps; `5do-cli --version` → `5DO 1.12.0`, `selftest --json` ok; `apt-get remove` cleaned up |
+| Debian family | Ubuntu 22.04.1, apt 2.4.8 | `apt-get update`, `apt-get install 5do`, `5do-cli --version` → `5DO 1.12.0`, `selftest --json` ok, `apt-get remove` cleaned up |
+| Linux Mint | 22.3, apt 2.8.3 (Mint wrapper) | install from the mirror, desktop entry/metainfo/MIME present, `desktop-file-validate` clean, `selftest` ok, `apt-get remove` cleaned up |
+| Fedora | 45, dnf5 5.4.6 | keyring imported from the mirror URL, signed `repomd.xml` accepted, `dnf install 5do` (with distro deps) → `5do-cli selftest` ok, `dnf remove` cleaned up |
+| Tamper check | all three | a modified `Packages`/`Packages.gz` fails APT with a hash mismatch; a modified `repomd.xml` fails dnf with `Bad PGP signature` and the repository is not used |
+
+Evidence: [TestCorpus.md](TestCorpus.md) §1.1cn. CI runs the same scripts with a
+throwaway key in `linux-packages.yml` and asserts the signed metadata and keyring.
 
 ---
 
@@ -251,6 +300,11 @@ bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid 
   --output artifacts/installers --runtime-version 26.08
 bash packaging/linux/sign-artifacts.sh --key-id "$KEY" \
   --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
+bash packaging/linux/build-apt-repo.sh --repo-dir artifacts/mirror/apt \
+  --base-url https://mirror.example.org/5do/apt --key-id "$KEY" artifacts/installers
+bash packaging/linux/build-rpm-repo.sh --repo-dir artifacts/mirror/rpm \
+  --base-url https://mirror.example.org/5do/rpm --key-id "$KEY" --gpgcheck 0 \
+  artifacts/installers
 sudo apt install ./artifacts/installers/5do_1.12.0_amd64.deb
 ```
 
@@ -567,6 +621,9 @@ bundle already has no runtime dependency).
       succeeds on the target host with the published dependency list, and the optional
       mirror scripts still produce signed `InRelease`/`Release.gpg` when a mirror is
       wanted.
+- [ ] `build-apt-repo.sh` and `build-rpm-repo.sh` publish `5do-archive-keyring.gpg` with
+      the trees, `gpg --verify` passes on `InRelease` and `repomd.xml.asc` with only that
+      keyring, and `apt`/`dnf` install `5do` from a served tree (see §5.1).
 - [ ] `gpg --verify` passes for `SHA256SUMS-linux.txt.asc` and every artifact `.asc`
       (including the two portable bundle tarballs); `sha256sum -c SHA256SUMS-linux.txt`
       passes from a clean download.

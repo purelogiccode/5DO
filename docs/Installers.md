@@ -88,6 +88,12 @@ installed, and packaged the Linux set from the 1.12.0 bundles:
 - **Checksums:** `SHA256SUMS-linux.txt` lists all four packages and the AppImage; the
   per-file `.sha256` outputs verify. The publish job's install test is the release
   gate for the unsigned path.
+- **Mirror tooling (`REL-05`, 2026-11-17):** `build-apt-repo.sh`/`build-rpm-repo.sh`
+  produced signed `InRelease`/`Release.gpg` and `repomd.xml.asc` plus the published
+  `5do-archive-keyring.gpg`; Debian 13, Ubuntu 22.04.1, Linux Mint 22.3, and Fedora 45
+  installed `5do` from the served trees and rejected tampered metadata. Details in
+  [LinuxDistribution.md](LinuxDistribution.md) §5.1 and [TestCorpus.md](TestCorpus.md)
+  §1.1cn.
 
 ## Validation evidence (2026-11-10)
 

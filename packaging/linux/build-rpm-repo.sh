@@ -13,17 +13,26 @@
 #       --key-id 5DO0123456789ABCDEF \
 #       artifacts/installers
 #
+# Signing also publishes 5do-archive-keyring.gpg (+ .asc and .fingerprint) at the
+# repository root, which is the URL written into 5do.repo and the generated README.
+# Pass --no-keyring to manage the keyring yourself.
+#
+# Environment:
+#   LINUX_GPG_KEY_ID      default for --key-id
+#   LINUX_GPG_HOME        optional GNUPGHOME override
+#
 set -euo pipefail
 
 repo_dir=""
 base_url=""
 key_id="${LINUX_GPG_KEY_ID:-}"
 unsigned="false"
+publish_keyring="true"
 gpgcheck="1"
 inputs=()
 
 usage() {
-    sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -32,6 +41,7 @@ while [[ $# -gt 0 ]]; do
         --base-url) base_url="${2:-}"; shift 2 ;;
         --key-id) key_id="${2:-}"; shift 2 ;;
         --unsigned) unsigned="true"; shift ;;
+        --no-keyring) publish_keyring="false"; shift ;;
         --gpgcheck) gpgcheck="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         --) shift; inputs+=("$@"); break ;;
@@ -49,6 +59,10 @@ if [[ -z "$base_url" ]]; then
     exit 2
 fi
 base_url="${base_url%/}"
+
+if [[ -n "${LINUX_GPG_HOME:-}" ]]; then
+    export GNUPGHOME="$LINUX_GPG_HOME"
+fi
 
 createrepo=""
 for candidate in createrepo_c createrepo; do
@@ -131,6 +145,23 @@ for arch_dir in "$repo_dir"/*/; do
         printf 'Signed %s\n' "$arch_dir/repodata/repomd.xml"
     fi
 done
+
+if [[ "$unsigned" != "true" && "$publish_keyring" == "true" ]]; then
+    # 5do.repo points at $base_url/5do-archive-keyring.gpg, so the public key has to
+    # live at the repository root next to it.
+    rm -f "$repo_dir/5do-archive-keyring.gpg" "$repo_dir/5do-archive-keyring.gpg.asc"
+    gpg --batch --export "$key_id" >"$repo_dir/5do-archive-keyring.gpg"
+    gpg --batch --export --armor "$key_id" >"$repo_dir/5do-archive-keyring.gpg.asc"
+    gpg --batch --with-colons --fingerprint "$key_id" |
+        awk -F: '/^fpr:/ { print $10; exit }' >"$repo_dir/5do-archive-keyring.gpg.fingerprint"
+    gpg --batch --show-keys --with-colons "$repo_dir/5do-archive-keyring.gpg" >/dev/null 2>&1 ||
+        { echo "The published keyring is not a valid OpenPGP key." >&2; exit 1; }
+    printf 'Published 5do-archive-keyring.gpg (fingerprint %s)\n' \
+        "$(cat "$repo_dir/5do-archive-keyring.gpg.fingerprint")"
+elif [[ "$unsigned" != "true" ]]; then
+    echo "NOTE: --no-keyring is set; 5do.repo expects" >&2
+    echo "      $base_url/5do-archive-keyring.gpg to be published by your pipeline." >&2
+fi
 
 cat >"$repo_dir/5do.repo" <<EOF
 [5do]

@@ -49,10 +49,12 @@ with zsync update information. `sign-artifacts.sh` adds detached `.asc` signatur
 published `5do-archive-keyring.gpg`. The packages are published as **GitHub release
 assets**; users install them with `sudo apt install ./5do_<version>_amd64.deb` or
 `sudo dnf install ./5do-<version>-1.x86_64.rpm`, and no package repository is hosted.
-`build-apt-repo.sh`/`build-rpm-repo.sh` remain available for operators who mirror the
-files (`REL-05`). `linux-packages.yml` runs from `release.yml` and installs both the
-`.deb` and the `.rpm` in CI to verify the desktop integration and that the packaged
-apphosts start; CI builds the unsigned path on every push.
+`build-apt-repo.sh`/`build-rpm-repo.sh` build signed `apt`/`dnf` trees for operators who
+mirror the files; the path is validated on Debian 13, Ubuntu 22.04.1, Linux Mint 22.3,
+and Fedora 45 (2026-11-17, [LinuxDistribution.md](LinuxDistribution.md) §5.1 and
+[TestCorpus.md](TestCorpus.md) §1.1cn). `linux-packages.yml` runs from `release.yml` and
+installs both the `.deb` and the `.rpm` in CI to verify the desktop integration and that
+the packaged apphosts start; CI builds the unsigned path on every push.
 **Validated 2026-11-17** by CI run
 <https://github.com/purelogiccode/5DO/actions/runs/44193278546>: native x86_64/aarch64
 builds, desktop/MIME/AppStream validation, `.deb` and `.rpm` install tests (both

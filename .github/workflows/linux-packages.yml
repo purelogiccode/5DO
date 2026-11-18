@@ -90,7 +90,10 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
             appstream \
+            apt-utils \
+            createrepo-c \
             desktop-file-utils \
+            dpkg-dev \
             flatpak \
             flatpak-builder \
             gnupg \
@@ -362,6 +365,56 @@ jobs:
           cp artifacts/signing/5do-archive-keyring.gpg \
              artifacts/signing/5do-archive-keyring.gpg.asc \
              artifacts/installers/
+
+      - name: Verify the mirror repository scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Build both operator-facing mirror trees with a throwaway key so the
+          # documented `apt install 5do` / `dnf install 5do` path stays working.
+          mirror_home="$RUNNER_TEMP/mirror-gnupg"
+          rm -rf "$mirror_home"
+          mkdir -p "$mirror_home"
+          chmod 700 "$mirror_home"
+          GNUPGHOME="$mirror_home" gpg --batch --pinentry-mode loopback --passphrase '' \
+            --quick-generate-key "5DO mirror smoke <mirror-smoke@5do.invalid>" ed25519 sign 1y
+          key_id="$(GNUPGHOME="$mirror_home" gpg --batch --with-colons --fingerprint |
+            awk -F: '/^fpr:/ { print $10; exit }')"
+          if [ -z "$key_id" ]; then
+            echo "The throwaway mirror key was not created." >&2
+            exit 1
+          fi
+
+          # The repo scripts sign with whatever keyring GNUPGHOME/LINUX_GPG_HOME names.
+          export GNUPGHOME="$mirror_home"
+
+          bash packaging/linux/build-apt-repo.sh \
+            --repo-dir artifacts/mirror/apt \
+            --base-url https://mirror.example.org/5do/apt \
+            --key-id "$key_id" artifacts/installers
+          bash packaging/linux/build-rpm-repo.sh \
+            --repo-dir artifacts/mirror/rpm \
+            --base-url https://mirror.example.org/5do/rpm \
+            --key-id "$key_id" --gpgcheck 0 artifacts/installers
+
+          test -s artifacts/mirror/apt/dists/stable/InRelease
+          test -s artifacts/mirror/apt/dists/stable/Release.gpg
+          test -s artifacts/mirror/apt/5do-archive-keyring.gpg
+          test -s artifacts/mirror/apt/5do-archive-keyring.gpg.asc
+          test -s artifacts/mirror/apt/5do.list
+          test -s artifacts/mirror/rpm/5do-archive-keyring.gpg
+          test -s artifacts/mirror/rpm/5do.repo
+
+          rpm_arch="$(basename "$(find artifacts/mirror/rpm -mindepth 1 -maxdepth 1 -type d | head -n1)")"
+          test -s "artifacts/mirror/rpm/$rpm_arch/repodata/repomd.xml.asc"
+
+          GNUPGHOME="$mirror_home" gpg --batch --verify \
+            artifacts/mirror/apt/dists/stable/Release.gpg \
+            artifacts/mirror/apt/dists/stable/Release
+          GNUPGHOME="$mirror_home" gpg --batch --verify \
+            "artifacts/mirror/rpm/$rpm_arch/repodata/repomd.xml.asc" \
+            "artifacts/mirror/rpm/$rpm_arch/repodata/repomd.xml"
+          echo "Mirror repositories built and verified."
 
       - name: Install and smoke-test the Debian package
         shell: bash
