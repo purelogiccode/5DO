@@ -221,8 +221,11 @@ jobs:
           tool_dir="artifacts/tools"
           mkdir -p "$tool_dir"
           url="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${IMAGE_ARCH}.AppImage"
-          if ! curl -fsSL -o "$tool_dir/appimagetool.AppImage" "$url"; then
-            echo "::warning::appimagetool download failed; the AppImage is skipped for this run."
+          # The arm64 asset intermittently 504s from the release CDN; retry before
+          # skipping, or the run ships without an AppImage for that architecture.
+          if ! curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors \
+              -o "$tool_dir/appimagetool.AppImage" "$url"; then
+            echo "::warning::appimagetool download failed after retries; the AppImage is skipped for this run."
             exit 0
           fi
           chmod +x "$tool_dir/appimagetool.AppImage"
