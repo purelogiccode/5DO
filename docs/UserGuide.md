@@ -433,7 +433,7 @@ or three or more audio underruns occurred in one second; **Idle** (gray) means n
 running. The tooltip explains the current verdict. The badge only reads the counters the
 FPS overlay already collects, so it never changes emulation or audio.
 
-![Emulation-health badge](../assets/screenshots/health-badge.png)
+![Emulation-health badge](assets/screenshots/health-badge.png)
 
 The **Graphics API** list selects
 **OpenGL**, **DirectX 11** (Windows only), **Vulkan**, or **Software (CPU)**; changing it

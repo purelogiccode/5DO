@@ -310,7 +310,7 @@ GNOME Software 46.0:
   metainfo, MIME XML); KDE Discover was not exercised because no Plasma host was
   available, and it reads the same AppStream data.
 
-![5DO in GNOME Software](../assets/screenshots/gnome-software-5do.png)
+![5DO in GNOME Software](assets/screenshots/gnome-software-5do.png)
 
 Evidence: [TestCorpus.md](TestCorpus.md) §1.1cp.
 

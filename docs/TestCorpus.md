@@ -4252,7 +4252,7 @@ underruns not keeping the badge amber, display-behind, and run-ahead auto-disabl
 **Visual evidence.** With Wolfenstein 3D running on the software presenter, the status bar
 shows the green dot and **OK** next to `59.9 fps`:
 
-![Emulation-health badge](../assets/screenshots/health-badge.png)
+![Emulation-health badge](assets/screenshots/health-badge.png)
 
 ### 1.1cr Named void patterns: 4DO, Bumps, Metal (2026-11-18)
 
@@ -4277,7 +4277,7 @@ around the booting Wolfenstein 3D image (`--gl-backend software`). The native GP
 presenters still paint their own black letterbox inside the swapchain; filling that
 scanout area is the remaining part of the "background expansion/scanout borders" option.
 
-![4DO void pattern](../assets/screenshots/void-pattern-fourdo.png)
+![4DO void pattern](assets/screenshots/void-pattern-fourdo.png)
 
 ### 1.1cq Audio channel swap (2026-11-18)
 
