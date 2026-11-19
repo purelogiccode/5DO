@@ -264,8 +264,9 @@ lines from the current VDLP state for the optional multitask path.
   flags, and control words once per CEL. It must run after `PrepareGeometry` and before
   any pixel write; batched fast paths that bypass `CelMemory` must add the same
   read/write cycle counts explicitly.
-- High-res `ResScale` addresses four 1 MB VRAM planes; preserve plane 0/1 vs 2/3
-  semantics.
+- True 2× `ResScale` addresses four 1 MB VRAM planes; preserve plane 0/1 vs 2/3
+  semantics. The legacy `--high-res` mode leaves `ResScale` at 0 and only scales the
+  assembled frame.
 - Fix-mode quirks (`BitTiming3/6`, `GraphicsStepY`, speedfixes, unknownflag11) are
   applied in the CEL path.
 
@@ -294,7 +295,7 @@ lines from the current VDLP state for the optional multitask path.
 
 - Parses display lists at `(addr & 0xFFFFF) + 2 MB`.
 - Line widths 320/384/512/640/1024; `VdlLine.MaxPixels = 1280`.
-- High-res line-doubles 640x240 to 640x480 via planes; the opt-in `--true-2x` path writes independent even/odd CEL fields into plane pairs 0/1 and 2/3.
+- The legacy `--high-res` path samples each native line into a 640-wide line and emits it twice (presentation-only). The opt-in `--true-2x` path writes independent even/odd CEL fields into plane pairs 0/1 and 2/3.
 - The CPU `FrameAssembler` is the oracle; the GPU `Accurate` mode must match.
 
 ### XBUS/CD-ROM

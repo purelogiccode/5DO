@@ -50,10 +50,11 @@ public sealed class CelGoldenSceneTests
     }
 
     [Fact]
-    public void LiteralScale_HighResolutionWritesTheFourVramPlanes()
+    public void LiteralScale_TrueHighResolutionWritesTheFourVramPlanes()
     {
         (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 319, clipY: 239);
         madam.Compatibility.HighResolution = true;
+        madam.Compatibility.TrueHighResolution = true;
         WriteLiteralCcb(
             memory,
             Ccb3,
@@ -72,6 +73,34 @@ public sealed class CelGoldenSceneTests
         {
             var address = (FrameBuffer ^ 2) + (uint)(plane * EmulatorConstants.VramSize);
             Assert.Equal(0x7ffe, memory.Ram.Read16(address));
+        }
+    }
+
+    [Fact]
+    public void LiteralScale_PresentationHighResolutionKeepsNativeVramLayout()
+    {
+        (FiveDoMemory memory, MadamChip madam) = CreateScene(clipX: 319, clipY: 239);
+        madam.Compatibility.HighResolution = true;
+        WriteLiteralCcb(
+            memory,
+            Ccb3,
+            Source3,
+            position: (0, 0),
+            hdx: 0x20000,
+            vdy: 0x20000,
+            pre0: 6 | 0x10,
+            pre1: 0,
+            last: true);
+        WriteBytes(memory, Source3 + 8, 0x7f, 0xfe);
+
+        _ = RunCel(madam, Ccb3);
+
+        Assert.Equal(0x7ffe, ReadPixel(memory, 0, 0));
+        for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            Assert.Equal(
+                0,
+                memory.Ram.Read16((FrameBuffer ^ 2) + (uint)(plane * EmulatorConstants.VramSize)));
         }
     }
 

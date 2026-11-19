@@ -169,7 +169,7 @@ the BIOS file.
 | `--nvram-mode global\|per-game` | `global` when a layout option is used | Resolve the shared or per-game NVRAM image. Per-game mode needs a disc for its game ID. |
 | `--nvram-version 0-9` | `0` | Independent NVRAM version slot. |
 | `--nvram-dir <path>` | settings directory | Root directory for the resolved NVRAM layout. |
-| `--high-res` | off | Enable the opt-in 640x480 CEL/VDLP mode. The legacy path line-doubles the 240-line source. |
+| `--high-res` | off | Enable the opt-in 640x480 presentation mode. The guest machine stays native; the frame is a 2x nearest upscale for 320-wide modes. |
 | `--true-2x` | off | Enable the opt-in true 2× CEL prototype. Implies `--high-res`; arbitrary CELs render independent 480-line fields, while packed/scaled 2D CELs expand to 2x2 blocks. Bitmap and SPORT content remains line-doubled. Only Jurassic Park Interactive and Family Feud are validated; other titles fall back to native 320x240 with a warning. |
 | `--deinterlace auto\|bob\|weave\|blend` | `bob` | Presentation-side field handling. `auto` detects 480i fields and weaves them; `bob` keeps each 240-line field (reference-compatible hashes); `weave` always doubles to 480 lines; `blend` averages two fields into one frame. |
 | `--game-profile <json>` | none | Load a per-game profile as the timing/region baseline before explicit flags. |

@@ -35,9 +35,9 @@ The v1 target is **3840x2160 output at 60 Hz** while emulating the 3DO at its na
 - **Output resolution:** the swapchain/control surface is 4K and the GPU performs
   the final upscale/filter.
 - **Internal resolution:** CEL rendering and VRAM remain at the emulated resolution.
-  `RESSCALE=1` (high-resolution CEL) is an opt-in 640x480 feature; the `--true-2x`
-  prototype renders independent 480-line CEL fields at about 30% more emulation time on
-  the Raptor Maze. Neither is part of the default 4K target.
+  `--high-res` is an opt-in presentation-only 640x480 frame (2x nearest upscale); the
+  `--true-2x` prototype renders independent 480-line CEL fields at about 30% more
+  emulation time on the Raptor Maze. Neither is part of the default 4K target.
 - **4K internal rendering is not a v1 goal.** It would require GPU CEL compositing or
   a fundamentally different renderer and is tracked only as an experiment.
 

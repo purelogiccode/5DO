@@ -220,9 +220,13 @@ public sealed class Vdlp : IVdlp, IStateSection
 
         if (y >= 0 && y < _region.Height)
         {
-            if (_compatibility.HighResolution)
+            if (_compatibility.TrueHighResolution)
             {
                 RenderHighResolutionLine(frame, y);
+            }
+            else if (_compatibility.HighResolution)
+            {
+                RenderScaledHighResolutionLine(frame, y);
             }
             else
             {
@@ -310,8 +314,92 @@ public sealed class Vdlp : IVdlp, IStateSection
     }
 
     /// <summary>
-    /// Renders one low-resolution VDL line as two high-resolution lines.
-    /// FreeDO: <c>_vdl_DoLineNew</c> with <c>RESSCALE</c> set.
+    /// Renders one native VDL line as two 640-wide lines for the presentation-only
+    /// high-resolution mode.
+    /// </summary>
+    /// <remarks>
+    /// The legacy <c>--high-res</c> option keeps the guest-visible machine identical to
+    /// native 320x240 and only enlarges the finished frame. Each native pixel becomes a
+    /// 2x horizontal pair and each native line is emitted twice. The output width is the
+    /// region's double-native width (640 for NTSC/PAL1, 768 for PAL2), widened when a
+    /// wider VDLP mode is active, so 320-wide modes are an exact 2x nearest upscale and
+    /// wider modes are resampled rather than cropped.
+    /// </remarks>
+    private void RenderScaledHighResolutionLine(VdlFrame frame, int y)
+    {
+        VdlLine target0 = frame.Lines[y * 2];
+        VdlLine target1 = frame.Lines[(y * 2) + 1];
+
+        var videoDmaEnabled = (_clutDma & (1u << 21)) != 0
+            && (VideoDmaEnabled?.Invoke() ?? true);
+        if (videoDmaEnabled)
+        {
+            var sourceWidth = (int)Math.Min(_modulo, VdlLine.MaxPixels);
+            if (sourceWidth <= 0)
+            {
+                sourceWidth = EmulatorConstants.VideoWidth;
+            }
+
+            var outputWidth = Math.Min(
+                Math.Max(_region.Width * 2, sourceWidth),
+                VdlLine.MaxPixels);
+            Span<ushort> destination0 = target0.PixelBuffer;
+            Span<ushort> destination1 = target1.PixelBuffer;
+            var source = ((_previousBitmap ^ 2) & VramMask) + VramOffset;
+            ReadOnlySpan<uint> words = _ram.Words;
+            var lane = (int)(source & 3);
+            if (!words.IsEmpty && lane <= 2)
+            {
+                var wordIndex = (int)(source >> 2);
+                var shift = lane * 8;
+                for (var x = 0; x < outputWidth; x++)
+                {
+                    var sample = (int)(((long)x * sourceWidth) / outputWidth);
+                    var pixel = (ushort)(words[wordIndex + sample] >> shift);
+                    destination0[x] = pixel;
+                    destination1[x] = pixel;
+                }
+            }
+            else
+            {
+                for (var x = 0; x < outputWidth; x++)
+                {
+                    var sample = (int)(((long)x * sourceWidth) / outputWidth);
+                    var pixel = _ram.Read16(source + (uint)(sample * 4));
+                    destination0[x] = pixel;
+                    destination1[x] = pixel;
+                }
+            }
+
+            target0.Width = outputWidth;
+            target1.Width = outputWidth;
+            _clutB.AsSpan().CopyTo(target0.ClutB);
+            _clutG.AsSpan().CopyTo(target0.ClutG);
+            _clutR.AsSpan().CopyTo(target0.ClutR);
+            _clutB.AsSpan().CopyTo(target1.ClutB);
+            _clutG.AsSpan().CopyTo(target1.ClutG);
+            _clutR.AsSpan().CopyTo(target1.ClutR);
+        }
+
+        target0.OutControl = _outControl;
+        target0.ClutDma = _clutDma;
+        target0.Background = _background;
+        target1.OutControl = _outControl;
+        target1.ClutDma = _clutDma;
+        target1.Background = _background;
+
+        if (!videoDmaEnabled)
+        {
+            target0.PixelBuffer.Clear();
+            target1.PixelBuffer.Clear();
+            target0.Background = 0;
+            target1.Background = 0;
+        }
+    }
+
+    /// <summary>
+    /// Renders one low-resolution VDL line as two independent high-resolution lines for
+    /// the experimental true 2× CEL mode.
     /// </summary>
     /// <remarks>
     /// The 3DO stores a 640x480 frame in four VRAM planes sized by the active VRAM capacity. Each low-resolution

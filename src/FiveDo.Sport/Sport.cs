@@ -35,7 +35,7 @@ public sealed class Sport : ISportBus, IStateSection
         _compatibility = compatibility;
     }
 
-    private bool HighResolution => _compatibility?.HighResolution == true;
+    private bool TrueHighResolutionMode => _compatibility?.TrueHighResolution == true;
 
     /// <summary>Gets the current fill color. FreeDO: <c>gSPORTCOLOR</c>.</summary>
     public uint Color => _color;
@@ -84,7 +84,7 @@ public sealed class Sport : ISportBus, IStateSection
                     _ram.Write32(VramOffset + ((page + i) << 2), _color);
                 }
 
-                if (HighResolution)
+                if (TrueHighResolutionMode)
                 {
                     for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
                     {
@@ -101,7 +101,7 @@ public sealed class Sport : ISportBus, IStateSection
                     _ram.Write32(offsetBytes, ((current ^ _color) & value) ^ _color);
                 }
 
-                if (HighResolution)
+                if (TrueHighResolutionMode)
                 {
                     for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
                     {
@@ -124,11 +124,14 @@ public sealed class Sport : ISportBus, IStateSection
             if (value == 0xffffffff)
             {
                 CopyPage(_destination, _source, 0);
-                if (HighResolution)
+                if (TrueHighResolutionMode)
                 {
+                    // FreeDO/Opera copy each source plane into the matching destination
+                    // plane; duplicating plane 0 would overwrite independent high-res
+                    // even/odd columns with the first plane's content.
                     for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
                     {
-                        CopyPage(_destination, _destination, plane * VramPlaneSize);
+                        CopyPagePlane(_destination, _source, plane * VramPlaneSize);
                     }
                 }
             }
@@ -142,14 +145,14 @@ public sealed class Sport : ISportBus, IStateSection
                     _ram.Write32(destinationBytes, ((current ^ sourceValue) & value) ^ sourceValue);
                 }
 
-                if (HighResolution)
+                if (TrueHighResolutionMode)
                 {
                     for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
                     {
                         for (var i = 0u; i < 512; i++)
                         {
                             var destinationBytes = VramOffset + (uint)(plane * VramPlaneSize) + ((_destination + i) << 2);
-                            var sourceValue = _ram.Read32(VramOffset + ((_source + i) << 2));
+                            var sourceValue = _ram.Read32(VramOffset + (uint)(plane * VramPlaneSize) + ((_source + i) << 2));
                             var current = _ram.Read32(destinationBytes);
                             _ram.Write32(destinationBytes, ((current ^ sourceValue) & value) ^ sourceValue);
                         }
@@ -172,6 +175,15 @@ public sealed class Sport : ISportBus, IStateSection
         {
             var source = _ram.Read32(VramOffset + ((sourcePage + i) << 2));
             _ram.Write32(VramOffset + (uint)destinationPlaneOffset + ((destinationPage + i) << 2), source);
+        }
+    }
+
+    private void CopyPagePlane(uint destinationPage, uint sourcePage, int planeOffset)
+    {
+        for (var i = 0u; i < 512; i++)
+        {
+            var source = _ram.Read32(VramOffset + (uint)planeOffset + ((sourcePage + i) << 2));
+            _ram.Write32(VramOffset + (uint)planeOffset + ((destinationPage + i) << 2), source);
         }
     }
 

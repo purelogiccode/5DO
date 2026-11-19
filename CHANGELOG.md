@@ -3,6 +3,21 @@
 All notable changes are recorded here. The project is at v1.13.2, a bug-fix release for
 movie verification and partial-extraction diagnostics.
 
+## [Unreleased]
+
+### Fixed
+
+- **High-resolution mode no longer corrupts or hangs games.** The legacy `--high-res`
+  option is now presentation-only: the guest machine stays at native 320x240 (CEL
+  coordinates, VRAM, CPU bitmap reads, and SPORT are unchanged) and the 640x480 frame
+  is produced by sampling each native line into a 640-wide line and emitting it twice.
+  For 320-wide modes this is a pixel-perfect 2x nearest upscale. It removes the
+  left-half 2D CEL cropping, stale bitmap/video planes, bottom-edge rainbow rows, and
+  the Road Rash gameplay hang caused by the old FreeDO-style four-plane layout. The
+  opt-in `--true-2x` exception remains experimental and gated to its validated titles.
+  Verified with 0-pixel differences against 2x native upscales on 20th Century Video
+  Almanac, Road Rash, Dragon's Lair, and the Alone in the Dark demo.
+
 ## [1.13.2] - 2026-11-19
 
 ### Fixed

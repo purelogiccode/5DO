@@ -310,7 +310,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
   - `LoadPLUT` reads 16-bit values with `_mem_read16((((pnt >> 1) + i) ^ 1) << 1)`. Port the exact XOR/scale.
   - `HandleDMA8`/`DMAPBus` copy the PBUS queue to memory and raise FIQ.
   - `KeyPressed` copies up to 16 bytes and fills the rest with `0xFF`.
-- High-resolution (`RESSCALE`) is not part of the first port. When added, it touches `FiveDoMemory` mirroring, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction. Do it as one milestone.
+- High-resolution now has two paths. The legacy presentation-only 640x480 frame leaves guest memory and CEL stepping native and only changes frame assembly. The experimental true 2× `RESSCALE` layout touches `FiveDoMemory` mirroring, VDLP line duplication, SPORT copies, CEL stepping, and frame extraction.
 
 ### 8.5 `DSP.cpp`
 

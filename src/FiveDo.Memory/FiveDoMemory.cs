@@ -23,6 +23,7 @@ namespace FiveDo.Memory;
 public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelector, IStateSection
 {
     private readonly uint[] _ram = new uint[EmulatorConstants.RamAllocationSize / sizeof(uint)];
+    private readonly CompatibilityState? _compatibility;
     private int _highWaterSize;
     private readonly uint[] _rom = new uint[EmulatorConstants.RomSize / sizeof(uint)];
     private readonly byte[] _nvram = new byte[EmulatorConstants.NvramSize];
@@ -33,12 +34,14 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
     /// <summary>Initializes a new instance of the <see cref="FiveDoMemory"/> class.</summary>
     /// <param name="tuning">Machine tuning. Defaults to <see cref="EmulatorTuning.Default"/>.</param>
-    public FiveDoMemory(EmulatorTuning? tuning = null)
+    /// <param name="compatibility">Optional shared compatibility state for true 2× VRAM mirroring.</param>
+    public FiveDoMemory(EmulatorTuning? tuning = null, CompatibilityState? compatibility = null)
     {
         Tuning = tuning ?? EmulatorTuning.Default;
         Tuning.Validate();
         _layout = MemoryLayout.For(Tuning.MemoryConfiguration);
         _highWaterSize = _layout.HiresRamSize;
+        _compatibility = compatibility;
     }
 
     /// <summary>Gets the machine tuning.</summary>
@@ -567,6 +570,60 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         WriteRam8(offset + 3, (byte)(value >> 24), notify: false);
     }
 
+    /// <summary>
+    /// Mirrors a CPU-visible VRAM byte into the extra high-resolution planes.
+    /// FreeDO: <c>_mem_write8</c>; Opera: <c>opera_mem_write8</c>.
+    /// </summary>
+    private void MirrorHighResolutionWrite8(uint offset, byte value)
+    {
+        if (!TrueHighResolutionWrites || !IsVisibleVramWrite(offset, sizeof(byte)))
+        {
+            return;
+        }
+
+        for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            WriteRam8(offset + ((uint)plane * (uint)_layout.VramSize), value, notify: false);
+        }
+    }
+
+    /// <summary>Mirrors a CPU-visible VRAM halfword into the extra high-resolution planes.</summary>
+    private void MirrorHighResolutionWrite16(uint offset, ushort value)
+    {
+        if (!TrueHighResolutionWrites || !IsVisibleVramWrite(offset, sizeof(ushort)))
+        {
+            return;
+        }
+
+        for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            WriteRam16(offset + ((uint)plane * (uint)_layout.VramSize), value, notify: false);
+        }
+    }
+
+    /// <summary>Mirrors a CPU-visible VRAM word into the extra high-resolution planes.</summary>
+    private void MirrorHighResolutionWrite32(uint offset, uint value)
+    {
+        if (!TrueHighResolutionWrites || !IsVisibleVramWrite(offset, sizeof(uint)))
+        {
+            return;
+        }
+
+        for (var plane = 1; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            WriteRam32(offset + ((uint)plane * (uint)_layout.VramSize), value, notify: false);
+        }
+    }
+
+    private bool TrueHighResolutionWrites => _compatibility?.TrueHighResolution == true;
+
+    private bool IsVisibleVramWrite(uint offset, int size)
+    {
+        var start = (uint)_layout.VramBase;
+        var end = (uint)_layout.RamSize;
+        return offset >= start && offset + (uint)size <= end;
+    }
+
     /// <inheritdoc />
     public byte Read8(uint address)
     {
@@ -711,7 +768,9 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         if (address < _layout.RamSize)
         {
-            WriteRam8(address ^ 3, value);
+            var offset = address ^ 3;
+            WriteRam8(offset, value);
+            MirrorHighResolutionWrite8(offset, value);
             return;
         }
 
@@ -733,7 +792,9 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
 
         if (address < _layout.RamSize)
         {
-            WriteRam16(address ^ 2, value);
+            var offset = address ^ 2;
+            WriteRam16(offset, value);
+            MirrorHighResolutionWrite16(offset, value);
             return;
         }
 
@@ -757,6 +818,7 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
         if (address < _layout.RamSize)
         {
             WriteRam32(address, value);
+            MirrorHighResolutionWrite32(address, value);
             return;
         }
 

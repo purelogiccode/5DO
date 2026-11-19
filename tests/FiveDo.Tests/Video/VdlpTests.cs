@@ -93,7 +93,11 @@ public sealed class VdlpTests
     public void DoLine_HighResolutionInterleavesFourPlanesIntoTwoLines()
     {
         var memory = new FiveDoMemory();
-        var compatibility = new CompatibilityState { HighResolution = true };
+        var compatibility = new CompatibilityState
+        {
+            HighResolution = true,
+            TrueHighResolution = true,
+        };
         var vdlp = new Vdlp(memory.Ram, compatibility);
         var frame = new VdlFrame();
         const uint head = 0x5000;
@@ -119,6 +123,78 @@ public sealed class VdlpTests
         Assert.Equal(2, frame[0].Pixels[1]);
         Assert.Equal(3, frame[1].Pixels[0]);
         Assert.Equal(4, frame[1].Pixels[1]);
+    }
+
+    [Fact]
+    public void DoLine_HighResolutionScalesANativeLineTwice()
+    {
+        var memory = new FiveDoMemory();
+        var compatibility = new CompatibilityState { HighResolution = true };
+        var vdlp = new Vdlp(memory.Ram, compatibility);
+        var frame = new VdlFrame();
+        const uint head = 0x7000;
+        const uint bitmap = 0x9000;
+        var header = 1u | (1u << 15) | (1u << 16) | (1u << 21);
+
+        WriteVdl(memory, head, header, bitmap, bitmap, 0);
+        for (var i = 0u; i < 320; i++)
+        {
+            memory.Ram.Write16(VramOffset + bitmap + (i * 4), (ushort)i);
+
+            // The presentation-only path must ignore the unused high-resolution planes.
+            memory.Ram.Write16(
+                VramOffset + EmulatorConstants.VramSize + bitmap + (i * 4),
+                (ushort)(500 + i));
+        }
+
+        vdlp.ProcessVdl(head);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(16, frame);
+
+        Assert.Equal(640, frame[0].Width);
+        Assert.Equal(640, frame[1].Width);
+        for (var i = 0; i < 320; i++)
+        {
+            Assert.Equal(i, frame[0].Pixels[i * 2]);
+            Assert.Equal(i, frame[0].Pixels[(i * 2) + 1]);
+            Assert.Equal(i, frame[1].Pixels[i * 2]);
+            Assert.Equal(i, frame[1].Pixels[(i * 2) + 1]);
+        }
+    }
+
+    [Fact]
+    public void DoLine_HighResolutionScalesPal2ToDoubleWidth()
+    {
+        var memory = new FiveDoMemory();
+        var compatibility = new CompatibilityState { HighResolution = true };
+        var vdlp = new Vdlp(memory.Ram, compatibility)
+        {
+            Region = VideoRegionProfile.Pal2,
+        };
+        var frame = new VdlFrame();
+        const uint head = 0x7800;
+        const uint bitmap = 0x9800;
+        var header = 1u | (1u << 15) | (1u << 16) | (1u << 21) | (1u << 23);
+
+        WriteVdl(memory, head, header, bitmap, bitmap, 0);
+        for (var i = 0u; i < 384; i++)
+        {
+            memory.Ram.Write16(VramOffset + bitmap + (i * 4), (ushort)i);
+        }
+
+        vdlp.ProcessVdl(head);
+        vdlp.DoLine(0, frame);
+        vdlp.DoLine(22, frame);
+
+        Assert.Equal(768, frame[0].Width);
+        Assert.Equal(768, frame[1].Width);
+        for (var i = 0; i < 384; i++)
+        {
+            Assert.Equal(i, frame[0].Pixels[i * 2]);
+            Assert.Equal(i, frame[0].Pixels[(i * 2) + 1]);
+            Assert.Equal(i, frame[1].Pixels[i * 2]);
+            Assert.Equal(i, frame[1].Pixels[(i * 2) + 1]);
+        }
     }
 
     [Fact]

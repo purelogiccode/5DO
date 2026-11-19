@@ -1253,9 +1253,17 @@ High-res (18,100 frames): 640x480, PC 0x00012B48, hash 0xE79E18C5
 
 The high-res capture shows all four title buttons (Play, New Game, Load, Options),
 the complete logo, and the marquee; it matches the 640x480 reference screenshot. The
-mode is opt-in because 320x240 titles must not be upscaled. The passcode screen is a
-320-wide UI scaled 2x; its five visible keyboard columns are the game's own window,
-not a framebuffer crop. The five 3,000-frame low-res baseline hashes are unchanged:
+mode is opt-in because a 320x240 title should not silently switch its internal CEL
+coordinates. The passcode screen is a 320-wide UI scaled 2x; its five visible keyboard
+columns are the game's own window, not a framebuffer crop.
+
+> The `0xE79E18C5` high-res hash above was recorded with the old FreeDO `RESSCALE`
+> implementation (pre-2026-11-19). The current `--high-res` option is presentation-only
+> and produces an exact 2x nearest upscale of the native frame; a sampled comparison at
+> frame 18,100 reports 0 differing pixels. Use the native hash plus the 2x relationship
+> as the current high-resolution oracle.
+
+The five 3,000-frame low-res baseline hashes are unchanged:
 `0xF4BDF79B`, `0x932C7722`, `0xEB31636F`, `0xA2B49CF0`, and `0xC21BB6A1`.
 
 #### Diagnostic input and RAM patches (2026-10-24 late pass)
@@ -3999,13 +4007,15 @@ dotnet src/FiveDo.Cli/bin/Debug/net11.0/FiveDo.Cli.dll run `
 
 ### 1.1cl VID-19 true 2× CEL high-resolution prototype (2026-11-16)
 
-**Finding.** The legacy `--high-res` path is line doubling, and it is visibly wrong for
-CEL scenes: at Jurassic Park frame 63,000 it shows only the ceiling/upper half of the
-Raptor Maze corridor and a half-width HUD, and Family Feud renders a black frame. The new
-opt-in `--true-2x` path keeps the four-plane layout but writes even output lines to planes
-0/1 and odd output lines to planes 2/3, so the VDLP reads real 480-line fields. Arbitrary
-(3D) CEL geometry evaluates at 640x480; packed/scaled 2D CELs expand each source pixel to a
-2x2 block. The default 320x240 path and the legacy `--high-res` behavior are unchanged.
+**Finding.** The legacy `--high-res` path used the FreeDO `RESSCALE` line-doubling
+layout, and it was visibly wrong for CEL scenes: at Jurassic Park frame 63,000 it showed
+only the ceiling/upper half of the Raptor Maze corridor and a half-width HUD, and Family
+Feud rendered a black frame. The new opt-in `--true-2x` path keeps the four-plane layout
+but writes even output lines to planes 0/1 and odd output lines to planes 2/3, so the
+VDLP reads real 480-line fields. Arbitrary (3D) CEL geometry evaluates at 640x480;
+packed/scaled 2D CELs expand each source pixel to a 2x2 block. The default 320x240 path is
+unchanged. The legacy `--high-res` path was replaced on 2026-11-19 by a presentation-only
+exact 2x nearest upscale; the legacy column below is historical.
 
 **Visual result.** The named CEL-heavy title is Jurassic Park Interactive's in-park Raptor
 Maze (`jurassic-park-raptor-maze.txt`, 63,000/65,000). Family Feud is the 2D control
@@ -4015,7 +4025,7 @@ Maze (`jurassic-park-raptor-maze.txt`, 63,000/65,000). Family Feud is the 2D con
 with no missing columns or palette artifacts. The pixel-difference figures count non-zero
 RGB differences between a 2x nearest-neighbor resize of the native PNG and the true 2x PNG.
 
-| Title / frame | Native 320x240 | Legacy `--high-res` | True 2× |
+| Title / frame | Native 320x240 | Old legacy `--high-res` | True 2× |
 |---|---:|---|---:|
 | Jurassic Park, 63,000 | `0xD5D6A993` | `0x79149ECD` (upper half only) | `0xF67CF55B` |
 | Jurassic Park, 65,000 | `0x133DCBA8` | - | `0x130EDE0E` direct / `0xF75B56C7` harness |
@@ -4031,7 +4041,7 @@ The harness captures are in `benchmarks/diff/vid19-true2x.json` and
 | Mode | Emulation time (run 1 / run 2) | Effective rate |
 |---|---:|---:|
 | Native 320x240 | 40.94 s / 45.17 s | 244.3 / 221.4 fps |
-| Legacy `--high-res` | 40.22 s | 248.6 fps |
+| Old legacy `--high-res` | 40.22 s | 248.6 fps |
 | True 2× | 54.91 s / 57.88 s | 182.1 / 172.8 fps |
 
 Across the two runs, true 2× averaged about 30% more emulation time (177 fps versus

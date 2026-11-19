@@ -130,9 +130,9 @@
                               ToolTip.Tip="Delete the online catalog and downloaded cover images." />
                 </MenuItem>
                 <Separator />
-                <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Mode (640x480)"
+                <MenuItem x:Name="HighResMenuItem" Header="High-Resolution Display (640x480)"
                           ToggleType="CheckBox" Click="OnHighResChanged"
-                          ToolTip.Tip="Enable the opt-in 640x480 CEL/VDLP mode. Only use it for supported titles." />
+                          ToolTip.Tip="Present the native frame at 640x480 with a 2x nearest-neighbor scale. Guest emulation is unchanged." />
             </MenuItem>
 
             <MenuItem Header="View" ToolTip.Tip="Switch the library layout, toggle the log dock, or go fullscreen.">

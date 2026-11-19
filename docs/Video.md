@@ -63,25 +63,26 @@ another thread (`VdlFrameMailbox` does this).
 - The line's CLUT is copied into the `VdlLine`.
 - At the V1 line, the machine sets the frame source dimensions and presents.
 
-High-resolution mode uses four 1 MB VRAM planes. The legacy `--high-res` path
-(`EmulatorTuning.HighResolution`) line-doubles the 240-line source: a low-resolution
-bitmap line supplies the even/odd columns of two adjacent high-resolution lines;
-planes 0/1 form the even line and planes 2/3 form the odd line, and CELs write the
-same pixel to both fields. SPORT copies and VDLP line copying honor the same plane
-layout. Lemmings' 640x480 title is the primary validation case.
+High-resolution mode has two paths. The legacy `--high-res` option
+(`EmulatorTuning.HighResolution`) is presentation-only: the guest machine, CEL
+coordinates, VRAM, CPU bitmap reads, and SPORT behavior are identical to native, and
+`Vdlp` samples each native line to the region's double-width frame (640 pixels for
+NTSC/PAL1, 768 for PAL2) and emits it twice. For native-width modes that is an exact 2x
+nearest-neighbor enlargement; wider modes are resampled instead of cropped. This path
+cannot crop content or corrupt video planes, so it is safe for every title.
 
 The opt-in **true 2×** mode (`--true-2x`, Settings > Emulation > True 2x CEL fields,
 `EmulatorTuning.TrueHighResolution`, or the per-game **TrueHighResolution** setting)
-keeps the four-plane layout but gives the odd field real content: CEL writes select
-planes 0/1 for even output lines and planes 2/3 for odd output lines. Arbitrary (3D)
-CEL geometry is evaluated in 640x480 space, while packed and scaled 2D CELs expand
+is the experimental guest-visible path. It uses four 1 MB VRAM planes: CEL writes
+select planes 0/1 for even output lines and planes 2/3 for odd output lines. Arbitrary
+(3D) CEL geometry is evaluated in 640x480 space, while packed and scaled 2D CELs expand
 each source pixel to a 2x2 block. VDLP reads the independent fields without changes.
 Bitmap and SPORT-drawn content remains line-doubled, and titles that read the
 framebuffer may still need the native path. The host gates the mode to Jurassic Park
 Interactive's Raptor Maze and Family Feud; other titles, including Road Rash, fall back
-to native 320x240. Default 320x240 output and the legacy line-doubled mode are unchanged.
+to native 320x240. Default 320x240 output and the legacy presentation mode are unchanged.
 
-The legacy mode is line doubling, not true internal 640x480 rendering. The true 2×
+The legacy mode is an output enlargement, not true internal 640x480 rendering. The true 2×
 prototype adds vertical detail for CEL geometry but is not the full production
 feature: bitmap/SPORT planes, framebuffer-read semantics, and a full-collection
 visual sweep remain in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).

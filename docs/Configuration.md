@@ -150,7 +150,7 @@ every serialized property in `AppSettings`.
 | `SaveNativeScreenshot` | bool | `false` | Also write a `-native.png` CPU frame with each screenshot. |
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
-| `HighResolution` | bool | `false` | Opt-in 640x480 CEL/VDLP mode. |
+| `HighResolution` | bool | `false` | Opt-in 640x480 presentation mode; the guest stays native and the frame is a 2x nearest upscale. |
 | `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields, applied only to validated titles. |
 | `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
 | `Region` | enum string | `"Ntsc"` | Video region used when `AutoRegion` is off: `Ntsc` (320x240, 60 Hz), `Pal1` (320x288, 50 Hz), or `Pal2` (384x288, 50 Hz). |
@@ -590,7 +590,8 @@ keys throw `UnknownMachineOptionException`.
 The Settings dialog's **Emulation** page edits:
 
 - `AutoGameFixes` checkbox.
-- `HighResolution` checkbox (restarts the machine when changed).
+- `HighResolution` checkbox: presentation-only 640x480 output (2x nearest upscale); it
+  restarts the machine when changed but does not alter guest CEL/VRAM behavior.
 - `TrueHighResolution` checkbox: the experimental true 2× CEL path. It requires
   high-resolution mode, leaves bitmap/SPORT content line-doubled, and restarts the machine
   when changed. It is applied only to Jurassic Park Interactive and Family Feud; other

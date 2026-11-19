@@ -221,7 +221,7 @@ Options:
 | `--disc <path>` | none | Insert a disc with `--bios`. |
 | `--state-in <path>` | none | Load a save state instead of booting. |
 | `--prefetch` | off | Enable the bounded disc prefetch cache for uncompressed images. |
-| `--high-res` | off | Enable the opt-in 640x480 mode (line-doubled). |
+| `--high-res` | off | Enable the opt-in 640x480 presentation mode (2x nearest upscale). |
 | `--true-2x` | off | Enable the experimental true 2x CEL path (validated titles only; others fall back to native). |
 | `--label <text>` | `synthetic` / `disc` / `state` | Report label. |
 | `--json` | off | Emit the JSON result. |

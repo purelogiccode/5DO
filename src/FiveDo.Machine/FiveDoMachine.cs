@@ -66,7 +66,7 @@ public sealed class FiveDoMachine
             Compatibility.HighResolution = true;
         }
 
-        Memory = new FiveDoMemory(Tuning);
+        Memory = new FiveDoMemory(Tuning, Compatibility);
         Clio = new ClioChip(Tuning);
         Diag = new DiagPort();
         Sport = new SportChip(Memory.Ram, Compatibility);

@@ -13,8 +13,10 @@ This document separates three ideas that are often conflated:
 
 1. **Output upscaling** — render at 320x240 and scale/filter the finished frame to
    1080p/4K. This is already implemented and is the compatibility-safe path.
-2. **The existing `--high-res` mode** — FreeDO's `RESSCALE` path, which stores a
-   640x480 frame in four 1 MB VRAM planes and line-doubles the 240-line VDL output.
+2. **The existing `--high-res` mode** — an opt-in presentation-only 640x480 frame. The
+   guest machine stays native and the frame is a 2x nearest upscale for 320-wide modes.
+   The old FreeDO `RESSCALE` four-plane layout now belongs only to the experimental
+   `--true-2x` path.
 3. **True internal high-resolution CEL rendering** — rasterize CELs and bitmap lines
    into a larger logical framebuffer so geometry, text, and 3D edges are genuinely
    higher resolution.
@@ -30,28 +32,37 @@ without a GPU CEL compositor or a large compatibility break.
 |---|---|
 | Mode flag | `EmulatorTuning.HighResolution`, `CompatibilityState.HighResolution`, CLI `--high-res`, Settings > Emulation > Hi-Res. |
 | Frame size | `EmulatorConstants.HighResolutionWidth = 640`, `HighResolutionHeight = 480`. |
-| VRAM | Four planes sized by the active VRAM capacity (`HighResolutionVramPlanes = 4`; `4 * VramSize`). Plane 0/1 hold even/odd X columns; planes 2/3 mirror the second interlace field. |
-| CEL rasterizer | `CelRasterizer.ResScale` is 0 or 1. `ReadPixel`/`WritePixel` shift X by `ResScale` and select the plane with `x & 1`; Y remains a 240-line coordinate. |
-| Clipping | `TestClip` doubles the clip rectangle with `(ClipX + 1) << ResScale`. |
-| VDLP | `Vdlp.RenderHighResolutionLine` reads all four planes, interleaves even/odd X, and writes two output lines for each low-resolution line. |
-| SPORT | `Sport` mirrors fill/copy pages into the extra planes. |
+| VRAM | Unchanged by the legacy mode. The four-plane layout (`HighResolutionVramPlanes = 4`; `4 * VramSize`) is used only by the experimental true 2× path. |
+| CEL rasterizer | `CelRasterizer.ResScale` is 0 unless `TrueHighResolution`; the legacy mode leaves CEL coordinates and VRAM writes native. |
+| Clipping | Native clip rectangle in the legacy mode; doubled only for true 2×. |
+| VDLP | Legacy: samples the native line into the region's double-width line and emits it twice. True 2×: reads all four planes, interleaves even/odd X, and writes two output lines for each low-resolution line. |
+| SPORT | Unchanged by the legacy mode. True 2× mirrors fill/copy pages into the extra planes. |
 | Presentation | The frame source becomes 640x480; the CPU assembler, uploader, screenshots, frame hash, and save-state frame sections carry the larger frame. |
 
-The important limitation is visible in `WritePixel`: the code writes the same texel to
-planes 2/3 as well as planes 0/1, and `RenderHighResolutionLine` emits two identical
-output lines. That is line doubling, not two independently rendered 480-line fields.
-It improves horizontal sampling for CEL X coordinates and matches the FreeDO
-`RESSCALE` behavior, but it cannot add vertical geometric detail.
+The legacy `--high-res` mode is now **presentation-only**. The guest machine is
+byte-identical to native: CELs, VRAM, CPU bitmap reads, and SPORT all use the native
+320x240 layout, and the 640x480 frame is an exact 2x nearest-neighbor enlargement for
+320-wide modes. This removes the old FreeDO `RESSCALE` side effects (left-half 2D CEL
+cropping, stale bitmap planes, and gameplay hangs) while keeping the option safe for
+every title. Wider VDLP modes are resampled to the 640-pixel frame.
 
-Evidence: Lemmings' 640x480 title matches the reference because the game itself uses a
-640-wide VDL mode; it is not proof that 3D CELs are rendered at true 640x480.
+The opt-in **`--true-2x`** path is the only mode that still changes guest-visible CEL
+fields. `WritePixel` selects planes 0/1 for even output lines and planes 2/3 for odd
+output lines; `RenderHighResolutionLine` emits two independent output lines. That is
+true internal 640x480 CEL sampling, but it is validated only on the two titles listed
+in §1 (VID-19) and remains experimental.
+
+Evidence: Lemmings' 640x480 title still matches the reference because the game itself
+uses a 640-wide VDL mode. 20th Century Video Almanac, Road Rash, Dragon's Lair, and the
+Alone in the Dark demo produce a 0-pixel difference between the legacy high-resolution
+frame and a 2x nearest upscale of the native frame at the same PC.
 
 ### VID-19 prototype result (2026-11-16)
 
 The bounded spike is implemented as the opt-in **`--true-2x`** machine option
 (Settings > Emulation > **True 2x CEL fields**, per-game **TrueHighResolution**, and a
-save-state field). The legacy `--high-res` line-doubled mode is unchanged and remains the
-fallback.
+save-state field). The legacy `--high-res` presentation mode (2x nearest upscale) remains
+the fallback.
 
 **Design.** The four-plane layout is kept, but the plane pairs now carry independent
 fields instead of copies. For a high-resolution pixel `(x, y)`:
@@ -69,15 +80,18 @@ line-doubled; a title that reads the framebuffer or copies pages after CEL rende
 still need the native path.
 
 **Visual comparison.** Jurassic Park Interactive's in-park Raptor Maze is the named
-CEL-heavy 3D title; Family Feud is the 2D control. At frame 63,000 the legacy
-`--high-res` output shows only the ceiling/upper half of the corridor and a half-width
-HUD, while `--true-2x` shows the complete corridor with the HUD at 2x scale. Compared with
-a 2x nearest-neighbor upscale of the native 320x240 frame, the true 2x frame changes
-**38.41%** of pixels (117,992 / 307,200) on the Raptor Maze, proving that the difference is
-not just output scaling. Family Feud at frame 9,000 changes **0.00%** of pixels, showing
-that 2D content is a clean 2x scale with no missing columns or palette artifacts.
+CEL-heavy 3D title; Family Feud is the 2D control. At frame 63,000 the *old* legacy
+`--high-res` output (pre-2026-11-19, FreeDO `RESSCALE` layout) showed only the
+ceiling/upper half of the corridor and a half-width HUD, while `--true-2x` shows the
+complete corridor with the HUD at 2x scale. Compared with a 2x nearest-neighbor upscale
+of the native 320x240 frame, the true 2x frame changes **38.41%** of pixels
+(117,992 / 307,200) on the Raptor Maze, proving that the difference is not just output
+scaling. Family Feud at frame 9,000 changes **0.00%** of pixels, showing that 2D content
+is a clean 2x scale with no missing columns or palette artifacts. The hashes below are
+historical captures of the old legacy path; today's legacy path produces the same
+0.00% 2x upscale as the native reference.
 
-| Title / frame | Native 320x240 hash | Legacy `--high-res` | True 2× hash | Result |
+| Title / frame | Native 320x240 hash | Old legacy `--high-res` | True 2× hash | Result |
 |---|---:|---|---:|---|
 | Jurassic Park, 63,000 | `0xD5D6A993` | `0x79149ECD` (upper half only) | `0xF67CF55B` | Full corridor; 38.41% differs from a 2x upscale |
 | Jurassic Park, 65,000 | `0x133DCBA8` | - | `0x130EDE0E` direct / `0xF75B56C7` harness | Raptor encounter renders at 640x480 |
@@ -96,7 +110,7 @@ The exact hashes and captures are recorded in `docs/TestCorpus.md` 1.1cl and
 
 Across the two runs, true 2× averaged about 56.4 s versus 43.1 s native, about 30% more
 emulation time (177 fps versus 232 fps), and still runs more than 3x real time. The legacy
-path is faster because it writes the same pixel to both fields.
+path is faster because it only samples each native line twice.
 
 **Default stability.** The native 63,000 frame hash remains `0xD5D6A993`, matching the
 ACC-04 reference checkpoint, and the full suite passes (2,367 tests). The option is
@@ -112,6 +126,13 @@ with a warning. The residual is tracked in [ImplementationPlan.md](Implementatio
 **Remaining production work (VID-01).** The prototype does not make high-resolution the
 default and does not solve bitmap/SPORT detail, framebuffer-read semantics, per-title
 validation, or a full-collection sweep. Those remain the production research items.
+
+**Legacy mode correction (2026-11-19).** The older `--high-res` implementation used the
+FreeDO `RESSCALE` four-plane layout for every title. That cropped 2D CEL content to the
+left half of the frame, left stale planes on bitmap/video lines, and could hang games
+such as Road Rash when gameplay started. The legacy option is now presentation-only:
+the guest machine stays native and the 640x480 frame is an exact 2x nearest upscale.
+Only `--true-2x` keeps the guest-visible four-plane layout.
 
 ---
 
@@ -235,8 +256,9 @@ broken.
 
 ### Phase 2 — True 640x480 prototype (3-5 days)
 
-**Delivered 2026-11-16 as the opt-in `--true-2x` path.** The existing `RESSCALE`
-line-doubled behavior remains available as the fallback.
+**Delivered 2026-11-16 as the opt-in `--true-2x` path.** The presentation-only
+`--high-res` mode remains the fallback (it was switched from the old `RESSCALE` layout
+on 2026-11-19).
 
 - Added `EmulatorTuning.TrueHighResolution` (CLI `--true-2x`, Settings > Emulation,
   per-game profile, and save-state field) without changing the default tuning.
@@ -244,7 +266,8 @@ line-doubled behavior remains available as the fallback.
   odd output lines use planes 2/3, with VDLP reading them unchanged.
 - Arbitrary CEL geometry evaluates at 640x480; packed/scaled 2D CELs expand to 2x2 blocks.
 - Validated Jurassic Park Interactive's Raptor Maze (3D CELs) and Family Feud (2D CELs);
-  native 320x240 and the legacy line-doubled path are byte-identical to before.
+  native 320x240 and the presentation-only legacy path are byte-identical to their
+  pre-VID-19 native references.
 - Bitmap/SPORT content remains line-doubled, and framebuffer-read semantics are not yet
   changed; these are the remaining production items.
 

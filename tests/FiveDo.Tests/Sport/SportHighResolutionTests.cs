@@ -13,7 +13,29 @@ public sealed class SportHighResolutionTests
     {
         return new SportChip(
             memory.Ram,
+            new CompatibilityState
+            {
+                HighResolution = true,
+                TrueHighResolution = true,
+            });
+    }
+
+    [Fact]
+    public void PresentationHighResolution_DoesNotMirrorSportPages()
+    {
+        var memory = new FiveDoMemory();
+        var sport = new SportChip(
+            memory.Ram,
             new CompatibilityState { HighResolution = true });
+
+        sport.WriteAccess(0x2000, 0x11223344);
+        sport.WriteAccess(0x4000, 0xffffffff);
+
+        Assert.Equal(0x11223344u, memory.Ram.Read32(VramOffset));
+        for (var plane = 1u; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
+        {
+            Assert.Equal(0u, memory.Ram.Read32(VramOffset + (plane * PlaneSize)));
+        }
     }
 
     [Fact]
@@ -58,13 +80,18 @@ public sealed class SportHighResolutionTests
     }
 
     [Fact]
-    public void PageCopy_MirrorsPlaneZeroIntoTheOtherPlanes()
+    public void PageCopy_CopiesEachSourcePlaneIntoTheMatchingDestinationPlane()
     {
         var memory = new FiveDoMemory();
         var sport = CreateHighResolutionSport(memory);
-        for (var i = 0u; i < 512; i++)
+        for (var plane = 0u; plane < EmulatorConstants.HighResolutionVramPlanes; plane++)
         {
-            memory.Ram.Write32(VramOffset + ((512 + i) << 2), i + 1);
+            for (var i = 0u; i < 512; i++)
+            {
+                memory.Ram.Write32(
+                    VramOffset + (plane * PlaneSize) + ((512 + i) << 2),
+                    (plane << 16) | (i + 1));
+            }
         }
 
         sport.SetSource(4);
@@ -75,7 +102,7 @@ public sealed class SportHighResolutionTests
             for (var i = 0u; i < 512; i++)
             {
                 Assert.Equal(
-                    i + 1,
+                    (plane << 16) | (i + 1),
                     memory.Ram.Read32(
                         VramOffset + (plane * PlaneSize) + ((1024 + i) << 2)));
             }

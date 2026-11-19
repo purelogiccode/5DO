@@ -15,9 +15,10 @@ namespace FiveDo.Madam;
 /// and are applied exactly as the reference applies them.
 /// </para>
 /// <para>
-/// <c>RESSCALE</c> is the runtime high-resolution mode flag (0 or 1). When it is set,
+/// <c>RESSCALE</c> is the experimental true 2× mode flag (0 or 1). When it is set,
 /// the CEL engine addresses four VRAM planes (each <c>VramSize</c> bytes) that make up a
-/// 640x480 frame.
+/// 640x480 frame. The legacy <c>--high-res</c> option does not set it; that mode only
+/// enlarges the assembled frame.
 /// </para>
 /// </remarks>
 internal sealed class CelRasterizer
@@ -52,8 +53,17 @@ internal sealed class CelRasterizer
         _engine = engine;
     }
 
-    /// <summary>Gets the high-resolution scale: 0 for 320x240, 1 for 640x480.</summary>
-    private int ResScale => _engine.Compatibility.HighResolution ? 1 : 0;
+    /// <summary>
+    /// Gets the high-resolution CEL scale: 0 for native 320x240 rendering, 1 for the
+    /// experimental independent 640x480 CEL fields.
+    /// </summary>
+    /// <remarks>
+    /// The presentation-only <c>--high-res</c> mode deliberately leaves the CEL engine at
+    /// native coordinates; its 640x480 frame is produced by <c>Vdlp</c> when the frame is
+    /// assembled. Only <see cref="CompatibilityState.TrueHighResolution"/> changes the
+    /// guest-visible CEL layout.
+    /// </remarks>
+    private int ResScale => _engine.Compatibility.TrueHighResolution ? 1 : 0;
 
     private void PreparePipeline()
     {
@@ -1544,14 +1554,7 @@ internal sealed class CelRasterizer
                 + (uint)(plane * _ram.Layout.VramSize));
         }
 
-        var lowOffset = Xy2Off((x >> ResScale) << 2, y, modulo);
-        if (_resScale)
-        {
-            // Field 0 uses planes 0/1; the odd X column is in plane 1.
-            var address = unchecked((source + (uint)lowOffset) ^ 2);
-            return _ram.Read16(address + (uint)((x & 1) * _ram.Layout.VramSize));
-        }
-
+        var lowOffset = Xy2Off(x << 2, y, modulo);
         return _ram.Read16(unchecked(source + (uint)lowOffset) ^ 2);
     }
 
@@ -1586,25 +1589,13 @@ internal sealed class CelRasterizer
             return;
         }
 
-        var lowOffset = Xy2Off((x >> ResScale) << 2, y, modulo);
-        if (_resScale)
-        {
-            // X is already in 640-wide space; Y is a 240-line scanline that the VDLP
-            // line-doubles. Write both interlace fields so both output lines match.
-            var plane = x & 1;
-            var address = unchecked((target + (uint)lowOffset) ^ 2);
-            _ram.Write16(address + (uint)(plane * _ram.Layout.VramSize), value);
-            _ram.Write16(address + (uint)((plane + 2) * _ram.Layout.VramSize), value);
-            return;
-        }
-
+        var lowOffset = Xy2Off(x << 2, y, modulo);
         _ram.Write16(unchecked(target + (uint)lowOffset) ^ 2, value);
     }
 
     /// <summary>
-    /// Writes a low-resolution (240-line) CEL pixel. The true 2x path expands it to a
-    /// 2x2 block so packed and scaled sprites keep their original geometry and stay
-    /// aligned with the 640x480 frame.
+    /// Writes a low-resolution (240-line) CEL pixel in the true 2x path. The pixel is
+    /// expanded to a 2x2 block so packed and scaled sprites keep their original geometry.
     /// </summary>
     private void WritePixelLowRes(uint target, int x, int y, ushort value, int modulo)
     {

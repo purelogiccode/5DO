@@ -240,7 +240,7 @@ workflow.
 | 1080p/1440p/4K output | Yes (GPU scaling); 4K60 on Tier A hardware | |
 | Fullscreen | Yes | |
 | 384/512/640/1024-wide VDLP modes | Parsed, may crop | Full presentation |
-| High-resolution CEL (`RESSCALE`) | Opt-in `--high-res` (line-doubled 640x480) or `--true-2x` (independent 480-line CEL fields) | Bitmap/SPORT high-resolution sampling and full-collection validation remain VID-01 research |
+| High-resolution output | Opt-in `--high-res` (presentation-only 2x nearest upscale to 640x480) or `--true-2x` (experimental independent 480-line CEL fields) | Bitmap/SPORT high-resolution sampling and full-collection validation remain VID-01 research |
 | PAL | Yes: PAL1 320x288 and PAL2 384x288 at 50 Hz, with per-game BIOS selection | |
 | CPU fallback renderer | Yes (no GL context) | |
 | Screenshots | Yes (GL readback or CPU frame) | |
@@ -258,31 +258,38 @@ synthetic probe frame and parity tests match exactly.
 
 ### 6.1 High-resolution mode
 
-`EmulatorTuning.HighResolution` / `--high-res` is an opt-in 640x480 renderer. CEL
-pixels address the 640-wide X coordinate and the 240-line Y coordinate; the even/odd
-X column is stored in plane 0/1 (and mirrored to planes 2/3 for the second interlace
-field). The VDLP interleaves planes 0/1 and 2/3 into two 640-wide scanlines and the
-frame source becomes 640x480. The extra planes follow the active VRAM capacity
-(`4 * VramSize`) and are not CPU-visible. SPORT fill/copy operations mirror the source page into the extra
-planes. Save states, frame hashes, screenshots, the CPU assembler, and the OpenGL
-uploader all carry the larger frame.
+`EmulatorTuning.HighResolution` / `--high-res` is an opt-in 640x480 **presentation**
+mode. The guest machine remains byte-identical to native 320x240: CEL coordinates,
+VRAM layout, CPU-visible bitmap reads, and SPORT behavior do not change. When each
+frame is assembled, `Vdlp` samples each native line to the region's double-width
+frame (640 pixels for NTSC/PAL1, 768 for PAL2) and emits it twice, so the presented
+frame is a clean 2x nearest-neighbor enlargement for native-width modes. Wider VDLP
+modes (384/512/640/1024) are resampled into that frame instead of being cropped.
 
-**Important limitation:** the legacy `--high-res` path is FreeDO-style line doubling,
-not true internal 640x480 rendering. Each 240-line source line is written to both
-interlace fields, so the vertical detail is still 240 lines. It improves horizontal CEL
-sampling and matches 640-wide titles such as Lemmings, but it does not add true vertical
-geometry.
+This makes the mode safe for every title: 2D bitmaps, bitmap video, packed CELs, and
+3D arbitrary CELs all follow the native path. The earlier FreeDO-style implementation
+changed the guest-visible VRAM/CEL/SPORT layout and could crop 2D CEL content to the
+left half, leave stale planes on video lines, or hang titles when gameplay started; it
+is no longer used by `--high-res`. A pixel-perfect comparison on 20th Century Video
+Almanac, Road Rash, Dragon's Lair, and the Alone in the Dark demo shows a 0-pixel
+difference between the 640x480 high-resolution frame and a 2x nearest upscale of the
+native frame at the same emulated PC.
+
+**Important limitation:** the legacy `--high-res` path is an output enlargement, not
+true internal 640x480 rendering. Vertical detail is still 240 lines. For experimental
+guest-visible 640x480 CEL fields, see the opt-in **`--true-2x`** path below.
 
 The opt-in **`--true-2x`** path (`EmulatorTuning.TrueHighResolution`, Settings >
-Emulation > **True 2x CEL fields**, and per-game **TrueHighResolution**) keeps the same
-four planes but writes even output lines to planes 0/1 and odd output lines to planes 2/3.
-Arbitrary CEL geometry evaluates at 640x480 and packed/scaled 2D CELs expand to 2x2
-blocks, so the VDLP presents independent 480-line CEL fields. Bitmap and SPORT content
-still follows the line-doubled layout. The mode is validated on Jurassic Park
-Interactive's Raptor Maze (38.41% of pixels differ from a 2x nearest upscale) and Family
-Feud (0.00% difference, a clean 2x scale); every unvalidated title, including Road Rash,
-falls back to native 320x240. Native output and the legacy mode are unchanged. True 2×
-costs about 30% more emulation time on the Raptor Maze and remains opt-in.
+Emulation > **True 2x CEL fields**, and per-game **TrueHighResolution**) is the
+experimental internal path. It keeps the four-plane layout but writes even output lines
+to planes 0/1 and odd output lines to planes 2/3. Arbitrary CEL geometry evaluates at
+640x480 and packed/scaled 2D CELs expand to 2x2 blocks, so the VDLP presents independent
+480-line CEL fields. Bitmap and SPORT content still follows the line-doubled layout.
+The mode is validated on Jurassic Park Interactive's Raptor Maze (38.41% of pixels
+differ from a 2x nearest upscale) and Family Feud (0.00% difference, a clean 2x scale);
+every unvalidated title, including Road Rash, falls back to native 320x240. Native
+output and the presentation-only legacy mode are unchanged. True 2× costs about 30%
+more emulation time on the Raptor Maze and remains opt-in.
 See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md) for the remaining
 VID-01 production work (bitmap/SPORT sampling, framebuffer-read semantics, and a
 full-collection sweep).
@@ -290,10 +297,11 @@ full-collection sweep).
 Evidence: from a fresh Lemmings boot, the 640x480 title screen shows all four buttons
 and the full logo and matches the reference screenshot; the five 3,000-frame low-res
 corpus hashes were unchanged by high-res mode (the current keys are in
-[`TestCorpus.md`](TestCorpus.md) 1.1). The mode is off by default because 320x240 titles must
-not be upscaled. The Lemmings passcode screen is a 320-wide UI scaled 2x; its five
-visible keyboard columns are the game's own window, not a framebuffer crop, so it
-does not need a separate high-resolution input path.
+[`TestCorpus.md`](TestCorpus.md) 1.1). The mode is off by default because a 320x240
+title should not silently switch its internal CEL coordinates. The Lemmings passcode
+screen is a 320-wide UI scaled 2x; its five visible keyboard columns are the game's own
+window, not a framebuffer crop, so it does not need a separate high-resolution input
+path.
 
 ---
 
@@ -345,11 +353,12 @@ does not need a separate high-resolution input path.
   audio evidence remain.
 - PAL1/PAL2 are implemented and the Europe-only matrix titles have dated captures in
   [PalValidation.md](PalValidation.md).
-- High-resolution CEL rendering is opt-in. The legacy `--high-res` path is validated for
-  the Lemmings title and is FreeDO-style line doubling; `--true-2x` adds independent
-  480-line CEL fields and is validated on Jurassic Park Interactive's Raptor Maze and
-  Family Feud. Bitmap/SPORT content remains line-doubled. Output upscaling via OpenGL is
-  supported separately. See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+- High-resolution output is opt-in. The legacy `--high-res` path is a presentation-only
+  2x nearest upscale and is validated for 2D, video, and 3D titles; `--true-2x` adds
+  independent 480-line CEL fields and is validated on Jurassic Park Interactive's Raptor
+  Maze and Family Feud. Bitmap/SPORT content remains line-doubled in true 2×. Output
+  upscaling via OpenGL is supported separately. See
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - No GPU CEL compositing in v1; CEL rendering is software, matching FreeDO. The OpenGL renderer accelerates presentation, palette expansion, scaling, and filters.
 - Mouse, light gun, arcade light gun, flightstick, and Orbatak trackball devices are
   implemented on the eight PBUS ports with an active-device cap of 0-8 and a 256-byte
