@@ -40,8 +40,9 @@ pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 linux stop
 ```
 
 **Deallocate when finished.** Compute billing stops on deallocation and the public IP is
-deleted with the session, so a stopped host costs only its OS disk (about $4.80/month).
-The old static IPs were removed on 2026-11-19. It auto-deallocates daily at 03:00 UTC.
+deleted with the session, so a stopped host costs only its OS disk (about $3.01/month,
+Standard HDD). The old static IPs were removed on 2026-11-19. It auto-deallocates daily at
+03:00 UTC.
 
 The VM has **no GPU and no sound card**. Mesa exposes only `llvmpipe` (OpenGL) and
 `lavapipe` (Vulkan), and audio needs a PulseAudio null sink. Use it to validate arm64
@@ -87,8 +88,9 @@ pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 windows start
 pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 windows stop
 ```
 
-**Deallocate when finished.** A stopped host costs only its OS disk (about $9.60/month);
-the public IP exists only during the session. It auto-deallocates daily at 03:00 UTC.
+**Deallocate when finished.** A stopped host costs only its OS disk (about $5.89/month,
+Standard HDD); the public IP exists only during the session. It auto-deallocates daily at
+03:00 UTC.
 
 The VM is a clean client image: it has **no GPU** (Microsoft Basic Render Driver), **no
 Vulkan driver**, and **no audio endpoint**. Direct3D 11 and ANGLE (OpenGL ES 3.0) render,
