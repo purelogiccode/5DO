@@ -31,11 +31,17 @@ is documented as preview/best-effort. Record new Linux evidence in
 The ARM64 Linux target is the Azure VM `linuxarm-test` (`Standard_D2ps_v6`,
 Neoverse-N2, 2 vCPU / 8 GB, Ubuntu 24.04.5, aarch64). Host inventory and rebuild
 scripts live in `C:\Sincronizar\ArmHosts`; machine-specific access details are in the
-gitignored `AGENTS.local.md`. Start it with
-`az vm start -g rg-linuxarm-test -n linuxarm-test` and **deallocate it when finished**
-with `az vm deallocate -g rg-linuxarm-test -n linuxarm-test` (compute billing stops
-only on deallocation; the OS disk and static IP keep billing). It auto-deallocates
-daily at 03:00 UTC.
+gitignored `AGENTS.local.md`. Start and stop it with the helper, which allocates a
+temporary public IP for the session and deletes it on stop:
+
+```powershell
+pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 linux start
+pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 linux stop
+```
+
+**Deallocate when finished.** Compute billing stops on deallocation and the public IP is
+deleted with the session, so a stopped host costs only its OS disk (about $4.80/month).
+The old static IPs were removed on 2026-11-19. It auto-deallocates daily at 03:00 UTC.
 
 The VM has **no GPU and no sound card**. Mesa exposes only `llvmpipe` (OpenGL) and
 `lavapipe` (Vulkan), and audio needs a PulseAudio null sink. Use it to validate arm64
@@ -72,10 +78,17 @@ entries and CRLF endings, so `git restore -- ':(glob)**/packages.lock.json'` aft
 
 The Windows ARM64 target is the Azure VM `winarm-test` (`Standard_D2ps_v6`, Cobalt 100,
 2 vCPU / 8 GB, Windows 11 Pro 25H2 build 26200). Inventory is in
-`C:\Sincronizar\ArmHosts`; access details are in the gitignored `AGENTS.local.md`. Start
-it with `az vm start -g rg-winarm-test -n winarm-test` and **deallocate it when
-finished** with `az vm deallocate -g rg-winarm-test -n winarm-test`. It auto-deallocates
-daily at 03:00 UTC.
+`C:\Sincronizar\ArmHosts`; access details are in the gitignored `AGENTS.local.md`. Use the
+same helper, which allocates a temporary public IP and refreshes the RDP NSG rule to the
+current client IP on every start:
+
+```powershell
+pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 windows start
+pwsh -NoProfile -File C:\Sincronizar\ArmHosts\ArmHost.ps1 windows stop
+```
+
+**Deallocate when finished.** A stopped host costs only its OS disk (about $9.60/month);
+the public IP exists only during the session. It auto-deallocates daily at 03:00 UTC.
 
 The VM is a clean client image: it has **no GPU** (Microsoft Basic Render Driver), **no
 Vulkan driver**, and **no audio endpoint**. Direct3D 11 and ANGLE (OpenGL ES 3.0) render,
