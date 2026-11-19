@@ -26,6 +26,89 @@ The GL probe timed out under the VM's llvmpipe/SSH session, so Linux GPU present
 is documented as preview/best-effort. Record new Linux evidence in
 `docs/Compatibility.md` §10.3 and `docs/KnownIssues.md`.
 
+## ARM64 Linux validation
+
+The ARM64 Linux target is the Azure VM `linuxarm-test` (`Standard_D2ps_v6`,
+Neoverse-N2, 2 vCPU / 8 GB, Ubuntu 24.04.5, aarch64). Host inventory and rebuild
+scripts live in `C:\Sincronizar\ArmHosts`; machine-specific access details are in the
+gitignored `AGENTS.local.md`. Start it with
+`az vm start -g rg-linuxarm-test -n linuxarm-test` and **deallocate it when finished**
+with `az vm deallocate -g rg-linuxarm-test -n linuxarm-test` (compute billing stops
+only on deallocation; the OS disk and static IP keep billing). It auto-deallocates
+daily at 03:00 UTC.
+
+The VM has **no GPU and no sound card**. Mesa exposes only `llvmpipe` (OpenGL) and
+`lavapipe` (Vulkan), and audio needs a PulseAudio null sink. Use it to validate arm64
+codegen, self-contained publishing, packaging, determinism parity with Windows x64, and
+the CPU/Vulkan software paths. Hardware GPU presentation and real-device audio evidence
+stay on the bare-metal x86 host above; never record llvmpipe results as GPU evidence.
+
+Run the `linux-arm64` gate against the published `5do-<version>-linux-arm64.tar.gz`, not
+a local cross-publish:
+
+- Verify `sha256sum` against the release `SHA256SUMS.txt`, then confirm both apphosts
+  are stripped aarch64 ELF files and the bundle has no PDB/XML documentation.
+- Install the .NET 11 SDK into `~/.dotnet` (the image ships without it) and run
+  `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`.
+- CLI: `--version`, `selftest --json`, `bench` (compatible and accuracy), `bios info`,
+  `info`, a 3,000-frame disc boot with `--frame-out`, `--audio wav` plus
+  `audio analyze`, `trace`, `doctor`, and a `--autopilot road` run. Compare the frame
+  hashes and PC with a Windows x64 run of the same disc and BIOS.
+- Desktop: `--smoke-test --smoke-output <path>` under `xvfb-run` (the marker is only
+  written when `--smoke-output` is supplied), plus a real XFCE session with
+  `--gl-backend software` or `--gl-backend vulkan`. The auto backend selects OpenGL and
+  leaves a 1x1 black video surface under llvmpipe.
+- Packages: AppImage (FUSE and `--appimage-extract-and-run`), the `.deb` install, the
+  `.rpm` metadata, and the Flatpak install.
+
+Record results in `docs/Compatibility.md` §10.5 and `docs/KnownIssues.md`.
+
+Two practical warnings: the SSH key under `C:\Sincronizar\ArmHosts` has loose ACLs, so
+copy it to a private folder and grant only the current user before `ssh`; and
+`dotnet publish -r linux-arm64` rewrites every `packages.lock.json` with RID-specific
+entries and CRLF endings, so `git restore -- ':(glob)**/packages.lock.json'` afterwards.
+
+## Windows ARM64 validation
+
+The Windows ARM64 target is the Azure VM `winarm-test` (`Standard_D2ps_v6`, Cobalt 100,
+2 vCPU / 8 GB, Windows 11 Pro 25H2 build 26200). Inventory is in
+`C:\Sincronizar\ArmHosts`; access details are in the gitignored `AGENTS.local.md`. Start
+it with `az vm start -g rg-winarm-test -n winarm-test` and **deallocate it when
+finished** with `az vm deallocate -g rg-winarm-test -n winarm-test`. It auto-deallocates
+daily at 03:00 UTC.
+
+The VM is a clean client image: it has **no GPU** (Microsoft Basic Render Driver), **no
+Vulkan driver**, and **no audio endpoint**. Direct3D 11 and ANGLE (OpenGL ES 3.0) render,
+so the desktop uses the ANGLE/GLES presenter; `--vk-probe` fails with
+`ErrorIncompatibleDriver`; OpenAL needs `vc_redist.arm64.exe` installed and has no device
+to open (use `ALSOFT_DRIVERS=null` for audio-path tests). The Windows distribution is a
+ZIP bundle; 1.13.1 has no Windows installer.
+
+The gate, run against the published `5do-<version>-win-arm64.zip`:
+
+- Verify `sha256sum` against the release `SHA256SUMS.txt`, then confirm the PE machine is
+  `ARM64` for `FiveDo.exe`, `FiveDo.Cli.exe`, `libSkiaSharp.dll`, `libHarfBuzzSharp.dll`,
+  `OpenAL32.dll`, `soft_oal.dll`, and `av_libglesv2.dll`.
+- Install the .NET 11 SDK with `dotnet-install.ps1 -Channel 11.0 -InstallDir
+  C:\Users\azureuser\dotnet`, unpack the `v1.13.1` tag source, and run
+  `dotnet test tests\FiveDo.Tests\FiveDo.Tests.csproj -c Release`. There is no `git` on
+  the image, so upload a `git archive` ZIP of the tag instead of cloning.
+- CLI: `--version`, `selftest --json`, `bench`, `bios info`, `info`, a 3,000-frame disc
+  boot with `--frame-out`, `--audio wav` plus `audio analyze`, `trace`, `doctor`,
+  `--autopilot road`, state save/resume, movie record/play, `disc convert`, and the
+  portable-mode NVRAM path. The 600-frame hash `0x110E7DC5`, the 3,000-frame hash
+  `0xAD4F370C` with PC `0x0007AEF8`, and the Road Rash 20,000-frame hash must match the
+  Linux arm64 and Windows x64 runs.
+- Desktop: SSH lands in session 0 with no desktop. Enable autologon, reboot, and run the
+  smoke and game through `schtasks /IT` tasks; wrap PowerShell in a `.vbs` launcher
+  (`WScript.Shell.Run ..., 0`) and force conhost (`HKCU\Console\%%Startup`), otherwise
+  Windows Terminal leaves a console tab over the screen. Capture with
+  `System.Drawing` `CopyFromScreen` from the same interactive session.
+- Probes: `--gl-probe` and `--d3d-probe` must pass, and `--vk-probe` is expected to fail
+  on this VM.
+
+Record results in `docs/Compatibility.md` §10.6 and `docs/KnownIssues.md`.
+
 ## Build and test
 
 ```powershell

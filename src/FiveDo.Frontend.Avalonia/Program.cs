@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,7 @@ using FiveDo.Diagnostics.Logging;
 using FiveDo.Diagnostics.Statistics;
 using FiveDo.Frontend.Avalonia.Audio;
 using FiveDo.Frontend.Avalonia.Input;
+using FiveDo.Host;
 using FiveDo.Input;
 using FiveDo.Localization;
 using FiveDo.Storage;
@@ -327,6 +329,29 @@ internal static class Program
                 _ = Task.Run(ApplicationStatsClient.TrackLaunch);
             }
 
+            NativeRuntimePlatform nativePlatform = NativeRuntimeCheck.DetectPlatform();
+            IReadOnlyList<string> missingNatives = NativeRuntimeCheck.FindMissing(
+                AppContext.BaseDirectory,
+                nativePlatform);
+            if (missingNatives.Count > 0)
+            {
+                var nativeMessage = NativeRuntimeCheck.BuildStartupMessage(
+                    AppContext.BaseDirectory,
+                    missingNatives,
+                    nativePlatform);
+                Console.Error.WriteLine(nativeMessage);
+                Serilog.Log.Error(
+                    "Missing native runtime files: {Files}.",
+                    string.Join(", ", missingNatives));
+                if (!IsAutomatedRun(args) && OperatingSystem.IsWindows())
+                {
+                    ShowStartupError(nativeMessage);
+                }
+
+                Environment.ExitCode = 1;
+                return;
+            }
+
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception exception)
@@ -514,6 +539,28 @@ internal static class Program
                || HasFlag(args, "--vk-window-probe")
                || HasFlag(args, "--d3d-probe")
                || HasFlag(args, "--d3d-window-probe");
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Style",
+        "IDE1006:Naming Styles",
+        Justification = "MessageBoxW keeps the documented Win32 export name.")]
+    [System.Runtime.InteropServices.DllImport(
+        "user32.dll",
+        CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int MessageBoxW(IntPtr window, string text, string caption, uint type);
+
+    private static void ShowStartupError(string message)
+    {
+        const uint IconError = 0x00000010;
+        try
+        {
+            _ = MessageBoxW(IntPtr.Zero, message, "5DO cannot start", IconError);
+        }
+        catch (Exception exception) when (exception is DllNotFoundException or EntryPointNotFoundException)
+        {
+            // The dialog is best effort; stderr already carries the same message.
+        }
     }
 
     /// <summary>

@@ -4,9 +4,9 @@
     "net11.0": {
       "CHDSharp": {
         "type": "Direct",
-        "requested": "[1.7.0, )",
-        "resolved": "1.7.0",
-        "contentHash": "irm+rOgHSKTnpvo1A5hDwQeUH3/dP9jgT0MIvzqgUHc02kNJfcgFXb/hoVgZBo14TWrz/XEvDWWhryGViURKZw==",
+        "requested": "[1.7.1, )",
+        "resolved": "1.7.1",
+        "contentHash": "KlqqxCxlzUPmKO8XYjbpsD0JANWfTVOEa1X28FyKun8G5AG0AP0EmIlszU7v98U1dFbBzXhtfFgkxsQVzVh5DQ==",
         "dependencies": {
           "System.IO.Hashing": "11.0.0"
         }

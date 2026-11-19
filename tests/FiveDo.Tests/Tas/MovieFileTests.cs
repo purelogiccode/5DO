@@ -63,6 +63,36 @@ public sealed class MovieFileTests
     }
 
     [Fact]
+    public void Roundtrip_PreservesEmulatedFrameSpan()
+    {
+        var header = new MovieHeader
+        {
+            StartFrame = 5,
+            EmulatedFrames = 3,
+        };
+        var frames = new List<byte[]>
+        {
+            new byte[] { 0x00, 0x48 },
+            new byte[] { 0x80, 0x80 },
+        };
+        var movie = new Movie(header, frames);
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-movie-{Guid.NewGuid():N}.5domovie");
+        try
+        {
+            MovieFile.Save(path, movie);
+            Movie loaded = MovieFile.Load(path);
+
+            Assert.Equal(2, loaded.FrameCount);
+            Assert.Equal(3, loaded.Header.EmulatedFrames);
+            Assert.Equal(8, loaded.Header.EndFrame);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void EmptyMovie_Roundtrips()
     {
         var movie = new Movie(new MovieHeader { GameName = "Empty" }, []);

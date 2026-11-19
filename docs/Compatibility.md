@@ -789,6 +789,110 @@ Retina/DPI (`PLAT-17`) is validated at 1x — windowed, resize, fullscreen, the 
 capture, and 4K offscreen output — and keeps only its 2x row open because the rented
 host's display advertises 1x modes only (2026-11-18).
 
+### 10.5 Linux arm64 validation (2026-11-19)
+
+Validated on a real ARM64 Azure VM: `Standard_D2ps_v6` (Neoverse-N2, 2 vCPU, 7 GiB),
+Ubuntu 24.04.5 LTS, kernel `7.0.0-1020-azure`, aarch64, and no GPU. Mesa exposes only
+`llvmpipe` for OpenGL and `lavapipe` (Vulkan 1.4, LLVM 20.1.2) for Vulkan. The desktop
+session was Xvfb at 1920x1080 with XFCE and xrdp. The .NET 11.0.100 SDK was installed
+into `~/.dotnet`, and the `v1.13.1` tag was cloned from GitHub.
+
+The tested artifact is the published `5do-1.13.1-linux-arm64.tar.gz`
+(SHA-256 `f44d2e629c0374c14d3b1780a52ac6fec9e4aac1214d53ab604a29b05afc234c`, matching
+`SHA256SUMS.txt`). Both apphosts are stripped aarch64 ELF binaries, and the bundle
+contains no PDB or XML documentation files.
+
+| Check | Result |
+|---|---|
+| Full test suite | `dotnet test tests/FiveDo.Tests/FiveDo.Tests.csproj -c Release`: **2,439/2,439 passed** in 30 s |
+| `selftest --json` | `ok: true`; 15/15 checks (five for each compatible/accuracy/performance profile) |
+| `bench --frames 120` | 240.3 fps, frame hash `0x76175DC5` |
+| `bench --frames 600 --profile accuracy` | 325.9 fps |
+| `bench --frames 120 --latency` | 260.0 fps; snapshot 9,348,653 bytes; capture 1.152 ms/frame; restore 1.142 ms/frame |
+| `bios info panafz1.bin` | MD5 `f47264dd47fe30f73ab3c010015c155b`, Panasonic FZ-1, USA NTSC |
+| `info "themepark.iso"` | 96,706 sectors, game ID `33e5afe454a7c4da20b419a09e2045e2`, known (Theme Park, Electronic Arts 1994) |
+| 3,000-frame boot | 7.67 s, 320x240, PC `0x0007AEF8`, frame hash `0xAD4F370C`, 2,207,205 samples, DSP running, no warnings |
+| Cross-architecture parity | the 600-frame hash `0x110E7DC5` and the 3,000-frame hash/PC are **identical** to Windows x64 for the same disc and BIOS |
+| Audio capture | 50.05 s WAV, peak 4,809, RMS 321, 0 clipped frames; `audio analyze` reports the DSP running |
+| OpenAL | `--audio-soak` with `ALSOFT_DRIVERS=null`: 0 dropped samples, 0 underruns, 66.7 ms latency. The PulseAudio software sink reports 428 ms latency and drops 58,661 of 441,441 samples |
+| Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.13.1`; `locale=en`, `firstMenuHeader=File`, `windowState=Normal`; `de`, `pt-br`, and `ja` report `Datei`, `Arquivo`, and `ファイル` |
+| Desktop shell | the XFCE window renders the toolbar, game list, and status bar; the software presenter runs the Theme Park intro at 59.9 fps; `--fullscreen` covers 1920x1080 |
+| Vulkan presentation | `--vk-probe` 52.0 fps offscreen and `--vk-window-probe` 30.8 fps with `fifo` vsync on lavapipe; `--gl-backend vulkan` presents the game in a 1060x466 swapchain at 59.9 fps |
+| OpenGL | `--gl-probe` times out after 30 s (backend null, 0 frames) under llvmpipe, matching the Linux x64 result; see [KnownIssues.md](KnownIssues.md) |
+| Autopilot | Road Rash, 20,000 frames in 102.9 s (~194 fps), crash restart/menu advance/pacing active, no warnings, frame hash `0x898FAD6E` |
+| Disc convert | Theme Park ISO to CHD in 4.53 s; source and output game ID match |
+| 4DO state roundtrip | `state export-4do` writes 5,620,484 bytes and `state import-4do` writes 813,275 bytes; `state inspect` accepts the result |
+| Packages | the AppImage (FUSE and `--appimage-extract-and-run`) reports 1.13.1 and passes the frontend smoke; `5do_1.13.1_arm64.deb` installs `/usr/bin/5do` and `/usr/bin/5do-cli` and passes CLI `selftest` plus the smoke; the `aarch64.rpm` metadata and file list are correct; the Flatpak installs its 26.08 runtime, runs the CLI `selftest`, and renders the game at 59.9 fps |
+
+The renderer, audio, and TAS findings from this host are:
+
+- Linux arm64 has no validated GPU: every frame came from llvmpipe/lavapipe. Hardware
+  GPU presentation remains validated on the bare-metal Intel HD 4000 host (§10.3), not
+  here. The auto backend selects the OpenGL video presenter, which leaves a 1x1 black
+  surface under llvmpipe; `--gl-backend software` (CPU) and `--gl-backend vulkan`
+  (lavapipe) both present correctly, so the VM needs one of those explicit backends.
+- Vulkan video presentation honours `RendererSettings.IntegerScale`, so the 320x240
+  source is shown 1:1 in a pane too short for a 2x scale. That is the documented default
+  rather than a regression; the CPU and fullscreen paths scale to fit.
+- The VM has no sound card. OpenAL runs through a PulseAudio null sink, so the 428 ms
+  latency and dropped samples belong to the software sink; the OpenAL null backend
+  produces 0 drops. Real-device audio remains validated on the bare-metal host.
+- `movie verify` reported a one-frame shortfall (`frames 598 != 599`) and matching
+  hash/PC/state mismatches for both disc and `--state-in` recordings in 1.13.1. The same
+  numbers reproduced on Windows x64, so the defect was platform-neutral; `SYS-26` fixed
+  it after the release by recording the emulated frame span and resolving the recorded
+  disc and BIOS.
+
+### 10.6 Windows arm64 validation (2026-11-19)
+
+Validated on an Azure `Standard_D2ps_v6` (Cobalt 100, 2 vCPU / 8 GB) running Windows 11
+Pro 25H2 build 26200, ARM64, with the Microsoft Basic Render Driver and no audio
+endpoint. The .NET 11.0.100 SDK was installed into `C:\Users\azureuser\dotnet`; the
+`v1.13.1` tag was uploaded as a `git archive` ZIP because the image has no `git`.
+
+The tested artifact is the published `5do-1.13.1-win-arm64.zip`
+(SHA-256 `c9925bfb6efc2d0e125fecf6e485ac1cbe9395b04a121d16022d21516d7c9e0a`, matching
+`SHA256SUMS.txt`). `FiveDo.exe`, `FiveDo.Cli.exe`, `libSkiaSharp.dll`,
+`libHarfBuzzSharp.dll`, `OpenAL32.dll`, `soft_oal.dll`, and `av_libglesv2.dll` all
+report the ARM64 PE machine type, and the bundle contains no PDB or XML files.
+
+| Check | Result |
+|---|---|
+| Full test suite | `dotnet test tests\FiveDo.Tests\FiveDo.Tests.csproj -c Release`: **2,439/2,439 passed** in 51 s |
+| `selftest --json` | `ok: true`; 15/15 checks across compatible, accuracy, and performance |
+| `bench --frames 120` | 297.0 fps, frame hash `0x76175DC5` |
+| `bench --frames 600 --profile accuracy` | 332.1 fps |
+| `bios info panafz1.bin` | MD5 `f47264dd47fe30f73ab3c010015c155b`, Panasonic FZ-1, USA NTSC |
+| `info "themepark.iso"` | 96,706 sectors, game ID `33e5afe454a7c4da20b419a09e2045e2`, known |
+| 3,000-frame boot | 7.43 s, 320x240, PC `0x0007AEF8`, frame hash `0xAD4F370C`, no warnings |
+| Cross-architecture parity | 600-frame hash `0x110E7DC5` and 3,000-frame hash/PC identical to Windows x64 and Linux arm64 |
+| Audio capture | 50.05 s WAV, peak 4,809, RMS 321.45, 0 clipped frames |
+| Frontend `--smoke-test` | `FRONTEND SMOKE OK 1.13.1`; `locale=pt-br` reports `firstMenuHeader=Arquivo` |
+| Desktop shell | windowed Theme Park at 61.5 fps through ANGLE (`OpenGL ES 3.0`, Microsoft Basic Render Driver); `--fullscreen --gl-backend software` fills 1024x768 |
+| Probes | `--gl-probe` ok at 17.9 fps (640x480, 30 frames); `--d3d-probe` ok at 17.1 fps; `--vk-probe` fails with `vkCreateInstance ErrorIncompatibleDriver` (no driver) |
+| Autopilot | Road Rash, 20,000 frames in 215.6 s, frame hash `0x898FAD6E`, PC `521772`, no warnings — identical to Linux arm64 |
+| Disc convert | Theme Park ISO to CHD in 9.08 s; source and output game ID match |
+| TAS | state save/inspect/resume, `movie record` and `movie play` (300 frames) pass; `movie verify` reproduced the 1.13.1 one-frame shortfall, fixed after the release by `SYS-26` |
+| Packages / CLI | the ZIP is the only Windows arm64 asset; portable mode writes `nvram.ram` beside the apphost, and `update --json` selects `5do-1.13.1-win-arm64.zip` |
+| Doctor | OpenGL, the Vulkan loader, and OpenAL load; the BIOS warning is expected because the folder contained only discs |
+
+The Windows-specific findings are:
+
+- **The bundled OpenAL Soft DLL needs the MSVC runtime.** On the clean image, audio
+  startup logs `Could not load from any of the possible library names` and the emulator
+  runs silently. Installing the Visual C++ 2015-2022 ARM64 redistributable
+  (`vc_redist.arm64.exe`) makes OpenAL load; the VM still has no audio endpoint, so the
+  soak uses `ALSOFT_DRIVERS=null` (0 dropped samples, 347 underruns over 5 s on 2 vCPU).
+  The bundle embeds the .NET runtime but not the VC++ runtime, so this is a documented
+  prerequisite rather than a codec defect.
+- **The VM has no Vulkan driver.** `--vk-probe` fails with `ErrorIncompatibleDriver`;
+  the validated presentation paths are ANGLE/GL ES 3.0 and Direct3D 11 on the Basic
+  Render Driver. Hardware GPU evidence remains the Windows x64 desktop.
+- **GUI automation needs an interactive session.** SSH lands in session 0 with no
+  desktop; the shell was exercised through autologon plus `schtasks /IT`, and the
+  fullscreen D3D surface blocks GDI capture, so the fullscreen evidence uses the
+  software presenter.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

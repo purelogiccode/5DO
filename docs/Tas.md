@@ -103,12 +103,17 @@ bar shows the current frame and player-1 buttons instead.
 ```
 
 `movie record` forwards every normal `run` option, including `--input-script`,
-`--state-in`, `--profile`, `--cd-speed`, and `--cheats`. The starting state is
-embedded unless `--movie-no-state` is supplied. To record a branch from a save state:
+`--state-in`, `--profile`, `--cd-speed`, and `--cheats`. The disc path may be positional
+or `--disc`. The starting state is embedded unless `--movie-no-state` is supplied. To
+record a branch from a save state, pass the disc (and BIOS) the state was saved with:
 
 ```powershell
-5do movie record --state-in run.state --frames 1200 --out branch.5domovie
+5do movie record "game.chd" --state-in run.state --bios bios/panafz1.bin `
+    --frames 1200 --out branch.5domovie
 ```
+
+A state saved from a disc session needs that disc again; without it the recording runs
+against an empty drive and will not verify.
 
 ### Play
 
@@ -118,17 +123,23 @@ embedded unless `--movie-no-state` is supplied. To record a branch from a save s
 ```
 
 If the movie has an embedded state, it is loaded before playback. If `--frames` is
-omitted, the whole movie plays; a shorter `--frames` plays a prefix.
+omitted, the whole movie plays; a shorter `--frames` plays a prefix. A movie recorded
+from a disc needs that image again: playback looks for the recorded file name next to
+the movie and in the current directory, then asks for `--disc`. The recorded BIOS is
+matched by MD5 in the default BIOS folders, so `--bios` is only needed when the image
+is elsewhere.
 
 ### Verify
 
 ```powershell
 5do movie verify run.5domovie --json
+5do movie verify run.5domovie --disc "game.chd" --bios bios/panafz1.bin --json
 ```
 
 Verification replays every frame and exits with code `2` when the recorded evidence
-does not match. `run --json` reports `moviePath`, `movieFrames`,
-`movieVerification` (`pass`/`fail`), and `movieFailures`.
+does not match. The movie stores the emulated frame span, so a frame boundary without a
+V1 input sample no longer shifts the frame count by one. `run --json` reports
+`moviePath`, `movieFrames`, `movieVerification` (`pass`/`fail`), and `movieFailures`.
 
 ### Inspect
 

@@ -1827,6 +1827,32 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void MovieVerify_WithoutTheRecordedDisc_FailsWithAnActionableMessage()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}.5domovie");
+        try
+        {
+            var movie = new FiveDo.Tas.Movie(
+                new FiveDo.Tas.MovieHeader
+                {
+                    DiscHash = "33e5afe454a7c4da20b419a09e2045e2",
+                    DiscFile = "missing-disc.iso",
+                },
+                [[0x00, 0x48]]);
+            FiveDo.Tas.MovieFile.Save(path, movie);
+
+            CliResult result = Invoke("movie", "verify", path);
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("Pass --disc", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void MovieRecordAndVerify_RoundtripFromState()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-movie-{Guid.NewGuid():N}");

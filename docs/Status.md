@@ -1,5 +1,51 @@
 # Project Status and Next Steps
 
+**2026-11-19, startup preflight for partial extractions:** issues #69923/#69924 reported
+`SkiaSharp.SKImageInfo` / `Dll was not found` from a bundle run out of `Downloads`. The
+desktop frontend now verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the
+apphost before Avalonia starts, then shows a **5DO cannot start** message naming the
+missing files and the extraction steps (Windows dialog; stderr for automated runs) and
+exits 1 without logging a fatal or filing a bug report. Verified against a self-contained
+win-x64 publish: the apphost alone gets the message, and the complete folder passes the
+smoke test. Evidence: `NativeRuntimeCheckTests` (6), [Troubleshooting.md](Troubleshooting.md)
+§1, README bundle notes.
+
+**2026-11-19, SYS-26 fixed:** `movie verify` no longer stops one frame early. The movie
+header now records the emulated frame span (`EmulatedFrames`, absent on older movies), so
+a 600-frame recording verifies its 599 packets over 600 frames, and verification compares
+that span instead of the packet counter. Playback and verification resolve the recorded
+disc by file name beside the movie or in the working directory and the BIOS by MD5 in the
+default folders, failing with an actionable message instead of silently replaying without
+them; `movie record --disc` now behaves like `movie play --disc`. A 600-frame Theme Park
+movie and a 300-frame `--state-in` branch verify with exit 0, the suite is
+**2,443/2,443**, and `dotnet format` is clean. Evidence: [Tas.md](Tas.md) §4,
+[ImplementationPlanArchive.md](ImplementationPlanArchive.md) §12.
+
+**2026-11-19, Windows arm64 hardware validation:** the published `win-arm64` ZIP ran on
+an Azure Cobalt 100 VM (Windows 11 Pro 25H2 build 26200, ARM64, no GPU). The SHA-256
+matches, every apphost and native DLL is an ARM64 PE, the suite is **2,439/2,439**, and
+the 600-frame hash `0x110E7DC5`, the 3,000-frame hash `0xAD4F370C` with PC `0x0007AEF8`,
+and the Road Rash 20,000-frame autopilot hash `0x898FAD6E` match Windows x64 and Linux
+arm64 exactly. The CLI, audio capture, trace, doctor, state resume, movie record/play,
+CHD conversion, portable mode, and update check pass; the desktop renders through
+ANGLE/GL ES 3.0 at 61.5 fps and covers fullscreen; `--gl-probe` and `--d3d-probe` pass
+while Vulkan is absent on this VM. The bundled OpenAL DLL needs the VC++ 2015-2022 ARM64
+redistributable on a clean image; recorded in [KnownIssues.md](KnownIssues.md). Evidence:
+[Compatibility.md](Compatibility.md) §10.6.
+
+**2026-11-19, Linux arm64 hardware validation:** the published `linux-arm64` release
+artifacts ran on ARM64 hardware for the first time. On an Azure `Standard_D2ps_v6`
+(Neoverse-N2, aarch64, Ubuntu 24.04.5, no GPU) the 1.13.1 bundle matches its published
+SHA-256, passes **2,439/2,439** tests with .NET 11.0.100, and reproduces the Windows x64
+frame hashes exactly (600 frames `0x110E7DC5`, 3,000 frames `0xAD4F370C`, PC
+`0x0007AEF8`). The CLI `selftest`/`bench`/`bios`/`info`/`trace`/`doctor` paths, audio
+capture, 4DO state roundtrip, CHD conversion, and the Road Rash autopilot pass; the
+desktop shell renders under XFCE (software and Vulkan/lavapipe) at 59.9 fps, and the
+AppImage, `.deb`, `.rpm`, and Flatpak packages install and run on the host. llvmpipe
+OpenGL still times out and `movie verify` stops one frame early on every platform; both
+are recorded in [KnownIssues.md](KnownIssues.md). Evidence:
+[Compatibility.md](Compatibility.md) §10.5.
+
 **2026-11-18, v1.13.1 release:** a naming and documentation update. The RPM, AppImage, and
 Flatpak assets now include the version and `linux` in their file names
 (`5do-1.13.1-1.linux.x86_64.rpm`, `5do-1.13.1-linux-x86_64.AppImage`,
@@ -97,8 +143,9 @@ builds, desktop/MIME/AppStream validation, `.deb` and `.rpm` install tests (both
 apphosts start), AppImage self-check, and checksums. The run is unsigned because
 `LINUX_GPG_PRIVATE_KEY` is not configured; the signing path activates on the first
 tagged run with the secret. The runbook, verification steps, and announcement channels
-are in [LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages and the
-AUR/AppImageHub/itch.io/Flatpak channels stay open as `REL-08`..`REL-10`.
+are in [LinuxDistribution.md](LinuxDistribution.md). Linux arm64 packages are validated
+on hardware (2026-11-19); the AUR/AppImageHub/itch.io channel listings stay open as
+`REL-08`..`REL-10`.
 
 **2026-11-17, UX-34/UX-35:** **BIOS discovery and `5do-cli doctor` remove the two biggest
 Linux support round-trips.** `bios discover` searches `FIVEDO_BIOS_DIR`, `<data>/bios`,

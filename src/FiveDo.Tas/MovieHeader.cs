@@ -43,6 +43,16 @@ public sealed record MovieHeader
     /// <summary>Gets the number of recorded frames.</summary>
     public int FrameCount { get; init; }
 
+    /// <summary>Gets the number of emulated frames the recording spans, when known.</summary>
+    /// <remarks>
+    /// A movie stores one PBUS packet per input sample. When a frame boundary falls
+    /// without a V1 sample, <see cref="FrameCount"/> is one less than the emulated frames
+    /// the run covered, so playback and verification use this count when it is present.
+    /// Movies recorded before this field existed leave it null and fall back to
+    /// <see cref="FrameCount"/>.
+    /// </remarks>
+    public int? EmulatedFrames { get; init; }
+
     /// <summary>Gets the final assembled frame hash, when the movie is complete.</summary>
     public uint? FinalFrameHash { get; init; }
 
@@ -66,5 +76,5 @@ public sealed record MovieHeader
     public string? Notes { get; init; }
 
     /// <summary>Gets the frame after the last recorded frame.</summary>
-    public long EndFrame => StartFrame + FrameCount;
+    public long EndFrame => StartFrame + (EmulatedFrames ?? FrameCount);
 }

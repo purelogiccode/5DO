@@ -31,7 +31,8 @@ are in [`KnownIssues.md`](KnownIssues.md).
 | Symptom | Cause / action |
 |---|---|
 | Nothing happens / console closes | Launch from a terminal to see the error: `dotnet run --project src/FiveDo.Frontend.Avalonia`. |
-| `You must install .NET` | The published bundle is framework-dependent; install the .NET 11 runtime from <https://dotnet.microsoft.com/download/dotnet/11.0>. |
+| `You must install .NET` | This bundle embeds the .NET 11 runtime; an older or partial bundle does not. Re-download the current release and extract it completely. |
+| `Dll was not found` / `SkiaSharp.SKImageInfo` type initializer crash | The native libraries are missing beside the apphost. Extract the ZIP/DMG/tarball as a whole; do not run the executable from inside the archive or copy it out alone. The frontend checks `libSkiaSharp`/`libHarfBuzzSharp` before starting and shows the missing names. |
 | `--gl-backend does not recognize ...` | Use `auto`, `wgl`, `angle`, or `software`. |
 | Crash before the window appears | Rename `settings.json` (see [`Configuration.md`](Configuration.md)); a malformed file normally falls back to defaults and is backed up. A read-only or cloud-synced data folder no longer crashes the shell; it logs the failure and continues. A bad custom path can still fail. |
 | Settings changes are not saved | The data folder is read-only, held by a sync client, or the file is locked. Check the log for "could not be written", make the folder available offline, clear the read-only attribute, or point `FIVEDO_DATA_DIR` at a local folder. |

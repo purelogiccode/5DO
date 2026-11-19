@@ -137,6 +137,11 @@ commands, the signing model, and the optional mirror setup are in the
 Bundles are versioned and published for x64 and arm64, for example `5do-1.13.1-win-arm64.zip`
 or `5do-1.13.1-osx-arm64.dmg`.
 
+Extract a bundle to a folder before running it. The apphosts load `libSkiaSharp`,
+`libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder, so running
+`FiveDo.exe` from inside the ZIP or copying only the executable cannot start the desktop
+app; it now reports the missing files by name instead of crashing inside Skia.
+
 ## Features
 
 ### Emulation core

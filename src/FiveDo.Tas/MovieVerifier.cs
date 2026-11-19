@@ -36,9 +36,10 @@ public static class MovieVerifier
     {
         ArgumentNullException.ThrowIfNull(header);
         var failures = new List<string>();
-        if (playedFrames != header.FrameCount)
+        var expectedFrames = header.EmulatedFrames ?? header.FrameCount;
+        if (playedFrames != expectedFrames)
         {
-            failures.Add($"frames {playedFrames} != {header.FrameCount}");
+            failures.Add($"frames {playedFrames} != {expectedFrames}");
         }
 
         if (header.FinalFrameHash is { } expectedFrame && expectedFrame != frameHash)

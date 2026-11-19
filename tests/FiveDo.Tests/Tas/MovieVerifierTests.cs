@@ -74,6 +74,38 @@ public sealed class MovieVerifierTests
     }
 
     [Fact]
+    public void Verify_UsesEmulatedFrameCountWhenPacketCountDiffers()
+    {
+        var header = new MovieHeader
+        {
+            FrameCount = 599,
+            EmulatedFrames = 600,
+            FinalFrameHash = 0x12345678,
+            FinalProgramCounter = 0x00200000,
+        };
+
+        Assert.True(MovieVerifier.Verify(header, 600, 0x12345678, 0x00200000).Ok);
+
+        MovieVerification truncated = MovieVerifier.Verify(header, 599, 0x12345678, 0x00200000);
+        Assert.False(truncated.Ok);
+        Assert.Contains(truncated.Failures, failure => failure.Contains("600", System.StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Verify_WithoutEmulatedFrameCountFallsBackToPacketCount()
+    {
+        var header = new MovieHeader
+        {
+            FrameCount = 599,
+            FinalFrameHash = 0x12345678,
+            FinalProgramCounter = 0x00200000,
+        };
+
+        Assert.True(MovieVerifier.Verify(header, 599, 0x12345678, 0x00200000).Ok);
+        Assert.False(MovieVerifier.Verify(header, 600, 0x12345678, 0x00200000).Ok);
+    }
+
+    [Fact]
     public void CompareOptions_ReportsMissingAndChangedValues()
     {
         var header = new MovieHeader

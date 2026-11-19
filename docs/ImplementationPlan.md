@@ -1,11 +1,11 @@
 # 5DO — Missing Features
 
-**Snapshot:** 2026-11-17
-**Release:** v1.12.0
+**Snapshot:** 2026-11-19
+**Release:** v1.13.1
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
-**Open items:** 11 — 3 platform, 4 release/packaging, 2 product, 2 awaiting hardware.
+**Open items:** 12 — 3 platform, 5 release/packaging, 2 product, 2 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -21,10 +21,11 @@ completed items, their evidence, and the full stable-ID history are in
 ## 1. Completed baseline
 
 Nothing in §3 is closed. The 375/378 playability result, the 101-row quality ledger, the
-50/50 accuracy panel, the v1.9.1–v1.12.0 release history, the 37 completed
-`QUAL`/`AUD`/`PLAT`/`ACC`/`SYS`/`UX`/`VID` rows, and every completed stable ID are recorded
-in [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §10–§15. Do not reopen a
-completed ID without new measurement.
+50/50 accuracy panel, the v1.9.1–v1.13.1 release history, the 39 completed
+`QUAL`/`AUD`/`PLAT`/`ACC`/`SYS`/`UX`/`VID` rows (including the post-1.13.1 `SYS-26`
+movie-verification and `UX-36` startup-preflight fixes), and every completed stable ID are
+recorded in [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §10–§16. Do not
+reopen a completed ID without new measurement.
 
 ---
 
@@ -70,10 +71,11 @@ open (§4).
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **REL-07** | Open (CI-built) | S | **AppImage with zsync update information**: run the x64 and arm64 images on matching hosts, verify `AppImageUpdate` finds the next release through the published `.zsync`, and verify `--appimage-signature` when signed. `build-appimage.sh` and the per-architecture CI steps already build both images with embedded update info. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged; the aarch64 build runs on `ubuntu-24.04-arm`. | `5do-x86_64.AppImage` and `5do-aarch64.AppImage` run `--version` and the frontend smoke on their matching hosts (with FUSE 2 or `--appimage-extract-and-run`), the build self-check runs each image on its own runner, and `AppImageUpdate` finds the next release through the published `.zsync`. |
+| **REL-07** | Partial | S | **AppImage with zsync update information**: the published `5do-1.13.1-linux-aarch64.AppImage` ran on Linux arm64 hardware on 2026-11-19 through FUSE and `--appimage-extract-and-run` (`--version` and the frontend smoke passed). Remaining: run the x64 image on a matching host, verify `AppImageUpdate` finds the next release through the published `.zsync`, and verify `--appimage-signature` when signed. `build-appimage.sh` and the per-architecture CI steps already build both images with embedded update info. | The bundle already contains both apphosts and every native library, and `appimagetool` packages that tree unchanged; the aarch64 build runs on `ubuntu-24.04-arm`. | `5do-x86_64.AppImage` and `5do-aarch64.AppImage` run `--version` and the frontend smoke on their matching hosts (with FUSE 2 or `--appimage-extract-and-run`), the build self-check runs each image on its own runner, and `AppImageUpdate` finds the next release through the published `.zsync`. |
 | **REL-08** | Open | M | **Third-party channel listings**: publish the AUR `5do-bin` package (PKGBUILD ships in `packaging/linux/aur/`), an AppImageHub entry, and an itch.io project page. The packager-facing files (desktop entry, MIME XML, metainfo, both icons) already ship in the Linux bundle and are verified by `build-bundle.yml`. | These channels accept a repackaged upstream release and need no licence change; the catalog entries are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
-| **REL-09** | Open (bundles in CI) | L | **Flatpak distribution**: keep the single-file `.flatpak` bundles for x64 and arm64, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
+| **REL-09** | Partial | L | **Flatpak distribution**: the published `5do-1.13.1-linux-aarch64.flatpak` installed with its 26.08 runtime on Linux arm64 hardware on 2026-11-19 and ran the CLI `selftest`, the frontend smoke, and Theme Park at 59.9 fps. Remaining: verify gamepad, audio, and display-sleep inhibit inside the sandbox, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
 | **REL-10** | Partial | S | **Steam Deck and EmuDeck integration**: a Deck-sized first-run BIOS offer on top of `bios discover` (`UX-34` closed), documented non-Steam-game setup, and an upstream EmuDeck/RetroDeck entry. The `--fullscreen` desktop action already ships. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the work is packaging and presentation, not emulation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
+| **REL-11** | Open | S | **Windows bundles do not ship the MSVC runtime required by the bundled OpenAL Soft DLL.** A clean Windows 11 arm64 image logs `Could not load from any of the possible library names`, disables audio, and continues silently; installing `vc_redist.arm64.exe` fixes it. The .NET 11 runtime is embedded, the VC++ runtime is not. Either ship `vcruntime140.dll`/`msvcp140.dll` app-local beside the OpenAL DLL or add first-run detection with an actionable message. | `package-bundle.ps1` already stages the loader-named OpenAL DLL and rejects a bundle without it, and the frontend already logs the enumeration failure; the Windows x64 bundle uses the same OpenAL build. | A clean Windows image with no VC++ redistributable either loads the bundled OpenAL from app-local DLLs or shows an actionable prerequisite message; `package-bundle.ps1` verifies the chosen files; README and [OpenALSoft.md](OpenALSoft.md) document it; the check passes on Windows x64 and arm64. |
 
 The unsigned Windows installer, the Linux `.deb`/`.rpm` (now signed), the desktop entry,
 MIME associations, and the macOS `.app`/`.dmg`/`.pkg` scaffolding are complete and built
@@ -137,21 +139,23 @@ was measured and closed with a documented limitation, not that it is unachievabl
 
 ## 5. Execution order
 
-1. **macOS platform:** `PLAT-17` now has only its Retina 2x row, which needs a HiDPI
+1. **Windows packaging:** `REL-11` on a clean Windows image (no VC++ redistributable),
+   then `REL-07`: the aarch64 AppImage half is already validated on hardware, so only the
+   x64 image, `AppImageUpdate` through the published `.zsync`, and the signature check
+   remain.
+2. **macOS platform:** `PLAT-17` now has only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller, so nothing on macOS is
    runnable until one of those devices is attached. The native Metal surface (`PLAT-14`)
    is complete, so the macOS build no longer reads back every frame.
-2. **Release evidence:** `REL-04` is closed by the v1.13.0 release, which published the
-   keyring and signatures. Next validate the AppImages from that release with `REL-07`,
-   publish the channel listings (`REL-08`, `REL-10`), and finish with the hosted Flatpak
-   repository and Flathub review (`REL-09`). The mirror trees and the software-center
-   metadata are already verified ([LinuxDistribution.md](LinuxDistribution.md)
-   §5.1–§5.2).
-3. **Product:** `UX-33` as one change per option, then the `SYS-25` live-clock probe. Close
+3. **Release channels:** publish the channel listings (`REL-08`, `REL-10`), then finish
+   with the hosted Flatpak repository and Flathub review (`REL-09`). The mirror trees and
+   the software-center metadata are already verified
+   ([LinuxDistribution.md](LinuxDistribution.md) §5.1–§5.2).
+4. **Product:** `UX-33` as one change per option, then the `SYS-25` live-clock probe. Close
    `SYS-25` with evidence if the probe is not clean; do not keep it open as a wish.
-4. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a
+5. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a
    DirectInput-only pad are available; both are code-complete and tested.
-5. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
+6. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
 
 **Stop rule:** do not start P3 product work while a P1 platform or packaging smoke is
 failing. §4 items stay blocked until their revisit condition is met.

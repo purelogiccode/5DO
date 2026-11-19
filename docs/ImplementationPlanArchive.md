@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.12.0.
+> history through v1.13.1.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -684,7 +684,7 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 
 ---
 
-# Part II — Consolidated baseline and completed backlog (2026-11-09 → 2026-11-17)
+# Part II — Consolidated baseline and completed backlog (2026-11-09 → 2026-11-19)
 
 > **Added 2026-11-17.** The active plan was reduced to missing features only. This part
 > receives the completed baseline, results, completed backlog rows, stable-ID index,
@@ -754,7 +754,7 @@ quality pass; `QUAL-03A`…`QUAL-03D` and `QUAL-05A` completed the follow-on scr
 aliases, old gates, and dated evidence entries are in Part I. Do not reopen a completed ID
 without new measurement.
 
-## 12. Completed backlog rows (2026-11-09 → 2026-11-17)
+## 12. Completed backlog rows (2026-11-09 → 2026-11-19)
 
 | ID | Priority | Completed result | Evidence |
 |---|---|---|---|
@@ -799,6 +799,8 @@ without new measurement.
 | **VID-19** | P3 | True 2× CEL high-resolution spike, shipped as the opt-in `--true-2x` machine option: independent 480-line fields, arbitrary CEL geometry at 640x480, and 2x2 packed/scaled 2D CELs. Jurassic Park's Raptor Maze renders at 63,000/65,000 (38.41% of pixels differ from a 2x nearest upscale); Family Feud matches a clean 2x scale (0.00%); native hashes unchanged (`0xD5D6A993`); true 2× costs about 30% more emulation time (177 fps versus 232 fps, two-run average). The host gates the mode to game IDs `18036597` and `55f8ccf1`; other titles fall back with a warning. | `benchmarks/diff/vid19-true2x.json`, `artifacts/vid19`, [TestCorpus.md](TestCorpus.md) 1.1cl, [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1 |
 | **UX-34** | P3 | BIOS discovery and first-run offer: `BiosDiscovery` searches `FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, and `<Documents>/BIOS`; `5do-cli bios discover [--json]` exposes the result; the welcome dialog offers the image with **Use this BIOS**. | `BiosDiscoveryTests` (4) (2026-11-17) |
 | **UX-35** | P3 | `5do-cli doctor` host report: read-only OS/session, data-folder, disk-space, OpenGL/Vulkan/OpenAL, evdev/optical, settings, and BIOS-discovery report with `--json` and `--strict`. | `DoctorReport`, `DoctorCommand`, `DoctorReportTests` (3) (2026-11-17) |
+| **SYS-26** | P1 | Movie verification false failure: the header records the emulated frame span (`EmulatedFrames`, null on older movies) and verification compares that span instead of the packet counter, so a 600-frame recording verifies its 599 packets over 600 frames. Playback and verification resolve the recorded disc by file name beside the movie or in the working directory and the BIOS by MD5 in the default folders, and fail with an actionable message instead of replaying without them; `movie record --disc` now matches `movie play --disc`. A 600-frame Theme Park movie and a 300-frame `--state-in` branch verify with exit 0; suite 2,443/2,443. | [Tas.md](Tas.md) §4, `MovieVerifierTests`, `MovieFileTests`, `MovieRecordAndVerify_RoundtripFromState`, [Compatibility.md](Compatibility.md) §10.6 |
+| **UX-36** | P3 | Startup preflight for partial extractions: the desktop frontend verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the apphost before Avalonia initializes, then shows a "5DO cannot start" message naming the missing files and the extraction steps (Windows dialog; stderr for automated runs) and exits 1 at Error level, so no fatal crash or bug report is produced. Issues #69923/#69924 (`SkiaSharp.SKImageInfo`/`Dll was not found` from a bundle run out of `Downloads`) reproduce it and now receive the actionable message. A published win-x64 apphost run alone shows the dialog; the complete folder passes the smoke test. | `NativeRuntimeCheck`, `NativeRuntimeCheckTests` (6), [Troubleshooting.md](Troubleshooting.md) §1, README bundle notes, issues #69923/#69924 |
 
 `UX-16` unsigned scaffolding is also complete: the Windows Inno Setup installer with
 `.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, the Linux `.deb`/`.rpm` with desktop and
@@ -841,8 +843,16 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 → v1.12.0)
+## 14. Release history (v1.9.1 → v1.13.1)
 
+- **v1.13.1 (2026-11-18):** naming and documentation update — the RPM, AppImage, and
+  Flatpak assets carry the version and `linux` in their names, the `.deb` keeps the
+  Debian convention, and every release page opens with a per-platform download table;
+  `jb inspectcode` is clean.
+- **v1.13.0 (2026-11-18):** native macOS Metal surface, the four Phoenix/4DO presentation
+  options (audio channel swap, named void patterns, GPU void color, and the
+  emulation-health badge), and the signed Linux release chain (keyring, signed
+  `SHA256SUMS-linux.txt`, and a detached `.asc` per artifact); suite 2,439/2,439.
 - **v1.12.0 (2026-11-17):** macOS GPU presentation — arm64 Vulkan/MoltenVK presenter, all
   eight filters, 2,394 tests, packaged DMG, and a .NET 8-free build; macOS full-support
   backlog tracked as `PLAT-14`..`PLAT-18`.
@@ -871,3 +881,37 @@ The v1.12.0 release page is
 | 2026-11-08 | Feasibility revision | Cut 49 open IDs and eight gates to nine release-blocking entries; replaced the full differential with the 414-title unique corpus. |
 | 2026-11-09 | Merge | Folded the active plan into the consolidated plan; this archive became the evidence and completed-log store. |
 | 2026-11-17 | Missing-features rewrite | The active plan now lists missing work only. The completed baseline, results table, 37 completed backlog rows, stable-ID index, platform workstreams, and release history moved here. Open at rewrite: `PLAT-05`, `PLAT-06`, `PLAT-14`, `PLAT-17`, `REL-04`..`REL-10`, `SYS-21`, `SYS-23`, `UX-33`, `SYS-25`. |
+
+## 16. ARM64 validation workstream (2026-11-19)
+
+Two Azure ARM64 hosts closed the "arm64 hardware" evidence gap for Linux and Windows.
+Access details are in the gitignored `AGENTS.local.md`; both VMs are deallocated when not
+testing.
+
+**Linux arm64.** `Standard_D2ps_v6` (Neoverse-N2, 2 vCPU / 8 GB), Ubuntu 24.04.5, no GPU.
+The published `5do-1.13.1-linux-arm64.tar.gz` verified against `SHA256SUMS.txt` and ran
+the full suite **2,439/2,439**, the CLI gate, a 3,000-frame boot with hash `0xAD4F370C`
+and PC `0x0007AEF8` matching Windows x64, audio capture, the Road Rash autopilot, and the
+AppImage, `.deb`, `.rpm`, and Flatpak packages. Vulkan runs on lavapipe (52.0 fps
+offscreen, 30.8 fps windowed); the llvmpipe OpenGL probe still times out, and the auto
+backend needs `--gl-backend software` or `vulkan`. Evidence:
+[Compatibility.md](Compatibility.md) §10.5.
+
+**Windows arm64.** `Standard_D2ps_v6` (Cobalt 100, 2 vCPU / 8 GB), Windows 11 Pro 25H2
+build 26200, no GPU or audio endpoint. The published `5do-1.13.1-win-arm64.zip` verified
+against `SHA256SUMS.txt`, every apphost and native DLL is an ARM64 PE, and the suite is
+**2,439/2,439**. The same 600/3,000-frame hashes and the 20,000-frame autopilot hash
+`0x898FAD6E` match Windows x64 and Linux arm64 exactly. The desktop renders through
+ANGLE/GL ES 3.0 at 61.5 fps and covers fullscreen; `--gl-probe` and `--d3d-probe` pass
+while `--vk-probe` reports `ErrorIncompatibleDriver`. Evidence:
+[Compatibility.md](Compatibility.md) §10.6.
+
+This workstream advanced `REL-07` (the aarch64 AppImage ran on hardware through FUSE and
+`--appimage-extract-and-run`) and `REL-09` (the aarch64 Flatpak installed with its 26.08
+runtime and ran the CLI selftest, frontend smoke, and game), and produced two new backlog
+rows: `SYS-26` (movie verification stops one frame early on every platform) and `REL-11`
+(the Windows bundles need the MSVC runtime for the bundled OpenAL). `SYS-26` was fixed the
+same day and is recorded in §12; the partial-extraction crash reported in #69923/#69924
+was closed by `UX-36` (startup preflight, §12). The NoMac M5 Pro VM reports
+`kern.hv_support=0`, so it cannot host accelerated Linux or Windows guests; the ARM64
+Azure VMs remain the practical targets for those platforms.

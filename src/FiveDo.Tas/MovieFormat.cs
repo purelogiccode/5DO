@@ -6,10 +6,11 @@ namespace FiveDo.Tas;
 /// Constants and limits for the 5DO TAS movie container.
 /// </summary>
 /// <remarks>
-/// A movie stores one PBUS packet per emulated frame, an optional starting save state,
-/// and a JSON metadata header. Packets are recorded as raw bytes so future input
-/// devices do not change the movie format. The payload is Brotli-compressed and every
-/// region is protected by a CRC-32.
+/// A movie stores one PBUS packet per input sample (normally one per emulated frame), an
+/// optional starting save state, and a JSON metadata header. The header records the
+/// emulated frame span when it differs from the packet count. Packets are recorded as raw
+/// bytes so future input devices do not change the movie format. The payload is
+/// Brotli-compressed and every region is protected by a CRC-32.
 /// </remarks>
 public static class MovieFormat
 {

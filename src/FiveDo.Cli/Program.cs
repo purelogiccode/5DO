@@ -419,17 +419,19 @@ internal static class Program
         var movieVerify = HasFlag(args, "--movie-verify");
         var movieIncludeState = !HasFlag(args, "--movie-no-state");
         Movie? movie = null;
+        var movieFrameSpan = 0;
         if (moviePlayPath is not null)
         {
             movie = MovieFile.Load(moviePlayPath);
+            movieFrameSpan = movie.Header.EmulatedFrames ?? movie.FrameCount;
             if (!framesSpecified)
             {
-                frames = movie.FrameCount;
+                frames = movieFrameSpan;
             }
-            else if (frames > movie.FrameCount)
+            else if (frames > movieFrameSpan)
             {
                 throw new ArgumentException(
-                    $"--frames {frames} exceeds the movie length of {movie.FrameCount}.",
+                    $"--frames {frames} exceeds the movie length of {movieFrameSpan}.",
                     nameof(args));
             }
         }
@@ -446,7 +448,7 @@ internal static class Program
             throw new ArgumentException("--movie-verify requires --movie-play.", nameof(args));
         }
 
-        if (movieVerify && frames != movie!.FrameCount)
+        if (movieVerify && frames != movieFrameSpan)
         {
             throw new ArgumentException(
                 "Movie verification must play every frame; do not truncate with --frames.",
@@ -547,6 +549,34 @@ internal static class Program
             discPath = DiscPlaylist.Load(discPath).Current.Path;
         }
 
+        if (movie is not null && discPath is null && !string.IsNullOrEmpty(movie.Header.DiscHash))
+        {
+            if (string.IsNullOrEmpty(movie.Header.DiscFile))
+            {
+                throw new ArgumentException(
+                    "This movie was recorded with a disc. Pass --disc <path> to play or verify it.",
+                    nameof(args));
+            }
+
+            var movieDirectory = Path.GetDirectoryName(Path.GetFullPath(moviePlayPath!));
+            var candidates = new List<string>(2);
+            if (!string.IsNullOrEmpty(movieDirectory))
+            {
+                candidates.Add(Path.Combine(movieDirectory, movie.Header.DiscFile));
+            }
+
+            candidates.Add(Path.Combine(Environment.CurrentDirectory, movie.Header.DiscFile));
+            var resolved = candidates.FirstOrDefault(File.Exists);
+            if (resolved is null)
+            {
+                throw new ArgumentException(
+                    $"This movie was recorded with '{movie.Header.DiscFile}'. Pass --disc <path> to play or verify it.",
+                    nameof(args));
+            }
+
+            discPath = resolved;
+        }
+
         var swapAtFrame = options.GetInt("--swap-at", -1);
         var swapDiscPath = options.Get("--swap-disc");
         if (swapDiscPath is not null && swapAtFrame < 0)
@@ -567,6 +597,27 @@ internal static class Program
         if (bios2Path is not null && biosPath is null && biosAutoFolder is null)
         {
             throw new ArgumentException("--bios2 requires --bios or --bios-auto.", nameof(args));
+        }
+
+        if (movie is not null
+            && biosPath is null
+            && biosAutoFolder is null
+            && !string.IsNullOrEmpty(movie.Header.BiosMd5))
+        {
+            BiosProfile? match = BiosDiscovery.DiscoverDefault(recursive: true).Primaries
+                .FirstOrDefault(profile => string.Equals(
+                    profile.Md5,
+                    movie.Header.BiosMd5,
+                    StringComparison.OrdinalIgnoreCase));
+            if (match is null)
+            {
+                throw new ArgumentException(
+                    $"This movie was recorded with BIOS '{movie.Header.BiosName ?? movie.Header.BiosMd5}'. "
+                    + "Pass --bios <path> or place that image in a default BIOS folder to play or verify it.",
+                    nameof(args));
+            }
+
+            biosPath = match.Path;
         }
 
         if (biosPath is null && biosAutoFolder is null && stateIn is null && movie?.State is null)
@@ -1354,6 +1405,7 @@ internal static class Program
                         : Path.GetFileNameWithoutExtension(biosLoad.PrimaryPath)),
                 StartFrame = movieStartFrame,
                 FrameCount = movieRecorder.FrameCount,
+                EmulatedFrames = (int)(machine.FramesExecuted - movieStartFrame),
                 FinalFrameHash = FrameHash(machine),
                 FinalProgramCounter = machine.Cpu.ProgramCounter,
                 FinalStateHash = HashState(machine),
@@ -1371,7 +1423,7 @@ internal static class Program
             uint? finalStateHash = movieHeader.FinalStateHash is null ? null : HashState(machine);
             movieVerification = MovieVerifier.Verify(
                 movieHeader,
-                moviePlayback.Position,
+                (int)(machine.FramesExecuted - movieStartFrame),
                 FrameHash(machine),
                 machine.Cpu.ProgramCounter,
                 finalStateHash);
@@ -4585,6 +4637,7 @@ internal static class Program
             BiosName: movie.Header.BiosName,
             StartFrame: movie.Header.StartFrame,
             FrameCount: movie.FrameCount,
+            EmulatedFrames: movie.Header.EmulatedFrames,
             EndFrame: movie.Header.EndFrame,
             FinalFrameHash: movie.Header.FinalFrameHash,
             FinalProgramCounter: movie.Header.FinalProgramCounter,
@@ -4607,7 +4660,7 @@ internal static class Program
         Console.WriteLine($"game id:     {info.GameId ?? "(unknown)"}");
         Console.WriteLine($"disc:        {info.DiscFile ?? "(none)"} {info.DiscHash}");
         Console.WriteLine($"bios:        {info.BiosName ?? "(none)"} {info.BiosMd5}");
-        Console.WriteLine($"frames:      {info.FrameCount} (start {info.StartFrame}, end {info.EndFrame})");
+        Console.WriteLine($"frames:      {info.FrameCount} input{(info.EmulatedFrames is { } emulated && emulated != info.FrameCount ? $", {emulated} emulated" : string.Empty)} (start {info.StartFrame}, end {info.EndFrame})");
         Console.WriteLine($"state:       {(info.HasState ? $"{info.StateBytes} bytes" : "none")}");
         Console.WriteLine($"file:        {info.FileBytes} bytes");
         if (info.FinalFrameHash is { } frameHash)
@@ -4643,9 +4696,23 @@ internal static class Program
         var output = options.Get("--out")
             ?? throw new ArgumentException("movie record needs --out <movie>.", nameof(args));
         var forwarded = new List<string> { "run" };
+        var disc = options.Get("--disc");
+        if (!string.IsNullOrWhiteSpace(disc))
+        {
+            if (options.Positional is not null)
+            {
+                throw new ArgumentException(
+                    "Use either a positional disc or --disc, not both.",
+                    nameof(args));
+            }
+
+            forwarded.Add(disc);
+        }
+
         for (var i = 2; i < args.Length; i++)
         {
-            if (string.Equals(args[i], "--out", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(args[i], "--out", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(args[i], "--disc", StringComparison.OrdinalIgnoreCase))
             {
                 i++;
                 continue;

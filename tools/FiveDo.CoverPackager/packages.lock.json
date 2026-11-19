@@ -189,7 +189,7 @@
         "type": "Project",
         "dependencies": {
           "CDISharp": "[1.13.1, )",
-          "CHDSharp": "[1.7.0, )",
+          "CHDSharp": "[1.7.1, )",
           "FiveDo.Core": "[1.13.1, )",
           "NRGSharp": "[1.13.1, )",
           "Serilog": "[4.4.0, )"
@@ -213,8 +213,8 @@
       "CHDSharp": {
         "type": "CentralTransitive",
         "requested": "[1.7.0, )",
-        "resolved": "1.7.0",
-        "contentHash": "irm+rOgHSKTnpvo1A5hDwQeUH3/dP9jgT0MIvzqgUHc02kNJfcgFXb/hoVgZBo14TWrz/XEvDWWhryGViURKZw==",
+        "resolved": "1.7.1",
+        "contentHash": "KlqqxCxlzUPmKO8XYjbpsD0JANWfTVOEa1X28FyKun8G5AG0AP0EmIlszU7v98U1dFbBzXhtfFgkxsQVzVh5DQ==",
         "dependencies": {
           "System.IO.Hashing": "11.0.0"
         }

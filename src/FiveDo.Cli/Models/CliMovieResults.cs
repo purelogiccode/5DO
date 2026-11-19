@@ -17,6 +17,7 @@ internal sealed record CliMovieInfoResult(
     string? BiosName,
     long StartFrame,
     int FrameCount,
+    int? EmulatedFrames,
     long EndFrame,
     uint? FinalFrameHash,
     uint? FinalProgramCounter,

@@ -447,13 +447,62 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - Some code comments are stale (for example `EmulatorTuning.HighResolution` says the
   mode is reserved even though it is implemented). Treat behavior/tests as authoritative.
 
+## Linux arm64 headless VM (2026-11-19)
+
+The full pass is recorded in [Compatibility.md](Compatibility.md) §10.5. The remaining
+limitations are environmental:
+
+- **No GPU on the ARM64 VM.** Mesa provides only llvmpipe (OpenGL) and lavapipe
+  (Vulkan). `--gl-probe` times out after 30 s and the auto backend leaves a 1x1 black
+  video surface, so the desktop needs `--gl-backend software` or `--gl-backend vulkan`
+  on this host. Hardware Linux GPU evidence remains the bare-metal Intel HD 4000 host.
+- **No sound card.** OpenAL plays through a PulseAudio null sink; the 100 ms buffer
+  reports 428 ms end-to-end latency and drops samples (~13% in a 10 s soak). With
+  `ALSOFT_DRIVERS=null` the soak is clean (0 drops, 0 underruns, 66.7 ms).
+- **`movie verify` stopped one frame early in 1.13.1.** A 600-frame recording reported
+  `frames 598 != 599`; `SYS-26` fixes this after the release by recording the emulated
+  frame span and resolving the recorded disc and BIOS. Movies recorded by 1.13.1 still
+  verify against the old packet count.
+- **Vulkan video honours integer scaling.** With `IntegerScale` at its default, a
+  1060x466 pane shows the 320x240 source at 1x because 2x does not fit. That is the
+  configured behavior; use a scale-friendly window size or disable integer scaling for
+  full-pane output.
+- No optical drive, physical gamepad, or DPI matrix is available on the VM: the evdev
+  backend detects the input nodes but no controller is attached, and the drive check
+  reports no `/dev/sr*`.
+
+## Windows arm64 (2026-11-19)
+
+The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
+
+- **Bundled OpenAL requires the Visual C++ 2015-2022 redistributable.** On a clean
+  Windows 11 ARM64 image the emulator logs `Could not load from any of the possible
+  library names`, disables audio, and continues silently. Install
+  `https://aka.ms/vs/17/release/vc_redist.arm64.exe`; the .NET 11 runtime is embedded but
+  the MSVC runtime is not. The Windows x64 bundle uses the same OpenAL Soft build, so
+  expect the same requirement on clean images.
+- **The Azure Windows 11 ARM64 VM has no GPU and no audio endpoint.** Direct3D 11 and
+  ANGLE (OpenGL ES 3.0) run on the Microsoft Basic Render Driver, `--vk-probe` fails
+  with `ErrorIncompatibleDriver`, and OpenAL cannot open a device. Use
+  `ALSOFT_DRIVERS=null` for audio-path tests; hardware GPU and audio evidence stays on
+  the Windows x64 desktop.
+- **GUI automation needs an interactive desktop.** SSH lands in session 0; run the smoke
+  and game through `schtasks /IT` after autologon. Windows Terminal keeps console tabs
+  on screen (force conhost), and GDI capture of a fullscreen D3D surface blocks, so use
+  the software presenter for fullscreen screenshots.
+- **`movie verify` stopped one frame early on Windows arm64 too** (`frames 299 != 300`
+  with a different final hash). The platform-neutral `SYS-26` fix records the emulated
+  frame span and resolves the recorded disc and BIOS.
+
 ## Packaging and platforms
 
 - CI builds five bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
   smoke on macOS arm64, Linux arm64, and Windows arm64. Intel macOS support was dropped
   in 1.12.0 because no Intel Mac is available for GPU validation. The smoke hides the
-  GL surface, so GPU presentation is not covered.
+  GL surface, so GPU presentation is not covered by CI. Windows arm64 desktop
+  presentation, fullscreen, and the D3D11/ANGLE probes were validated separately on the
+  Basic Render Driver (2026-11-19, [Compatibility.md](Compatibility.md) §10.6).
 - macOS arm64 GPU presentation is validated through Vulkan/MoltenVK on a paravirtual
   Apple M5 Pro (2026-11-17), including the packaged `.app`/`.dmg`. Intel macOS is
   unsupported. macOS physical gamepad detection remains unvalidated, and accelerated
@@ -467,9 +516,11 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   output — is validated on that host (2026-11-18); the 2x math is covered by
   `PixelSizeTests` and `MacMetalSurface` only. See
   [Performance.md](Performance.md) §8.8 and [TestCorpus.md](TestCorpus.md) §1.1ct.
-- **The Linux arm64 AppImage has not run on arm64 Linux hardware.** CI builds
-  `5do-aarch64.AppImage` on the native ARM runner and self-checks it there, but no
-  arm64 Linux desktop was available for a `--version`/frontend run at release time.
+- **Linux arm64 packages now run on arm64 hardware (2026-11-19).** The published
+  `5do-1.13.1-linux-aarch64.AppImage` starts through FUSE and
+  `--appimage-extract-and-run`, reports `1.13.1`, and passes the Xvfb frontend smoke.
+  The arm64 `.deb`, `.rpm`, and Flatpak were also installed or inspected on that host.
+  See [Compatibility.md](Compatibility.md) §10.5.
 - **Linux artifacts are signed but not served from a repository.** Each release carries
   the keyring, a signed checksum manifest, and per-artifact `.asc` files; there is no
   hosted `apt`/`dnf` server and no Flathub listing. Rotation of the single release key

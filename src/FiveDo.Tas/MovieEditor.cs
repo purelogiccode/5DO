@@ -29,6 +29,7 @@ public static class MovieEditor
         MovieHeader header = movie.Header with
         {
             FrameCount = frameCount,
+            EmulatedFrames = null,
             FinalFrameHash = null,
             FinalProgramCounter = null,
             FinalStateHash = null,
@@ -180,6 +181,7 @@ public static class MovieEditor
         MovieHeader header = movie.Header with
         {
             FrameCount = combined.Count,
+            EmulatedFrames = null,
             FinalFrameHash = null,
             FinalProgramCounter = null,
             FinalStateHash = null,
@@ -204,6 +206,7 @@ public static class MovieEditor
         MovieHeader header = movie.Header with
         {
             FrameCount = frames.Count,
+            EmulatedFrames = null,
             FinalFrameHash = null,
             FinalProgramCounter = null,
             FinalStateHash = null,
