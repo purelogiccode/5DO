@@ -50,6 +50,18 @@ public sealed class NativeRuntimeCheckTests
         }
     }
 
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    [InlineData(@"C:\build\FiveDo.dll", false)]
+    [InlineData("/build/FiveDo.dll", false)]
+    public void IsSelfContainedApphost_DetectsFrameworkDependentBuilds(
+        string? entryAssemblyLocation,
+        bool expected)
+    {
+        Assert.Equal(expected, NativeRuntimeCheck.IsSelfContainedApphost(entryAssemblyLocation));
+    }
+
     [Fact]
     public void BuildStartupMessage_NamesTheMissingFilesAndTheFolder()
     {

@@ -67,6 +67,32 @@ public static class NativeRuntimeCheck
         throw new PlatformNotSupportedException("5DO supports Windows, Linux, and macOS.");
     }
 
+    /// <summary>
+    /// Returns whether the process is a single-file or NativeAOT apphost.
+    /// </summary>
+    /// <param name="entryAssemblyLocation">
+    /// <see cref="System.Reflection.Assembly.Location"/> of the entry assembly, or null.
+    /// </param>
+    /// <returns><see langword="true"/> when native files are expected beside the apphost.</returns>
+    /// <remarks>
+    /// Framework-dependent builds (a normal <c>dotnet build</c> or <c>dotnet run</c>) keep the
+    /// managed assembly next to the apphost and resolve native runtime assets from the NuGet
+    /// package graph, so the bundled-file check must not run for them. Single-file and
+    /// NativeAOT apphosts report an empty entry-assembly location and do need the files.
+    /// </remarks>
+    public static bool IsSelfContainedApphost(string? entryAssemblyLocation)
+    {
+        return string.IsNullOrEmpty(entryAssemblyLocation);
+    }
+
+    /// <summary>Returns whether the current process needs the bundled native files check.</summary>
+    /// <returns><see langword="true"/> for single-file and NativeAOT apphosts.</returns>
+    public static bool IsSelfContainedApphost()
+    {
+        return IsSelfContainedApphost(
+            System.Reflection.Assembly.GetEntryAssembly()?.Location);
+    }
+
     /// <summary>Finds the required native files that are missing from a folder.</summary>
     /// <param name="directory">Folder that contains the apphosts and native libraries.</param>
     /// <param name="platform">Operating-system family.</param>

@@ -329,27 +329,30 @@ internal static class Program
                 _ = Task.Run(ApplicationStatsClient.TrackLaunch);
             }
 
-            NativeRuntimePlatform nativePlatform = NativeRuntimeCheck.DetectPlatform();
-            IReadOnlyList<string> missingNatives = NativeRuntimeCheck.FindMissing(
-                AppContext.BaseDirectory,
-                nativePlatform);
-            if (missingNatives.Count > 0)
+            if (NativeRuntimeCheck.IsSelfContainedApphost())
             {
-                var nativeMessage = NativeRuntimeCheck.BuildStartupMessage(
+                NativeRuntimePlatform nativePlatform = NativeRuntimeCheck.DetectPlatform();
+                IReadOnlyList<string> missingNatives = NativeRuntimeCheck.FindMissing(
                     AppContext.BaseDirectory,
-                    missingNatives,
                     nativePlatform);
-                Console.Error.WriteLine(nativeMessage);
-                Serilog.Log.Error(
-                    "Missing native runtime files: {Files}.",
-                    string.Join(", ", missingNatives));
-                if (!IsAutomatedRun(args) && OperatingSystem.IsWindows())
+                if (missingNatives.Count > 0)
                 {
-                    ShowStartupError(nativeMessage);
-                }
+                    var nativeMessage = NativeRuntimeCheck.BuildStartupMessage(
+                        AppContext.BaseDirectory,
+                        missingNatives,
+                        nativePlatform);
+                    Console.Error.WriteLine(nativeMessage);
+                    Serilog.Log.Error(
+                        "Missing native runtime files: {Files}.",
+                        string.Join(", ", missingNatives));
+                    if (!IsAutomatedRun(args) && OperatingSystem.IsWindows())
+                    {
+                        ShowStartupError(nativeMessage);
+                    }
 
-                Environment.ExitCode = 1;
-                return;
+                    Environment.ExitCode = 1;
+                    return;
+                }
             }
 
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
