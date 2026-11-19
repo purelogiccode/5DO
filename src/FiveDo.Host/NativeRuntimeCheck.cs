@@ -70,27 +70,30 @@ public static class NativeRuntimeCheck
     /// <summary>
     /// Returns whether the process is a single-file or NativeAOT apphost.
     /// </summary>
-    /// <param name="entryAssemblyLocation">
-    /// <see cref="System.Reflection.Assembly.Location"/> of the entry assembly, or null.
-    /// </param>
+    /// <param name="directory">Folder that contains the apphost.</param>
+    /// <param name="managedAssemblyFileName">Managed entry assembly file name, for example <c>FiveDo.dll</c>.</param>
     /// <returns><see langword="true"/> when native files are expected beside the apphost.</returns>
     /// <remarks>
     /// Framework-dependent builds (a normal <c>dotnet build</c> or <c>dotnet run</c>) keep the
     /// managed assembly next to the apphost and resolve native runtime assets from the NuGet
     /// package graph, so the bundled-file check must not run for them. Single-file and
-    /// NativeAOT apphosts report an empty entry-assembly location and do need the files.
+    /// NativeAOT apphosts do not emit the managed assembly and do need the files.
     /// </remarks>
-    public static bool IsSelfContainedApphost(string? entryAssemblyLocation)
+    /// <exception cref="ArgumentException">Thrown when an argument is empty.</exception>
+    public static bool IsSelfContainedApphost(string directory, string managedAssemblyFileName)
     {
-        return string.IsNullOrEmpty(entryAssemblyLocation);
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(managedAssemblyFileName);
+        return !File.Exists(Path.Combine(directory, managedAssemblyFileName));
     }
 
     /// <summary>Returns whether the current process needs the bundled native files check.</summary>
     /// <returns><see langword="true"/> for single-file and NativeAOT apphosts.</returns>
     public static bool IsSelfContainedApphost()
     {
-        return IsSelfContainedApphost(
-            System.Reflection.Assembly.GetEntryAssembly()?.Location);
+        var name = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name;
+        return name is not null
+            && IsSelfContainedApphost(AppContext.BaseDirectory, name + ".dll");
     }
 
     /// <summary>Finds the required native files that are missing from a folder.</summary>
