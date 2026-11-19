@@ -1,7 +1,40 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.13.1, the signed Linux release
-with per-platform asset names.
+All notable changes are recorded here. The project is at v1.13.2, a bug-fix release for
+movie verification and partial-extraction diagnostics.
+
+## [1.13.2] - 2026-11-19
+
+### Fixed
+
+- **Movie verification no longer stops one frame early (`SYS-26`).** A frame boundary
+  without a V1 input sample made a 600-frame recording store 599 packets, so `movie
+  verify` reported `frames 598 != 599` and mismatched hashes. The movie header now
+  records the emulated frame span (absent on older movies, which keep the old
+  behaviour), playback runs that span, and verification compares it. Playback and
+  verification resolve the recorded disc (beside the movie or in the working directory)
+  and the BIOS (by MD5 in the default folders), failing with an actionable message
+  instead of replaying without them; `movie record --disc` now matches `movie play
+  --disc`. A 600-frame disc movie and a 300-frame `--state-in` branch verify with exit
+  0.
+- **Partial extractions explain themselves (`UX-36`).** The desktop frontend checks for
+  `libSkiaSharp` and `libHarfBuzzSharp` before Avalonia starts, then shows a "5DO cannot
+  start" message naming the missing files and the extraction steps and exits without a
+  fatal crash or a bug report. Issues #69923/#69924 (`SkiaSharp.SKImageInfo` /
+  `Dll was not found`) reproduce it and now receive the actionable message.
+
+### Changed
+
+- **CHDSharp 1.7.1** replaces 1.7.0; the central package version and every lock file
+  were refreshed, and `dotnet restore --locked-mode` passes.
+
+### Documentation
+
+- ARM64 validation results for the published 1.13.1 assets are recorded in
+  [Compatibility.md](docs/Compatibility.md) §10.5–§10.6, with the remaining limits in
+  [KnownIssues.md](docs/KnownIssues.md).
+- The TAS guide now documents disc/BIOS resolution for playback and verification, and
+  the bundle README/troubleshooting explain how to extract the archive.
 
 ## [1.13.1] - 2026-11-18
 

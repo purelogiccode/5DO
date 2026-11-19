@@ -16,11 +16,13 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.13.1 native Metal and signed Linux release"
-    5DO is at v1.13.1. **Windows x64, Linux x64, and macOS arm64** are validated
-    targets: macOS presents through a native `CAMetalLayer` surface at 60 fps, with all
-    eight filters and a packaged DMG. The release adds the Phoenix/4DO presentation
-    options and GPG-signed Linux artifacts (keyring fingerprint
+!!! important "v1.13.2 bug-fix release"
+    5DO is at v1.13.2. Movie verification matches the recorded evidence again, and a
+    partial extraction now shows a "5DO cannot start" message instead of a Skia crash.
+    **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
+    through a native `CAMetalLayer` surface at 60 fps, with all eight filters and a
+    packaged DMG. The 1.13.x line adds the Phoenix/4DO presentation options and
+    GPG-signed Linux artifacts (keyring fingerprint
     `E69FF266D1FB01D3411578775C4C1E8EAFD44075`). The macOS arm64 bundle includes MoltenVK
     and the Vulkan loader; the CPU presenter is the fallback. Linux arm64 and Windows
     arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game
@@ -78,14 +80,18 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.13.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.13.2.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-18, v1.13.1 native Metal and signed Linux release (GitHub Releases).**
+**2026-11-19, v1.13.2 bug-fix release (GitHub Releases).**
 
-- **2,439 tests** are present in the current test assembly.
+- **2,449 tests** are present in the current test assembly.
+- **Movie verification matches the recording:** the header records the emulated frame
+  span, disc and BIOS are resolved automatically, and a 600-frame disc movie verifies
+  with exit 0; a partial extraction now explains the missing native files instead of
+  crashing inside Skia.
 - **macOS arm64 presents through a native Metal surface** (`CAMetalLayer`,
   `VK_EXT_metal_surface`) with 0 renderer bytes/frame at 1080p FIFO, live resize and
   fullscreen, 320x240 capture parity, and 4K offscreen output. Retina 2x remains
@@ -143,11 +149,10 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.13.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.13.1)
+- v1.13.2 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.13.2)
   as one bundle per system and architecture (Windows/Linux/macOS, x64 and arm64), each with the CLI,
   desktop app, and SHA-256 checksums; macOS is distributed as a DMG. The .NET 11
-  runtime is embedded in the self-contained apphosts. The release adds macOS arm64 GPU
-  presentation and removes the .NET 8 build requirement. See [What's new](WhatsNew.md).
+  runtime is embedded in the self-contained apphosts. See [What's new](WhatsNew.md).
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.

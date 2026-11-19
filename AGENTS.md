@@ -82,7 +82,7 @@ Vulkan driver**, and **no audio endpoint**. Direct3D 11 and ANGLE (OpenGL ES 3.0
 so the desktop uses the ANGLE/GLES presenter; `--vk-probe` fails with
 `ErrorIncompatibleDriver`; OpenAL needs `vc_redist.arm64.exe` installed and has no device
 to open (use `ALSOFT_DRIVERS=null` for audio-path tests). The Windows distribution is a
-ZIP bundle; 1.13.1 has no Windows installer.
+ZIP bundle; 1.13.2 has no Windows installer.
 
 The gate, run against the published `5do-<version>-win-arm64.zip`:
 
@@ -90,7 +90,7 @@ The gate, run against the published `5do-<version>-win-arm64.zip`:
   `ARM64` for `FiveDo.exe`, `FiveDo.Cli.exe`, `libSkiaSharp.dll`, `libHarfBuzzSharp.dll`,
   `OpenAL32.dll`, `soft_oal.dll`, and `av_libglesv2.dll`.
 - Install the .NET 11 SDK with `dotnet-install.ps1 -Channel 11.0 -InstallDir
-  C:\Users\azureuser\dotnet`, unpack the `v1.13.1` tag source, and run
+  C:\Users\azureuser\dotnet`, unpack the `v1.13.2` tag source, and run
   `dotnet test tests\FiveDo.Tests\FiveDo.Tests.csproj -c Release`. There is no `git` on
   the image, so upload a `git archive` ZIP of the tag instead of cloning.
 - CLI: `--version`, `selftest --json`, `bench`, `bios info`, `info`, a 3,000-frame disc

@@ -1,9 +1,10 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.13.1 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.13.2 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.13.0 adds the native Metal surface, the
+v1.2.x. macOS is published as a DMG. v1.13.2 is a bug-fix release for movie verification
+and partial-extraction diagnostics; v1.13.0 added the native Metal surface, the
 Phoenix/4DO presentation options, and GPG-signed Linux artifacts.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
@@ -38,6 +39,24 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.13.2 bug-fix gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.13.2`.
+- [x] `SYS-26`: movie verification uses the recorded emulated frame span, resolves the
+      recorded disc and BIOS, and both a 600-frame disc movie and a 300-frame
+      `--state-in` branch verify with exit 0.
+- [x] `UX-36`: a partial extraction shows the "5DO cannot start" message with the missing
+      file names and exits without a fatal crash or bug report; a complete folder still
+      passes the smoke test.
+- [x] CHDSharp 1.7.1 with every lock file refreshed; `dotnet restore --locked-mode`
+      passes.
+- [x] Full suite green (**2,449 tests**), `dotnet format`, `jb inspectcode`, and
+      `mkdocs build --strict`.
+- [x] Tagged release publishes the five bundles and the signed Linux assets; the
+      download verification in [LinuxDistribution.md](LinuxDistribution.md) §3 passes
+      from a clean download.
 
 ## 1.13.0 native Metal and signed Linux gate
 

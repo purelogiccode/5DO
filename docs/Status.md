@@ -1,5 +1,12 @@
 # Project Status and Next Steps
 
+**2026-11-19, v1.13.2 release:** the bug-fix release ships the `SYS-26`
+movie-verification fix and the `UX-36` partial-extraction preflight, with CHDSharp 1.7.1
+and refreshed lock files. The suite is **2,449/2,449**, `dotnet format` and
+`jb inspectcode` are clean, and `dotnet restore --locked-mode` passes; CI publishes the
+five bundles and the signed Linux assets. Release notes:
+[ReleaseNotes-1.13.2.md](ReleaseNotes-1.13.2.md).
+
 **2026-11-19, startup preflight for partial extractions:** issues #69923/#69924 reported
 `SkiaSharp.SKImageInfo` / `Dll was not found` from a bundle run out of `Downloads`. The
 desktop frontend now verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the

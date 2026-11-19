@@ -460,7 +460,7 @@ limitations are environmental:
   reports 428 ms end-to-end latency and drops samples (~13% in a 10 s soak). With
   `ALSOFT_DRIVERS=null` the soak is clean (0 drops, 0 underruns, 66.7 ms).
 - **`movie verify` stopped one frame early in 1.13.1.** A 600-frame recording reported
-  `frames 598 != 599`; `SYS-26` fixes this after the release by recording the emulated
+  `frames 598 != 599`; `SYS-26` fixes this in 1.13.2 by recording the emulated
   frame span and resolving the recorded disc and BIOS. Movies recorded by 1.13.1 still
   verify against the old packet count.
 - **Vulkan video honours integer scaling.** With `IntegerScale` at its default, a

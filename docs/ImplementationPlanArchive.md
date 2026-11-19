@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.13.1.
+> history through v1.13.2.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -843,8 +843,12 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 → v1.13.1)
+## 14. Release history (v1.9.1 → v1.13.2)
 
+- **v1.13.2 (2026-11-19):** bug-fix release — `SYS-26` makes movie verification use the
+  recorded emulated frame span and resolves the disc/BIOS, `UX-36` turns a partial
+  extraction into a "5DO cannot start" message instead of a Skia crash, and CHDSharp
+  1.7.1 refreshes the lock files. Suite 2,449/2,449.
 - **v1.13.1 (2026-11-18):** naming and documentation update — the RPM, AppImage, and
   Flatpak assets carry the version and `linux` in their names, the `.deb` keeps the
   Debian convention, and every release page opens with a per-platform download table;

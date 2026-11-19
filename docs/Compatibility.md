@@ -840,7 +840,7 @@ The renderer, audio, and TAS findings from this host are:
 - `movie verify` reported a one-frame shortfall (`frames 598 != 599`) and matching
   hash/PC/state mismatches for both disc and `--state-in` recordings in 1.13.1. The same
   numbers reproduced on Windows x64, so the defect was platform-neutral; `SYS-26` fixed
-  it after the release by recording the emulated frame span and resolving the recorded
+  it in 1.13.2 by recording the emulated frame span and resolving the recorded
   disc and BIOS.
 
 ### 10.6 Windows arm64 validation (2026-11-19)
@@ -872,7 +872,7 @@ report the ARM64 PE machine type, and the bundle contains no PDB or XML files.
 | Probes | `--gl-probe` ok at 17.9 fps (640x480, 30 frames); `--d3d-probe` ok at 17.1 fps; `--vk-probe` fails with `vkCreateInstance ErrorIncompatibleDriver` (no driver) |
 | Autopilot | Road Rash, 20,000 frames in 215.6 s, frame hash `0x898FAD6E`, PC `521772`, no warnings — identical to Linux arm64 |
 | Disc convert | Theme Park ISO to CHD in 9.08 s; source and output game ID match |
-| TAS | state save/inspect/resume, `movie record` and `movie play` (300 frames) pass; `movie verify` reproduced the 1.13.1 one-frame shortfall, fixed after the release by `SYS-26` |
+| TAS | state save/inspect/resume, `movie record` and `movie play` (300 frames) pass; `movie verify` reproduced the 1.13.1 one-frame shortfall, fixed in 1.13.2 by `SYS-26` |
 | Packages / CLI | the ZIP is the only Windows arm64 asset; portable mode writes `nvram.ram` beside the apphost, and `update --json` selects `5do-1.13.1-win-arm64.zip` |
 | Doctor | OpenGL, the Vulkan loader, and OpenAL load; the BIOS warning is expected because the folder contained only discs |
 
