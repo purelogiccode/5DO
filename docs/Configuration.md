@@ -396,13 +396,14 @@ player-1 defaults. See section 3 for the full input structure.
       "LoadState": "F8",
       "Screenshot": "F12",
       "Fullscreen": "F11",
-      "Pause": "Escape",
+      "Pause": "P",
       "Reset": "F10",
       "SlotPrevious": "F6",
       "SlotNext": "F7",
       "FrameAdvance": "F9",
       "Rewind": "R",
-      "FastForward": "Tab"
+      "FastForward": "Tab",
+      "ToggleFastForward": "Space"
     }
   }
 }
@@ -490,12 +491,14 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
 slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewind one
-second), Tab (hold to fast-forward), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
-Escape (pause), and F10 (reset). Alt+Enter also toggles fullscreen. The shell dispatches
-these bindings before forwarding a key to the emulated pad; F11 and Alt+Enter also work
-from the library (after a game is loaded), and Escape leaves fullscreen before it reaches
-the pause action. While paused, a second Escape closes 5DO; resuming, stopping, opening
-the quick menu, or losing window focus disarms that second press.
+second), P (pause/resume), Tab (hold to fast-forward), Space (toggle fast-forward),
+F4 (quick menu), F12 (screenshot), F11 (fullscreen), and F10 (reset). Alt+Enter also
+toggles fullscreen. The shell dispatches these bindings before forwarding a key to the
+emulated pad; F11 and Alt+Enter also work from the library (after a game is loaded), and
+Escape leaves fullscreen before it reaches the pause action. Escape remains a system
+pause/quit shortcut independent of the configured Pause key. While paused, a second
+Escape closes 5DO; resuming, stopping, opening the quick menu, or losing window focus
+disarms that second press.
 `HotkeyRouter` resolves the persisted action names case-insensitively, so a custom key
 assignment in the profile is honored. Unknown action names and unbound keys are ignored.
 
@@ -539,7 +542,9 @@ single-pad packet for default configurations.
 Selecting a peripheral switches the packet to the Opera daisy-chain layout. The
 legacy 16-byte 4DO layout remains active while every port is a joypad. The CLI mirrors
 the setting with `--input-device 1=mouse,3=lightgun` and can force either layout with
-`--pbus-format legacy|opera`.
+`--pbus-format legacy|opera`. Demolition Man's database profile uses
+`1=joypad,2=lightgun`, keeping the pad on port 1 for menus and hand-to-hand sections
+and placing the Gamegun on port 2 where the game recognizes it.
 
 ---
 

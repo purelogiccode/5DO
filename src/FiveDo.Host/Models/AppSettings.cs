@@ -891,9 +891,13 @@ public sealed class AppSettings
     /// <returns>The resolved device names.</returns>
     public IReadOnlyList<string> ResolveInputDevices(string? gameId)
     {
+        // The desktop shell passes the full 32-character disc checksum, while
+        // per-game overrides and the CLI may pass the eight-character 4DO ID.
+        // Accept either form so database defaults apply in every host.
         GameRecord? record = string.IsNullOrWhiteSpace(gameId)
             ? null
-            : GameDatabase.Default.FindById(gameId);
+            : GameDatabase.Default.FindByChecksum(gameId)
+                ?? GameDatabase.Default.FindById(gameId);
         IReadOnlyList<string>? devices = GetInputDeviceOverride(gameId)
             ?? GameControlDefaults.ParseDeviceSpec(record?.InputDevices);
         return devices ?? NormalizeInputDevices(InputDevices);
@@ -912,8 +916,11 @@ public sealed class AppSettings
         }
 
         // The game database already drives ResolveInputDevices; do not persist a copy
-        // that would shadow future database updates.
-        if (GameControlDefaults.ParseDeviceSpec(GameDatabase.Default.FindById(gameId)?.InputDevices) is not null)
+        // that would shadow future database updates. Accept both the full checksum
+        // and the eight-character 4DO ID.
+        GameRecord? record = GameDatabase.Default.FindByChecksum(gameId)
+            ?? GameDatabase.Default.FindById(gameId);
+        if (GameControlDefaults.ParseDeviceSpec(record?.InputDevices) is not null)
         {
             return false;
         }

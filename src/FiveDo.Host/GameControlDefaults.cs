@@ -30,6 +30,14 @@ public static class GameControlDefaults
         ("Orbatak", InputDeviceType.OrbatakTrackball),
     ];
 
+    // Gamegun titles that also need a pad on port 1 for menus, calibration, and
+    // hand-to-hand sections. The gun is placed on port 2, where these games detect it.
+    private static readonly (string Prefix, string Spec)[] KnownSpecs =
+    [
+        ("Demolition Man", "1=joypad,2=lightgun"),
+        ("Corpse Killer", "1=joypad,2=lightgun"),
+    ];
+
     /// <summary>Resolves the automatic device list for a title.</summary>
     /// <param name="title">Game title, with or without a region suffix.</param>
     /// <param name="databaseSpec">Optional game-database device list such as <c>1=lightgun</c>.</param>
@@ -48,6 +56,14 @@ public static class GameControlDefaults
         }
 
         var trimmed = title.Trim();
+        foreach (var (prefix, spec) in KnownSpecs)
+        {
+            if (trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return ParseDeviceSpec(spec);
+            }
+        }
+
         foreach (var (prefix, device) in KnownDevices)
         {
             if (!trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))

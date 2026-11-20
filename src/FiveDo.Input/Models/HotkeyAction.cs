@@ -42,7 +42,7 @@ public enum HotkeyAction
     /// <summary>Rewind the emulated machine by a short step.</summary>
     Rewind,
 
-    /// <summary>Hold or toggle fast-forward playback.</summary>
+    /// <summary>Hold fast-forward playback.</summary>
     FastForward,
 
     /// <summary>Open or close the in-game quick menu.</summary>
@@ -53,4 +53,7 @@ public enum HotkeyAction
 
     /// <summary>Toggle the on-screen frame and player-1 input display.</summary>
     ToggleInputDisplay,
+
+    /// <summary>Toggle fast-forward playback on or off.</summary>
+    ToggleFastForward,
 }

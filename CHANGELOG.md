@@ -7,6 +7,11 @@ movie verification and partial-extraction diagnostics.
 
 ### Fixed
 
+- **Database input-device defaults now apply in the desktop shell.** The shell passes
+  the full 32-character disc MD5, but `ResolveInputDevices` looked it up only as an
+  eight-character 4DO ID, so curated `inputDevices` entries were ignored and every port
+  stayed a joypad. The lookup now accepts either form. This is what prevented the
+  automatic Gamegun profile from reaching the frontend mouse.
 - **High-resolution mode no longer corrupts or hangs games.** The legacy `--high-res`
   option is now presentation-only: the guest machine stays at native 320x240 (CEL
   coordinates, VRAM, CPU bitmap reads, and SPORT are unchanged) and the 640x480 frame
@@ -28,6 +33,16 @@ movie verification and partial-extraction diagnostics.
 
 ### Changed
 
+- **P pauses and resumes; Space toggles fast-forward.** **P** is now the default Pause
+  hotkey, while **Escape** keeps its system pause/quit behavior. **Space** toggles
+  fast-forward on or off like RetroArch; **Tab** still holds fast-forward and returns to
+  normal speed on release.
+- **American Laser Games Gamegun titles default to a joypad plus 3DO Gamegun.**
+  Demolition Man and Corpse Killer use `1=joypad,2=lightgun`, so the pad still drives
+  menus and hand-to-hand sections while the host mouse aims the Gamegun for the
+  shooting galleries. Other Gamegun titles keep their lightgun defaults. Left click
+  fires, right click is the Gamegun option/start/calibrate button, and middle click
+  reloads.
 - **`Alt+Enter` toggles fullscreen** in addition to `F11`. It is handled before quick-menu
   Enter routing and emulated-pad bindings, and leaves fullscreen on the same shortcut.
 - **True 2x CEL mode is unlocked for every title (experimental).** The CLI `--true-2x`

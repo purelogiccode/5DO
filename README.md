@@ -177,7 +177,8 @@ app; it now reports the missing files by name instead of crashing inside Skia.
   overrides.
 - Shared and per-game NVRAM with backup, import, reset, and delete.
 - Ten save slots with PNG thumbnails, state inspection, state diffing, and format v3.
-- Compressed rewind history (30–300 seconds) and 2×–10× fast-forward.
+- Compressed rewind history (30–300 seconds) and 2×–10× fast-forward; hold `Tab` or
+  toggle it with `Space`.
 - Latency controls: 0-2 frame run-ahead, 0-8 frame presentation delay, VRR/adaptive-sync
   presentation, a -250..250 ms audio sync offset, and software input-to-present telemetry.
 - Per-game cheats with raw/typed/conditional/button codes and a desktop manager.
@@ -308,9 +309,9 @@ The complete command surface is documented in the [CLI reference](https://purelo
 
 Useful desktop shortcuts: `F5` save state, `F8` load state, `F6`/`F7` change slots,
 `F9` advance one frame while paused, `Shift+F9` rewind one frame, `R` rewind one
-second, hold `Tab` to fast-forward, `F10` reset, `F11` or `Alt+Enter` fullscreen,
-`F12` screenshot, `F3` swap disc, and `F4` open the quick menu. Bindings are configurable
-for eight players in **Input**.
+second, `P` pause or resume, hold `Tab` to fast-forward or tap `Space` to toggle it,
+`F10` reset, `F11` or `Alt+Enter` fullscreen, `F12` screenshot, `F3` swap disc, and
+`F4` open the quick menu. Bindings are configurable for eight players in **Input**.
 
 ## Documentation
 

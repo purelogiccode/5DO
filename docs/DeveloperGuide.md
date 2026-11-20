@@ -333,7 +333,8 @@ lines from the current VDLP state for the optional multitask path.
   supplies the frame number. The desktop writes `<game>-<timestamp>-input.txt`.
 - Keyboard/gamepad profiles are per-player; gamepad fallbacks for sticks/triggers.
 - `HotkeyRouter` resolves the persisted console hotkeys; the shell dispatches
-  them before forwarding a key to the emulated pad. F11 and Alt+Enter work from the library,
+  them before forwarding a key to the emulated pad. P pauses/resumes, Tab holds
+  fast-forward, and Space toggles fast-forward. F11 and Alt+Enter work from the library,
   and Escape leaves fullscreen before the pause action runs. `EscapeQuitPolicy`
   turns Escape into a two-step shortcut: pause first, close the shell on the next
   press while still paused. It is disarmed when emulation resumes or stops, when the

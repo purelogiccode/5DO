@@ -87,6 +87,7 @@ public partial class MainWindow : Window, IDisposable
     private bool _pointerLeftDown;
     private bool _pointerMiddleDown;
     private bool _pointerRightDown;
+    private readonly HashSet<Key> _heldToggleKeys = [];
     private OpenAlAudioOutput? _audio;
     private string _audioDevice;
     private int _audioBufferMilliseconds;
@@ -1422,10 +1423,23 @@ public partial class MainWindow : Window, IDisposable
                 effective.ApplyInputDevices(_input, gameId);
             }
 
+            IReadOnlyList<string> resolvedDevices = effective.ResolveInputDevices(gameId);
+            _logger.ForCategory(LogCategory.Input).Information(
+                "Input devices for {Game}: {Devices}; pointer port {PointerPort}.",
+                record?.Name ?? Path.GetFileNameWithoutExtension(path),
+                string.Join(",", resolvedDevices),
+                _settings.PointerPort);
+
             if (autoDevices)
             {
                 ShowOsd(
-                    $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {effective.ResolveInputDevices(gameId)[0]}.");
+                    $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {string.Join(", ", resolvedDevices)}.");
+            }
+
+            if (resolvedDevices.Contains(InputDeviceType.Lightgun.ToString(), StringComparer.OrdinalIgnoreCase))
+            {
+                ShowOsd(
+                    "Mouse aims the 3DO Gamegun. Left click fires; right click is the Gamegun option.");
             }
 
             var fixMode = effective.ResolveFixMode(gameId);
@@ -3295,6 +3309,7 @@ public partial class MainWindow : Window, IDisposable
     private void OnWindowDeactivated()
     {
         _escapeQuit.Disarm();
+        _heldToggleKeys.Clear();
         CancelFastForward();
 
         // Release held keyboard bindings so a focus switch cannot leave a
@@ -7323,6 +7338,14 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        if ((hotkey is HotkeyAction.Pause or HotkeyAction.ToggleFastForward)
+            && !_heldToggleKeys.Add(e.Key))
+        {
+            // Ignore auto-repeat while the key is held; these actions toggle state.
+            e.Handled = true;
+            return;
+        }
+
         if (hotkey != HotkeyAction.None)
         {
             HandleHotkey(hotkey);
@@ -7374,6 +7397,9 @@ public partial class MainWindow : Window, IDisposable
                 break;
             case HotkeyAction.FastForward:
                 StartFastForward();
+                break;
+            case HotkeyAction.ToggleFastForward:
+                ToggleFastForward();
                 break;
             case HotkeyAction.QuickMenu:
                 ToggleQuickMenu();
@@ -7486,6 +7512,18 @@ public partial class MainWindow : Window, IDisposable
         ShowOsd($"Fast-forward {_runner.SpeedMultiplier}x");
     }
 
+    private void ToggleFastForward()
+    {
+        if (_fastForwardHeld)
+        {
+            StopFastForward();
+        }
+        else
+        {
+            StartFastForward();
+        }
+    }
+
     private void StopFastForward()
     {
         CancelFastForward();
@@ -7513,6 +7551,7 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     protected override void OnKeyUp(KeyEventArgs e)
     {
+        _heldToggleKeys.Remove(e.Key);
         if (_quickMenuOpen)
         {
             base.OnKeyUp(e);

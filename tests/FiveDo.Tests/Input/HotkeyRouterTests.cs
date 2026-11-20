@@ -11,12 +11,13 @@ public sealed class HotkeyRouterTests
     [InlineData("F10", HotkeyAction.Reset)]
     [InlineData("F11", HotkeyAction.Fullscreen)]
     [InlineData("F12", HotkeyAction.Screenshot)]
-    [InlineData("Escape", HotkeyAction.Pause)]
+    [InlineData("P", HotkeyAction.Pause)]
     [InlineData("F6", HotkeyAction.SlotPrevious)]
     [InlineData("F7", HotkeyAction.SlotNext)]
     [InlineData("F9", HotkeyAction.FrameAdvance)]
     [InlineData("R", HotkeyAction.Rewind)]
     [InlineData("Tab", HotkeyAction.FastForward)]
+    [InlineData("Space", HotkeyAction.ToggleFastForward)]
     [InlineData("F4", HotkeyAction.QuickMenu)]
     public void Resolve_ReturnsEveryDefaultHotkey(string key, HotkeyAction expected)
     {
@@ -79,11 +80,32 @@ public sealed class HotkeyRouterTests
     [InlineData(HotkeyAction.FrameAdvance, "FrameAdvance")]
     [InlineData(HotkeyAction.Rewind, "Rewind")]
     [InlineData(HotkeyAction.FastForward, "FastForward")]
+    [InlineData(HotkeyAction.ToggleFastForward, "ToggleFastForward")]
     [InlineData(HotkeyAction.QuickMenu, "QuickMenu")]
     [InlineData(HotkeyAction.None, "")]
     public void GetActionName_RoundtripsThePersistedName(HotkeyAction action, string expected)
     {
         Assert.Equal(expected, HotkeyRouter.GetActionName(action));
+    }
+
+    [Fact]
+    public void DefaultHotkeys_UsePForPauseAndSpaceForToggleFastForward()
+    {
+        InputProfile profile = InputProfile.CreateDefault();
+
+        Assert.Equal("P", profile.Hotkeys["Pause"]);
+        Assert.Equal("Space", profile.Hotkeys["ToggleFastForward"]);
+    }
+
+    [Fact]
+    public void Normalize_MigratesTheLegacyEscapePauseBinding()
+    {
+        InputProfile profile = InputProfile.CreateDefault();
+        profile.Hotkeys["Pause"] = "Escape";
+
+        profile.Normalize();
+
+        Assert.Equal("P", profile.Hotkeys["Pause"]);
     }
 
     [Fact]

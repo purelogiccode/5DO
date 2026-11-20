@@ -126,8 +126,9 @@ readable. State compatibility across 5DO builds is documented in
 ### Can I rewind or fast-forward?
 
 Yes. Rewind is on by default with a compressed 30–300 second window. Press `R` to
-rewind one second or `Shift+F9` to step back one frame. Hold `Tab` to fast-forward at
-2×–10×; audio is muted while fast-forwarding.
+rewind one second or `Shift+F9` to step back one frame. Hold `Tab` or tap `Space` to
+fast-forward at 2×–10×; tap `Space` again to return to normal speed. Audio is muted
+while fast-forwarding.
 
 ### Where are saves, screenshots, and logs?
 

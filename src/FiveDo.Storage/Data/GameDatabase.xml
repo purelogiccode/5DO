@@ -1520,6 +1520,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>Digital Pictures</publisher>
     <regions>US</regions>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>4A8B8CCE</id>
@@ -3973,6 +3974,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>Virgin Games</publisher>
     <regions>JP</regions>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>C530F2E8</id>
@@ -4203,6 +4205,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>Virgin</publisher>
     <regions>US</regions>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>CF9A26E0</id>
@@ -4966,6 +4969,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>Digital Pictures</publisher>
     <regions>JP</regions>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>F4C6076E</id>

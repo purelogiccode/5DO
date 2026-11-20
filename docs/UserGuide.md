@@ -195,6 +195,17 @@ history. The CLI
 exposes the same selection with `--input-device 1=mouse,3=lightgun` and can force the
 chain layout with `--pbus-format opera`.
 
+**Point-and-shoot titles.** For a title that uses the 3DO Gamegun, select
+**Lightgun**, not **Mouse**: the 3DO mouse is a separate point-and-click device, and
+some titles (including Demolition Man) do not recognize it. The host mouse then aims
+the gun; left click fires, right click is the Gamegun option/start/calibrate button,
+and middle click reloads. Demolition Man's database profile uses a joypad on port 1 and
+a Gamegun on port 2, so the pad still drives the menus and hand-to-hand sections while
+the mouse handles shooting. The same layout is available from the CLI with
+`--input-device 1=joypad,2=lightgun`. There is no separate mouse-mode toggle:
+selecting **Lightgun** on a port is the switch that makes the host mouse drive the
+Gamegun.
+
 The current MADAM PBUS DMA window is 20 bytes, so a chain longer than that is
 truncated cleanly at the DMA boundary. One peripheral plus joypads fits; avoid
 stacking several large devices (for example three flightsticks) until the DMA length
@@ -208,7 +219,9 @@ is widened.
 - **F9** advances the paused machine by one frame.
 - **Shift+F9** rewinds one frame.
 - **R** rewinds one second.
+- **P** pauses or resumes emulation.
 - **Tab** holds fast-forward; release it to return to normal speed.
+- **Space** toggles fast-forward on or off, matching RetroArch's toggle behavior.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.
@@ -225,7 +238,9 @@ is widened.
   fullscreen are also available from the toolbar and the **Emulation** menu.
 
 The hotkey map is part of the input profile. Custom key assignments are resolved
-case-insensitively; an unbound key falls through to the emulated pad.
+case-insensitively; an unbound key falls through to the emulated pad. **P** is the
+default Pause binding. **Escape** remains a system shortcut: it pauses and arms the
+second-press quit, independent of the configured Pause key.
 
 ### Rewind and fast-forward
 
@@ -237,9 +252,10 @@ Frame**. Rewinding restores the full machine state and replays the recorded inpu
 resuming is deterministic. The history is cleared when a state is loaded, the machine is
 reset, or a different disc starts.
 
-Hold **Tab** to fast-forward. The default multiplier is 4x and is configurable from 2x
-to 10x in **Settings > Emulation**. The **Emulation > Fast-Forward** menu item toggles
-the same mode for pointer-only use. Intermediate frames skip presentation and audio is
+Hold **Tab** to fast-forward, or tap **Space** to toggle it on and tap **Space** again
+to return to normal speed. The default multiplier is 4x and is configurable from 2x to
+10x in **Settings > Emulation**. The **Emulation > Fast-Forward** menu item toggles the
+same mode for pointer-only use. Intermediate frames skip presentation and audio is
 muted while fast-forwarding; emulation and input are unchanged. Releasing **Tab**,
 pausing, stopping, or resetting returns to normal speed.
 

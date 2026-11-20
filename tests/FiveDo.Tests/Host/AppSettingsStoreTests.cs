@@ -332,8 +332,18 @@ public sealed class AppSettingsStoreTests
 
         Assert.Equal("Lightgun", settings.ResolveInputDevices("E8FBE61C")[0]);
         Assert.Equal("Joypad", settings.ResolveInputDevices("E8FBE61C")[1]);
+        Assert.Equal(
+            "Lightgun",
+            settings.ResolveInputDevices("E8FBE61CA2232EC73B71D3524CE00567")[0]);
+        Assert.Equal("Joypad", settings.ResolveInputDevices("CF43E695")[0]);
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("CF43E695")[1]);
+        Assert.Equal("Joypad", settings.ResolveInputDevices("CF43E6953AC0F5012D8E674D5BACF15D")[0]);
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("CF43E6953AC0F5012D8E674D5BACF15D")[1]);
         Assert.Equal("OrbatakTrackball", settings.ResolveInputDevices("B6B3F5B2")[0]);
         Assert.False(settings.EnsureAutoInputDeviceOverride("E8FBE61C", "Crime Patrol"));
+        Assert.False(settings.EnsureAutoInputDeviceOverride(
+            "E8FBE61CA2232EC73B71D3524CE00567",
+            "Crime Patrol"));
         Assert.Null(settings.GetInputDeviceOverride("E8FBE61C"));
     }
 

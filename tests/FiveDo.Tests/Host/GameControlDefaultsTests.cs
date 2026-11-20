@@ -49,4 +49,20 @@ public sealed class GameControlDefaultsTests
         Assert.NotNull(devices);
         Assert.Equal(InputDeviceType.OrbatakTrackball.ToString(), devices[0]);
     }
+
+    [Fact]
+    public void TryGetInputDevices_SeedsGamegunAndPadForAlgTitles()
+    {
+        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(
+            "Demolition Man (1994)(Virgin)(US)");
+
+        Assert.NotNull(devices);
+        Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
+        Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
+
+        devices = GameControlDefaults.TryGetInputDevices("Corpse Killer (USA)");
+        Assert.NotNull(devices);
+        Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
+        Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
+    }
 }

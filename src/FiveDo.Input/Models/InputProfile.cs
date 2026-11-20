@@ -19,13 +19,14 @@ public sealed class InputProfile
         ["LoadState"] = "F8",
         ["Screenshot"] = "F12",
         ["Fullscreen"] = "F11",
-        ["Pause"] = "Escape",
+        ["Pause"] = "P",
         ["Reset"] = "F10",
         ["SlotPrevious"] = "F6",
         ["SlotNext"] = "F7",
         ["FrameAdvance"] = "F9",
         ["Rewind"] = "R",
         ["FastForward"] = "Tab",
+        ["ToggleFastForward"] = "Space",
         ["QuickMenu"] = "F4",
         ["SwapDisc"] = "F3",
         ["ToggleInputDisplay"] = "F2",
@@ -63,6 +64,18 @@ public sealed class InputProfile
 
         Players = players;
         AddMissingDefaultHotkeys();
+        MigrateLegacyPauseKey();
+    }
+
+    private void MigrateLegacyPauseKey()
+    {
+        // P is the dedicated pause key now. Escape remains a system-level pause/quit
+        // shortcut in the desktop shell, so upgrading the old default loses nothing.
+        if (Hotkeys.TryGetValue("Pause", out string? pause)
+            && string.Equals(pause, "Escape", StringComparison.OrdinalIgnoreCase))
+        {
+            Hotkeys["Pause"] = "P";
+        }
     }
 
     /// <summary>Adds hotkeys introduced after an older profile was saved.</summary>
