@@ -1,13 +1,56 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.14.0, a compatibility and
-input fix release for high-resolution presentation, Gamegun defaults, and desktop
-controls.
+All notable changes are recorded here. The project is at v1.14.1, a bug-fix release for
+the deep-review pass across the host, emulation core, storage, achievements, diagnostics,
+and desktop frontend.
 
-## [Unreleased]
+## [1.14.1] - 2026-11-20
+
+### Fixed
+
+- **CHD Mode 2 native track sectors are aligned correctly.** `ChdDiscImage.ReadTrackSector`
+  now returns the frame from offset zero for 2336-byte Mode 2 and 2324-byte Form 2
+  tracks. `ReadSector` still applies the subheader offset to reach the 2048-byte user
+  data. This fixes raw-sector consumers, disc-health/DAT hashing, and multi-track audio
+  handling for CHD images.
+- **Clearing auto-crop no longer leaves stale frame dimensions.** When auto-crop stopped
+  cropping or a manual crop was cleared, the cached cropped frame kept its old size and
+  could mis-size CPU presentation, screenshot metadata, and mouse pointer mapping. The
+  cache is now dropped so those paths follow the live frame dimensions.
+- **Malformed persisted data is rejected or normalized instead of crashing.** Settings
+  with null collections, invalid enums, or out-of-range presentation values; library,
+  disc-health, and update caches with null entries; null BIOS overrides; and null state
+  document values are repaired or ignored. Invalid CD-ROM FIFO and track ranges, MADAM
+  FSM states, and truncated state sections now raise a clear `InvalidStateException`.
+- **Disc and container parsing is stricter.** CDI signatures require at least one track
+  and the parser reads exactly the declared session count; NRG ETN2 entries use the
+  28-byte layout; CUE/CHD Mode 2 Form Mix tracks use the 2336-byte subheader layout;
+  standalone BIN images expose a data track; and the game database accepts `.bin`
+  images and single-letter GoodTools region tags.
+- **Shutdown and device-loss paths no longer race with live workers.** The OpenAL fill
+  thread, RetroAchievements unlock queue, bug-report sink, core thread, and audio
+  recorder handoff are left intact when they cannot stop in time instead of disposing
+  objects they may still use. Vulkan surface acquisition has a bounded timeout and safe
+  resize waits, and Direct3D rejects only device-removal/hang/reset failures.
+- **CD-DA keeps advancing while muted.** The CD audio cursor is consumed even at zero
+  volume or when muted, so unmuting no longer replays the muted interval or cuts off
+  the tail of the track.
+- **DirectInput Y axes match the frontend convention.** Left and right stick Y values
+  are inverted into the positive-up `GamepadState` axes, and the eight-device PBUS chain
+  packet grows to 80 bytes so eight flightsticks fit.
 
 ### Changed
 
+- **Persistence writes use unique temporary names and clean up after failures.**
+  Settings, save slots, save-slot metadata, screenshots, NVRAM, BIOS, movies, library
+  caches, cover metadata, update cache, diagnostics bundles, and achievement queues no
+  longer share a fixed `.tmp` name. The final file is replaced atomically and the
+  temporary file is removed on both success and failure.
+- **The last non-Serilog debug output is gone.** `DisplaySleep` writes its screen-saver
+  and PATH fallbacks through Serilog, and previously silent fallback catches in Host,
+  Storage, Achievements, Diagnostics, and the frontend now log at `Debug` with the
+  exception detail. `FiveDo.Video.Vulkan` references Serilog for the runtime-probe
+  fallback.
 - **Tooltip coverage now includes content elements, not only controls.**
   `FrontendToolTipTests` parses every `Views/*.axaml` and requires a `ToolTip.Tip` on
   each interactive control plus every `TextBlock` and `Image`, either directly or on an
@@ -18,28 +61,29 @@ controls.
   entry point is now `internal` (128 methods across the Rcheevos port, Host state/cache
   helpers, Storage, and the Avalonia helpers). `Program.BuildAvaloniaApp` remains public
   for the Avalonia designer convention.
-- **The last non-Serilog debug output is gone.** `DisplaySleep` writes its screen-saver
-  and PATH fallbacks through Serilog instead of `Debug.WriteLine`, and previously silent
-  fallback catches in Host, Storage, Achievements, Diagnostics, and the frontend now log
-  at `Debug` with the exception detail. `FiveDo.Video.Vulkan` references Serilog for the
-  runtime-probe fallback.
+- **Presentation and CLI polish.** OpenGL allocates GL 3.3/GLES 3.0-compatible texture
+  storage with `TexImage2D`, Direct3D/Vulkan honor fixed output resolutions, Vulkan
+  maps bicubic to its shader path, the GPU void color is used for letterboxing, and the
+  CLI treats boolean options as flags, reports disc warnings/notes, and releases discs
+  and trace writers after a failed run. Language selection honors the first supported
+  locale in a `LANGUAGE` priority list.
 
 ### Added
 
 - **Bug-report contract tests.** The required environment, error, and exception field
   names and blocks are asserted for every payload, and the sink is covered for rejected
-  HTTP responses and transport failures. The `InstructionsToSendBugs.md` file was not
-  present at either documented path; the inline field list supplied with the task was
-  used as the contract.
-- **38 more tests** (2,513 total): atomic file writes, 5DO state-document parsing and
-  section editing, library-cache persistence, local cover indexing, the bug-report
-  contract, and update-cache fallbacks.
+  HTTP responses and transport failures. The suite also covers atomic file writes, 5DO
+  state documents, library caches, local cover indexing, and update-cache fallbacks.
+- **Regression coverage for native CHD Mode 2 sectors**, including a 2336-byte CUE/CHD
+  round trip that compares both the native track sector and the 2048-byte user data.
 
 ### Validation
 
-- Full suite **2,513/2,513** passes in Debug; `dotnet build` reports 0 warnings and
-  0 errors, `dotnet format --verify-no-changes` passes, and `dotnet restore --locked-mode`
-  succeeds after the lock files were refreshed to 1.14.0.
+- Full suite **2,534/2,534** passes in Debug; `dotnet build` reports 0 warnings and
+  0 errors, `dotnet format --verify-no-changes` passes, `jb inspectcode` at warning
+  severity reports no findings, and `dotnet restore --locked-mode` succeeds.
+- CI passes on Windows, Linux, and macOS, and the tagged release publishes the five
+  bundles plus the signed Linux packages.
 
 ## [1.14.0] - 2026-11-20
 

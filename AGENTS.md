@@ -105,7 +105,7 @@ The gate, run against the published `5do-<version>-win-arm64.zip`:
   `ARM64` for `FiveDo.exe`, `FiveDo.Cli.exe`, `libSkiaSharp.dll`, `libHarfBuzzSharp.dll`,
   `OpenAL32.dll`, `soft_oal.dll`, and `av_libglesv2.dll`.
 - Install the .NET 11 SDK with `dotnet-install.ps1 -Channel 11.0 -InstallDir
-  C:\Users\azureuser\dotnet`, unpack the `v1.14.0` tag source, and run
+  C:\Users\azureuser\dotnet`, unpack the `v1.14.1` tag source, and run
   `dotnet test tests\FiveDo.Tests\FiveDo.Tests.csproj -c Release`. There is no `git` on
   the image, so upload a `git archive` ZIP of the tag instead of cloning.
 - CLI: `--version`, `selftest --json`, `bench`, `bios info`, `info`, a 3,000-frame disc

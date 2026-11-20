@@ -2,6 +2,11 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
+**Current release (2026-11-20):** v1.14.1 is a deep-review bug-fix release for CHD Mode
+2 native sectors, stale crop dimensions, atomic persistence, malformed-data recovery,
+and shutdown/device-loss handling. It does not change the default 320x240 compatibility
+path or the documented title matrix; the 1.14.0 feature baseline remains current.
+
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
 additional titles were validated on 2026-10-26 (Gex, Need for Speed, Super Street

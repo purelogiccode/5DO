@@ -16,12 +16,15 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.14.0 high-resolution and input fix release"
-    5DO is at v1.14.0. The legacy `--high-res` option is now a presentation-only 2x
-    upscale that is safe for every title, the OpenGL 480-line upload no longer paints
-    rainbow background rows, and the retail American Laser Games Gamegun titles keep a
-    joypad alongside the gun. **P** pauses, **Space** toggles fast-forward, **F1**
-    connects the Gamegun, and **Alt+Enter** toggles fullscreen.
+!!! important "v1.14.1 deep-review bug-fix release"
+    5DO is at v1.14.1. This bug-fix release aligns CHD Mode 2 native track sectors,
+    clears stale cropped-frame dimensions after auto-crop stops, and hardens atomic
+    persistence, malformed-settings recovery, CD-ROM/state validation, and shutdown for
+    audio, RetroAchievements, Vulkan, and Direct3D workers. The 1.14.0 feature baseline
+    is unchanged: `--high-res` remains a presentation-only 2x upscale, the OpenGL
+    480-line upload is fixed, and retail Gamegun titles keep a joypad on port 1.
+    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
+    **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all eight filters and a
     packaged DMG. GPG-signed Linux artifacts use the keyring fingerprint
@@ -82,14 +85,22 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.14.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.14.1.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-20, v1.14.0 high-resolution and input fix release (GitHub Releases).**
+**2026-11-20, v1.14.1 deep-review bug-fix release (GitHub Releases).**
 
-- **2,513 tests** are present in the current test assembly.
+- **2,534 tests** are present in the current test assembly.
+- **CHD Mode 2 sectors and crop dimensions are fixed:** native 2336-byte and 2324-byte
+  track sectors start at frame offset zero for raw-sector consumers and DAT hashing, and
+  clearing auto-crop or a manual crop returns pointer mapping and CPU presentation to the
+  live frame size.
+- **Persistence and shutdown are hardened:** state, cache, BIOS, NVRAM, screenshot, and
+  movie writes use unique temporary files with cleanup; malformed settings and caches
+  recover instead of crashing; and audio, RetroAchievements, Vulkan, Direct3D, and core
+  workers are not disposed while they may still be running.
 - **High-resolution presentation is safe for every title:** `--high-res` keeps the guest
   at native 320x240 and doubles the finished frame in `Vdlp`; a 300-frame Road Rash run
   matches a 2x nearest upscale of the native frame with 0 differing pixels. The OpenGL
@@ -158,7 +169,7 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.14.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.14.0)
+- v1.14.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.14.1)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See

@@ -1,5 +1,17 @@
 # Project Status and Next Steps
 
+**2026-11-20, v1.14.1 release:** the deep-review bug-fix release aligns CHD Mode 2
+native track sectors (2336-byte track data and disc-health/DAT hashing), drops stale
+cropped-frame dimensions when auto-crop stops, and hardens persistence, malformed
+settings, CD-ROM/state validation, and shutdown across the OpenAL, RetroAchievements,
+Vulkan, Direct3D, and core workers. Writes for save slots, screenshots, NVRAM, BIOS,
+movies, caches, and diagnostics are atomic with unique temporary names, and the new
+2336-byte CUE/CHD round-trip test covers the native-sector and user-data paths. The
+suite is **2,534/2,534**, `dotnet build` reports 0 warnings/0 errors, `dotnet format`
+and `jb inspectcode` are clean, and CI passes on Windows, Linux, and macOS. Release
+notes: [ReleaseNotes-1.14.1.md](ReleaseNotes-1.14.1.md). Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.14.1>.
+
 **2026-11-20, v1.14.0 release:** the high-resolution and input fix release makes
 `--high-res` presentation-only (the guest stays at native 320x240 and VDLP performs an
 exact 2x upscale for 320-wide modes), fixes the OpenGL `RG32UI` 480-line upload, and

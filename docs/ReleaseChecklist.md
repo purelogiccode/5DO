@@ -1,11 +1,14 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.14.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.14.1 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.14.0 makes `--high-res` presentation-only, fixes
-the OpenGL 480-line upload, and completes the Gamegun/input defaults; v1.13.2 was a
-bug-fix release for movie verification and partial-extraction diagnostics.
+v1.2.x. macOS is published as a DMG. v1.14.1 is a deep-review bug-fix release for CHD
+Mode 2 native sectors, stale crop dimensions, atomic persistence, malformed-data
+recovery, and shutdown/device-loss handling. v1.14.0 made `--high-res`
+presentation-only, fixed the OpenGL 480-line upload, and completed the Gamegun/input
+defaults; v1.13.2 was a bug-fix release for movie verification and partial-extraction
+diagnostics.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -39,6 +42,24 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.14.1 deep-review bug-fix gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.14.1`.
+- [x] CHD Mode 2 native track sectors start at frame offset zero; a 2336-byte CUE/CHD
+      round trip compares both the native track sector and the 2048-byte user data.
+- [x] Clearing auto-crop or a manual crop drops the cached cropped frame, so CPU
+      presentation, screenshot metadata, and pointer mapping use the live frame size.
+- [x] Save slots, screenshots, NVRAM, BIOS, movies, caches, cover metadata, update
+      checks, diagnostics, and achievement queues use unique temporary files and clean
+      up after failure.
+- [x] Malformed settings/caches, invalid state/CD-ROM records, and null collections no
+      longer crash callers.
+- [x] Full suite green (**2,534 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
+- [ ] CI passes on Windows, Linux, and macOS.
+- [ ] Tagged release publishes the five bundles and the signed Linux assets.
 
 ## 1.14.0 high-resolution and input gate
 

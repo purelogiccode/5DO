@@ -1,6 +1,9 @@
 # Known Issues
 
-**Snapshot:** 2026-11-16, v1.10.2: Jurassic Park Interactive reaches the in-park Raptor
+**Snapshot:** 2026-11-20, v1.14.1. The 1.14.1 deep-review release fixes CHD Mode 2
+native track sectors, stale cropped-frame dimensions, malformed-persistence recovery,
+and shutdown races; it adds no new known issues. The list below remains the supported
+corpus and prototype-state record. Jurassic Park Interactive reaches the in-park Raptor
 Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
 images, the Windows OpenAL bundle
 fix, RetroAchievements with a managed rcheevos engine, save-state hit persistence,

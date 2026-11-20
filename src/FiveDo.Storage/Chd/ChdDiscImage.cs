@@ -236,13 +236,10 @@ public sealed class ChdDiscImage : ITrackedDiscSource
             }
         }
 
-        if (track.SectorSize == RawSectorSize)
-        {
-            _rawSector.AsSpan(0, RawSectorSize).CopyTo(destination);
-            return RawSectorSize;
-        }
-
-        _rawSector.AsSpan(track.PayloadOffset, track.SectorSize).CopyTo(destination);
+        // CHDSharp returns the frame's data at offset zero and zero-pads shorter
+        // data sizes. ReadSector applies PayloadOffset to reach the 2048-byte user
+        // data, but the native track sector itself starts at the frame start.
+        _rawSector.AsSpan(0, track.SectorSize).CopyTo(destination);
         return track.SectorSize;
     }
 

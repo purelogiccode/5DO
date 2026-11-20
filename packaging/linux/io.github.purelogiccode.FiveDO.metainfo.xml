@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.14.1" date="2026-11-20">
+      <description>
+        <p>
+          Bug-fix release for the deep-review pass: CHD Mode 2 native track sectors,
+          cropped-frame pointer and CPU presentation dimensions, atomic state/cache
+          writes, malformed settings recovery, and shutdown handling for audio,
+          RetroAchievements, and presentation threads.
+        </p>
+      </description>
+    </release>
     <release version="1.14.0" date="2026-11-20">
       <description>
         <p>

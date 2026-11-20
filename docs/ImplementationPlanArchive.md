@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.14.0.
+> history through v1.14.1.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -843,8 +843,11 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 → v1.14.0)
+## 14. Release history (v1.9.1 - v1.14.1)
 
+- **v1.14.1 (2026-11-20):** deep-review bug-fix release - CHD Mode 2 native track
+  sectors, stale crop dimensions, atomic persistence, malformed cache/settings recovery,
+  state/CD validation, and shutdown/device-loss hardening; suite 2,534/2,534.
 - **v1.14.0 (2026-11-20):** high-resolution and input fix release — `--high-res` is
   presentation-only (native guest, exact 2x VDLP upscale), the OpenGL 480-line upload
   uses `RG32UI`, retail ALG Gamegun titles keep a joypad on port 1, Demolition Man starts

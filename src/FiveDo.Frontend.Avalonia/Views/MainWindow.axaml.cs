@@ -2324,9 +2324,11 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        WavAudioSink? recorder = null;
         try
         {
-            _audioRecorder = new WavAudioSink(path);
+            recorder = new WavAudioSink(path);
+            _audioRecorder = recorder;
             _audioRecordingPath = path;
             UpdateAudioSink();
             RecordAudioMenuItem.Header = "Stop Audio Recording";
@@ -2334,10 +2336,14 @@ public partial class MainWindow : Window, IDisposable
             ShowOsd($"Recording audio: {Path.GetFileName(path)}", OsdSeverity.Success);
             _logger.ForCategory(LogCategory.Audio).Information("Audio recording started: {Path}.", path);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or InvalidOperationException)
         {
             _audioRecorder = null;
             _audioRecordingPath = null;
+            recorder?.Dispose();
             RecordAudioMenuItem.Header = "Record Audio...";
             ShowError("Audio recording", exception.Message);
             _logger.ForCategory(LogCategory.Audio).Error(exception, "Audio recording failed to start.");
@@ -6772,6 +6778,10 @@ public partial class MainWindow : Window, IDisposable
                 out var width,
                 out var height))
         {
+            // Drop the cached cropped frame so pointer mapping, CPU presentation,
+            // and screenshot metadata fall back to the live source dimensions when
+            // auto-crop stops cropping or a manual crop is cleared.
+            _overscanFrame = null;
             return frame;
         }
 
