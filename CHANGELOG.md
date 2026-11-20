@@ -1,9 +1,10 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.13.2, a bug-fix release for
-movie verification and partial-extraction diagnostics.
+All notable changes are recorded here. The project is at v1.14.0, a compatibility and
+input fix release for high-resolution presentation, Gamegun defaults, and desktop
+controls.
 
-## [Unreleased]
+## [1.14.0] - 2026-11-20
 
 ### Fixed
 
@@ -12,6 +13,10 @@ movie verification and partial-extraction diagnostics.
   eight-character 4DO ID, so curated `inputDevices` entries were ignored and every port
   stayed a joypad. The lookup now accepts either form. This is what prevented the
   automatic Gamegun profile from reaching the frontend mouse.
+- **The legacy gun-only override migration runs once.** Earlier 1.14 builds removed the
+  old automatic `1=lightgun` seed on every settings load, which also deleted a gun-only
+  layout the user chose deliberately. The migration is now recorded in settings and runs
+  only for files that predate it.
 - **High-resolution mode no longer corrupts or hangs games.** The legacy `--high-res`
   option is now presentation-only: the guest machine stays at native 320x240 (CEL
   coordinates, VRAM, CPU bitmap reads, and SPORT are unchanged) and the 640x480 frame
@@ -19,7 +24,8 @@ movie verification and partial-extraction diagnostics.
   For 320-wide modes this is a pixel-perfect 2x nearest upscale. It removes the
   left-half 2D CEL cropping, stale bitmap/video planes, bottom-edge rainbow rows, and
   the Road Rash gameplay hang caused by the old FreeDO-style four-plane layout. The
-  opt-in `--true-2x` exception remains experimental and gated to its validated titles.
+  opt-in `--true-2x` path remains experimental and is available for every title, with
+  Jurassic Park Interactive and Family Feud as the visually validated references.
   Verified with 0-pixel differences against 2x native upscales on 20th Century Video
   Almanac, Road Rash, Dragon's Lair, and the Alone in the Dark demo.
 - **OpenGL no longer draws rainbow background rows on 480-line frames.** The
@@ -41,8 +47,8 @@ movie verification and partial-extraction diagnostics.
   Drug Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot
   Johnny Rock, and Corpse Killer use `1=joypad,2=lightgun`, so the keyboard/gamepad
   still drive menus and non-lightgun sections while the host mouse aims the Gamegun for
-  the shooting galleries. Old auto-seeded gun-only overrides are removed on load. Left
-  click fires, right click is the Gamegun option/start/calibrate button, and middle
+  the shooting galleries. Old auto-seeded gun-only overrides are removed once on upgrade.
+  Left click fires, right click is the Gamegun option/start/calibrate button, and middle
   click reloads.
 - **Demolition Man starts with the pad, then connects the Gamegun on demand.**
   Demolition Man ignores pad Start/A while a Gamegun is attached during boot and stays
@@ -57,7 +63,7 @@ movie verification and partial-extraction diagnostics.
   to native for unvalidated game IDs. Jurassic Park Interactive and Family Feud remain
   the visually validated references; other titles log an experimental warning and may
   misrender bitmap/SPORT or framebuffer-read content. The legacy presentation-only
-  `--high-res` mode is unchanged and remains the safe option.
+  `--high-res` mode remains the safe option.
 
 ## [1.13.2] - 2026-11-19
 

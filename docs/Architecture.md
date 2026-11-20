@@ -305,7 +305,7 @@ The core never knows about Avalonia or OpenGL. `IFrameSink` receives a `VdlFrame
 VdlFrame
   ├── pixel texture:  R16UI, width x height (320x240 typical)
   ├── palette texture: RGB8, 32 x height (per-line CLUT)
-  └── line-param texture: RGBA32UI, 1 x height
+  └── line-param texture: RG32UI, 1 x height
         (background, out-control, clut-dma flags)
         │
         ▼

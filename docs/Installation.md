@@ -18,15 +18,15 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 ## Download
 
 Download the bundle for your system and architecture from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.13.2):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.14.0):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.13.2-win-x64.zip` |
-| Windows arm64 | `5do-1.13.2-win-arm64.zip` |
-| Linux x64 | `5do-1.13.2-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.13.2-linux-arm64.tar.gz` |
-| macOS arm64 | `5do-1.13.2-osx-arm64.dmg` |
+| Windows x64 | `5do-1.14.0-win-x64.zip` |
+| Windows arm64 | `5do-1.14.0-win-arm64.zip` |
+| Linux x64 | `5do-1.14.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.14.0-linux-arm64.tar.gz` |
+| macOS arm64 | `5do-1.14.0-osx-arm64.dmg` |
 
 Each bundle contains both the desktop app and the CLI. The .NET 11 runtime is embedded
 in the self-contained apphosts, so no separate runtime install is required. On Windows
@@ -34,8 +34,8 @@ extract the ZIP and run
 `FiveDo.exe`; on Linux extract the tarball and run
 `./FiveDo`; on macOS open the DMG and drag `5DO.app` to Applications.
 
-Bundles are versioned, for example `5do-1.13.2-win-arm64.zip` or
-`5do-1.13.2-osx-arm64.dmg`.
+Bundles are versioned, for example `5do-1.14.0-win-arm64.zip` or
+`5do-1.14.0-osx-arm64.dmg`.
 
 ### Installers and file associations
 

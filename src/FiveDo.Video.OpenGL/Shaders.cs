@@ -95,7 +95,7 @@ internal static class Shaders
     private const string FragmentPaletteBody = """
         uniform usampler2D uPixels;  // R16UI indexed pixels
         uniform sampler2D uClut;     // RGB8, 32 entries x height
-        uniform usampler2D uParams;  // RGBA32UI: background, out-control
+        uniform usampler2D uParams;  // RG32UI: background, out-control
         uniform ivec2 uSource;
         out vec4 fragColor;
 

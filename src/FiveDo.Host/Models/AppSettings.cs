@@ -32,9 +32,11 @@ public sealed class AppSettings
     /// unsigned-disc/RSA-patch option. Version 6 adds the latency options (run-ahead,
     /// frame delay, adaptive sync, and audio sync). Version 7 adds the online cover
     /// catalog options. Version 8 adds the UI locale. Version 9 adds the audio channel
-    /// swap. Older files load with the documented defaults for new properties.
+    /// swap. Version 10 runs the one-shot legacy input-device override migration and
+    /// records the new default hotkeys. Older files load with the documented defaults
+    /// for new properties.
     /// </remarks>
-    public const int CurrentVersion = 9;
+    public const int CurrentVersion = 10;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file

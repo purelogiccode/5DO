@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.13.2-orange" alt="Version 1.13.2"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.14.0-orange" alt="Version 1.14.0"></a>
 </p>
 
 <p align="center">
@@ -27,12 +27,15 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.13.2**, a bug-fix release: movie verification matches the recorded
-> evidence again, and a partial extraction now shows a "5DO cannot start" message instead
-> of a Skia crash. The 1.13.x line adds the **native macOS `CAMetalLayer` surface** at
-> 60 fps with no per-frame readback, all eight filters, the Phoenix/4DO presentation
-> options (audio channel swap, named void patterns, the GPU void color, and the
-> emulation-health badge), and **GPG-signed Linux artifacts** (keyring fingerprint
+> 5DO is at **v1.14.0**, an input and high-resolution fix release. `--high-res` is now a
+> safe presentation-only 2x upscale for every title, the OpenGL 480-line upload no
+> longer shows rainbow background rows, and the retail American Laser Games Gamegun
+> titles keep a joypad alongside the gun. **P** pauses, **Space** toggles fast-forward,
+> **F1** connects the Gamegun, and **Alt+Enter** toggles fullscreen. The 1.13.x line
+> added the **native macOS `CAMetalLayer` surface** at 60 fps with no per-frame readback,
+> all eight filters, the Phoenix/4DO presentation options (audio channel swap, named
+> void patterns, the GPU void color, and the emulation-health badge), and
+> **GPG-signed Linux artifacts** (keyring fingerprint
 > `E69FF266D1FB01D3411578775C4C1E8EAFD44075`).
 > Windows x64 and Linux x64 remain validated targets; macOS arm64, Linux arm64, and
 > Windows arm64 pass the native CLI/frontend runtime smoke. Intel macOS is no longer
@@ -86,10 +89,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.13.2` release (GitHub Releases) |
+| Version | `1.14.0` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,449 tests** in the current test assembly |
+| Automated tests | **2,475 tests** in the current test assembly |
 | macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
@@ -111,11 +114,11 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.13.2-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.2/5do-1.13.2-win-x64.zip) |
-| Windows arm64 | [`5do-1.13.2-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.13.2/5do-1.13.2-win-arm64.zip) |
-| Linux x64 | [`5do-1.13.2-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.2/5do-1.13.2-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.13.2-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.13.2/5do-1.13.2-linux-arm64.tar.gz) |
-| macOS arm64 | [`5do-1.13.2-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.13.2/5do-1.13.2-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.14.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.14.0/5do-1.14.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.14.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.14.0/5do-1.14.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.14.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.14.0/5do-1.14.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.14.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.14.0/5do-1.14.0-linux-arm64.tar.gz) |
+| macOS arm64 | [`5do-1.14.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.14.0/5do-1.14.0-osx-arm64.dmg) |
 
 The Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the bundled
 OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux bundles ship
@@ -123,20 +126,20 @@ the same OpenAL Soft runtime and do not require a system OpenAL install.
 
 The apps are **self-contained single-file executables**: the .NET 11 runtime is
 embedded, so no separate runtime install is required. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.13.2)
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.14.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 Linux users can also install the `.deb`/`.rpm` packages, run the portable AppImage, or
 install the single-file Flatpak bundle; all four are built for x64 and arm64 from the
 same bundles. The Linux files carry the platform and version in their names, for example
-`5do_1.13.2_amd64.deb`, `5do-1.13.2-1.linux.x86_64.rpm`,
-`5do-1.13.2-linux-x86_64.AppImage`, and `5do-1.13.2-linux-x86_64.flatpak`; the release
+`5do_1.14.0_amd64.deb`, `5do-1.14.0-1.linux.x86_64.rpm`,
+`5do-1.14.0-linux-x86_64.AppImage`, and `5do-1.14.0-linux-x86_64.flatpak`; the release
 page opens with a table that maps each system to the one file it needs. Verification
 commands, the signing model, and the optional mirror setup are in the
 [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.13.2-win-arm64.zip`
-or `5do-1.13.2-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.14.0-win-arm64.zip`
+or `5do-1.14.0-osx-arm64.dmg`.
 
 Extract a bundle to a folder before running it. The apphosts load `libSkiaSharp`,
 `libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder, so running
@@ -188,8 +191,8 @@ app; it now reports the missing files by name instead of crashing inside Skia.
   achievement progress window. Fast-forward and creating save states remain available in
   hardcore; loading states, rewind, frame advance, cheats, and TAS are blocked. Hardcore
   credit is pending RetroAchievements client approval. See
-  [RetroAchievements](RetroAchievements.md) and
-  [the compliance package](RetroAchievementsCompliance.md).
+  [RetroAchievements](docs/RetroAchievements.md) and
+  [the compliance package](docs/RetroAchievementsCompliance.md).
 - Deterministic `.5domovie` TAS recording, replay, verification, branching, and a
   per-frame movie editor. Lua input scripts (`--input-lua`) and **Emulation > Input
   Timeline...** add scripted and editable timeline authoring.

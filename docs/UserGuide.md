@@ -232,6 +232,7 @@ is widened.
 - **F1** connects or disconnects the emulated 3DO Gamegun on the game's lightgun port.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
+- **Alt+Enter** also toggles fullscreen, including from the library and the quick menu.
 - **F12** captures a screenshot.
 - **F3** swaps to the next disc in an M3U playlist or opens a disc picker; see
   **File > Swap Disc**.

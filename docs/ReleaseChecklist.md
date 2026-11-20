@@ -1,11 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.13.2 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.14.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.13.2 is a bug-fix release for movie verification
-and partial-extraction diagnostics; v1.13.0 added the native Metal surface, the
-Phoenix/4DO presentation options, and GPG-signed Linux artifacts.
+v1.2.x. macOS is published as a DMG. v1.14.0 makes `--high-res` presentation-only, fixes
+the OpenGL 480-line upload, and completes the Gamegun/input defaults; v1.13.2 was a
+bug-fix release for movie verification and partial-extraction diagnostics.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -39,6 +39,24 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.14.0 high-resolution and input gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.14.0`.
+- [x] `--high-res` is presentation-only: a 300-frame Road Rash frame is a 0-pixel
+      difference from a 2x nearest upscale of the native frame.
+- [x] OpenGL uploads the two-word line parameters as `RG32UI`; the 480-line rainbow
+      background rows are gone.
+- [x] Retail ALG Gamegun titles keep a joypad on port 1; Demolition Man starts with the
+      pad and connects the gun with F1; full-checksum database input lookup works.
+- [x] The legacy gun-only override migration runs once and preserves a later explicit
+      override.
+- [x] Full suite green (**2,475 tests**), `dotnet format`, `jb inspectcode`, and
+      `mkdocs build --strict`.
+- [ ] Tagged release publishes the five bundles and the signed Linux assets; the
+      download verification in [LinuxDistribution.md](LinuxDistribution.md) §3 passes
+      from a clean download.
 
 ## 1.13.2 bug-fix gate
 

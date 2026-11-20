@@ -380,6 +380,36 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Load_MigratesLegacyInputDeviceOverridesOnlyOnce()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        const string legacyJson = """
+            {
+              "SettingsVersion": 9,
+              "InputDeviceOverrides": {
+                "E8FBE61C": ["Lightgun", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad"]
+              }
+            }
+            """;
+        File.WriteAllText(path, legacyJson);
+
+        AppSettings migrated = AppSettingsStore.Load(path);
+        Assert.Equal(AppSettings.CurrentVersion, migrated.SettingsVersion);
+        Assert.Null(migrated.GetInputDeviceOverride("E8FBE61C"));
+
+        // A new explicit override must survive the next load; the legacy migration
+        // ran once for the pre-schema-10 file and must not keep deleting it.
+        migrated.SetInputDeviceOverride(
+            "E8FBE61C",
+            ["Lightgun", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad"]);
+        Assert.True(AppSettingsStore.Save(migrated, path));
+
+        AppSettings reloaded = AppSettingsStore.Load(path);
+        Assert.Equal("Lightgun", reloaded.GetInputDeviceOverride("E8FBE61C")![0]);
+    }
+
+    [Fact]
     public void GameProfileClone_IsIndependent()
     {
         var profile = new GameProfile

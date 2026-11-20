@@ -410,7 +410,7 @@ This is the largest and riskiest port. Split it into classes but keep the origin
 - The C# `FrameAssembler` does the same conversion into a `FrameBuffer` with a configurable pixel format. It is the **accuracy oracle and CPU fallback**, not the primary desktop path.
   - **M3 note:** the background is expanded from 5 bits to 8 bits with `(v << 3) | (v >> 2)`; FreeDO's `frame.cpp` writes the raw 5-bit value. The expansion is the documented CPU-oracle behaviour and the GPU shader must match it. CLUT entries are already 8-bit in both paths.
 - The **required OpenGL renderer** ports the same palette logic into a fragment shader:
-  - raw 16-bit pixels (`R16UI`) + per-line CLUT (`RGB8`) + line-param texture (`RGBA32UI`)
+  - raw 16-bit pixels (`R16UI`) + per-line CLUT (`RGB8`) + line-param texture (`RG32UI`)
   - exact 5-bit-to-8-bit expansion
   - fixed CLUT and background paths
   - **Per-channel CLUT indices are mandatory.** The per-line CLUT is a 32-entry
@@ -659,7 +659,7 @@ M1 implements the section primitive used by all later chips:
 ### 12.12 M9/M9R implementation notes
 
 - The OpenGL presenter lives entirely in the host layer. `FiveDo.Video` owns the backend-neutral `IVideoRenderer` contract, settings, aspect/integer viewport math, the frame uploader, and `GpuPalette` (the CPU reference for the shader). `FiveDo.Video.OpenGL` owns Silk.NET GL/GLES resources and the GLSL 330 / GLSL ES 300 shader variants. The target design and current gaps are in [`Performance.md`](Performance.md).
-- `VdlFrameUploader` packs R16UI indexed pixels, an RGB8 32xheight CLUT, and an RGBA32UI per-line background/out-control texture. Buffers are reused. The shader uses `texelFetch` with nearest sampling for the accurate path.
+- `VdlFrameUploader` packs R16UI indexed pixels, an RGB8 32xheight CLUT, and an RG32UI per-line background/out-control texture. Buffers are reused. The shader uses `texelFetch` with nearest sampling for the accurate path.
 - `GpuPalette` exists so the palette algorithm can be tested without a GL context: tests compare it against `FrameAssembler` for a 320x240 synthetic VDL frame including background, fixed-CLUT bit 15, and per-line CLUT cases. The shader mirrors this logic.
 - `OpenGlRenderer` creates the programs, VAO/VBO, textures, and a native-resolution palette FBO, draws a fullscreen triangle strip into the supplied framebuffer, and implements `ReadPixels` with an RGBA-to-BGRA swap. `VideoSurface` calls `GL.GetApi(gl.GetProcAddress)` from Avalonia's `OpenGlControlBase` and renders a latest-frame mailbox snapshot. The two-stage palette/scale pipeline, `TexStorage2D`/`TexSubImage2D`, cached uniforms, and physical-pixel sizing are implemented. **Remaining deviations:** the GLES/ANGLE/Pi path is not validated on hardware.
 - The Windows frontend now prefers WGL with ANGLE/software fallbacks. `OpenGlRenderer` detects an OpenGL ES context from the version string and selects GLSL ES 300 shader sources with the required precision qualifiers; desktop contexts keep GLSL 330. Real-hardware ANGLE and Raspberry Pi 4/5 validation remains.

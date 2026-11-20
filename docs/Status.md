@@ -1,5 +1,18 @@
 # Project Status and Next Steps
 
+**2026-11-20, v1.14.0 release:** the high-resolution and input fix release makes
+`--high-res` presentation-only (the guest stays at native 320x240 and VDLP performs an
+exact 2x upscale for 320-wide modes), fixes the OpenGL `RG32UI` 480-line upload, and
+completes the Gamegun defaults: retail American Laser Games titles keep a joypad on port
+1, Demolition Man starts with the pad and connects the gun with F1, and the database
+input devices now resolve for both the full disc checksum and the 8-character 4DO ID.
+The legacy gun-only override migration now runs once instead of deleting an explicit
+choice on every launch. Defaults are P to pause, Space to toggle fast-forward, F1 to
+connect the Gamegun, and Alt+Enter for fullscreen. The suite is **2,475/2,475**,
+`dotnet format` and `jb inspectcode` are clean, and a 300-frame Road Rash `--high-res`
+run matches a 2x nearest upscale of the native frame with 0 differing pixels. Release
+notes: [ReleaseNotes-1.14.0.md](ReleaseNotes-1.14.0.md).
+
 **2026-11-19, v1.13.2 release:** the bug-fix release ships the `SYS-26`
 movie-verification fix and the `UX-36` partial-extraction preflight, with CHDSharp 1.7.1
 and refreshed lock files. The suite is **2,449/2,449**, `dotnet format` and

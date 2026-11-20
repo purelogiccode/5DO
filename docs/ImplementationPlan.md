@@ -1,7 +1,7 @@
 # 5DO — Missing Features
 
-**Snapshot:** 2026-11-19
-**Release:** v1.13.2
+**Snapshot:** 2026-11-20
+**Release:** v1.14.0
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
@@ -21,7 +21,7 @@ completed items, their evidence, and the full stable-ID history are in
 ## 1. Completed baseline
 
 Nothing in §3 is closed. The 375/378 playability result, the 101-row quality ledger, the
-50/50 accuracy panel, the v1.9.1–v1.13.2 release history, the 39 completed
+50/50 accuracy panel, the v1.9.1–v1.14.0 release history, the 39 completed
 `QUAL`/`AUD`/`PLAT`/`ACC`/`SYS`/`UX`/`VID` rows (including the post-1.13.1 `SYS-26`
 movie-verification and `UX-36` startup-preflight fixes), and every completed stable ID are
 recorded in [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §10–§16. Do not

@@ -170,7 +170,7 @@ VdlFrame
   |
   +--> indexed pixel texture: R16UI, width x height
   +--> palette texture:       RGB8, 32 entries x height
-  +--> line-param texture:    RGBA32UI, 1 x height (background, out-control)
+  +--> line-param texture:    RG32UI, 1 x height (background, out-control)
         |
         v
 Stage 1: palette expansion at native resolution (e.g. 320x240)

@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.14.0" date="2026-11-20">
+      <description>
+        <p>
+          High-resolution presentation is now a safe 2x upscale for every title, the
+          OpenGL 480-line upload is fixed, and the Gamegun defaults keep a joypad
+          alongside the gun. P pauses, Space toggles fast-forward, F1 connects the
+          Gamegun, and Alt+Enter toggles fullscreen.
+        </p>
+      </description>
+    </release>
     <release version="1.13.2" date="2026-11-19">
       <description>
         <p>

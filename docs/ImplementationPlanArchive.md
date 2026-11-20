@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.13.2.
+> history through v1.14.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -843,8 +843,14 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 → v1.13.2)
+## 14. Release history (v1.9.1 → v1.14.0)
 
+- **v1.14.0 (2026-11-20):** high-resolution and input fix release — `--high-res` is
+  presentation-only (native guest, exact 2x VDLP upscale), the OpenGL 480-line upload
+  uses `RG32UI`, retail ALG Gamegun titles keep a joypad on port 1, Demolition Man starts
+  with the pad and connects the gun with F1, full-checksum database input lookup works,
+  and the legacy gun-only override migration runs once. P pauses, Space toggles
+  fast-forward, and Alt+Enter toggles fullscreen. Suite 2,475/2,475.
 - **v1.13.2 (2026-11-19):** bug-fix release — `SYS-26` makes movie verification use the
   recorded emulated frame span and resolves the disc/BIOS, `UX-36` turns a partial
   extraction into a "5DO cannot start" message instead of a Skia crash, and CHDSharp

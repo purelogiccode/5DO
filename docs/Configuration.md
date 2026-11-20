@@ -60,7 +60,7 @@ shows the owner and exits. `FIVEDO_ALLOW_MULTIPLE=1` disables that guard. Differ
 profiles or data directories use different lock files and may run together.
 
 Settings are written through a temporary file and an atomic replace by default and carry
-`"SettingsVersion": 8`. An older file is loaded with defaults for new properties and
+`"SettingsVersion": 10`. An older file is loaded with defaults for new properties and
 rewritten at the current version on the next save. If a cloud-sync provider, read-only
 file, or another process denies the atomic replace, the store copies the completed
 temporary file over the destination; if even that write is denied, the application keeps
@@ -83,7 +83,7 @@ every serialized property in `AppSettings`.
 
 | Property | Type | Default | Meaning |
 |---|---|---|---|
-| `SettingsVersion` | int | `8` | Settings schema version. Unversioned files are migrated on load. |
+| `SettingsVersion` | int | `10` | Settings schema version. Unversioned files are migrated on load. |
 | `Language` | string | `"system"` | UI locale code (`de`, `en`, `es`, `fr`, `it`, `ja`, `ko`, `pt-br`, `zh`) or `system`. Presentation-only; `--locale` overrides it for one launch. |
 | `FirstRunCompleted` | bool | `false` | Whether the first-run guide has been shown. |
 | `BiosPath` | string | `""` | Last primary BIOS path; fallback when auto-selection is off or unavailable. |
@@ -267,7 +267,7 @@ player-1 defaults. See section 3 for the full input structure.
 
 ```json
 {
-  "SettingsVersion": 8,
+  "SettingsVersion": 10,
   "FirstRunCompleted": true,
   "BiosPath": "C:\\3DO\\panafz1.bin",
   "Bios2Path": "",

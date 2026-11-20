@@ -137,6 +137,7 @@ public static class AppSettingsStore
             AppSettings settings = JsonSerializer.Deserialize(
                 json,
                 AppSettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            int loadedVersion = settings.SettingsVersion;
             if (settings.SettingsVersion > AppSettings.CurrentVersion)
             {
                 int fileVersion = settings.SettingsVersion;
@@ -354,7 +355,13 @@ public static class AppSettingsStore
                     .ToList();
             }
 
-            settings.MigrateLegacyInputDeviceOverrides();
+            if (loadedVersion < 10)
+            {
+                // The old automatic gun-only seed shadowed the curated joypad-plus-gun
+                // layouts. Run this only for files written before schema 10 so a later
+                // explicit gun-only choice is preserved.
+                settings.MigrateLegacyInputDeviceOverrides();
+            }
 
             if (!Enum.IsDefined(settings.ArmTiming))
             {
