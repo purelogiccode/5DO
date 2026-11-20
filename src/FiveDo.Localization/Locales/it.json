@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "Riavvolgi di 1 secondo",
     "ui.rewind_1_frame": "Riavvolgi di 1 frame",
     "ui.fast_forward": "Avanti veloce",
+    "ui.connect_gamegun": "Collega Gamegun",
     "ui.save_state": "Salva stato",
     "ui.load_state": "Carica stato",
     "ui.previous_slot": "Slot precedente",

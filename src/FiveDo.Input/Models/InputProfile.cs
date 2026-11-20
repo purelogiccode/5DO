@@ -27,6 +27,7 @@ public sealed class InputProfile
         ["Rewind"] = "R",
         ["FastForward"] = "Tab",
         ["ToggleFastForward"] = "Space",
+        ["ToggleGamegun"] = "F1",
         ["QuickMenu"] = "F4",
         ["SwapDisc"] = "F3",
         ["ToggleInputDisplay"] = "F2",

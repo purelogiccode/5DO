@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "1 Sekunde zurückspulen",
     "ui.rewind_1_frame": "1 Frame zurückspulen",
     "ui.fast_forward": "Vorspulen",
+    "ui.connect_gamegun": "Gamegun verbinden",
     "ui.save_state": "Spielstand speichern",
     "ui.load_state": "Spielstand laden",
     "ui.previous_slot": "Vorheriger Slot",

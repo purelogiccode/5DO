@@ -114,6 +114,8 @@ public partial class MainWindow : Window, IDisposable
     private DiscPlaylist? _playlist;
     private string? _playlistPath;
     private string _gameId = string.Empty;
+    private int _gamegunPort = 1;
+    private InputDeviceType _gamegunDevice = InputDeviceType.Lightgun;
     private string _gameName = string.Empty;
     private string _nvramGameId = string.Empty;
     private NvramStorageMode _nvramMode;
@@ -238,6 +240,7 @@ public partial class MainWindow : Window, IDisposable
             QuickMenuLoadButton,
             QuickMenuRewindButton,
             QuickMenuFastForwardButton,
+            QuickMenuGamegunButton,
             QuickMenuScreenshotButton,
             QuickMenuResetButton,
             QuickMenuCheatsButton,
@@ -1424,10 +1427,46 @@ public partial class MainWindow : Window, IDisposable
             }
 
             IReadOnlyList<string> resolvedDevices = effective.ResolveInputDevices(gameId);
+            _gamegunPort = 1;
+            _gamegunDevice = InputDeviceType.Lightgun;
+            for (var port = 0; port < PbusEncoder.MaxPorts; port++)
+            {
+                InputDeviceType device = _input.Devices.GetDevice(port);
+                if (device is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
+                {
+                    _gamegunPort = port;
+                    _gamegunDevice = device;
+                    break;
+                }
+            }
+
+            // Demolition Man ignores the pad while a Gamegun is attached during boot.
+            // Keep the gun disconnected until the game is running, then let F1 (or the
+            // Quick Menu) connect it for the lightgun sections.
+            bool demolitionMan = string.Equals(
+                record?.Name,
+                "Demolition Man",
+                StringComparison.OrdinalIgnoreCase);
+            if (demolitionMan)
+            {
+                for (var port = 0; port < PbusEncoder.MaxPorts; port++)
+                {
+                    InputDeviceType device = _input.Devices.GetDevice(port);
+                    if (device is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
+                    {
+                        _input.Devices.SetDevice(port, InputDeviceType.Joypad);
+                    }
+                }
+            }
+
+            string appliedDevices = string.Join(
+                ",",
+                Enumerable.Range(0, PbusEncoder.MaxPorts)
+                    .Select(port => _input.Devices.GetDevice(port)));
             _logger.ForCategory(LogCategory.Input).Information(
                 "Input devices for {Game}: {Devices}; pointer port {PointerPort}.",
                 record?.Name ?? Path.GetFileNameWithoutExtension(path),
-                string.Join(",", resolvedDevices),
+                appliedDevices,
                 _settings.PointerPort);
 
             if (autoDevices)
@@ -1436,7 +1475,12 @@ public partial class MainWindow : Window, IDisposable
                     $"Auto input: {Path.GetFileNameWithoutExtension(path)} uses {string.Join(", ", resolvedDevices)}.");
             }
 
-            if (resolvedDevices.Contains(InputDeviceType.Lightgun.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (demolitionMan)
+            {
+                ShowOsd(
+                    "Demolition Man: press Enter at the 3DO START screen. Press F1 after starting to connect the Gamegun.");
+            }
+            else if (resolvedDevices.Contains(InputDeviceType.Lightgun.ToString(), StringComparer.OrdinalIgnoreCase))
             {
                 ShowOsd(
                     "Mouse aims the 3DO Gamegun. Left click fires; right click is the Gamegun option.");
@@ -5396,6 +5440,12 @@ public partial class MainWindow : Window, IDisposable
         QuickMenuFastForwardButton.Content = _fastForwardHeld
             ? "Stop Fast-Forward"
             : $"Fast-Forward ({multiplier}x)";
+        InputDeviceType gamegun = _input.Devices.GetDevice(
+            Math.Clamp(_gamegunPort, 0, PbusEncoder.MaxPorts - 1));
+        QuickMenuGamegunButton.Content =
+            gamegun is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun
+                ? "Disconnect Gamegun"
+                : "Connect Gamegun";
         QuickMenuSubtitleText.Text = _machine is null
             ? "No machine loaded."
             : $"{_gameName} · frame {_machine.FramesExecuted} · slot {_slots.CurrentSlot + 1}";
@@ -5459,6 +5509,12 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StartFastForward();
+    }
+
+    private void OnQuickMenuGamegun(object? sender, RoutedEventArgs e)
+    {
+        ToggleGamegun();
+        CloseQuickMenu();
     }
 
     private void OnQuickMenuScreenshot(object? sender, RoutedEventArgs e)
@@ -7338,7 +7394,9 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        if ((hotkey is HotkeyAction.Pause or HotkeyAction.ToggleFastForward)
+        if ((hotkey is HotkeyAction.Pause
+                or HotkeyAction.ToggleFastForward
+                or HotkeyAction.ToggleGamegun)
             && !_heldToggleKeys.Add(e.Key))
         {
             // Ignore auto-repeat while the key is held; these actions toggle state.
@@ -7400,6 +7458,9 @@ public partial class MainWindow : Window, IDisposable
                 break;
             case HotkeyAction.ToggleFastForward:
                 ToggleFastForward();
+                break;
+            case HotkeyAction.ToggleGamegun:
+                ToggleGamegun();
                 break;
             case HotkeyAction.QuickMenu:
                 ToggleQuickMenu();
@@ -7522,6 +7583,42 @@ public partial class MainWindow : Window, IDisposable
         {
             StartFastForward();
         }
+    }
+
+    private void ToggleGamegun()
+    {
+        if (_machine is null)
+        {
+            StatusText.Text = "Boot a disc before connecting a Gamegun.";
+            ShowOsd("Boot a disc before connecting a Gamegun.", OsdSeverity.Warning);
+            return;
+        }
+
+        int port = Math.Clamp(_gamegunPort, 0, PbusEncoder.MaxPorts - 1);
+        InputDeviceType current = _input.Devices.GetDevice(port);
+        if (current is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
+        {
+            _gamegunDevice = current;
+            _input.Devices.SetDevice(port, InputDeviceType.Joypad);
+            StatusText.Text = $"Gamegun disconnected from port {port + 1}.";
+            _logger.ForCategory(LogCategory.Input).Information(
+                "Gamegun disconnected from port {Port}.",
+                port + 1);
+            ShowOsd(
+                $"Gamegun disconnected from port {port + 1}. Keyboard and gamepad remain active.");
+        }
+        else
+        {
+            _input.SetDevice(port, _gamegunDevice);
+            StatusText.Text = $"Gamegun connected on port {port + 1}.";
+            _logger.ForCategory(LogCategory.Input).Information(
+                "Gamegun connected on port {Port}.",
+                port + 1);
+            ShowOsd(
+                $"Gamegun connected on port {port + 1}. Move the mouse to aim; left click fires, right click is the option button.");
+        }
+
+        UpdateQuickMenuState();
     }
 
     private void StopFastForward()

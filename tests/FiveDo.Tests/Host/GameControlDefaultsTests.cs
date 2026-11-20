@@ -56,7 +56,6 @@ public sealed class GameControlDefaultsTests
         foreach (string title in new[]
                  {
                      "Crime Patrol (USA)",
-                     "Demolition Man (1994)(Virgin)(US)",
                      "Corpse Killer (USA)",
                      "Mad Dog McCree (USA)",
                  })
@@ -67,5 +66,11 @@ public sealed class GameControlDefaultsTests
             Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
             Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
         }
+
+        IReadOnlyList<string>? demolitionMan = GameControlDefaults.TryGetInputDevices(
+            "Demolition Man (1994)(Virgin)(US)");
+        Assert.NotNull(demolitionMan);
+        Assert.Equal(InputDeviceType.Joypad.ToString(), demolitionMan[0]);
+        Assert.Equal(InputDeviceType.Joypad.ToString(), demolitionMan[1]);
     }
 }

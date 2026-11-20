@@ -712,6 +712,10 @@
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                     Click="OnQuickMenuFastForward"
                                     ToolTip.Tip="Run at the configured 2x-10x speed." />
+                            <Button x:Name="QuickMenuGamegunButton" Content="Connect Gamegun"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                    Click="OnQuickMenuGamegun"
+                                    ToolTip.Tip="Connect or disconnect the emulated 3DO Gamegun. Use it after starting a game that needs the pad at boot." />
                             <Button x:Name="QuickMenuScreenshotButton" Content="Screenshot"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                     Click="OnQuickMenuScreenshot"

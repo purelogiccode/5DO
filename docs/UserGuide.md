@@ -88,8 +88,9 @@ duration (500-10000 ms).
 
 Press **F4** (the default Quick Menu hotkey) or hold **Select+Start** on a gamepad to
 open the quick menu. It pauses the game and offers Resume/Pause, Save State, Load
-State, Rewind 1 Second, Fast-Forward, Screenshot, Reset, Cheats..., Settings..., Stop
-Game, and Close. Use Up/Down/Home/End to move, Enter or Space to activate, and F4 or
+State, Rewind 1 Second, Fast-Forward, Connect/Disconnect Gamegun, Screenshot, Reset,
+Cheats..., Settings..., Stop Game, and Close. Use Up/Down/Home/End to move, Enter or
+Space to activate, and F4 or
 Escape to close. Closing the menu resumes the game only if it was running when the
 menu opened. Settings > Video can disable the quick menu.
 
@@ -203,11 +204,14 @@ and middle click reloads. Demolition Man's database profile uses a joypad on por
 a Gamegun on port 2, so the pad still drives the menus and hand-to-hand sections while
 the mouse handles shooting. Retail American Laser Games titles (Crime Patrol, Drug
 Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot
-Johnny Rock, Demolition Man, and Corpse Killer) use the same joypad-plus-Gamegun
-layout. The arcade CD-ROM variants keep the arcade lightgun. The same layout is
-available from the CLI with `--input-device 1=joypad,2=lightgun`. There is no separate
-mouse-mode toggle: selecting **Lightgun** on a port is the switch that makes the host
-mouse drive the Gamegun.
+Johnny Rock, and Corpse Killer) use the same joypad-plus-Gamegun layout. The arcade
+CD-ROM variants keep the arcade lightgun. **Demolition Man is different:** it ignores
+pad Start/A while the Gamegun is attached during boot, so it starts with the pad only.
+Press **F1** or use **Quick Menu > Connect Gamegun** after the game is running, then
+select the lightgun control scheme in the game's OPTIONS > CONTROLS screen if needed.
+The same manual layout is available from the CLI with
+`--input-device 1=joypad,2=lightgun`. There is no separate mouse-mode toggle: selecting
+**Lightgun** on a port is the switch that makes the host mouse drive the Gamegun.
 
 The current MADAM PBUS DMA window is 20 bytes, so a chain longer than that is
 truncated cleanly at the DMA boundary. One peripheral plus joypads fits; avoid
@@ -225,6 +229,7 @@ is widened.
 - **P** pauses or resumes emulation.
 - **Tab** holds fast-forward; release it to return to normal speed.
 - **Space** toggles fast-forward on or off, matching RetroArch's toggle behavior.
+- **F1** connects or disconnects the emulated 3DO Gamegun on the game's lightgun port.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.

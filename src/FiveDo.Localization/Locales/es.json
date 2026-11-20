@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "Rebobinar 1 segundo",
     "ui.rewind_1_frame": "Rebobinar 1 fotograma",
     "ui.fast_forward": "Avance rápido",
+    "ui.connect_gamegun": "Conectar Gamegun",
     "ui.save_state": "Guardar estado",
     "ui.load_state": "Cargar estado",
     "ui.previous_slot": "Ranura anterior",

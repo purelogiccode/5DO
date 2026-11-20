@@ -310,8 +310,9 @@ The complete command surface is documented in the [CLI reference](https://purelo
 Useful desktop shortcuts: `F5` save state, `F8` load state, `F6`/`F7` change slots,
 `F9` advance one frame while paused, `Shift+F9` rewind one frame, `R` rewind one
 second, `P` pause or resume, hold `Tab` to fast-forward or tap `Space` to toggle it,
-`F10` reset, `F11` or `Alt+Enter` fullscreen, `F12` screenshot, `F3` swap disc, and
-`F4` open the quick menu. Bindings are configurable for eight players in **Input**.
+`F1` connect/disconnect the Gamegun, `F10` reset, `F11` or `Alt+Enter` fullscreen,
+`F12` screenshot, `F3` swap disc, and `F4` open the quick menu. Bindings are
+configurable for eight players in **Input**.
 
 ## Documentation
 

@@ -21,7 +21,7 @@ public sealed class GameDatabaseTests
 
         Assert.Equal(0x00000001u, database.FindById("F3AF1B13")?.FixMode);
         Assert.Equal("1=joypad,2=lightgun", database.FindById("E8FBE61C")?.InputDevices);
-        Assert.Equal("1=joypad,2=lightgun", database.FindById("CF43E695")?.InputDevices);
+        Assert.Equal("1=joypad", database.FindById("CF43E695")?.InputDevices);
         Assert.Equal("1=joypad,2=lightgun", database.FindById("4A39F30D")?.InputDevices);
         Assert.Equal("a48e6746bd7edec0f40cff078f0bb19f", database.FindById("14F7638D")?.Bios);
         Assert.Equal("20706f726c22d79d3c385e215d7428e2", database.FindById("56927592")?.Bios);

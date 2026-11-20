@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "Retroceder 1 segundo",
     "ui.rewind_1_frame": "Retroceder 1 quadro",
     "ui.fast_forward": "Avanço rápido",
+    "ui.connect_gamegun": "Conectar Gamegun",
     "ui.save_state": "Salvar estado",
     "ui.load_state": "Carregar estado",
     "ui.previous_slot": "Slot anterior",

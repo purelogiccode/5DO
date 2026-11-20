@@ -145,6 +145,8 @@
     "ui.rewind_1_second": "Rewind 1 Second",
     "ui.rewind_1_frame": "Rewind 1 Frame",
     "ui.fast_forward": "Fast-Forward",
+    "ui.connect_gamegun": "Connect Gamegun",
+    "ui.tip.connect_or_disconnect_the_emulated_3do_gamegun_use_it_after": "Connect or disconnect the emulated 3DO Gamegun. Use it after starting a game that needs the pad at boot.",
     "ui.save_state": "Save State",
     "ui.load_state": "Load State",
     "ui.previous_slot": "Previous Slot",

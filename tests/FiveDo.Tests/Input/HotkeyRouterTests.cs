@@ -18,6 +18,7 @@ public sealed class HotkeyRouterTests
     [InlineData("R", HotkeyAction.Rewind)]
     [InlineData("Tab", HotkeyAction.FastForward)]
     [InlineData("Space", HotkeyAction.ToggleFastForward)]
+    [InlineData("F1", HotkeyAction.ToggleGamegun)]
     [InlineData("F4", HotkeyAction.QuickMenu)]
     public void Resolve_ReturnsEveryDefaultHotkey(string key, HotkeyAction expected)
     {
@@ -40,7 +41,7 @@ public sealed class HotkeyRouterTests
     {
         InputProfile profile = InputProfile.CreateDefault();
 
-        Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F1"));
+        Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, "F13"));
         Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, string.Empty));
         Assert.Equal(HotkeyAction.None, HotkeyRouter.Resolve(profile, null));
     }
@@ -64,7 +65,7 @@ public sealed class HotkeyRouterTests
 
         Assert.True(HotkeyRouter.TryResolve(profile, "F8", out HotkeyAction load));
         Assert.Equal(HotkeyAction.LoadState, load);
-        Assert.False(HotkeyRouter.TryResolve(profile, "F1", out HotkeyAction none));
+        Assert.False(HotkeyRouter.TryResolve(profile, "F13", out HotkeyAction none));
         Assert.Equal(HotkeyAction.None, none);
     }
 
@@ -81,6 +82,7 @@ public sealed class HotkeyRouterTests
     [InlineData(HotkeyAction.Rewind, "Rewind")]
     [InlineData(HotkeyAction.FastForward, "FastForward")]
     [InlineData(HotkeyAction.ToggleFastForward, "ToggleFastForward")]
+    [InlineData(HotkeyAction.ToggleGamegun, "ToggleGamegun")]
     [InlineData(HotkeyAction.QuickMenu, "QuickMenu")]
     [InlineData(HotkeyAction.None, "")]
     public void GetActionName_RoundtripsThePersistedName(HotkeyAction action, string expected)
@@ -95,6 +97,7 @@ public sealed class HotkeyRouterTests
 
         Assert.Equal("P", profile.Hotkeys["Pause"]);
         Assert.Equal("Space", profile.Hotkeys["ToggleFastForward"]);
+        Assert.Equal("F1", profile.Hotkeys["ToggleGamegun"]);
     }
 
     [Fact]

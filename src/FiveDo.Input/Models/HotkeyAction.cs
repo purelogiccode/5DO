@@ -56,4 +56,7 @@ public enum HotkeyAction
 
     /// <summary>Toggle fast-forward playback on or off.</summary>
     ToggleFastForward,
+
+    /// <summary>Connect or disconnect the emulated 3DO Gamegun.</summary>
+    ToggleGamegun,
 }

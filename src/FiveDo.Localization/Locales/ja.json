@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "1 秒巻き戻し",
     "ui.rewind_1_frame": "1 フレーム巻き戻し",
     "ui.fast_forward": "早送り",
+    "ui.connect_gamegun": "Gamegunを接続",
     "ui.save_state": "ステートを保存",
     "ui.load_state": "ステートを読み込み",
     "ui.previous_slot": "前のスロット",

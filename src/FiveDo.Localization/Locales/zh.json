@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "回退 1 秒",
     "ui.rewind_1_frame": "回退 1 帧",
     "ui.fast_forward": "快进",
+    "ui.connect_gamegun": "连接 Gamegun",
     "ui.save_state": "保存状态",
     "ui.load_state": "加载状态",
     "ui.previous_slot": "上一个槽位",

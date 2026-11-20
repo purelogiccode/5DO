@@ -29,7 +29,9 @@ public static class GameControlDefaults
         ("Crime Patrol", "1=joypad,2=lightgun"),
         ("Crime Patrol 2", "1=joypad,2=lightgun"),
         ("Corpse Killer", "1=joypad,2=lightgun"),
-        ("Demolition Man", "1=joypad,2=lightgun"),
+        // Demolition Man ignores the pad at boot while a Gamegun is attached.
+        // Start with the pad, then connect the Gamegun from the Quick Menu or F1.
+        ("Demolition Man", "1=joypad"),
         ("Drug Wars", "1=joypad,2=lightgun"),
         ("Mad Dog II", "1=joypad,2=lightgun"),
         ("Mad Dog McCree", "1=joypad,2=lightgun"),

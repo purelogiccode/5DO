@@ -145,6 +145,7 @@
     "ui.rewind_1_second": "1초 되감기",
     "ui.rewind_1_frame": "1프레임 되감기",
     "ui.fast_forward": "빠른 감기",
+    "ui.connect_gamegun": "Gamegun 연결",
     "ui.save_state": "상태 저장",
     "ui.load_state": "상태 불러오기",
     "ui.previous_slot": "이전 슬롯",

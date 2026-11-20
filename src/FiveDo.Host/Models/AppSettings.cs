@@ -886,10 +886,6 @@ public sealed class AppSettings
                 || !string.Equals(
                     curated[0],
                     InputDeviceType.Joypad.ToString(),
-                    StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(
-                    curated[1],
-                    InputDeviceType.Lightgun.ToString(),
                     StringComparison.OrdinalIgnoreCase))
             {
                 continue;
