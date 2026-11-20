@@ -116,15 +116,14 @@ path is faster because it only samples each native line twice.
 ACC-04 reference checkpoint, and the full suite passes (2,367 tests). The option is
 disabled by default; enabling it changes frame hashes and costs performance, as expected.
 
-**Validation gate (2026-11-16; OpenGL rainbow fixed 2026-11-19).** Road Rash (`d7672550`)
-showed stale/rainbow rows at the bottom of the presented frame during scene transitions,
-even though its CPU frame was clean. The OpenGL 480-line line-parameter upload bug
-responsible for the bottom rainbow was fixed on 2026-11-19. The host still enables
-`--true-2x` only for game IDs `18036597` (Jurassic Park Interactive) and `55f8ccf1`
-(Family Feud) because bitmap/SPORT sampling and framebuffer-read semantics are
-incomplete; every other title falls back to native 320x240 with a warning. The residual
-is tracked in [ImplementationPlan.md](ImplementationPlan.md) §4. The mode remains
-experimental.
+**Validation gate (2026-11-16; unlocked for all titles 2026-11-19).** Road Rash
+(`d7672550`) showed stale/rainbow rows at the bottom of the presented frame during scene
+transitions, even though its CPU frame was clean. The OpenGL 480-line line-parameter
+upload bug responsible for the bottom rainbow was fixed on 2026-11-19. The true 2× option
+is now available for every title so it can be re-tested; Jurassic Park Interactive
+(`18036597`) and Family Feud (`55f8ccf1`) remain the visually validated reference titles.
+Unvalidated titles may still misrender bitmap/SPORT or framebuffer-read content, so the
+mode remains experimental.
 
 **Remaining production work (VID-01).** The prototype does not make high-resolution the
 default and does not solve bitmap/SPORT detail, framebuffer-read semantics, per-title

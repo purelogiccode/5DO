@@ -55,10 +55,11 @@ Vulkan/MoltenVK. The compatibility plan is complete:
   Alone now reaches the room and the Actions menu; Road Rash still cycles through
   wrecks under the autopilot.
 - The opt-in **true 2× CEL** path (`--true-2x`) renders independent 480-line CEL fields;
-  it is validated on Jurassic Park Interactive's Raptor Maze and Family Feud and leaves
-  bitmap/SPORT content line-doubled. The host gates it to those two titles; other games,
-  including Road Rash, fall back to native 320x240. The legacy `--high-res` line-doubled
-  mode remains available. See [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+  Jurassic Park Interactive's Raptor Maze and Family Feud are the visually validated
+  references, and bitmap/SPORT content stays line-doubled. The option is available for
+  every title now; unvalidated games are experimental. The legacy `--high-res`
+  presentation-only mode remains available. See
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 **Accuracy residuals (not release blockers):**
 

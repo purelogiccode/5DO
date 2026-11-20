@@ -105,9 +105,10 @@ still being validated across the library.
 
 5DO renders CELs natively at 320×240, with an opt-in 640×480 presentation mode
 (`--high-res`, an exact 2x nearest upscale) and an experimental true 2× CEL path
-(`--true-2x`, validated titles only). 4K is **output upscaling**, not internal 4K CEL
-rendering. The OpenGL/Vulkan presenters can output 4K with nearest, sharp-bilinear,
-bicubic, CRT, xBR, FSR, HQx, and MMPX filters.
+(`--true-2x`, experimental; Jurassic Park Interactive and Family Feud are the validated
+references). 4K is **output upscaling**, not internal 4K CEL rendering. The
+OpenGL/Vulkan presenters can output 4K with nearest, sharp-bilinear, bicubic, CRT, xBR,
+FSR, HQx, and MMPX filters.
 
 ### Is there netplay or achievements?
 

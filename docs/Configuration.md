@@ -151,7 +151,7 @@ every serialized property in `AppSettings`.
 | `Bloom` | float | `0.35` | CRT bloom strength, 0..1. |
 | `FsrSharpness` | float | `0.8` | FSR 1.0 RCAS sharpness, 0 (soft) .. 1 (maximum). |
 | `HighResolution` | bool | `false` | Opt-in 640x480 presentation mode; the guest stays native and the frame is a 2x nearest upscale. |
-| `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields, applied only to validated titles. |
+| `TrueHighResolution` | bool | `false` | Experimental true 2× CEL path; independent 480-line fields, available for every title. |
 | `Profile` | enum string | `"Compatible"` | Last selected timing profile: `Compatible`, `Accuracy`, `Performance`, or `Custom`. The individual timing fields remain authoritative. |
 | `Region` | enum string | `"Ntsc"` | Video region used when `AutoRegion` is off: `Ntsc` (320x240, 60 Hz), `Pal1` (320x288, 50 Hz), or `Pal2` (384x288, 50 Hz). |
 | `AutoRegion` | bool | `true` | Follow the resolved BIOS video standard: PAL BIOS selects PAL1, NTSC selects NTSC. Disable to force `Region`. |
@@ -491,10 +491,11 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
 slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewind one
 second), Tab (hold to fast-forward), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
-Escape (pause), and F10 (reset). The shell dispatches these bindings before forwarding a
-key to the emulated pad; F11 also works from the library, and Escape leaves fullscreen
-before it reaches the pause action. While paused, a second Escape closes 5DO; resuming,
-stopping, opening the quick menu, or losing window focus disarms that second press.
+Escape (pause), and F10 (reset). Alt+Enter also toggles fullscreen. The shell dispatches
+these bindings before forwarding a key to the emulated pad; F11 and Alt+Enter also work
+from the library (after a game is loaded), and Escape leaves fullscreen before it reaches
+the pause action. While paused, a second Escape closes 5DO; resuming, stopping, opening
+the quick menu, or losing window focus disarms that second press.
 `HotkeyRouter` resolves the persisted action names case-insensitively, so a custom key
 assignment in the profile is honored. Unknown action names and unbound keys are ignored.
 
@@ -594,8 +595,8 @@ The Settings dialog's **Emulation** page edits:
   restarts the machine when changed but does not alter guest CEL/VRAM behavior.
 - `TrueHighResolution` checkbox: the experimental true 2× CEL path. It requires
   high-resolution mode, leaves bitmap/SPORT content line-doubled, and restarts the machine
-  when changed. It is applied only to Jurassic Park Interactive and Family Feud; other
-  titles fall back to native 320x240.
+  when changed. It is available for every title; Jurassic Park Interactive and Family
+  Feud are the visually validated references, and unvalidated titles may misrender.
 - `Region` combo: NTSC, PAL1, or PAL2. PAL runs at 50 Hz with 288 visible lines and
   needs a PAL BIOS. **Choose PAL/NTSC automatically from the BIOS** is enabled by
   default and switches the running machine between frames when a newly resolved BIOS

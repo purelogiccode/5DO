@@ -94,7 +94,8 @@ public sealed class GameProfile
 
     /// <summary>
     /// Gets or sets the per-game true 2x CEL mode, or <see langword="null"/> for the global mode.
-    /// The host enables it only for validated titles.
+    /// It is available for every title; only Jurassic Park Interactive and Family Feud
+    /// are visually validated.
     /// </summary>
     public bool? TrueHighResolution { get; set; }
 

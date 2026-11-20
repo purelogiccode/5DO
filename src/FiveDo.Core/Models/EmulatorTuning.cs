@@ -98,9 +98,10 @@ public sealed record EmulatorTuning
     /// This is the bounded VID-19 prototype. It keeps the four-plane VRAM layout but
     /// stores even output lines in planes 0/1 and odd output lines in planes 2/3, so
     /// arbitrary (3D) CEL geometry gains true vertical detail. Bitmap and SPORT-drawn
-    /// content remains line-doubled. The host enables it only for Jurassic Park
-    /// Interactive and Family Feud; every other title falls back to native 320x240.
-    /// The default path is unchanged.
+    /// content remains line-doubled. It is opt-in for every title; Jurassic Park
+    /// Interactive and Family Feud are the visually validated reference titles, while
+    /// other titles are experimental and may misrender bitmap/SPORT or framebuffer-read
+    /// content. The default path is unchanged.
     /// </remarks>
     public bool TrueHighResolution { get; init; }
 

@@ -572,7 +572,7 @@ below still apply to the signed release.
 - [x] Enable ReadyToRun for single-file, untrimmed frontend publishes and verify
       win-x64, win-arm64, and linux-x64 builds.
 - [x] Make Escape leave fullscreen and pause a running game in one step; the next
-      Escape closes 5DO. Keep F11 as the independent fullscreen toggle.
+      Escape closes 5DO. Keep F11 and Alt+Enter as the independent fullscreen toggles.
 - [x] Show a localized **Loading game... / Please wait...** overlay from a fresh game
       start until the first visible frame is presented, with a 30-second safety timeout.
 - [x] Convert every release-note Markdown link to an absolute GitHub URL and update the live v1.10.0 release body.

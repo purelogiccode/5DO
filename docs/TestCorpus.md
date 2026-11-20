@@ -4058,17 +4058,17 @@ the framebuffer or copies pages after CEL rendering can still need the native pa
 mode is validated on two titles, not the full collection. The production work for bitmap
 sampling, framebuffer semantics, and a full sweep remains under VID-01.
 
-**Road Rash blocker and validation gate (2026-11-16).** Road Rash (USA, game ID
-`d7672550...`) with `--bios bios/panafz1.bin` and true 2x shows stale/rainbow rows at the
-bottom of the presented frame during scene transitions. The captures are in
-`artifacts/vid19/roadrash-user`. The frontend's same-request native CPU screenshots are
-clean (`artifacts/vid19/frontend-shots/*-native.png`), while the OpenGL screenshots have
-the extra rows, so the remaining defect is in the presented bitmap/SPORT bottom-row path,
-not the CEL rasterizer. The host now enables `--true-2x` only for game IDs `18036597...`
-(Jurassic Park Interactive) and `55f8ccf1...` (Family Feud); every other title, including
-Road Rash, falls back to native 320x240 with a warning. To reproduce the original glitch,
-use a pre-gate build; the current CLI logs the fallback instead. The residual is tracked in
-[ImplementationPlan.md](ImplementationPlan.md) §4.
+**Road Rash blocker and validation gate (2026-11-16; fixed 2026-11-19).** Road Rash
+(USA, game ID `d7672550...`) with `--bios bios/panafz1.bin` and true 2x showed
+stale/rainbow rows at the bottom of the presented frame during scene transitions. The
+captures are in `artifacts/vid19/roadrash-user`. The frontend's same-request native CPU
+screenshots were clean (`artifacts/vid19/frontend-shots/*-native.png`), while the OpenGL
+screenshots had the extra rows. The cause was the OpenGL 480-line line-parameter texture
+upload using four components for a two-word-per-line array; it was fixed on 2026-11-19
+(`RG32UI`/`RGInteger`). The host no longer gates `--true-2x`; every title can enable it,
+with `18036597...` (Jurassic Park Interactive) and `55f8ccf1...` (Family Feud) as the
+visually validated references. To reproduce the original glitch, use a build before the
+OpenGL fix.
 
 **Reproduce.**
 

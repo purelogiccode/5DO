@@ -461,10 +461,10 @@ since 2026-11-19). Jurassic Park's Raptor Maze now shows the full corridor and r
 640x480; 38.41% of its pixels differ from a 2x nearest upscale, while Family Feud matches
 a clean 2x scale exactly (0.00%). Native hashes are unchanged and the mode costs about 30%
 more emulation time (177 fps versus 232 fps, two-run average). Bitmap/SPORT content stays
-line-doubled.
-Road Rash shows stale/rainbow rows at the bottom of the presented frame at scene
-transitions, so the host gates the mode to Jurassic Park and Family Feud; other titles fall
-back to native 320x240. See [`TestCorpus.md`](TestCorpus.md) 1.1cl and
+line-doubled. The OpenGL 480-line line-parameter upload bug caused the Road Rash
+bottom rainbow and was fixed on 2026-11-19. The true 2× option is now available for every
+title; Jurassic Park Interactive and Family Feud remain the validated references, and
+unvalidated titles are experimental. See [`TestCorpus.md`](TestCorpus.md) 1.1cl and
 [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 
 The suspected core-defect triage is closed: DeathKeep's Start Game black screen also

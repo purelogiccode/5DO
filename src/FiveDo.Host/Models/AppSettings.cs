@@ -650,7 +650,8 @@ public sealed class AppSettings
 
     /// <summary>
     /// Gets or sets a value indicating whether the experimental true 2x CEL path is used.
-    /// The host enables it only for validated titles.
+    /// It is available for every title; only Jurassic Park Interactive and Family Feud
+    /// are visually validated.
     /// </summary>
     public bool TrueHighResolution { get; set; }
 

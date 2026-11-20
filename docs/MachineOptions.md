@@ -19,7 +19,7 @@ Each option is validated by the machine, reachable from the CLI, desktop setting
 | fixMode | --fix-mode | FixModeOverrides | FixMode | flags | None | 0x00000000-0xFFFFFFFF | yes | Per-game 4DO compatibility fix mask. |
 | cpuBackend | --cpu-backend | CpuBackend | CpuBackend | enum (CpuBackendKind) | Interpreter | Interpreter, Jit | yes | Guest ARM60 backend. Interpreter is the reference; JIT compiles hot blocks and falls back safely. |
 | highResolution | --high-res | HighResolution | HighResolution | boolean | disabled | enabled, disabled | yes | Opt-in 640x480 CEL/VDLP rendering. |
-| trueHighResolution | --true-2x | TrueHighResolution | TrueHighResolution | boolean | disabled | enabled, disabled | yes | Experimental 640x480 CEL path with independent 480-line fields; only Jurassic Park Interactive and Family Feud are validated. |
+| trueHighResolution | --true-2x | TrueHighResolution | TrueHighResolution | boolean | disabled | enabled, disabled | yes | Experimental 640x480 CEL path with independent 480-line fields; available for every title (Jurassic Park Interactive and Family Feud are visually validated). |
 | operaDipir | --opera-dipir | OperaDipir | OperaDipir | boolean | disabled | enabled, disabled | yes | CLIO DIPIR latches and XBUS access aborts. |
 | operaSoftReset | --opera-soft-reset | OperaSoftReset | OperaSoftReset | boolean | disabled | enabled, disabled | yes | CLIO CSTAT soft resets use Opera's ARM/MADAM/DSP reset path. |
 | swiHle | --swi-hle | SwiHle | SwiHle | boolean | disabled | enabled, disabled | yes | Handle Portfolio OS fixed-point math SWIs on the host instead of running the guest implementation. |

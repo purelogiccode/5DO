@@ -678,25 +678,19 @@ internal static class Program
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
-        var trueHighResolutionRequested =
+        var trueHighResolution =
             HasFlag(args, "--true-2x") || profileTuning.TrueHighResolution;
-        var trueHighResolution = trueHighResolutionRequested
-            && TrueHighResolutionCompatibility.IsValidated(gameId);
-        var trueHighResolutionFallback = trueHighResolutionRequested && !trueHighResolution;
-        if (trueHighResolutionFallback)
+        if (trueHighResolution && !TrueHighResolutionCompatibility.IsValidated(gameId))
         {
             Console.Error.WriteLine(
-                "warning: true 2x CEL mode is only validated for Jurassic Park Interactive "
-                + "and Family Feud; using "
-                + (HasFlag(args, "--high-res")
-                    ? "the line-doubled high-resolution path."
-                    : "native 320x240."));
+                "warning: true 2x CEL mode is experimental for this title; "
+                + "bitmap/SPORT content and framebuffer reads may render incorrectly.");
         }
 
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res")
-                || (profileTuning.HighResolution && !trueHighResolutionFallback)
+                || profileTuning.HighResolution
                 || trueHighResolution,
             TrueHighResolution = trueHighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),
@@ -1686,25 +1680,19 @@ internal static class Program
         VideoRegion fallbackRegion = biosLoad.Selection?.Primary?.VideoStandard == BiosVideoStandard.Pal
             ? VideoRegion.Pal1
             : profileTuning.Region;
-        var trueHighResolutionRequested =
+        var trueHighResolution =
             HasFlag(args, "--true-2x") || profileTuning.TrueHighResolution;
-        var trueHighResolution = trueHighResolutionRequested
-            && TrueHighResolutionCompatibility.IsValidated(gameId);
-        var trueHighResolutionFallback = trueHighResolutionRequested && !trueHighResolution;
-        if (trueHighResolutionFallback)
+        if (trueHighResolution && !TrueHighResolutionCompatibility.IsValidated(gameId))
         {
             Console.Error.WriteLine(
-                "warning: true 2x CEL mode is only validated for Jurassic Park Interactive "
-                + "and Family Feud; using "
-                + (HasFlag(args, "--high-res")
-                    ? "the line-doubled high-resolution path."
-                    : "native 320x240."));
+                "warning: true 2x CEL mode is experimental for this title; "
+                + "bitmap/SPORT content and framebuffer reads may render incorrectly.");
         }
 
         var machine = new FiveDoMachine(new EmulatorTuning
         {
             HighResolution = HasFlag(args, "--high-res")
-                || (profileTuning.HighResolution && !trueHighResolutionFallback)
+                || profileTuning.HighResolution
                 || trueHighResolution,
             TrueHighResolution = trueHighResolution,
             Region = ParseRegion(options.Get("--region"), fallbackRegion),

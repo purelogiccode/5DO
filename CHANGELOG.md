@@ -26,6 +26,17 @@ movie verification and partial-extraction diagnostics.
   contract already used by Vulkan (`R32G32_UINT`) and Direct3D (`uint2`). Verified in the
   desktop OpenGL frontend with FSR at 640x480; the bottom bars are black again.
 
+### Changed
+
+- **`Alt+Enter` toggles fullscreen** in addition to `F11`. It is handled before quick-menu
+  Enter routing and emulated-pad bindings, and leaves fullscreen on the same shortcut.
+- **True 2x CEL mode is unlocked for every title (experimental).** The CLI `--true-2x`
+  option, the Settings checkbox, and per-game `TrueHighResolution` no longer fall back
+  to native for unvalidated game IDs. Jurassic Park Interactive and Family Feud remain
+  the visually validated references; other titles log an experimental warning and may
+  misrender bitmap/SPORT or framebuffer-read content. The legacy presentation-only
+  `--high-res` mode is unchanged and remains the safe option.
+
 ## [1.13.2] - 2026-11-19
 
 ### Fixed

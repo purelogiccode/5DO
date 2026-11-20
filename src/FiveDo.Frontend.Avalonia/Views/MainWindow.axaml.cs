@@ -192,6 +192,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         InitializeComponent();
+        AddHandler(KeyDownEvent, OnPreviewKeyDownForFullscreen, RoutingStrategies.Tunnel);
         ShowIdleHealth();
         Serilog.Log.Information("Startup timing: XAML initialized at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
         DragDrop.SetAllowDrop(this, true);
@@ -5873,6 +5874,15 @@ public partial class MainWindow : Window, IDisposable
         return normalized;
     }
 
+    /// <summary>Returns whether a key event is the Alt+Enter fullscreen toggle.</summary>
+    /// <param name="key">Pressed key.</param>
+    /// <param name="modifiers">Active key modifiers.</param>
+    /// <returns><see langword="true"/> for Alt+Enter.</returns>
+    internal static bool IsFullscreenShortcut(Key key, KeyModifiers modifiers)
+    {
+        return key == Key.Enter && modifiers.HasFlag(KeyModifiers.Alt);
+    }
+
     /// <summary>Applies platform renderer constraints for a known operating system.</summary>
     /// <param name="kind">Requested renderer.</param>
     /// <param name="isMacOs">Whether the host is macOS.</param>
@@ -6408,14 +6418,9 @@ public partial class MainWindow : Window, IDisposable
             };
             if (tuning.TrueHighResolution && !TrueHighResolutionCompatibility.IsValidated(gameId))
             {
-                tuning = tuning with
-                {
-                    TrueHighResolution = false,
-                    HighResolution = false,
-                };
                 _logger.ForCategory(LogCategory.Video).Warning(
-                    "True 2x CEL mode is only validated for {Titles}; using native 320x240 for this title.",
-                    string.Join(", ", TrueHighResolutionCompatibility.ValidatedTitles));
+                    "True 2x CEL mode is experimental for this title; "
+                    + "bitmap/SPORT content and framebuffer reads may render incorrectly.");
             }
 
             _machine = new FiveDoMachine(tuning)
@@ -7205,9 +7210,29 @@ public partial class MainWindow : Window, IDisposable
 
     }
 
+    private void OnPreviewKeyDownForFullscreen(object? sender, KeyEventArgs e)
+    {
+        // Tunnel Alt+Enter before the menu bar or a focused control can consume Alt.
+        if (IsFullscreenShortcut(e.Key, e.KeyModifiers))
+        {
+            ToggleFullscreen();
+            e.Handled = true;
+        }
+    }
+
     /// <inheritdoc />
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        // Alt+Enter is the standard windowed/fullscreen toggle and works from the
+        // library, the game view, and the quick menu. Handle it before the quick-menu
+        // Enter routing or the emulated pad bindings.
+        if (IsFullscreenShortcut(e.Key, e.KeyModifiers))
+        {
+            ToggleFullscreen();
+            e.Handled = true;
+            return;
+        }
+
         var keyName = e.Key.ToString();
         HotkeyAction hotkey = HotkeyRouter.Resolve(_settings.Input, keyName);
 

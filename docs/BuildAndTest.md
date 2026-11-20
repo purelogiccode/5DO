@@ -222,7 +222,7 @@ Options:
 | `--state-in <path>` | none | Load a save state instead of booting. |
 | `--prefetch` | off | Enable the bounded disc prefetch cache for uncompressed images. |
 | `--high-res` | off | Enable the opt-in 640x480 presentation mode (2x nearest upscale). |
-| `--true-2x` | off | Enable the experimental true 2x CEL path (validated titles only; others fall back to native). |
+| `--true-2x` | off | Enable the experimental true 2x CEL path for any title (Jurassic Park Interactive and Family Feud are the visually validated references). |
 | `--label <text>` | `synthetic` / `disc` / `state` | Report label. |
 | `--json` | off | Emit the JSON result. |
 | `--gate` | off | Enforce the CI budgets; exit code 3 on failure. |

@@ -175,7 +175,7 @@ public static class MachineOptionRegistry
         new(
             "trueHighResolution",
             "true 2x CEL mode",
-            "Experimental 640x480 CEL path with independent 480-line fields; only Jurassic Park Interactive and Family Feud are validated.",
+            "Experimental 640x480 CEL path with independent 480-line fields; available for every title (Jurassic Park Interactive and Family Feud are visually validated).",
             "disabled",
             "enabled, disabled",
             "--true-2x",
