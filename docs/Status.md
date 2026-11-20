@@ -10,7 +10,14 @@ movies, caches, and diagnostics are atomic with unique temporary names, and the 
 suite is **2,534/2,534**, `dotnet build` reports 0 warnings/0 errors, `dotnet format`
 and `jb inspectcode` are clean, and CI passes on Windows, Linux, and macOS. Release
 notes: [ReleaseNotes-1.14.1.md](ReleaseNotes-1.14.1.md). Published at
-<https://github.com/purelogiccode/5DO/releases/tag/v1.14.1>.
+<https://github.com/purelogiccode/5DO/releases/tag/v1.14.1>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44829339302>, CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44827374563>, docs run
+<https://github.com/purelogiccode/5DO/actions/runs/44827374615>, and platform runtime
+validation <https://github.com/purelogiccode/5DO/actions/runs/44827374731> passed (the
+Windows arm64 job was rerun after a runner-level PowerShell CLR crash). The five
+published bundles match `SHA256SUMS.txt`; the win-x64 CLI `selftest` and frontend smoke
+report `FRONTEND SMOKE OK 1.14.1`.
 
 **2026-11-20, v1.14.0 release:** the high-resolution and input fix release makes
 `--high-res` presentation-only (the guest stays at native 320x240 and VDLP performs an

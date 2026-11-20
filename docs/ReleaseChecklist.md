@@ -58,8 +58,16 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       longer crash callers.
 - [x] Full suite green (**2,534 tests**), `dotnet build` 0 warnings/0 errors,
       `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
-- [ ] CI passes on Windows, Linux, and macOS.
-- [ ] Tagged release publishes the five bundles and the signed Linux assets.
+- [x] CI passes on Windows, Linux, and macOS: run
+      <https://github.com/purelogiccode/5DO/actions/runs/44827374563>, docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/44827374615>, and platform
+      runtime validation <https://github.com/purelogiccode/5DO/actions/runs/44827374731>
+      (the Windows arm64 job was rerun after a runner-level PowerShell CLR crash).
+- [x] Tagged release publishes the five bundles and the signed Linux assets: run
+      <https://github.com/purelogiccode/5DO/actions/runs/44829339302>,
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.14.1>. The five bundles
+      match `SHA256SUMS.txt`; the win-x64 CLI `selftest` and frontend smoke report
+      `FRONTEND SMOKE OK 1.14.1`.
 
 ## 1.14.0 high-resolution and input gate
 
