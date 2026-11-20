@@ -597,11 +597,12 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   upscale (0-pixel difference on the tested 2D, video, and 3D titles). The newer
   `--true-2x` path renders independent 480-line CEL fields but leaves bitmap/SPORT
   content line-doubled. It is validated on Jurassic Park Interactive's Raptor Maze (3D)
-  and Family Feud (2D), not the full collection. **Road Rash showed stale/rainbow rows
-  at the bottom of the presented frame during true 2× scene transitions**, so the host
-  gates true 2× to those two game IDs and falls back to native 320x240 for everything
-  else. A true 640x240 non-interlaced mode has not been identified. Research options are
-  in [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+  and Family Feud (2D), not the full collection. **The OpenGL 480-line line-parameter
+  upload bug that produced rainbow rows at the bottom of high-resolution frames was
+  fixed on 2026-11-19**, but true 2× remains gated to those two game IDs while
+  bitmap/SPORT sampling and framebuffer-read semantics are completed. A true 640x240
+  non-interlaced mode has not been identified. Research options are in
+  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
 - 480i field handling is a presentation feature, not a new VDLP field model. `auto`
   detects complementary fields by content (12-field confirm, 30-field release) and can
   be overridden with `weave`/`blend`; no local title is confirmed 480i, so the synthetic

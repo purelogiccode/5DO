@@ -894,7 +894,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         gl.TexStorage2D(
             TextureTarget.Texture2D,
             1,
-            SizedInternalFormat.Rgba32ui,
+            SizedInternalFormat.RG32ui,
             1,
             VdlFrameUploader.MaxHeight);
     }
@@ -911,7 +911,10 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
-        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 1, (uint)height, GlPixelFormat.RgbaInteger, PixelType.UnsignedInt, _uploader.LineParams);
+        // Two words per line (background, out-control). The texture and client format
+        // must both be two-component; an RGBA upload reads four words per line and
+        // walks past the 2 * height array on 480-line high-resolution frames.
+        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 1, (uint)height, GlPixelFormat.RGInteger, PixelType.UnsignedInt, _uploader.LineParams);
     }
 
     private static uint CreateTexture(GL gl)

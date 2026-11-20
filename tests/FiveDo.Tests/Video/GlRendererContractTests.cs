@@ -100,6 +100,33 @@ public sealed class GlRendererContractTests
         Assert.Equal(0x1234u, uploader.LineParams[0]);
         Assert.Equal(0x02000000u, uploader.LineParams[1]);
         Assert.Equal(0x5678u, uploader.LineParams[2]);
+        Assert.Equal(0u, uploader.LineParams[3]);
+        Assert.Equal(4, uploader.LineParams.Length);
+    }
+
+    [Fact]
+    public void Uploader_LineParamsAreTwoWordsPerLine()
+    {
+        var frame = new VdlFrame { SourceWidth = 640, SourceHeight = 480 };
+        for (var y = 0; y < 480; y++)
+        {
+            frame[y].Width = 640;
+            frame[y].Background = (uint)y;
+            frame[y].OutControl = (uint)(y << 16);
+        }
+
+        var uploader = new VdlFrameUploader();
+        uploader.Update(frame);
+
+        // OpenGL uploads this span as RG32UI; Vulkan and Direct3D also consume a
+        // uint2 per line. A four-component upload would walk past the array on
+        // 480-line frames and turn background pixels into garbage.
+        Assert.Equal(960, uploader.LineParams.Length);
+        for (var y = 0; y < 480; y++)
+        {
+            Assert.Equal((uint)y, uploader.LineParams[y * 2]);
+            Assert.Equal((uint)(y << 16), uploader.LineParams[(y * 2) + 1]);
+        }
     }
 
     [Fact]

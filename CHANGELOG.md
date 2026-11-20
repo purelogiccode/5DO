@@ -17,6 +17,14 @@ movie verification and partial-extraction diagnostics.
   opt-in `--true-2x` exception remains experimental and gated to its validated titles.
   Verified with 0-pixel differences against 2x native upscales on 20th Century Video
   Almanac, Road Rash, Dragon's Lair, and the Alone in the Dark demo.
+- **OpenGL no longer draws rainbow background rows on 480-line frames.** The
+  line-parameter texture was allocated and uploaded as four-component `RGBA32UI` while
+  `VdlFrameUploader` packs two words per line (`background`, `out-control`). Native
+  240-line uploads stayed inside the backing array, but 480-line high-resolution uploads
+  read past it, so the bottom rows and every `pixel == 0` background used uninitialized
+  memory. The texture is now `RG32UI` with an `RGInteger` upload, matching the two-word
+  contract already used by Vulkan (`R32G32_UINT`) and Direct3D (`uint2`). Verified in the
+  desktop OpenGL frontend with FSR at 640x480; the bottom bars are black again.
 
 ## [1.13.2] - 2026-11-19
 

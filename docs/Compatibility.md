@@ -273,7 +273,9 @@ left half, leave stale planes on video lines, or hang titles when gameplay start
 is no longer used by `--high-res`. A pixel-perfect comparison on 20th Century Video
 Almanac, Road Rash, Dragon's Lair, and the Alone in the Dark demo shows a 0-pixel
 difference between the 640x480 high-resolution frame and a 2x nearest upscale of the
-native frame at the same emulated PC.
+native frame at the same emulated PC. The OpenGL presenter also uploads the two-word
+per-line parameter texture as `RG32UI` now; the old `RGBA32UI` upload overran the
+480-line array and produced the bottom rainbow rows.
 
 **Important limitation:** the legacy `--high-res` path is an output enlargement, not
 true internal 640x480 rendering. Vertical detail is still 240 lines. For experimental
