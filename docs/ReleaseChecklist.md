@@ -54,9 +54,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       override.
 - [x] Full suite green (**2,475 tests**), `dotnet format`, `jb inspectcode`, and
       `mkdocs build --strict`.
-- [ ] Tagged release publishes the five bundles and the signed Linux assets; the
-      download verification in [LinuxDistribution.md](LinuxDistribution.md) §3 passes
-      from a clean download.
+- [x] Tagged release publishes the five bundles and the signed Linux assets at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.14.0>. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/44781829378> passed all five
+      bundle jobs, both Linux package jobs, signing, and the publish job.
+- [x] CI run <https://github.com/purelogiccode/5DO/actions/runs/44774987267> passed
+      every job after a runner-level rerun of the Linux x64 package job; docs run
+      <https://github.com/purelogiccode/5DO/actions/runs/44774985985> deployed Pages
+      and published the wiki.
+- [x] Downloaded the five bundles to `src/FiveDo.Frontend.Avalonia/bin/Release`; all
+      SHA-256 values match `SHA256SUMS.txt`, and the win-x64 CLI `selftest` and
+      frontend smoke report `FRONTEND SMOKE OK 1.14.0`.
 
 ## 1.13.2 bug-fix gate
 

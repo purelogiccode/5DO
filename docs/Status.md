@@ -11,7 +11,13 @@ choice on every launch. Defaults are P to pause, Space to toggle fast-forward, F
 connect the Gamegun, and Alt+Enter for fullscreen. The suite is **2,475/2,475**,
 `dotnet format` and `jb inspectcode` are clean, and a 300-frame Road Rash `--high-res`
 run matches a 2x nearest upscale of the native frame with 0 differing pixels. Release
-notes: [ReleaseNotes-1.14.0.md](ReleaseNotes-1.14.0.md).
+notes: [ReleaseNotes-1.14.0.md](ReleaseNotes-1.14.0.md). Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.14.0>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44781829378>, CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44774987267>, and docs run
+<https://github.com/purelogiccode/5DO/actions/runs/44774985985> passed. The five
+published bundles match `SHA256SUMS.txt`, and the win-x64 CLI `selftest` plus frontend
+smoke report `FRONTEND SMOKE OK 1.14.0`.
 
 **2026-11-19, v1.13.2 release:** the bug-fix release ships the `SYS-26`
 movie-verification fix and the `UX-36` partial-extraction preflight, with CHDSharp 1.7.1
