@@ -18,24 +18,25 @@ public static class GameControlDefaults
 {
     private static readonly (string Prefix, InputDeviceType Device)[] KnownDevices =
     [
-        ("Crime Patrol", InputDeviceType.Lightgun),
-        ("Crime Patrol 2", InputDeviceType.Lightgun),
-        ("Drug Wars", InputDeviceType.Lightgun),
-        ("Mad Dog II", InputDeviceType.Lightgun),
-        ("Mad Dog McCree", InputDeviceType.Lightgun),
-        ("Who Shot Johnny Rock", InputDeviceType.Lightgun),
-        ("The Last Bounty Hunter", InputDeviceType.Lightgun),
-        ("Shootout at Old Tucson", InputDeviceType.Lightgun),
-        ("Space Pirates", InputDeviceType.Lightgun),
         ("Orbatak", InputDeviceType.OrbatakTrackball),
     ];
 
-    // Gamegun titles that also need a pad on port 1 for menus, calibration, and
-    // hand-to-hand sections. The gun is placed on port 2, where these games detect it.
+    // Retail Gamegun titles keep a pad on port 1 for menus, calibration, and
+    // non-lightgun sections. The gun is placed on port 2, matching the real
+    // daisy-chained Gamegun + controller layout these games expect.
     private static readonly (string Prefix, string Spec)[] KnownSpecs =
     [
-        ("Demolition Man", "1=joypad,2=lightgun"),
+        ("Crime Patrol", "1=joypad,2=lightgun"),
+        ("Crime Patrol 2", "1=joypad,2=lightgun"),
         ("Corpse Killer", "1=joypad,2=lightgun"),
+        ("Demolition Man", "1=joypad,2=lightgun"),
+        ("Drug Wars", "1=joypad,2=lightgun"),
+        ("Mad Dog II", "1=joypad,2=lightgun"),
+        ("Mad Dog McCree", "1=joypad,2=lightgun"),
+        ("Shootout at Old Tucson", "1=joypad,2=lightgun"),
+        ("Space Pirates", "1=joypad,2=lightgun"),
+        ("The Last Bounty Hunter", "1=joypad,2=lightgun"),
+        ("Who Shot Johnny Rock", "1=joypad,2=lightgun"),
     ];
 
     /// <summary>Resolves the automatic device list for a title.</summary>

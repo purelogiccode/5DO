@@ -330,11 +330,14 @@ public sealed class AppSettingsStoreTests
     {
         var settings = new AppSettings();
 
-        Assert.Equal("Lightgun", settings.ResolveInputDevices("E8FBE61C")[0]);
-        Assert.Equal("Joypad", settings.ResolveInputDevices("E8FBE61C")[1]);
+        Assert.Equal("Joypad", settings.ResolveInputDevices("E8FBE61C")[0]);
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("E8FBE61C")[1]);
+        Assert.Equal(
+            "Joypad",
+            settings.ResolveInputDevices("E8FBE61CA2232EC73B71D3524CE00567")[0]);
         Assert.Equal(
             "Lightgun",
-            settings.ResolveInputDevices("E8FBE61CA2232EC73B71D3524CE00567")[0]);
+            settings.ResolveInputDevices("E8FBE61CA2232EC73B71D3524CE00567")[1]);
         Assert.Equal("Joypad", settings.ResolveInputDevices("CF43E695")[0]);
         Assert.Equal("Lightgun", settings.ResolveInputDevices("CF43E695")[1]);
         Assert.Equal("Joypad", settings.ResolveInputDevices("CF43E6953AC0F5012D8E674D5BACF15D")[0]);
@@ -345,6 +348,27 @@ public sealed class AppSettingsStoreTests
             "E8FBE61CA2232EC73B71D3524CE00567",
             "Crime Patrol"));
         Assert.Null(settings.GetInputDeviceOverride("E8FBE61C"));
+    }
+
+    [Fact]
+    public void MigrateLegacyInputDeviceOverrides_RemovesTheOldGunOnlySeed()
+    {
+        var settings = new AppSettings();
+        settings.SetInputDeviceOverride(
+            "E8FBE61C",
+            ["Lightgun", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad"]);
+
+        settings.MigrateLegacyInputDeviceOverrides();
+
+        Assert.Null(settings.GetInputDeviceOverride("E8FBE61C"));
+        Assert.Equal("Joypad", settings.ResolveInputDevices("E8FBE61C")[0]);
+        Assert.Equal("Lightgun", settings.ResolveInputDevices("E8FBE61C")[1]);
+
+        settings.SetInputDeviceOverride(
+            "11111111",
+            ["Mouse", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad", "Joypad"]);
+        settings.MigrateLegacyInputDeviceOverrides();
+        Assert.NotNull(settings.GetInputDeviceOverride("11111111"));
     }
 
     [Fact]
@@ -455,7 +479,8 @@ public sealed class AppSettingsStoreTests
         var settings = new AppSettings();
 
         Assert.True(settings.EnsureAutoInputDeviceOverride("11111111", "Crime Patrol (USA)"));
-        Assert.Equal("Lightgun", settings.GetInputDeviceOverride("11111111")![0]);
+        Assert.Equal("Joypad", settings.GetInputDeviceOverride("11111111")![0]);
+        Assert.Equal("Lightgun", settings.GetInputDeviceOverride("11111111")![1]);
         Assert.False(settings.EnsureAutoInputDeviceOverride("11111111", "Crime Patrol (USA)"));
 
         Assert.True(settings.EnsureAutoInputDeviceOverride("22222222", "Orbatak (USA)"));

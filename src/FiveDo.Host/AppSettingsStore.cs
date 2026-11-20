@@ -354,6 +354,8 @@ public static class AppSettingsStore
                     .ToList();
             }
 
+            settings.MigrateLegacyInputDeviceOverrides();
+
             if (!Enum.IsDefined(settings.ArmTiming))
             {
                 settings.ArmTiming = ArmTimingMode.FreeDoCompatible;

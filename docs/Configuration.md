@@ -542,8 +542,8 @@ single-pad packet for default configurations.
 Selecting a peripheral switches the packet to the Opera daisy-chain layout. The
 legacy 16-byte 4DO layout remains active while every port is a joypad. The CLI mirrors
 the setting with `--input-device 1=mouse,3=lightgun` and can force either layout with
-`--pbus-format legacy|opera`. Demolition Man's database profile uses
-`1=joypad,2=lightgun`, keeping the pad on port 1 for menus and hand-to-hand sections
+`--pbus-format legacy|opera`. Retail American Laser Games titles use
+`1=joypad,2=lightgun`, keeping the pad on port 1 for menus and non-lightgun sections
 and placing the Gamegun on port 2 where the game recognizes it.
 
 ---

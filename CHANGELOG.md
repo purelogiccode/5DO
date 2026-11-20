@@ -37,12 +37,13 @@ movie verification and partial-extraction diagnostics.
   hotkey, while **Escape** keeps its system pause/quit behavior. **Space** toggles
   fast-forward on or off like RetroArch; **Tab** still holds fast-forward and returns to
   normal speed on release.
-- **American Laser Games Gamegun titles default to a joypad plus 3DO Gamegun.**
-  Demolition Man and Corpse Killer use `1=joypad,2=lightgun`, so the pad still drives
-  menus and hand-to-hand sections while the host mouse aims the Gamegun for the
-  shooting galleries. Other Gamegun titles keep their lightgun defaults. Left click
-  fires, right click is the Gamegun option/start/calibrate button, and middle click
-  reloads.
+- **Retail American Laser Games Gamegun titles default to a joypad plus 3DO Gamegun.**
+  Crime Patrol, Drug Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty
+  Hunter, Who Shot Johnny Rock, Demolition Man, and Corpse Killer use
+  `1=joypad,2=lightgun`, so the keyboard/gamepad still drive menus and non-lightgun
+  sections while the host mouse aims the Gamegun for the shooting galleries. Old
+  auto-seeded gun-only overrides are removed on load. Left click fires, right click is
+  the Gamegun option/start/calibrate button, and middle click reloads.
 - **`Alt+Enter` toggles fullscreen** in addition to `F11`. It is handled before quick-menu
   Enter routing and emulated-pad bindings, and leaves fullscreen on the same shortcut.
 - **True 2x CEL mode is unlocked for every title (experimental).** The CLI `--true-2x`

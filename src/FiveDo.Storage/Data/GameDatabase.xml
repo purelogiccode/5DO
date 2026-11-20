@@ -161,7 +161,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>08456921</id>
@@ -3162,7 +3162,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>9897452B</id>
@@ -3228,7 +3228,7 @@
     <releaseYear>1993</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>9B87E5D7</id>
@@ -3505,7 +3505,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>A9B777E0</id>
@@ -4662,7 +4662,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>E907558E</id>
@@ -4720,7 +4720,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>EB86BF87</id>
@@ -4943,7 +4943,7 @@
     <releaseYear>1995</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>F3E53BED</id>
@@ -4986,7 +4986,7 @@
     <releaseYear>1994</releaseYear>
     <publisher>American Laser Games</publisher>
     <regions>US</regions>
-    <inputDevices>1=lightgun</inputDevices>
+    <inputDevices>1=joypad,2=lightgun</inputDevices>
   </game>
   <game>
     <id>F60FFF30</id>

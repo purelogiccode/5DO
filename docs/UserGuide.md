@@ -201,10 +201,13 @@ some titles (including Demolition Man) do not recognize it. The host mouse then 
 the gun; left click fires, right click is the Gamegun option/start/calibrate button,
 and middle click reloads. Demolition Man's database profile uses a joypad on port 1 and
 a Gamegun on port 2, so the pad still drives the menus and hand-to-hand sections while
-the mouse handles shooting. The same layout is available from the CLI with
-`--input-device 1=joypad,2=lightgun`. There is no separate mouse-mode toggle:
-selecting **Lightgun** on a port is the switch that makes the host mouse drive the
-Gamegun.
+the mouse handles shooting. Retail American Laser Games titles (Crime Patrol, Drug
+Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot
+Johnny Rock, Demolition Man, and Corpse Killer) use the same joypad-plus-Gamegun
+layout. The arcade CD-ROM variants keep the arcade lightgun. The same layout is
+available from the CLI with `--input-device 1=joypad,2=lightgun`. There is no separate
+mouse-mode toggle: selecting **Lightgun** on a port is the switch that makes the host
+mouse drive the Gamegun.
 
 The current MADAM PBUS DMA window is 20 bytes, so a chain longer than that is
 truncated cleanly at the DMA boundary. One peripheral plus joypads fits; avoid

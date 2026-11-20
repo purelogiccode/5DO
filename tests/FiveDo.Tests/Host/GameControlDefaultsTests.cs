@@ -53,16 +53,19 @@ public sealed class GameControlDefaultsTests
     [Fact]
     public void TryGetInputDevices_SeedsGamegunAndPadForAlgTitles()
     {
-        IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(
-            "Demolition Man (1994)(Virgin)(US)");
+        foreach (string title in new[]
+                 {
+                     "Crime Patrol (USA)",
+                     "Demolition Man (1994)(Virgin)(US)",
+                     "Corpse Killer (USA)",
+                     "Mad Dog McCree (USA)",
+                 })
+        {
+            IReadOnlyList<string>? devices = GameControlDefaults.TryGetInputDevices(title);
 
-        Assert.NotNull(devices);
-        Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
-        Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
-
-        devices = GameControlDefaults.TryGetInputDevices("Corpse Killer (USA)");
-        Assert.NotNull(devices);
-        Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
-        Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
+            Assert.NotNull(devices);
+            Assert.Equal(InputDeviceType.Joypad.ToString(), devices[0]);
+            Assert.Equal(InputDeviceType.Lightgun.ToString(), devices[1]);
+        }
     }
 }

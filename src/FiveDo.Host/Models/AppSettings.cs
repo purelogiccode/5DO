@@ -865,6 +865,52 @@ public sealed class AppSettings
         return null;
     }
 
+    /// <summary>
+    /// Removes old automatic gun-only overrides when the database now curates a
+    /// joypad-plus-Gamegun layout for the title.
+    /// </summary>
+    /// <remarks>
+    /// Earlier builds seeded <c>1=lightgun</c> for known American Laser Games titles.
+    /// That shadowed the improved database layout and left the keyboard and gamepad
+    /// with no joypad port. Only the exact legacy auto-seed is removed; a user's other
+    /// explicit override is preserved.
+    /// </remarks>
+    public void MigrateLegacyInputDeviceOverrides()
+    {
+        foreach (var gameId in InputDeviceOverrides.Keys.ToArray())
+        {
+            GameRecord? record = GameDatabase.Default.FindByChecksum(gameId)
+                ?? GameDatabase.Default.FindById(gameId);
+            IReadOnlyList<string>? curated = GameControlDefaults.ParseDeviceSpec(record?.InputDevices);
+            if (curated is null
+                || !string.Equals(
+                    curated[0],
+                    InputDeviceType.Joypad.ToString(),
+                    StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(
+                    curated[1],
+                    InputDeviceType.Lightgun.ToString(),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> current = NormalizeInputDevices(InputDeviceOverrides[gameId]);
+            if (string.Equals(
+                    current[0],
+                    InputDeviceType.Lightgun.ToString(),
+                    StringComparison.OrdinalIgnoreCase)
+                && current.Skip(1).All(
+                    name => string.Equals(
+                        name,
+                        InputDeviceType.Joypad.ToString(),
+                        StringComparison.OrdinalIgnoreCase)))
+            {
+                InputDeviceOverrides.Remove(gameId);
+            }
+        }
+    }
+
     /// <summary>Sets or removes a per-game input-device override.</summary>
     /// <param name="gameId">4DO game ID, case-insensitive.</param>
     /// <param name="devices">Six device names, or <see langword="null"/> to use the global list.</param>
