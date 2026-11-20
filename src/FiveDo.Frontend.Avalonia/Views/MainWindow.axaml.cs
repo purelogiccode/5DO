@@ -7126,6 +7126,9 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        // Clicking the game view restores keyboard focus after using the library or
+        // another window, so hotkeys and pad bindings keep working alongside the mouse.
+        FocusManager.Focus(this);
         PointerPointProperties properties = e.GetCurrentPoint(VideoSurfaceHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;

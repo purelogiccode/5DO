@@ -200,13 +200,13 @@ chain layout with `--pbus-format opera`.
 **Lightgun**, not **Mouse**: the 3DO mouse is a separate point-and-click device, and
 some titles (including Demolition Man) do not recognize it. The host mouse then aims
 the gun; left click fires, right click is the Gamegun option/start/calibrate button,
-and middle click reloads. Demolition Man's database profile uses a joypad on port 1 and
-a Gamegun on port 2, so the pad still drives the menus and hand-to-hand sections while
-the mouse handles shooting. Retail American Laser Games titles (Crime Patrol, Drug
-Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot
-Johnny Rock, and Corpse Killer) use the same joypad-plus-Gamegun layout. The arcade
-CD-ROM variants keep the arcade lightgun. **Demolition Man is different:** it ignores
-pad Start/A while the Gamegun is attached during boot, so it starts with the pad only.
+and middle click reloads. Retail American Laser Games titles (Crime Patrol, Drug Wars,
+Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot Johnny
+Rock, and Corpse Killer) use a joypad on port 1 and a Gamegun on port 2, so the pad
+still drives menus and non-lightgun sections while the mouse handles shooting. The
+arcade CD-ROM variants keep the arcade lightgun. **Demolition Man is different:** its
+database profile is `1=joypad`, because it ignores pad Start/A while a Gamegun is
+attached during boot, so it starts with the pad only.
 Press **F1** or use **Quick Menu > Connect Gamegun** after the game is running, then
 select the lightgun control scheme in the game's OPTIONS > CONTROLS screen if needed.
 The same manual layout is available from the CLI with
