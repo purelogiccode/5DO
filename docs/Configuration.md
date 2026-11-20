@@ -493,7 +493,7 @@ Explicit stick/trigger bindings win over the fallback. The default radial dead z
 **Hotkeys:** the profile stores default F5 (save), F8 (load), F6/F7 (previous/next
 slot), F9 (advance one frame while paused), Shift+F9 (rewind one frame), R (rewind one
 second), P (pause/resume), Tab (hold to fast-forward), Space (toggle fast-forward),
-F1 (cycle pointer mode), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
+F1 (connect/disconnect Gamegun), F4 (quick menu), F12 (screenshot), F11 (fullscreen),
 and F10 (reset). Alt+Enter also
 toggles fullscreen. The shell dispatches these bindings before forwarding a key to the
 emulated pad; F11 and Alt+Enter also work from the library (after a game is loaded), and
@@ -548,9 +548,8 @@ the setting with `--input-device 1=mouse,3=lightgun` and can force either layout
 `1=joypad,2=lightgun`, keeping the pad on port 1 for menus and non-lightgun sections
 and placing the Gamegun on port 2 where the game recognizes it. Demolition Man is the
 exception: it starts as `1=joypad`, because it ignores the pad while a Gamegun is
-attached during boot. Its default pointer mode is **Mouse as Pad**; **F1** cycles
-Mouse as Pad → Gamegun → Off. Mouse-as-pad steers the D-pad by moving away from the
-video center and maps left/right/middle click to A/B/C.
+attached during boot. Press **F1** or use **Quick Menu > Connect Gamegun** after the
+game is running.
 
 ---
 

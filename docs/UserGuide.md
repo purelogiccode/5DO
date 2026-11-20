@@ -88,9 +88,8 @@ duration (500-10000 ms).
 
 Press **F4** (the default Quick Menu hotkey) or hold **Select+Start** on a gamepad to
 open the quick menu. It pauses the game and offers Resume/Pause, Save State, Load
-State, Rewind 1 Second, Fast-Forward, Pointer mode (Mouse as Pad/Gamegun/Off),
-Screenshot, Reset, Cheats..., Settings..., Stop Game, and Close. Use Up/Down/Home/End
-to move, Enter or
+State, Rewind 1 Second, Fast-Forward, Connect/Disconnect Gamegun, Screenshot, Reset,
+Cheats..., Settings..., Stop Game, and Close. Use Up/Down/Home/End to move, Enter or
 Space to activate, and F4 or
 Escape to close. Closing the menu resumes the game only if it was running when the
 menu opened. Settings > Video can disable the quick menu.
@@ -201,21 +200,18 @@ chain layout with `--pbus-format opera`.
 **Lightgun**, not **Mouse**: the 3DO mouse is a separate point-and-click device, and
 some titles (including Demolition Man) do not recognize it. The host mouse then aims
 the gun; left click fires, right click is the Gamegun option/start/calibrate button,
-and middle click reloads. Retail American Laser Games titles (Crime Patrol, Drug Wars,
-Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot Johnny
-Rock, and Corpse Killer) use a joypad on port 1 and a Gamegun on port 2, so the pad
-still drives menus and non-lightgun sections while the mouse handles shooting. The
-arcade CD-ROM variants keep the arcade lightgun. **Demolition Man is different:** its
-database profile is `1=joypad`, because it ignores pad Start/A while a Gamegun is
-attached during boot, so it starts with the pad only.
-Its default pointer mode is **Mouse as Pad**: move the mouse away from the video center
-to hold a D-pad direction, return to center to stop, and use left/right/middle click for
-A/B/C. Press **F1** to cycle **Mouse as Pad → Gamegun → Off**. Select the lightgun
-control scheme in the game's OPTIONS > CONTROLS screen before using Gamegun in a
-lightgun level. The same manual layout is available from the CLI with
-`--input-device 1=joypad,2=lightgun`. **F1** cycles the frontend pointer mode; the
-per-port **Lightgun** device is still the hardware switch that makes the host mouse
-drive the emulated Gamegun.
+and middle click reloads. Demolition Man's database profile uses a joypad on port 1 and
+a Gamegun on port 2, so the pad still drives the menus and hand-to-hand sections while
+the mouse handles shooting. Retail American Laser Games titles (Crime Patrol, Drug
+Wars, Mad Dog McCree, Mad Dog II, Space Pirates, The Last Bounty Hunter, Who Shot
+Johnny Rock, and Corpse Killer) use the same joypad-plus-Gamegun layout. The arcade
+CD-ROM variants keep the arcade lightgun. **Demolition Man is different:** it ignores
+pad Start/A while the Gamegun is attached during boot, so it starts with the pad only.
+Press **F1** or use **Quick Menu > Connect Gamegun** after the game is running, then
+select the lightgun control scheme in the game's OPTIONS > CONTROLS screen if needed.
+The same manual layout is available from the CLI with
+`--input-device 1=joypad,2=lightgun`. There is no separate mouse-mode toggle: selecting
+**Lightgun** on a port is the switch that makes the host mouse drive the Gamegun.
 
 The current MADAM PBUS DMA window is 20 bytes, so a chain longer than that is
 truncated cleanly at the DMA boundary. One peripheral plus joypads fits; avoid
@@ -233,7 +229,7 @@ is widened.
 - **P** pauses or resumes emulation.
 - **Tab** holds fast-forward; release it to return to normal speed.
 - **Space** toggles fast-forward on or off, matching RetroArch's toggle behavior.
-- **F1** cycles the pointer mode: **Mouse as Pad → Gamegun → Off**.
+- **F1** connects or disconnects the emulated 3DO Gamegun on the game's lightgun port.
 - **F10** resets the machine.
 - **F11** toggles fullscreen.
 - **F12** captures a screenshot.

@@ -715,7 +715,7 @@
                             <Button x:Name="QuickMenuGamegunButton" Content="Connect Gamegun"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                     Click="OnQuickMenuGamegun"
-                                    ToolTip.Tip="Cycle the pointer mode: mouse as pad, Gamegun, or off." />
+                                    ToolTip.Tip="Connect or disconnect the emulated 3DO Gamegun. Use it after starting a game that needs the pad at boot." />
                             <Button x:Name="QuickMenuScreenshotButton" Content="Screenshot"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                     Click="OnQuickMenuScreenshot"

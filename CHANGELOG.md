@@ -44,14 +44,12 @@ movie verification and partial-extraction diagnostics.
   the shooting galleries. Old auto-seeded gun-only overrides are removed on load. Left
   click fires, right click is the Gamegun option/start/calibrate button, and middle
   click reloads.
-- **Demolition Man starts with the pad and uses the mouse as a pad by default.**
+- **Demolition Man starts with the pad, then connects the Gamegun on demand.**
   Demolition Man ignores pad Start/A while a Gamegun is attached during boot and stays
-  in its lightgun attract demo. Its default profile is now `1=joypad`, and the host
-  mouse drives the joypad by default: move away from the video center to hold a D-pad
-  direction, left click A, right click B, middle click C. **F1** or the Quick Menu's
-  pointer item cycles **Mouse as Pad → Gamegun → Off**. Use Gamegun for Demolition
-  Man's lightgun levels; the Tunnels, first-person, fighting, and racing sections use
-  the pad.
+  in its lightgun attract demo. Its default profile is now `1=joypad`; press **F1** or
+  use **Quick Menu > Connect Gamegun** after the game is running to attach the Gamegun
+  for the shooting-gallery sections. The Quick Menu label reflects whether the gun is
+  connected.
 - **`Alt+Enter` toggles fullscreen** in addition to `F11`. It is handled before quick-menu
   Enter routing and emulated-pad bindings, and leaves fullscreen on the same shortcut.
 - **True 2x CEL mode is unlocked for every title (experimental).** The CLI `--true-2x`
