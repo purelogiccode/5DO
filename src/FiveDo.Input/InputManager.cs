@@ -130,6 +130,8 @@ public sealed class InputManager : IPbusSource
     private readonly KeyboardInputMapper _keyboard;
     private readonly IGamepadBackend _gamepad;
     private readonly InputDeviceSet _devices = new();
+    private readonly Lock _mousePadGate = new();
+    private readonly ControllerButton[] _mousePadButtons = new ControllerButton[PbusEncoder.MaxPorts];
     private int _controllerCount = 1;
     private InputRecorder? _recorder;
     private Func<long>? _frameProvider;
@@ -158,6 +160,29 @@ public sealed class InputManager : IPbusSource
     public void Reset()
     {
         _keyboard.Reset();
+        ClearMousePadButtons();
+    }
+
+    /// <summary>Sets host mouse-as-pad buttons for a player.</summary>
+    /// <param name="port">Zero-based player/port index.</param>
+    /// <param name="buttons">Buttons to merge with the keyboard and gamepad.</param>
+    public void SetMousePadButtons(int port, ControllerButton buttons)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(port);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
+        lock (_mousePadGate)
+        {
+            _mousePadButtons[port] = buttons;
+        }
+    }
+
+    /// <summary>Releases every host mouse-as-pad button.</summary>
+    public void ClearMousePadButtons()
+    {
+        lock (_mousePadGate)
+        {
+            Array.Clear(_mousePadButtons);
+        }
     }
 
     /// <summary>Sets the device type on a port.</summary>
@@ -207,7 +232,13 @@ public sealed class InputManager : IPbusSource
         for (var player = 0; player < PbusEncoder.MaxPorts; player++)
         {
             ControllerState pad = player < _gamepad.ControllerCount ? _gamepad.GetState(player) : ControllerState.Empty;
-            ControllerState state = new(_keyboard.GetState(player).Buttons | pad.Buttons);
+            ControllerButton mousePad;
+            lock (_mousePadGate)
+            {
+                mousePad = _mousePadButtons[player];
+            }
+
+            ControllerState state = new(_keyboard.GetState(player).Buttons | pad.Buttons | mousePad);
             _devices.SetJoypad(player, state);
             if (_devices.GetDevice(player) == InputDeviceType.Flightstick)
             {

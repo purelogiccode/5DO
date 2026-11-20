@@ -113,9 +113,18 @@ public partial class MainWindow : Window, IDisposable
     private IDiscSource? _disc;
     private DiscPlaylist? _playlist;
     private string? _playlistPath;
+    private enum PointerMode
+    {
+        Off,
+        MousePad,
+        Gamegun,
+    }
+
     private string _gameId = string.Empty;
     private int _gamegunPort = 1;
     private InputDeviceType _gamegunDevice = InputDeviceType.Lightgun;
+    private PointerMode _pointerMode = PointerMode.Off;
+    private int _mousePadPort;
     private string _gameName = string.Empty;
     private string _nvramGameId = string.Empty;
     private NvramStorageMode _nvramMode;
@@ -1429,20 +1438,27 @@ public partial class MainWindow : Window, IDisposable
             IReadOnlyList<string> resolvedDevices = effective.ResolveInputDevices(gameId);
             _gamegunPort = 1;
             _gamegunDevice = InputDeviceType.Lightgun;
+            _mousePadPort = 0;
+            bool mousePadPortFound = false;
             for (var port = 0; port < PbusEncoder.MaxPorts; port++)
             {
                 InputDeviceType device = _input.Devices.GetDevice(port);
+                if (!mousePadPortFound && device == InputDeviceType.Joypad)
+                {
+                    _mousePadPort = port;
+                    mousePadPortFound = true;
+                }
+
                 if (device is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
                 {
                     _gamegunPort = port;
                     _gamegunDevice = device;
-                    break;
                 }
             }
 
             // Demolition Man ignores the pad while a Gamegun is attached during boot.
-            // Keep the gun disconnected until the game is running, then let F1 (or the
-            // Quick Menu) connect it for the lightgun sections.
+            // Keep the gun disconnected until the game is running, and default the mouse
+            // to the joypad so the Tunnels and pad shooting galleries are playable.
             bool demolitionMan = string.Equals(
                 record?.Name,
                 "Demolition Man",
@@ -1459,14 +1475,28 @@ public partial class MainWindow : Window, IDisposable
                 }
             }
 
+            RefreshControllerCount();
+            _input.ClearMousePadButtons();
+            _pointerMode = demolitionMan
+                ? PointerMode.MousePad
+                : (resolvedDevices.Contains(
+                        InputDeviceType.Lightgun.ToString(),
+                        StringComparer.OrdinalIgnoreCase)
+                    || resolvedDevices.Contains(
+                        InputDeviceType.ArcadeLightgun.ToString(),
+                        StringComparer.OrdinalIgnoreCase))
+                    ? PointerMode.Gamegun
+                    : PointerMode.Off;
+
             string appliedDevices = string.Join(
                 ",",
                 Enumerable.Range(0, PbusEncoder.MaxPorts)
                     .Select(port => _input.Devices.GetDevice(port)));
             _logger.ForCategory(LogCategory.Input).Information(
-                "Input devices for {Game}: {Devices}; pointer port {PointerPort}.",
+                "Input devices for {Game}: {Devices}; pointer mode {PointerMode}; pointer port {PointerPort}.",
                 record?.Name ?? Path.GetFileNameWithoutExtension(path),
                 appliedDevices,
+                _pointerMode,
                 _settings.PointerPort);
 
             if (autoDevices)
@@ -1478,9 +1508,9 @@ public partial class MainWindow : Window, IDisposable
             if (demolitionMan)
             {
                 ShowOsd(
-                    "Demolition Man: press Enter at the 3DO START screen. Press F1 after starting to connect the Gamegun.");
+                    "Demolition Man: mouse controls the pad. Press Enter at the 3DO START screen; F1 switches to Gamegun.");
             }
-            else if (resolvedDevices.Contains(InputDeviceType.Lightgun.ToString(), StringComparer.OrdinalIgnoreCase))
+            else if (_pointerMode == PointerMode.Gamegun)
             {
                 ShowOsd(
                     "Mouse aims the 3DO Gamegun. Left click fires; right click is the Gamegun option.");
@@ -1842,6 +1872,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void PauseEmulation(bool showLibrary)
     {
+        _input.ClearMousePadButtons();
         if (_running)
         {
             _running = false;
@@ -1880,6 +1911,7 @@ public partial class MainWindow : Window, IDisposable
         StopGifRecording();
         StopMovie(save: true);
         StopInputRecording(save: true);
+        _input.ClearMousePadButtons();
         CancelFastForward();
 
         // Stop, not pause: join the core thread and reset the machine so a later
@@ -3112,6 +3144,7 @@ public partial class MainWindow : Window, IDisposable
         Direct3DVideo.SetPresentationVisible(false);
         LibraryView.IsVisible = true;
         _input.Keyboard.Reset();
+        _input.ClearMousePadButtons();
         ApplyLibraryFilter();
     }
 
@@ -5440,12 +5473,12 @@ public partial class MainWindow : Window, IDisposable
         QuickMenuFastForwardButton.Content = _fastForwardHeld
             ? "Stop Fast-Forward"
             : $"Fast-Forward ({multiplier}x)";
-        InputDeviceType gamegun = _input.Devices.GetDevice(
-            Math.Clamp(_gamegunPort, 0, PbusEncoder.MaxPorts - 1));
-        QuickMenuGamegunButton.Content =
-            gamegun is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun
-                ? "Disconnect Gamegun"
-                : "Connect Gamegun";
+        QuickMenuGamegunButton.Content = _pointerMode switch
+        {
+            PointerMode.MousePad => "Pointer: Mouse as Pad",
+            PointerMode.Gamegun => "Pointer: Gamegun",
+            _ => "Pointer: Off",
+        };
         QuickMenuSubtitleText.Text = _machine is null
             ? "No machine loaded."
             : $"{_gameName} · frame {_machine.FramesExecuted} · slot {_slots.CurrentSlot + 1}";
@@ -5513,7 +5546,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnQuickMenuGamegun(object? sender, RoutedEventArgs e)
     {
-        ToggleGamegun();
+        CyclePointerMode();
         CloseQuickMenu();
     }
 
@@ -7126,6 +7159,9 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        // Clicking the game view restores keyboard focus after using the library or
+        // another window, so hotkeys and pad bindings keep working alongside the mouse.
+        FocusManager.Focus(this);
         PointerPointProperties properties = e.GetCurrentPoint(VideoSurfaceHost).Properties;
         _pointerLeftDown = properties.IsLeftButtonPressed;
         _pointerMiddleDown = properties.IsMiddleButtonPressed;
@@ -7155,6 +7191,7 @@ public partial class MainWindow : Window, IDisposable
         _pointerLeftDown = false;
         _pointerMiddleDown = false;
         _pointerRightDown = false;
+        _input.ClearMousePadButtons();
         for (var port = 0; port < PbusEncoder.MaxPorts; port++)
         {
             if (_input.Devices.GetDevice(port) == InputDeviceType.Lightgun)
@@ -7184,6 +7221,13 @@ public partial class MainWindow : Window, IDisposable
         double height = VideoSurfaceHost.Bounds.Height;
         if (width <= 0 || height <= 0)
         {
+            return;
+        }
+
+        if (_pointerMode == PointerMode.MousePad)
+        {
+            UpdateMousePadPointer(position, width, height);
+            LightgunOverlay.IsVisible = false;
             return;
         }
 
@@ -7279,6 +7323,68 @@ public partial class MainWindow : Window, IDisposable
             LightgunOverlay.IsVisible = false;
         }
 
+    }
+
+    private void UpdateMousePadPointer(Point position, double width, double height)
+    {
+        double normalizedX = position.X / width - 0.5;
+        double normalizedY = position.Y / height - 0.5;
+        _input.SetMousePadButtons(
+            _mousePadPort,
+            MapMousePad(normalizedX, normalizedY, _pointerLeftDown, _pointerRightDown, _pointerMiddleDown));
+        _lastPointerPosition = position;
+    }
+
+    /// <summary>Maps a normalized host pointer position and buttons to joypad buttons.</summary>
+    /// <param name="normalizedX">Horizontal position, -0.5 (left) to 0.5 (right).</param>
+    /// <param name="normalizedY">Vertical position, -0.5 (top) to 0.5 (bottom).</param>
+    /// <param name="left">Whether the left mouse button is down.</param>
+    /// <param name="right">Whether the right mouse button is down.</param>
+    /// <param name="middle">Whether the middle mouse button is down.</param>
+    /// <returns>The D-pad and A/B/C buttons to merge into the joypad.</returns>
+    internal static ControllerButton MapMousePad(
+        double normalizedX,
+        double normalizedY,
+        bool left,
+        bool right,
+        bool middle)
+    {
+        const double deadZone = 0.12;
+        var buttons = ControllerButton.None;
+        if (normalizedX > deadZone)
+        {
+            buttons |= ControllerButton.Right;
+        }
+        else if (normalizedX < -deadZone)
+        {
+            buttons |= ControllerButton.Left;
+        }
+
+        if (normalizedY > deadZone)
+        {
+            buttons |= ControllerButton.Down;
+        }
+        else if (normalizedY < -deadZone)
+        {
+            buttons |= ControllerButton.Up;
+        }
+
+        if (left)
+        {
+            buttons |= ControllerButton.A;
+        }
+
+        if (right)
+        {
+            buttons |= ControllerButton.B;
+        }
+
+        if (middle)
+        {
+            buttons |= ControllerButton.C;
+        }
+
+        return buttons;
     }
 
     private void OnPreviewKeyDownForFullscreen(object? sender, KeyEventArgs e)
@@ -7460,7 +7566,7 @@ public partial class MainWindow : Window, IDisposable
                 ToggleFastForward();
                 break;
             case HotkeyAction.ToggleGamegun:
-                ToggleGamegun();
+                CyclePointerMode();
                 break;
             case HotkeyAction.QuickMenu:
                 ToggleQuickMenu();
@@ -7585,29 +7691,35 @@ public partial class MainWindow : Window, IDisposable
         }
     }
 
-    private void ToggleGamegun()
+    private void CyclePointerMode()
     {
         if (_machine is null)
         {
-            StatusText.Text = "Boot a disc before connecting a Gamegun.";
-            ShowOsd("Boot a disc before connecting a Gamegun.", OsdSeverity.Warning);
+            StatusText.Text = "Boot a disc before changing the pointer mode.";
+            ShowOsd("Boot a disc before changing the pointer mode.", OsdSeverity.Warning);
             return;
         }
 
+        _pointerMode = _pointerMode switch
+        {
+            PointerMode.Off => PointerMode.MousePad,
+            PointerMode.MousePad => PointerMode.Gamegun,
+            _ => PointerMode.Off,
+        };
+        ApplyPointerMode();
+    }
+
+    private void ApplyPointerMode()
+    {
         int port = Math.Clamp(_gamegunPort, 0, PbusEncoder.MaxPorts - 1);
         InputDeviceType current = _input.Devices.GetDevice(port);
+        _input.ClearMousePadButtons();
         if (current is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
         {
             _gamegunDevice = current;
-            _input.Devices.SetDevice(port, InputDeviceType.Joypad);
-            StatusText.Text = $"Gamegun disconnected from port {port + 1}.";
-            _logger.ForCategory(LogCategory.Input).Information(
-                "Gamegun disconnected from port {Port}.",
-                port + 1);
-            ShowOsd(
-                $"Gamegun disconnected from port {port + 1}. Keyboard and gamepad remain active.");
         }
-        else
+
+        if (_pointerMode == PointerMode.Gamegun)
         {
             _input.SetDevice(port, _gamegunDevice);
             StatusText.Text = $"Gamegun connected on port {port + 1}.";
@@ -7617,8 +7729,47 @@ public partial class MainWindow : Window, IDisposable
             ShowOsd(
                 $"Gamegun connected on port {port + 1}. Move the mouse to aim; left click fires, right click is the option button.");
         }
+        else
+        {
+            if (current is InputDeviceType.Lightgun or InputDeviceType.ArcadeLightgun)
+            {
+                _input.Devices.SetDevice(port, InputDeviceType.Joypad);
+            }
 
+            if (_pointerMode == PointerMode.MousePad)
+            {
+                StatusText.Text = "Mouse as pad.";
+                _logger.ForCategory(LogCategory.Input).Information(
+                    "Pointer mode: mouse as pad on port {Port}.",
+                    _mousePadPort + 1);
+                ShowOsd(
+                    "Mouse as pad: move to steer; left click A, right click B, middle click C.");
+            }
+            else
+            {
+                StatusText.Text = "Pointer off.";
+                _logger.ForCategory(LogCategory.Input).Information("Pointer mode: off.");
+                ShowOsd("Pointer off. Keyboard and gamepad remain active.");
+            }
+        }
+
+        RefreshControllerCount();
+        LightgunOverlay.IsVisible = false;
         UpdateQuickMenuState();
+    }
+
+    private void RefreshControllerCount()
+    {
+        var count = 1;
+        for (var port = 0; port < PbusEncoder.MaxPorts; port++)
+        {
+            if (_input.Devices.GetDevice(port) != InputDeviceType.Joypad)
+            {
+                count = port + 1;
+            }
+        }
+
+        _input.ControllerCount = count;
     }
 
     private void StopFastForward()

@@ -49,6 +49,26 @@ public sealed class InputManagerTests
         Assert.Equal(0x80, packet[5]);
     }
 
+    [Fact]
+    public void InputManager_MergesAndClearsMousePadButtons()
+    {
+        var manager = new InputManager(InputProfile.CreateDefault());
+        manager.ControllerCount = 1;
+        manager.SetMousePadButtons(0, ControllerButton.Left | ControllerButton.A);
+
+        var packet = new byte[PbusEncoder.PacketSize];
+        manager.GetPbusData(packet);
+
+        Assert.True(manager.Devices.GetJoypad(0).IsDown(ControllerButton.Left));
+        Assert.True(manager.Devices.GetJoypad(0).IsDown(ControllerButton.A));
+
+        manager.ClearMousePadButtons();
+        manager.GetPbusData(packet);
+
+        Assert.False(manager.Devices.GetJoypad(0).IsDown(ControllerButton.Left));
+        Assert.False(manager.Devices.GetJoypad(0).IsDown(ControllerButton.A));
+    }
+
     private sealed class FakeGamepad : IGamepadBackend
     {
         internal ControllerState[] States { get; } = new ControllerState[PbusEncoder.MaxControllers];
