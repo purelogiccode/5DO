@@ -51,9 +51,37 @@ stdout/stderr contract (JSON and concise errors) and writes diagnostics to the f
 and bug-report sinks.
 
 Warning-or-higher events are submitted asynchronously to the bug-report API with
-the required environment, error, and exception blocks. Expected command-line usage
-errors (bad arguments, missing paths, malformed input scripts, and out-of-range
-offsets) are logged with `WithoutBugReport` so they do not create bug reports.
+the required environment, error, and exception blocks. Every report carries exactly
+these fields:
+
+```text
+=== Environment Details ===
+Date
+Application Name
+Application Version
+OS Version
+Architecture
+Bitness
+Windows, Linux or MacOsX Version
+Processor Count
+Base Directory
+Temp Path
+
+=== Error Details ===
+Error message
+
+=== Exception Details ===
+Type
+Message
+Source
+StackTrace
+```
+
+`BugReportFormatter` folds the blocks into the service's `message`, `environment`,
+and `stackTrace` fields; `BugReportContractTests` locks the field names and block
+headings. Expected command-line usage errors (bad arguments, missing paths, malformed
+input scripts, and out-of-range offsets) are logged with `WithoutBugReport` so they do
+not create bug reports.
 Submissions are deduplicated for five minutes and capped at ten per minute. Set `FIVEDO_BUG_REPORTS=0` to
 disable submission, `FIVEDO_LOG_DIR` to redirect log files, or
 `FIVEDO_BUGREPORT_API_KEY` to override the API key. CI and test runs disable

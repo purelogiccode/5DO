@@ -53,7 +53,7 @@ internal sealed class RcRichPresence
 
     internal List<RcMemRefBase> MemRefs { get; private set; } = [];
 
-    public static RcRichPresence Parse(string script)
+    internal static RcRichPresence Parse(string script)
     {
         var parse = new RcParseState();
         RcRichPresence richPresence = ParseInternal(script, parse);
@@ -61,7 +61,7 @@ internal sealed class RcRichPresence
         return richPresence;
     }
 
-    public void Update(RcPeek? peek, object? userData)
+    internal void Update(RcPeek? peek, object? userData)
     {
         RcMemRefHelpers.UpdateMemRefs(MemRefs, peek, userData);
 
@@ -83,7 +83,7 @@ internal sealed class RcRichPresence
         }
     }
 
-    public string GetDisplayString(RcPeek? peek, object? userData)
+    internal string GetDisplayString(RcPeek? peek, object? userData)
     {
         for (RcRichPresenceDisplay? display = FirstDisplay; display is not null; display = display.Next)
         {
@@ -106,13 +106,13 @@ internal sealed class RcRichPresence
         return string.Empty;
     }
 
-    public string Evaluate(RcPeek? peek, object? userData)
+    internal string Evaluate(RcPeek? peek, object? userData)
     {
         Update(peek, userData);
         return GetDisplayString(peek, userData);
     }
 
-    public void Reset()
+    internal void Reset()
     {
         for (RcRichPresenceDisplay? display = FirstDisplay; display is not null; display = display.Next)
         {

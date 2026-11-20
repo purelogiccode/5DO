@@ -104,7 +104,7 @@ public static class DiscImageWriter
     {
         string directory = Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".";
         Directory.CreateDirectory(directory);
-        string tempPath = path + ".tmp";
+        string tempPath = path + "." + Path.GetRandomFileName() + ".tmp";
         var sector = new byte[IsoImage.SectorBytes];
         try
         {

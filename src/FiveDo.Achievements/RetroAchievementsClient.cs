@@ -574,18 +574,28 @@ public sealed class RetroAchievementsClient : IDisposable
 
             return JsonDocument.Parse(body);
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException exception)
         {
+            Serilog.Log.Debug(exception, "RetroAchievements request {Path} failed.", path);
             return null;
         }
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
         {
+            Serilog.Log.Debug(exception, "RetroAchievements request {Path} timed out.", path);
             return null;
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
             // A proxy or captive portal can return HTTP 200 with HTML. Treat that as
             // an unavailable service instead of faulting the caller.
+            Serilog.Log.Debug(exception, "RetroAchievements request {Path} returned non-JSON content.", path);
+            return null;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException
+            or NotSupportedException
+            or ArgumentException)
+        {
+            Serilog.Log.Debug(exception, "RetroAchievements request {Path} could not be created.", path);
             return null;
         }
     }
@@ -672,7 +682,11 @@ public sealed class RetroAchievementsClient : IDisposable
             host = "https://" + host;
         }
 
-        return host;
+        return Uri.TryCreate(host, UriKind.Absolute, out Uri? uri)
+            && (string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+            ? host
+            : DefaultHost;
     }
 
     private static string StripImagePath(string value)

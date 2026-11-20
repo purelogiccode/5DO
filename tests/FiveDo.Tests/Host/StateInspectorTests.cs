@@ -162,6 +162,29 @@ public sealed class StateInspectorTests
     }
 
     [Fact]
+    public void FrameDumper_WritesRgbaFramesInBmpChannelOrder()
+    {
+        var frame = new FrameBuffer(1, 1, PixelFormat.Rgba8888);
+        frame.PixelSpan[0] = 10;
+        frame.PixelSpan[1] = 20;
+        frame.PixelSpan[2] = 30;
+        frame.PixelSpan[3] = 255;
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-frame-{Guid.NewGuid():N}.bmp");
+        try
+        {
+            FrameDumper.WriteBmp(frame, path);
+            var bytes = File.ReadAllBytes(path);
+            Assert.Equal(30, bytes[54]);
+            Assert.Equal(20, bytes[55]);
+            Assert.Equal(10, bytes[56]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void FrameDumper_WritesPackedBgraSpan()
     {
         var pixels = new byte[4 * 2 * 4];

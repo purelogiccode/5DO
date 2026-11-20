@@ -20,14 +20,14 @@ internal sealed class RcLeaderboard
 
     internal List<RcMemRefBase> MemRefs { get; private set; } = [];
 
-    public static RcLeaderboard Parse(string memaddr)
+    internal static RcLeaderboard Parse(string memaddr)
     {
         var cursor = new RcCursor(memaddr);
         var parse = new RcParseState();
         return Parse(cursor, parse);
     }
 
-    public static RcLeaderboard Parse(RcCursor cursor, RcParseState parse)
+    internal static RcLeaderboard Parse(RcCursor cursor, RcParseState parse)
     {
         var leaderboard = new RcLeaderboard();
         ParseInternal(leaderboard, cursor, parse);
@@ -169,7 +169,7 @@ internal sealed class RcLeaderboard
         self.State = RcLeaderboardState.Waiting;
     }
 
-    public RcLeaderboardState Evaluate(out int value, RcPeek? peek, object? userData)
+    internal RcLeaderboardState Evaluate(out int value, RcPeek? peek, object? userData)
     {
         RcMemRefHelpers.UpdateMemRefs(MemRefs, peek, userData);
 
@@ -256,7 +256,7 @@ internal sealed class RcLeaderboard
         return State;
     }
 
-    public void Reset()
+    internal void Reset()
     {
         State = RcLeaderboardState.Waiting;
         Start.ResetTrigger();
@@ -266,7 +266,7 @@ internal sealed class RcLeaderboard
         Value.Reset();
     }
 
-    public static bool IsActiveState(RcLeaderboardState state) =>
+    internal static bool IsActiveState(RcLeaderboardState state) =>
         state is not (RcLeaderboardState.Disabled or RcLeaderboardState.Inactive);
 
     private static bool StartsWith(RcCursor cursor, string prefix)

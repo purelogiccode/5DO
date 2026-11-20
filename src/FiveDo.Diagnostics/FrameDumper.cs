@@ -19,7 +19,13 @@ public static class FrameDumper
     public static void WriteBmp(FrameBuffer frame, string path)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        WriteBmp(frame.PixelSpan, frame.Width, frame.Height, frame.Stride, path);
+        WriteBmp(
+            frame.PixelSpan,
+            frame.Width,
+            frame.Height,
+            frame.Stride,
+            frame.Format == PixelFormat.Rgba8888,
+            path);
     }
 
     /// <summary>Writes a tightly packed 32-bit BGRA frame as a bottom-up BMP.</summary>
@@ -32,10 +38,16 @@ public static class FrameDumper
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
-        WriteBmp(bgra, width, height, checked(width * 4), path);
+        WriteBmp(bgra, width, height, checked(width * 4), rgba: false, path);
     }
 
-    private static void WriteBmp(ReadOnlySpan<byte> pixels, int width, int height, int stride, string path)
+    private static void WriteBmp(
+        ReadOnlySpan<byte> pixels,
+        int width,
+        int height,
+        int stride,
+        bool rgba,
+        string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         var rowBytes = checked(width * 4);
@@ -76,9 +88,9 @@ public static class FrameDumper
             {
                 var offset = source + (x * 4);
                 var destination = x * 4;
-                row[destination] = pixels[offset];
+                row[destination] = rgba ? pixels[offset + 2] : pixels[offset];
                 row[destination + 1] = pixels[offset + 1];
-                row[destination + 2] = pixels[offset + 2];
+                row[destination + 2] = rgba ? pixels[offset] : pixels[offset + 2];
                 row[destination + 3] = 0xff;
             }
 

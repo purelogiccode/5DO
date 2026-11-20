@@ -45,7 +45,7 @@ public sealed class InputRecorder
         {
             lock (_gate)
             {
-                return _lastFrame < 0 ? 0 : _lastFrame - _firstFrame + 1;
+                return _entries.Count == 0 ? 0 : _lastFrame - _firstFrame + 1;
             }
         }
     }
@@ -59,6 +59,21 @@ public sealed class InputRecorder
             {
                 return _entries.Count;
             }
+        }
+    }
+
+    /// <summary>Resets the recorded timeline to a new starting frame.</summary>
+    /// <param name="frame">Frame at which recording should continue.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="frame"/> is negative.</exception>
+    public void ResetTimeline(long frame)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(frame);
+        lock (_gate)
+        {
+            _entries.Clear();
+            _lastState = default;
+            _firstFrame = frame;
+            _lastFrame = frame;
         }
     }
 

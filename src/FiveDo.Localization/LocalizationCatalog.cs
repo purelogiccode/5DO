@@ -261,13 +261,17 @@ public static class Localizer
             }
 
             // LANGUAGE may contain a priority list; LC_* may carry an encoding or modifier.
-            var first = value.Split(':', 2)[0];
-            first = first.Split('.', 2)[0];
-            first = first.Split('@', 2)[0];
-            var code = NormalizeLocale(first);
-            if (code.Length > 0 && FindCatalog(code) is not null)
+            foreach (string candidate in value.Split(
+                ':',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
-                return code;
+                var first = candidate.Split('.', 2)[0];
+                first = first.Split('@', 2)[0];
+                var code = NormalizeLocale(first);
+                if (code.Length > 0 && FindCatalog(code) is not null)
+                {
+                    return code;
+                }
             }
         }
 

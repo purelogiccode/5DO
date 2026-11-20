@@ -284,13 +284,25 @@ public static class NvramLayout
         string? gameId)
     {
         var info = new FileInfo(path);
-        return new NvramFile(
-            path,
-            mode,
-            version,
-            gameId,
-            info.Exists ? info.Length : 0,
-            info.Exists ? info.LastWriteTimeUtc : null);
+        long length = 0;
+        DateTime? modified = null;
+        try
+        {
+            if (info.Exists)
+            {
+                length = info.Length;
+                if (FileStamp.TryGetLastWriteTimeUtc(info, out DateTime value))
+                {
+                    modified = value;
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
+        {
+            Serilog.Log.Debug(exception, "NVRAM file {Path} metadata could not be read.", path);
+        }
+
+        return new NvramFile(path, mode, version, gameId, length, modified);
     }
 
     private static bool TryParseVersion(string text, out int version)

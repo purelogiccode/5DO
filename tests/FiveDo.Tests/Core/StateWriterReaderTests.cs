@@ -42,6 +42,19 @@ public sealed class StateWriterReaderTests
     }
 
     [Fact]
+    public void TryReadSection_HugeLength_ThrowsInvalidStateException()
+    {
+        var data = new byte[12];
+        BinaryPrimitives.WriteUInt32LittleEndian(data, 0x12345678);
+        BinaryPrimitives.WriteUInt16LittleEndian(data.AsSpan(4), 1);
+        BinaryPrimitives.WriteUInt16LittleEndian(data.AsSpan(6), 0);
+        BinaryPrimitives.WriteUInt32LittleEndian(data.AsSpan(8), int.MaxValue);
+        var reader = new StateReader(data);
+
+        Assert.Throws<InvalidStateException>(() => reader.TryReadSection(out _));
+    }
+
+    [Fact]
     public void String_Roundtrip()
     {
         var writer = new StateWriter();

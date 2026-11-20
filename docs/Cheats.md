@@ -84,7 +84,10 @@ if dword 0x00123456 < 0x1000 then write32 0x00123456 = 0x1000
 
 Conditions compare a guest memory value. The default width is 32 bits; `byte`, `word`,
 and `dword` select 8, 16, or 32 bits. Operators are `==`, `!=`, `<`, `<=`, `>`, `>=`.
-A single `=` is accepted as equality in a condition.
+A single `=` is accepted as equality in a condition. Semicolons after a conditional
+write on the same line keep the following writes under the same condition, so
+`if 0x1000 == 1 then write8 0x1001 = 1; write8 0x1002 = 2` performs both writes only
+when the condition is true. Use a newline to start an independent statement.
 
 ### Button conditions
 

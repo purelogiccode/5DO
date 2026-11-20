@@ -254,6 +254,7 @@ public sealed class MetadataCatalogClient : IDisposable
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "A metadata record path could not be normalized.");
             return false;
         }
     }

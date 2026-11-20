@@ -98,6 +98,23 @@ public sealed class InputRecorderTests
     }
 
     [Fact]
+    public void ResetTimeline_ClearsHistoryAndAcceptsTheRestoredFrame()
+    {
+        var recorder = new InputRecorder();
+        recorder.Record(10, new ControllerState(ControllerButton.A));
+        recorder.Record(12, new ControllerState(ControllerButton.B));
+
+        recorder.ResetTimeline(4);
+
+        Assert.Equal(0, recorder.Frames);
+        Assert.Equal(0, recorder.EntryCount);
+        recorder.Record(4, new ControllerState(ControllerButton.C));
+        Assert.Equal(1, recorder.Frames);
+        Assert.Equal(1, recorder.EntryCount);
+        Assert.Equal(4, InputScript.Parse(recorder.ToScript())[0].Frame);
+    }
+
+    [Fact]
     public void InputManager_RecordsPlayerOneStateAtTheProvidedFrame()
     {
         InputProfile profile = InputProfile.CreateDefault();

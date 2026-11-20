@@ -128,6 +128,36 @@ public sealed class AudioPipelineTests
     }
 
     [Fact]
+    public void WavWriter_PatchHeaderKeepsTheStreamAtTheEndOfTheData()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fivedo-audio-patch-{Guid.NewGuid():N}.wav");
+        try
+        {
+            using (var writer = new Pcm16WavWriter(path, 44100))
+            {
+                for (var i = 0; i < 20_000; i++)
+                {
+                    writer.WriteSample(0x0102, 0x0304);
+                }
+
+                // This flushes the 64 KiB buffer before rewriting the header.
+                writer.PatchHeader();
+                writer.WriteSample(0x0506, 0x0708);
+            }
+
+            var data = File.ReadAllBytes(path);
+            Assert.Equal(44 + (20_001 * 4), data.Length);
+            Assert.Equal(20_001 * 4, BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(40)));
+            Assert.Equal(0x0506, BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(data.Length - 4)));
+            Assert.Equal(0x0708, BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(data.Length - 2)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void NullSink_CountsSamples()
     {
         var sink = new NullAudioSink();

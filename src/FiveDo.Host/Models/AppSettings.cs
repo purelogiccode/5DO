@@ -806,6 +806,8 @@ public sealed class AppSettings
     {
         ArgumentOutOfRangeException.ThrowIfNegative(port);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(port, PbusEncoder.MaxPorts);
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        InputDevices ??= new List<string>();
         while (InputDevices.Count <= port)
         {
             InputDevices.Add(nameof(InputDeviceType.Joypad));

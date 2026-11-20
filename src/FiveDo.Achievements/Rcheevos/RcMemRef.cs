@@ -111,19 +111,19 @@ internal static class RcMemRefHelpers
         RcMemSize.Bits32,   // Variable
     ];
 
-    public static uint Mask(RcMemSize size)
+    internal static uint Mask(RcMemSize size)
     {
         int index = (int)size;
         return (uint)index < (uint)Masks.Length ? Masks[index] : 0xffffffff;
     }
 
-    public static RcMemSize SharedSize(RcMemSize size)
+    internal static RcMemSize SharedSize(RcMemSize size)
     {
         int index = (int)size;
         return (uint)index < (uint)SharedSizes.Length ? SharedSizes[index] : size;
     }
 
-    public static uint PeekValue(uint address, RcMemSize size, RcPeek? peek, object? userData)
+    internal static uint PeekValue(uint address, RcMemSize size, RcPeek? peek, object? userData)
     {
         if (peek is null)
         {
@@ -151,7 +151,7 @@ internal static class RcMemRefHelpers
         }
     }
 
-    public static void UpdateValue(ref RcMemRefValue memref, uint newValue)
+    internal static void UpdateValue(ref RcMemRefValue memref, uint newValue)
     {
         if (memref.Value == newValue)
         {
@@ -165,7 +165,7 @@ internal static class RcMemRefHelpers
         }
     }
 
-    public static uint GetValue(RcMemRefValue memref, RcOperandType operandType)
+    internal static uint GetValue(RcMemRefValue memref, RcOperandType operandType)
     {
         switch (operandType)
         {
@@ -183,14 +183,14 @@ internal static class RcMemRefHelpers
         }
     }
 
-    public static void GetMemRefValue(out RcTypedValue value, RcMemRefBase memref, RcOperandType operandType)
+    internal static void GetMemRefValue(out RcTypedValue value, RcMemRefBase memref, RcOperandType operandType)
     {
         value = default;
         value.Type = memref.Value.Type;
         value.U32 = GetValue(memref.Value, operandType);
     }
 
-    public static void Transform(ref RcTypedValue value, RcMemSize size)
+    internal static void Transform(ref RcTypedValue value, RcMemSize size)
     {
         // ASSERT: value.Type == RcValueType.Unsigned.
         switch (size)
@@ -274,7 +274,7 @@ internal static class RcMemRefHelpers
         }
     }
 
-    public static bool IsFloat(RcMemSize size) => size is RcMemSize.Float or RcMemSize.FloatBe
+    internal static bool IsFloat(RcMemSize size) => size is RcMemSize.Float or RcMemSize.FloatBe
         or RcMemSize.Double32 or RcMemSize.Double32Be or RcMemSize.Mbf32 or RcMemSize.Mbf32Le;
 
     private static void TransformFloat(ref RcTypedValue value)
@@ -388,7 +388,7 @@ internal static class RcMemRefHelpers
     }
 
     /// <summary>Recomputes the value of a modified memory reference.</summary>
-    public static uint GetModifiedValue(RcModifiedMemRef memref, RcPeek? peek, object? userData)
+    internal static uint GetModifiedValue(RcModifiedMemRef memref, RcPeek? peek, object? userData)
     {
         RcOperand.Evaluate(out RcTypedValue value, memref.Parent, null);
         RcOperand.Evaluate(out RcTypedValue modifier, memref.Modifier, null);
@@ -428,7 +428,7 @@ internal static class RcMemRefHelpers
     }
 
     /// <summary>Refreshes every memory reference in a set, including dependent modified references.</summary>
-    public static void UpdateMemRefs(IEnumerable<RcMemRefBase> memrefs, RcPeek? peek, object? userData)
+    internal static void UpdateMemRefs(IEnumerable<RcMemRefBase> memrefs, RcPeek? peek, object? userData)
     {
         var modified = new List<RcModifiedMemRef>();
 

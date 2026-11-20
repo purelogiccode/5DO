@@ -103,9 +103,7 @@ public sealed class CoverDownloader : IDisposable
         }
 
         EnsureRemoteScheme(uri);
-        using var timeout = CreateTimeout(TimeSpan.FromSeconds(30), cancellationToken);
-        var timeoutToken = timeout.Token;
-        return await ExecuteWithRetryAsync(async () =>
+        return await ExecuteWithRetryAsync(async timeoutToken =>
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -132,7 +130,7 @@ public sealed class CoverDownloader : IDisposable
                 false,
                 json,
                 response.Headers.ETag?.Tag ?? string.Empty);
-        }, timeoutToken).ConfigureAwait(false);
+        }, TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Downloads one image into the content-addressed cache.</summary>
@@ -164,9 +162,7 @@ public sealed class CoverDownloader : IDisposable
         }
 
         EnsureRemoteScheme(uri);
-        using var timeout = CreateTimeout(TimeSpan.FromSeconds(120), cancellationToken);
-        var timeoutToken = timeout.Token;
-        return await ExecuteWithRetryAsync(async () =>
+        return await ExecuteWithRetryAsync(async timeoutToken =>
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("image/webp"));
@@ -183,7 +179,7 @@ public sealed class CoverDownloader : IDisposable
                 .ReadAsStreamAsync(timeoutToken)
                 .ConfigureAwait(false);
             return await store.SaveImageAsync(id, stream, timeoutToken, progress).ConfigureAwait(false);
-        }, timeoutToken).ConfigureAwait(false);
+        }, TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Downloads the optional bulk pack to a local path.</summary>
@@ -230,9 +226,7 @@ public sealed class CoverDownloader : IDisposable
         }
 
         EnsureRemoteScheme(uri);
-        using var timeout = CreateTimeout(TimeSpan.FromMinutes(15), cancellationToken);
-        var timeoutToken = timeout.Token;
-        return await ExecuteWithRetryAsync(async () =>
+        return await ExecuteWithRetryAsync(async timeoutToken =>
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
             using HttpResponseMessage response = await _http
@@ -255,7 +249,7 @@ public sealed class CoverDownloader : IDisposable
                     progress,
                     timeoutToken)
                 .ConfigureAwait(false);
-        }, timeoutToken).ConfigureAwait(false);
+        }, TimeSpan.FromMinutes(15), cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -402,28 +396,33 @@ public sealed class CoverDownloader : IDisposable
     }
 
     private static async Task<T> ExecuteWithRetryAsync<T>(
-        Func<Task<T>> action,
+        Func<CancellationToken, Task<T>> action,
+        TimeSpan timeout,
         CancellationToken cancellationToken)
     {
         for (var attempt = 1; ; attempt++)
         {
+            using var attemptTimeout = CreateTimeout(timeout, cancellationToken);
             try
             {
-                return await action().ConfigureAwait(false);
+                return await action(attemptTimeout.Token).ConfigureAwait(false);
             }
-            catch (TransientCoverHttpException) when (attempt < MaxAttempts)
+            catch (TransientCoverHttpException exception) when (attempt < MaxAttempts)
             {
+                Serilog.Log.Debug(exception, "Transient cover download failure; retrying attempt {Attempt}.", attempt + 1);
                 await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch (HttpRequestException) when (attempt < MaxAttempts)
+            catch (HttpRequestException exception) when (attempt < MaxAttempts)
             {
+                Serilog.Log.Debug(exception, "Cover download failed; retrying attempt {Attempt}.", attempt + 1);
                 await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested
+            catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested
                                                 && attempt < MaxAttempts)
             {
+                Serilog.Log.Debug(exception, "Cover download timed out; retrying attempt {Attempt}.", attempt + 1);
                 await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), cancellationToken)
                     .ConfigureAwait(false);
             }

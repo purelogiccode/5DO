@@ -85,8 +85,8 @@ internal sealed class Pcm16WavWriter : IDisposable
     internal void PatchHeader()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        var position = _stream.Position;
         Flush();
+        var position = _stream.Position;
         _stream.Seek(4, SeekOrigin.Begin);
         Span<byte> riffSize = stackalloc byte[4];
         BinaryPrimitives.WriteInt32LittleEndian(riffSize, checked((int)(HeaderSize - 8 + _dataBytes)));

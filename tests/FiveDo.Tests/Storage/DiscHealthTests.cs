@@ -100,6 +100,37 @@ public sealed class DiscHealthTests
         Assert.All(result.Tracks, track => Assert.True(track.Matched));
     }
 
+    [Fact]
+    public void Verify_BinImageHashesNativeRawSectors()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"fivedo-raw-{Guid.NewGuid():N}.bin");
+        try
+        {
+            var raw = new byte[2 * BinImage.RawSectorBytes];
+            for (var i = 0; i < raw.Length; i++)
+            {
+                raw[i] = (byte)(i * 7);
+            }
+
+            File.WriteAllBytes(path, raw);
+            using var image = new BinImage(path);
+            Assert.Single(image.Tracks);
+            Assert.Equal(BinImage.RawSectorBytes, image.Tracks[0].SectorSize);
+            Assert.Equal(16, image.Tracks[0].PayloadOffset);
+
+            RedumpDat dat = CreateDat("Raw Game", "raw.bin", raw);
+            DiscDatResult result = DiscHealth.Verify(image, dat);
+
+            Assert.True(result.KnownDump);
+            Assert.Equal(1, result.MatchedTracks);
+            Assert.Equal(raw.Length, Assert.Single(result.Tracks).Size);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static RedumpDat CreateDat(string game, string romName, byte[] data)
     {
         return RedumpDat.Parse(

@@ -159,6 +159,8 @@ public sealed partial class Direct3D11Renderer
             return;
         }
 
+        // D3D11 flip-discard exposes only buffer 0; DXGI rotates the physical
+        // buffers behind that index after Present.
         using (ID3D11Texture2D currentBackBuffer = _swapChain.GetBuffer<ID3D11Texture2D>(0))
         {
             _context.CopyResource(currentBackBuffer, _output.Texture);

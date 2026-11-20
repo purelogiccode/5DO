@@ -78,16 +78,15 @@ public static class BiosInventory
         }
 
         var destination = ResolveDestination(destinationFolder, profile);
-        var temporary = destination + ".tmp";
+        var temporary = destination + "." + Path.GetRandomFileName() + ".tmp";
         try
         {
             File.Copy(source, temporary, overwrite: true);
             File.Move(temporary, destination, overwrite: false);
         }
-        catch
+        finally
         {
             TryDelete(temporary);
-            throw;
         }
 
         BiosProfile imported = BiosLibrary.Describe(destination);
@@ -158,6 +157,7 @@ public static class BiosInventory
                 or ArgumentException)
             {
                 // An unrelated malformed file must not block a valid import.
+                Serilog.Log.Debug(exception, "Skipping an unreadable BIOS candidate while importing {Path}.", path);
             }
         }
 
@@ -216,6 +216,7 @@ public static class BiosInventory
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             // Best effort; the original exception is more useful.
+            Serilog.Log.Debug(exception, "Could not delete the temporary BIOS file {Path}.", path);
         }
     }
 }

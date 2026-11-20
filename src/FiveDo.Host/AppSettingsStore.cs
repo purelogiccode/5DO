@@ -8,6 +8,7 @@ using FiveDo.Core;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Host.Osd;
 using FiveDo.Input;
+using FiveDo.Video;
 
 namespace FiveDo.Host;
 
@@ -172,9 +173,28 @@ public static class AppSettingsStore
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.Input ??= InputProfile.CreateDefault();
             settings.Input.Normalize();
+            settings.InputDevices = AppSettings.NormalizeInputDevices(settings.InputDevices).ToList();
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.BiosOverrides ??= new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var key in settings.BiosOverrides.Keys.ToArray())
+            {
+                if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(settings.BiosOverrides[key]))
+                {
+                    settings.BiosOverrides.Remove(key);
+                }
+            }
+
+            // JSON can deserialize null lists and dictionaries despite the non-nullable
+            // annotations. Normalize them before any Count/Any/TryGetValue caller runs.
+            settings.RecentDiscs = NormalizeStringList(settings.RecentDiscs);
+            settings.LibraryFolders = NormalizeStringList(settings.LibraryFolders);
+            // JSON can deserialize null dictionaries despite the non-nullable annotations.
+            // ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.FixModeOverrides ??= new Dictionary<string, FixMode>(StringComparer.Ordinal);
+            settings.FilterOverrides ??= new Dictionary<string, VideoFilter>(StringComparer.Ordinal);
+            settings.RegionOverrides ??= new Dictionary<string, VideoRegion>(StringComparer.Ordinal);
+            // ReSharper restore NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             if (!double.IsFinite(settings.CpuClockMultiplier)
                 || settings.CpuClockMultiplier < 0.5
                 || settings.CpuClockMultiplier > 4.0)
@@ -274,6 +294,41 @@ public static class AppSettingsStore
             if (!Enum.IsDefined(settings.Renderer))
             {
                 settings.Renderer = VideoRendererKind.OpenGl;
+            }
+
+            if (!Enum.IsDefined(settings.Filter))
+            {
+                settings.Filter = VideoFilter.SharpBilinear;
+            }
+
+            if (!Enum.IsDefined(settings.Aspect))
+            {
+                settings.Aspect = AspectMode.FourThree;
+            }
+
+            if (!Enum.IsDefined(settings.Deinterlace))
+            {
+                settings.Deinterlace = DeinterlaceMode.Auto;
+            }
+
+            if (!Enum.IsDefined(settings.FrameSkip))
+            {
+                settings.FrameSkip = FrameSkipMode.Auto;
+            }
+
+            if (!double.IsFinite(settings.CustomAspect) || settings.CustomAspect <= 0)
+            {
+                settings.CustomAspect = 4.0 / 3.0;
+            }
+
+            if (!float.IsFinite(settings.Bloom) || settings.Bloom is < 0 or > 1)
+            {
+                settings.Bloom = 0.35f;
+            }
+
+            if (!float.IsFinite(settings.FsrSharpness) || settings.FsrSharpness is < 0 or > 1)
+            {
+                settings.FsrSharpness = 0.8f;
             }
 
             if (settings.Renderer == VideoRendererKind.Direct3D11 && !OperatingSystem.IsWindows())
@@ -454,6 +509,20 @@ public static class AppSettingsStore
                 resolved);
             return new AppSettings { SettingsVersion = AppSettings.CurrentVersion };
         }
+    }
+
+    private static List<string> NormalizeStringList(IList<string>? values)
+    {
+        if (values is null)
+        {
+            return [];
+        }
+
+        return values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static void TryBackupInvalidFile(string path)

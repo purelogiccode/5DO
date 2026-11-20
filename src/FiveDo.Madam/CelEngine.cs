@@ -26,6 +26,9 @@ internal sealed class CelEngine
     private const uint PixelSourceRegister = 0x138;
     private const uint FrameBufferTargetRegister = 0x13c;
     private const uint NextCcbRegister = 0x5a4;
+    private const uint CurrentCcbRegister = 0x5a0;
+    private const uint PlutDataRegister = 0x5a8;
+    private const uint PDataRegister = 0x5ac;
 
     private static readonly int[] BppTable = { 1, 1, 2, 4, 6, 8, 16, 1 };
 
@@ -241,6 +244,14 @@ internal sealed class CelEngine
         CelsProcessed = 0;
 
         _nextCcb = _madam.ReadRegister(NextCcbRegister);
+        uint maximumVramAddress = (uint)(_ram.Layout.RamSize - 1);
+        if ((_nextCcb & 0xfffffcu) > maximumVramAddress)
+        {
+            _nextCcb = 0;
+            _madam.WriteRegister(NextCcbRegister, 0);
+            return 0;
+        }
+
         _madam.WriteRegister(CcbStatus, _madam.ReadRegister(CcbStatus) | 0x10u);
 
         var stop = false;
@@ -248,6 +259,7 @@ internal sealed class CelEngine
         {
             CelsProcessed++;
             _currentCcb = _nextCcb;
+            _madam.WriteRegister(CurrentCcbRegister, _currentCcb);
             CcbHeader header = _parser.Parse(_nextCcb & 0xfffffcu);
             _flags = header.Flags;
             _nextCcb = header.NextCcb;
@@ -320,6 +332,7 @@ internal sealed class CelEngine
                     _ => 32,
                 };
                 _madam.LoadPlut(header.PlutData, count);
+                _madam.WriteRegister(PlutDataRegister, header.PlutData);
             }
 
             if ((_flags & CcbControl.Skip) != CcbControl.None || header.PDataInvalid)
@@ -330,6 +343,7 @@ internal sealed class CelEngine
             _dataAddress = (_flags & CcbControl.CcbPreamble) != CcbControl.None
                 ? header.PData
                 : header.PDataCursor;
+            _madam.WriteRegister(PDataRegister, _dataAddress);
 
             _geometry.Flags = _flags;
             _geometry.ClipX = ClipX;

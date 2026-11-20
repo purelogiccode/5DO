@@ -1,3 +1,4 @@
+using System;
 using FiveDo.Input;
 
 namespace FiveDo.Tests.Input;
@@ -286,6 +287,18 @@ public sealed class PbusChainEncoderTests
         Assert.Equal(4, length);
         Assert.Equal(0x80, packet[0]);
         Assert.Equal(0x80, packet[1]);
+    }
+
+    [Fact]
+    public void EightFlightsticks_FitTheChainPacket()
+    {
+        var devices = new InputDeviceType[8];
+        Array.Fill(devices, InputDeviceType.Flightstick);
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+
+        var length = PbusChainEncoder.Encode(devices, packet);
+
+        Assert.Equal(76, length);
     }
 
     [Fact]

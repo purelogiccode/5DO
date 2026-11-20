@@ -53,6 +53,50 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void CueSheet_ReadsMixedMode2SectorDataAfterTheSubheader()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"fivedo-cue-m2-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string binPath = Path.Combine(directory, "disc.bin");
+        string cuePath = Path.Combine(directory, "disc.cue");
+        try
+        {
+            using (FileStream bin = File.Create(binPath))
+            {
+                for (var lba = 0; lba < 4; lba++)
+                {
+                    var sector = new byte[2336];
+                    sector[0] = 0x00;
+                    sector[1] = 0x00;
+                    sector[2] = 0x08;
+                    sector[3] = 0x00;
+                    DiscFixture.Expected(lba).CopyTo(sector.AsSpan(8));
+                    bin.Write(sector);
+                }
+            }
+
+            File.WriteAllText(
+                cuePath,
+                $"FILE \"{Path.GetFileName(binPath)}\" BINARY\n"
+                + "  TRACK 01 MODE2/2336\n"
+                + "    INDEX 01 00:00:00\n");
+
+            using var image = CueDiscImage.Open(cuePath);
+            DiscTrack track = Assert.Single(image.Tracks);
+            Assert.Equal(2336, track.SectorSize);
+            Assert.Equal(8, track.PayloadOffset);
+
+            var data = new byte[2048];
+            image.ReadSector(2, data);
+            Assert.Equal(DiscFixture.Expected(2), data);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Factory_DetectsIsoBinCue()
     {
         using var fixture = new DiscFixture(sectorCount: 8);

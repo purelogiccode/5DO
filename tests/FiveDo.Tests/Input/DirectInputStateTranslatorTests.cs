@@ -71,9 +71,10 @@ public sealed class DirectInputStateTranslatorTests
             0);
 
         Assert.Equal(1f, state.LeftStickX);
-        Assert.Equal(-1f, state.LeftStickY);
+        // DirectInput axes are positive-down; GamepadState is positive-up.
+        Assert.Equal(1f, state.LeftStickY);
         Assert.Equal(0.5f, state.RightStickX);
-        Assert.Equal(-0.5f, state.RightStickY);
+        Assert.Equal(0.5f, state.RightStickY);
     }
 
     [Fact]

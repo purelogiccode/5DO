@@ -4,6 +4,43 @@ All notable changes are recorded here. The project is at v1.14.0, a compatibilit
 input fix release for high-resolution presentation, Gamegun defaults, and desktop
 controls.
 
+## [Unreleased]
+
+### Changed
+
+- **Tooltip coverage now includes content elements, not only controls.**
+  `FrontendToolTipTests` parses every `Views/*.axaml` and requires a `ToolTip.Tip` on
+  each interactive control plus every `TextBlock` and `Image`, either directly or on an
+  ancestor. The remaining input-timeline, health-summary, and RetroAchievements labels
+  and headers now carry tooltips, and the English catalog contains the new strings.
+- **Visibility is consistent with containing types.** Every `public` method declared by
+  an `internal` type that is not an interface implementation, override, or framework
+  entry point is now `internal` (128 methods across the Rcheevos port, Host state/cache
+  helpers, Storage, and the Avalonia helpers). `Program.BuildAvaloniaApp` remains public
+  for the Avalonia designer convention.
+- **The last non-Serilog debug output is gone.** `DisplaySleep` writes its screen-saver
+  and PATH fallbacks through Serilog instead of `Debug.WriteLine`, and previously silent
+  fallback catches in Host, Storage, Achievements, Diagnostics, and the frontend now log
+  at `Debug` with the exception detail. `FiveDo.Video.Vulkan` references Serilog for the
+  runtime-probe fallback.
+
+### Added
+
+- **Bug-report contract tests.** The required environment, error, and exception field
+  names and blocks are asserted for every payload, and the sink is covered for rejected
+  HTTP responses and transport failures. The `InstructionsToSendBugs.md` file was not
+  present at either documented path; the inline field list supplied with the task was
+  used as the contract.
+- **38 more tests** (2,513 total): atomic file writes, 5DO state-document parsing and
+  section editing, library-cache persistence, local cover indexing, the bug-report
+  contract, and update-cache fallbacks.
+
+### Validation
+
+- Full suite **2,513/2,513** passes in Debug; `dotnet build` reports 0 warnings and
+  0 errors, `dotnet format --verify-no-changes` passes, and `dotnet restore --locked-mode`
+  succeeds after the lock files were refreshed to 1.14.0.
+
 ## [1.14.0] - 2026-11-20
 
 ### Fixed

@@ -194,10 +194,10 @@ pass for the output.
 - `Clut`: `byte[32 * 3 * 480]` (R/G/B per entry per line).
 - `LineParams`: `uint[2 * 480]` (background, out-control).
 
-`OpenGlRenderer` allocates immutable storage with `TexStorage2D` and updates with
-`TexSubImage2D` (or the equivalent path) each frame. Uniform locations, the VAO, and the
-present callback are cached. Steady-state presentation performs **0 managed
-allocations/frame** on the measured path.
+`OpenGlRenderer` allocates its GL 3.3/GLES 3.0-compatible texture storage with
+`TexImage2D` and updates with `TexSubImage2D` (or the equivalent path) each frame.
+Uniform locations, the VAO, and the present callback are cached. Steady-state
+presentation performs **0 managed allocations/frame** on the measured path.
 
 Approximate upload cost for 320x240:
 

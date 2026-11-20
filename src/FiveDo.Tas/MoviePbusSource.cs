@@ -14,9 +14,10 @@ namespace FiveDo.Tas;
 /// </remarks>
 public sealed class MoviePbusSource : IPbusSource
 {
-    private static readonly byte[] EmptyPacket = [];
     private readonly Movie _movie;
     private readonly ControllerState[] _controllers = new ControllerState[PbusEncoder.MaxPorts];
+    private readonly byte[] _packet = new byte[MovieFormat.MaxPacketLength];
+    private int _packetLength;
     private int _position;
 
     /// <summary>Initializes a new instance of the <see cref="MoviePbusSource"/> class.</summary>
@@ -33,12 +34,7 @@ public sealed class MoviePbusSource : IPbusSource
         _position = startFrame;
         if (startFrame < movie.FrameCount)
         {
-            CurrentPacket = movie.GetFrame(startFrame);
-            PbusDecoder.Decode(CurrentPacket, _controllers);
-        }
-        else
-        {
-            CurrentPacket = EmptyPacket;
+            SelectFrame(startFrame);
         }
 
         CurrentControllers = _controllers;
@@ -57,7 +53,7 @@ public sealed class MoviePbusSource : IPbusSource
     public bool IsFinished => _position >= _movie.FrameCount;
 
     /// <summary>Gets the packet for the most recently selected frame.</summary>
-    public byte[] CurrentPacket { get; private set; }
+    public ReadOnlyMemory<byte> CurrentPacket => _packet.AsMemory(0, _packetLength);
 
     /// <summary>Gets the decoded controllers for the most recently selected frame.</summary>
     public ControllerState[] CurrentControllers { get; private set; }
@@ -72,12 +68,11 @@ public sealed class MoviePbusSource : IPbusSource
         _position = frame;
         if (frame < _movie.FrameCount)
         {
-            CurrentPacket = _movie.GetFrame(frame);
-            PbusDecoder.Decode(CurrentPacket, _controllers);
+            SelectFrame(frame);
         }
         else
         {
-            CurrentPacket = EmptyPacket;
+            _packetLength = 0;
             Array.Clear(_controllers);
         }
     }
@@ -101,15 +96,26 @@ public sealed class MoviePbusSource : IPbusSource
         if (_position >= _movie.FrameCount)
         {
             destination.Clear();
+            _packetLength = 0;
+            Array.Clear(_controllers);
             return 0;
         }
 
-        byte[] packet = _movie.Frames[_position];
+        ReadOnlySpan<byte> packet = _movie.Frames[_position];
         _position++;
-        CurrentPacket = packet;
+        packet.CopyTo(_packet);
+        _packetLength = packet.Length;
         PbusDecoder.Decode(packet, _controllers);
         var length = Math.Min(packet.Length, destination.Length);
-        packet.AsSpan(0, length).CopyTo(destination);
+        packet[..length].CopyTo(destination);
         return length;
+    }
+
+    private void SelectFrame(int frame)
+    {
+        ReadOnlySpan<byte> packet = _movie.Frames[frame];
+        packet.CopyTo(_packet);
+        _packetLength = packet.Length;
+        PbusDecoder.Decode(packet, _controllers);
     }
 }

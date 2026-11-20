@@ -103,6 +103,17 @@ public sealed class CoverService : IDisposable
                         _metadata.ETag,
                         cancellationToken)
                     .ConfigureAwait(false);
+                if (response.NotModified && _catalog is null)
+                {
+                    // The sidecar supplied an ETag but the cached catalog is missing.
+                    // Ask again without a conditional request so a valid body is returned.
+                    response = await _downloader.GetCatalogAsync(
+                            _options.CatalogUri,
+                            etag: null,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
                 if (response.NotModified && _catalog is not null)
                 {
                     _metadata.FetchedUtc = DateTimeOffset.UtcNow;
@@ -868,6 +879,7 @@ public sealed class CoverService : IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "The cover length for {Path} could not be read.", path);
             return 0;
         }
     }

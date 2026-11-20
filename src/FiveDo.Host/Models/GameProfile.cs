@@ -243,7 +243,7 @@ public sealed class GameProfile
 
         settings.SetInputDeviceOverride(
             gameId,
-            InputDevices.Count == 0 ? null : new List<string>(InputDevices));
+            InputDevices is null or { Count: 0 } ? null : new List<string>(InputDevices));
         if (NvramStorageMode is { } nvramStorageMode)
         {
             settings.NvramStorageMode = nvramStorageMode;

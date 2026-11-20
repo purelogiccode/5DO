@@ -141,6 +141,11 @@ internal static class Program
             catch (Exception exception) when (exception is IOException
                 or InvalidDataException
                 or InvalidStateException
+                or DiscImageException
+                or UnauthorizedAccessException
+                or JsonException
+                or OverflowException
+                or EmulationException
                 or ArgumentException
                 or FormatException
                 or NotSupportedException)
@@ -1299,6 +1304,44 @@ internal static class Program
                     }
                 }
             }
+        }
+        catch
+        {
+            // The run failed, but still flush the NVRAM image, close trace files, and
+            // release the disc source instead of leaking them until process exit.
+            try
+            {
+                gifRecorder?.Complete();
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException)
+            {
+                Serilog.Log.Debug(exception, "The GIF recorder could not be finalized after a failed run.");
+            }
+
+            gifStream?.Dispose();
+            fiqTraceWriter?.Dispose();
+            clioTraceWriter?.Dispose();
+            cdTraceWriter?.Dispose();
+            cdRegisterTraceWriter?.Dispose();
+            cdTranscriptWriter?.Dispose();
+            celTraceWriter?.Dispose();
+            clioTimerTraceWriter?.Dispose();
+            clioReadTraceWriter?.Dispose();
+            pbusTraceWriter?.Dispose();
+            kprintWriter?.Dispose();
+            kprintPcWriter?.Dispose();
+            watchWriter?.Dispose();
+            try
+            {
+                SaveNvramIfRequested(machine, nvramSelection);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"warning: NVRAM could not be saved after the failed run: {exception.Message}");
+            }
+
+            disc?.Dispose();
+            throw;
         }
         finally
         {
@@ -3476,7 +3519,7 @@ internal static class Program
                     tracks.Add(new CliDiscTrackResult(
                         track.Number,
                         track.IsAudio ? "audio" : "data",
-                        track.SectorSize,
+                        track.SectorSize * track.SectorCount,
                         track.SectorCount,
                         track.StartLba,
                         track.PayloadOffset));
@@ -3487,7 +3530,7 @@ internal static class Program
                 tracks.Add(new CliDiscTrackResult(
                     1,
                     "data",
-                    source.SectorSize,
+                    source.SectorSize * source.SectorCount,
                     source.SectorCount,
                     0,
                     0));
@@ -3505,17 +3548,9 @@ internal static class Program
 
             foreach (CliDiscTrackResult track in tracks)
             {
-                int dataSize = track.DataSize;
-                if (source is not ITrackedDiscSource)
-                {
-                    dataSize = (long)source.SectorCount * source.SectorSize <= int.MaxValue
-                        ? source.SectorCount * source.SectorSize
-                        : dataSize;
-                }
-
                 Console.WriteLine(
                     $"track {track.Number}: type={track.Type} format={(format.Length == 0 ? "raw" : format)} "
-                    + $"dataSize={dataSize} frames={track.Frames} start={track.Start} payload={track.PayloadOffset}");
+                    + $"dataSize={track.DataSize} frames={track.Frames} start={track.Start} payload={track.PayloadOffset}");
             }
 
             return 0;
@@ -5631,6 +5666,24 @@ internal static class Program
                 }
             }
         }
+
+        if (result.Warnings.Count > 0)
+        {
+            Console.WriteLine("warnings:");
+            foreach (var warning in result.Warnings)
+            {
+                Console.WriteLine($"  {warning}");
+            }
+        }
+
+        if (result.Notes.Count > 0)
+        {
+            Console.WriteLine("notes:");
+            foreach (var note in result.Notes)
+            {
+                Console.WriteLine($"  {note}");
+            }
+        }
     }
 
     private static string DescribeWriter()
@@ -6372,6 +6425,12 @@ internal static class Program
 
             if (arg.StartsWith("--", StringComparison.Ordinal))
             {
+                if (ParsedOptions.BooleanOptions.Contains(arg))
+                {
+                    options.Values[arg] = "true";
+                    continue;
+                }
+
                 if (i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
                 {
                     options.Values[arg] = args[++i];
@@ -6571,6 +6630,46 @@ internal static class Program
 
     private sealed class ParsedOptions
     {
+        internal static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "--all",
+            "--allow-patched",
+            "--allow-unsigned-discs",
+            "--audio-hash",
+            "--audio-swap",
+            "--cheat-auto",
+            "--clio-timer-stats",
+            "--cycle-classes",
+            "--disabled",
+            "--dry-run",
+            "--fix",
+            "--force",
+            "--high-res",
+            "--include-known",
+            "--json",
+            "--latency",
+            "--list-locales",
+            "--movie-no-state",
+            "--movie-verify",
+            "--mute-cd",
+            "--no-game-fixes",
+            "--no-recursive",
+            "--no-update-check",
+            "--opera-dipir",
+            "--opera-soft-reset",
+            "--overwrite",
+            "--prefer-anvil",
+            "--prefetch",
+            "--realtime",
+            "--recursive",
+            "--require-kanji",
+            "--state-hash",
+            "--stop-invalid",
+            "--swi-comments",
+            "--swi-hle",
+            "--true-2x",
+        };
+
         internal Dictionary<string, string> Values { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         internal bool Json { get; set; }

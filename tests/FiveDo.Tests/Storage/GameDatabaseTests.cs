@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Input;
 using FiveDo.Storage;
@@ -7,6 +8,27 @@ namespace FiveDo.Tests.Storage;
 
 public sealed class GameDatabaseTests
 {
+    [Fact]
+    public void FindDiscs_IncludesStandaloneBinImages()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"fivedo-scan-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllBytes(Path.Combine(directory, "disc.BIN"), [0]);
+            File.WriteAllBytes(Path.Combine(directory, "disc.chd"), [0]);
+
+            IReadOnlyList<string> discs = GameDatabaseScanner.FindDiscs(directory, recursive: false);
+
+            Assert.Equal(2, discs.Count);
+            Assert.Contains(discs, path => path.EndsWith("disc.BIN", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Fact]
     public void DefaultDatabase_ContainsKnownRecords()
     {
@@ -141,6 +163,9 @@ public sealed class GameDatabaseTests
         "",
         "",
         "US-KR")]
+    [InlineData("Gex (U).chd", "Gex", "", "", "US")]
+    [InlineData("Gex (J).chd", "Gex", "", "", "JP")]
+    [InlineData("Gex (E).chd", "Gex", "", "", "EU")]
     public void Describe_ParsesGoodToolsAndRedumpNames(
         string fileName,
         string expectedName,

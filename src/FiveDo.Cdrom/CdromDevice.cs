@@ -954,6 +954,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
         reader.ReadBytes(_command);
 
+        if (_dataPointer < 0
+            || _dataLength < 0
+            || _dataLength > _data.Length
+            || _dataPointer > _data.Length - _dataLength)
+        {
+            throw new InvalidStateException(
+                $"Invalid CD-ROM data FIFO state (pointer {_dataPointer}, length {_dataLength}).");
+        }
+
         if (reader is not StateSectionReader sectionReader || sectionReader.Version >= 2)
         {
             _cycles = reader.ReadUInt64();
@@ -1046,6 +1055,16 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
 
         _discState.FirstTrack = reader.ReadByte();
         _discState.LastTrack = reader.ReadByte();
+        // A machine saved without media records 0-0; every real disc has 1-99.
+        bool noMedia = _discState.FirstTrack == 0 && _discState.LastTrack == 0;
+        if (!noMedia
+            && (_discState.FirstTrack is < 1 or > 99
+                || _discState.LastTrack is < 1 or > 99
+                || _discState.LastTrack < _discState.FirstTrack))
+        {
+            throw new InvalidStateException(
+                $"Invalid CD-ROM track range {_discState.FirstTrack}-{_discState.LastTrack}.");
+        }
         reader.ReadBytes(_discState.CurrentAbsoluteMsf);
         reader.ReadBytes(_discState.NextMsf);
         reader.ReadBytes(_discState.TempMsf);
@@ -1339,6 +1358,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 }
 
                 byte requestedTrack = _command[2];
+                if (_discState.FirstTrack is < 1 or > 99
+                    || _discState.LastTrack is < 1 or > 99
+                    || _discState.LastTrack < _discState.FirstTrack)
+                {
+                    FailWithStatus(0x8C);
+                    _meiStatus = MeiError.ReceiveEcc;
+                    break;
+                }
+
                 if (requestedTrack == 0xAA)
                 {
                     _xbusStatus |= CdstReady;
@@ -2089,9 +2117,9 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             return;
         }
 
-        _discState.FirstTrack = (byte)tracked.Tracks[0].Number;
-        _discState.LastTrack = (byte)tracked.Tracks[^1].Number;
-
+        _discState.FirstTrack = 1;
+        _discState.LastTrack = 1;
+        var firstSet = false;
         foreach (DiscTrack track in tracked.Tracks)
         {
             if (track.Number is < 1 or > 99)
@@ -2099,6 +2127,13 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 continue;
             }
 
+            if (!firstSet)
+            {
+                _discState.FirstTrack = (byte)track.Number;
+                firstSet = true;
+            }
+
+            _discState.LastTrack = (byte)track.Number;
             int absoluteFrame = track.StartLba + 150;
             SetTocEntry(
                 track.Number,

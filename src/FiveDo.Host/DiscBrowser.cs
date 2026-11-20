@@ -351,8 +351,9 @@ public sealed class DiscBrowser : IDisposable
         {
             return FiveDo.Storage.GameId.Compute(disc);
         }
-        catch (DiscImageException)
+        catch (DiscImageException exception)
         {
+            Serilog.Log.Debug(exception, "The disc game ID could not be computed.");
             return string.Empty;
         }
     }

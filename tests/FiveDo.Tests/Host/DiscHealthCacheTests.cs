@@ -56,6 +56,19 @@ public sealed class DiscHealthCacheTests
     }
 
     [Fact]
+    public void Load_DropsNullAndEmptyRecords()
+    {
+        using var folder = new TempFolder();
+        var path = Path.Combine(folder.Path, "null-entries.json");
+        File.WriteAllText(path, """{"Version":1,"Entries":[null,{},{"Path":""},{"Path":"game.iso"}]}""");
+
+        DiscHealthCache cache = DiscHealthCacheStore.Load(path);
+
+        DiscHealthRecord record = Assert.Single(cache.Entries);
+        Assert.Equal("game.iso", record.Path);
+    }
+
+    [Fact]
     public void Find_IgnoresStaleRecords()
     {
         using var folder = new TempFolder();

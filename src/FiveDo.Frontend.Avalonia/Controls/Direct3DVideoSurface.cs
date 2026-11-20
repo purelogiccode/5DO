@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -55,6 +56,7 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
     private readonly VdlFrameMailbox _mailbox = new();
     private readonly VdlFrame _presentFrame = new();
     private readonly Action _presentAction;
+    private int _presentRequestPending;
     private Direct3D11Renderer? _renderer;
     private RendererSettings _settings = new();
     private nint _parentHandle;
@@ -197,8 +199,9 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
 
         _parentHandle = platformHandle.Handle;
 
-        var (width, height) = GetPixelSize(topLevel);
-        _childHandle = CreateChildWindow(_parentHandle, width, height);
+        var (windowWidth, windowHeight) = GetPixelSize(topLevel);
+        var (width, height) = ResolveOutputSize(windowWidth, windowHeight);
+        _childHandle = CreateChildWindow(_parentHandle, windowWidth, windowHeight);
         try
         {
             _renderer = new Direct3D11Renderer
@@ -274,7 +277,7 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
         _mailbox.Write(frame);
         if (_started)
         {
-            Dispatcher.UIThread.Post(_presentAction, DispatcherPriority.Render);
+            RequestPresent();
         }
     }
 
@@ -353,11 +356,17 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
 
     private void RequestPresent()
     {
+        if (Interlocked.Exchange(ref _presentRequestPending, 1) != 0)
+        {
+            return;
+        }
+
         Dispatcher.UIThread.Post(_presentAction, DispatcherPriority.Render);
     }
 
     private void PresentLatestFrame()
     {
+        Interlocked.Exchange(ref _presentRequestPending, 0);
         if (!_started || !_presentationVisible || _renderer is null)
         {
             return;
@@ -448,8 +457,7 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
         var message = exception.Message;
         return message.Contains("DEVICE_REMOVED", StringComparison.OrdinalIgnoreCase)
                || message.Contains("DEVICE_HUNG", StringComparison.OrdinalIgnoreCase)
-               || message.Contains("DEVICE_RESET", StringComparison.OrdinalIgnoreCase)
-               || message.Contains("0x887A000", StringComparison.OrdinalIgnoreCase);
+               || message.Contains("DEVICE_RESET", StringComparison.OrdinalIgnoreCase);
     }
 
     private void UpdateChildBounds()
@@ -495,7 +503,15 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
             width,
             height,
             SwpNoZOrder | SwpNoActivate | (_presentationVisible ? SwpShowWindow : 0));
-        _renderer?.Resize(width, height);
+        (int outputWidth, int outputHeight) = ResolveOutputSize(width, height);
+        _renderer?.Resize(outputWidth, outputHeight);
+    }
+
+    private (int Width, int Height) ResolveOutputSize(int width, int height)
+    {
+        return OutputResolutionSizes.TryGetSize(_settings.OutputResolution, out int outputWidth, out int outputHeight)
+            ? (outputWidth, outputHeight)
+            : (width, height);
     }
 
     private (int Width, int Height) GetPixelSize(TopLevel topLevel)

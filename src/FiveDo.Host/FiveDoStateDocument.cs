@@ -51,7 +51,7 @@ internal sealed class FiveDoStateDocument
 
     public List<FiveDoStateSection> Sections { get; }
 
-    public static FiveDoStateDocument Parse(ReadOnlySpan<byte> data)
+    internal static FiveDoStateDocument Parse(ReadOnlySpan<byte> data)
     {
         var reader = new StateReader(data.ToArray());
         if (reader.Remaining < 8)
@@ -148,7 +148,7 @@ internal sealed class FiveDoStateDocument
             sections);
     }
 
-    public byte[] Write(bool compress = true)
+    internal byte[] Write(bool compress = true)
     {
         var writer = new StateWriter();
         writer.CompressionEnabled = compress;
@@ -187,7 +187,7 @@ internal sealed class FiveDoStateDocument
         return writer.ToArray();
     }
 
-    public FiveDoStateSection? Find(uint id)
+    internal FiveDoStateSection? Find(uint id)
     {
         foreach (FiveDoStateSection section in Sections)
         {
@@ -200,7 +200,7 @@ internal sealed class FiveDoStateDocument
         return null;
     }
 
-    public void Replace(uint id, ushort version, byte[] payload)
+    internal void Replace(uint id, ushort version, byte[] payload)
     {
         ArgumentNullException.ThrowIfNull(payload);
         for (var i = 0; i < Sections.Count; i++)
@@ -215,7 +215,7 @@ internal sealed class FiveDoStateDocument
         Sections.Add(new FiveDoStateSection(id, version, payload));
     }
 
-    public bool Remove(uint id)
+    internal bool Remove(uint id)
     {
         for (var i = 0; i < Sections.Count; i++)
         {

@@ -24,7 +24,7 @@ internal static class RcProgressCodec
 
     private const int MaxEntries = 1_000_000;
 
-    public static byte[] Serialize(string gameHash, RcRuntime runtime)
+    internal static byte[] Serialize(string gameHash, RcRuntime runtime)
     {
         ArgumentNullException.ThrowIfNull(gameHash);
         ArgumentNullException.ThrowIfNull(runtime);
@@ -65,7 +65,7 @@ internal static class RcProgressCodec
         return writer.ToArray();
     }
 
-    public static bool TryDeserialize(
+    internal static bool TryDeserialize(
         ReadOnlySpan<byte> payload,
         string expectedGameHash,
         RcRuntime runtime)

@@ -223,6 +223,88 @@ public sealed class UpdateCheckerTests
         Assert.False(result.Info.UpdateAvailable);
     }
 
+    [Fact]
+    public void IsEnabled_IsDisabledByTheTestEnvironment()
+    {
+        // TestEnvironment sets FIVEDO_UPDATE_CHECK=0 so test launches never query GitHub.
+        Assert.False(UpdateChecker.IsEnabled);
+    }
+
+    [Fact]
+    public async Task CheckAsync_IgnoresACorruptCacheFile()
+    {
+        using var directory = new TempDirectory();
+        var cachePath = Path.Combine(directory.Path, "cache.json");
+        File.WriteAllText(cachePath, "not json");
+        using var client = new HttpClient(new StaticHandler(ReleaseJson(
+            "v1.2.0",
+            "5DO 1.2.0",
+            "https://github.com/purelogiccode/5DO/releases/tag/v1.2.0",
+            "win-x64")));
+
+        UpdateCheckResult result = await UpdateChecker.CheckAsync(
+            new UpdateCheckOptions { CachePath = cachePath },
+            client,
+            "1.1.0",
+            DateTimeOffset.UtcNow,
+            CancellationToken.None);
+
+        Assert.True(result.Ok);
+        Assert.False(result.FromCache);
+        Assert.NotNull(result.Info);
+        Assert.True(result.Info.UpdateAvailable);
+    }
+
+    [Fact]
+    public async Task CheckAsync_FallsBackToTheLatestReleasePageWhenHtmlUrlIsMissing()
+    {
+        using var directory = new TempDirectory();
+        using var client = new HttpClient(new StaticHandler(
+            """
+            {
+              "tag_name": "v1.2.0",
+              "name": "5DO 1.2.0"
+            }
+            """));
+
+        UpdateCheckResult result = await UpdateChecker.CheckAsync(
+            new UpdateCheckOptions { CachePath = Path.Combine(directory.Path, "cache.json") },
+            client,
+            "1.1.0",
+            DateTimeOffset.UtcNow,
+            CancellationToken.None);
+
+        Assert.True(result.Ok);
+        Assert.NotNull(result.Info);
+        Assert.Equal(UpdateChecker.LatestReleaseUrl, result.Info.ReleasePageUrl);
+        Assert.Equal(UpdateChecker.LatestReleaseUrl, result.Info.DownloadUrl);
+        Assert.Null(result.Info.AssetName);
+    }
+
+    [Fact]
+    public async Task CheckAsync_UsesTheReleasePageWhenNoPlatformAssetExists()
+    {
+        using var directory = new TempDirectory();
+        using var client = new HttpClient(new StaticHandler(ReleaseJson(
+            "v1.2.0",
+            "5DO 1.2.0",
+            "https://github.com/purelogiccode/5DO/releases/tag/v1.2.0")));
+
+        UpdateCheckResult result = await UpdateChecker.CheckAsync(
+            new UpdateCheckOptions { CachePath = Path.Combine(directory.Path, "cache.json") },
+            client,
+            "1.1.0",
+            DateTimeOffset.UtcNow,
+            CancellationToken.None);
+
+        Assert.True(result.Ok);
+        Assert.NotNull(result.Info);
+        Assert.Equal(
+            "https://github.com/purelogiccode/5DO/releases/tag/v1.2.0",
+            result.Info.DownloadUrl);
+        Assert.Null(result.Info.AssetName);
+    }
+
     private static string ReleaseJson(string tag, string name, string url, params string[] assetTokens)
     {
         var version = tag.TrimStart('v');

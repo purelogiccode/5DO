@@ -33,14 +33,14 @@ internal sealed class RcTrigger
 
     internal void UseMemRefs(List<RcMemRefBase> memrefs) => MemRefs = memrefs;
 
-    public static RcTrigger Parse(string memaddr)
+    internal static RcTrigger Parse(string memaddr)
     {
         var cursor = new RcCursor(memaddr);
         var parse = new RcParseState();
         return Parse(cursor, parse);
     }
 
-    public static RcTrigger Parse(RcCursor cursor, RcParseState parse)
+    internal static RcTrigger Parse(RcCursor cursor, RcParseState parse)
     {
         var trigger = new RcTrigger();
         ParseInternal(trigger, cursor, parse);
@@ -93,7 +93,7 @@ internal sealed class RcTrigger
         trigger.HasHits = false;
     }
 
-    public RcTriggerState Evaluate(RcPeek? peek, object? userData)
+    internal RcTriggerState Evaluate(RcPeek? peek, object? userData)
     {
         switch (State)
         {
@@ -263,13 +263,13 @@ internal sealed class RcTrigger
         return State;
     }
 
-    public bool Test(RcPeek? peek, object? userData)
+    internal bool Test(RcPeek? peek, object? userData)
     {
         State = RcTriggerState.Active;
         return Evaluate(peek, userData) == RcTriggerState.Triggered;
     }
 
-    public void ResetTrigger()
+    internal void ResetTrigger()
     {
         ResetHitCounts();
         State = RcTriggerState.Waiting;
@@ -282,14 +282,14 @@ internal sealed class RcTrigger
         HasHits = false;
     }
 
-    public void UpdateMemRefs(RcPeek? peek, object? userData)
+    internal void UpdateMemRefs(RcPeek? peek, object? userData)
     {
         RcMemRefHelpers.UpdateMemRefs(MemRefs, peek, userData);
     }
 
     public bool IsEmpty => (Requirement is null || Requirement.Conditions is null) && Alternative is null;
 
-    public bool ContainsMemRef(RcMemRefBase memref)
+    internal bool ContainsMemRef(RcMemRefBase memref)
     {
         foreach (RcMemRefBase candidate in MemRefs)
         {
@@ -327,11 +327,11 @@ internal sealed class RcTrigger
         return false;
     }
 
-    public static bool IsActiveState(RcTriggerState state) => state is not (RcTriggerState.Disabled
+    internal static bool IsActiveState(RcTriggerState state) => state is not (RcTriggerState.Disabled
         or RcTriggerState.Inactive
         or RcTriggerState.Triggered);
 
-    public string FormatMeasured()
+    internal string FormatMeasured()
     {
         if (MeasuredTarget == 0 || !IsActiveState(State))
         {

@@ -20,7 +20,7 @@ internal static class AtomicFile
     /// <param name="contents">Complete file contents.</param>
     /// <param name="description">Short description used in log messages.</param>
     /// <returns><see langword="true"/> when the file was written; otherwise <see langword="false"/>.</returns>
-    public static bool WriteAllText(string path, string contents, string description)
+    internal static bool WriteAllText(string path, string contents, string description)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(contents);
@@ -49,7 +49,7 @@ internal static class AtomicFile
     /// <param name="contents">Complete file contents.</param>
     /// <param name="description">Short description used in log messages.</param>
     /// <returns><see langword="true"/> when the file was written; otherwise <see langword="false"/>.</returns>
-    public static bool WriteAllBytes(string path, ReadOnlySpan<byte> contents, string description)
+    internal static bool WriteAllBytes(string path, ReadOnlySpan<byte> contents, string description)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentException.ThrowIfNullOrWhiteSpace(description);

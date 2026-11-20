@@ -207,6 +207,7 @@ public sealed class DiscHealthCache
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
         {
+            Serilog.Log.Debug(exception, "The cached disc health record for {Path} could not be validated.", path);
             return null;
         }
     }
@@ -330,7 +331,40 @@ public static class DiscHealthCacheStore
             DiscHealthCache cache = JsonSerializer.Deserialize(
                 File.ReadAllText(resolved),
                 DiscHealthCacheJsonContext.Default.DiscHealthCache) ?? new DiscHealthCache();
-            return cache.Version == DiscHealthCache.CurrentVersion ? cache : new DiscHealthCache();
+            if (cache.Version != DiscHealthCache.CurrentVersion)
+            {
+                return new DiscHealthCache();
+            }
+
+            // JSON can deserialize null entries and strings despite the annotations.
+            // ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            cache.Entries ??= [];
+            for (var index = cache.Entries.Count - 1; index >= 0; index--)
+            {
+                DiscHealthRecord? record = cache.Entries[index];
+                if (record is null)
+                {
+                    cache.Entries.RemoveAt(index);
+                    continue;
+                }
+
+                record.Path ??= string.Empty;
+                record.GameName ??= string.Empty;
+                record.RomName ??= string.Empty;
+                record.Crc32 ??= string.Empty;
+                record.Md5 ??= string.Empty;
+                record.Sha1 ??= string.Empty;
+                record.Detail ??= string.Empty;
+                // ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                // ReSharper restore NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                if (record.Path.Length == 0)
+                {
+                    cache.Entries.RemoveAt(index);
+                }
+            }
+
+            return cache;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -348,21 +382,15 @@ public static class DiscHealthCacheStore
         var resolved = path ?? DefaultPath;
         try
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(resolved));
-            if (!string.IsNullOrEmpty(directory))
+            var json = JsonSerializer.Serialize(cache, DiscHealthCacheJsonContext.Default.DiscHealthCache);
+            if (!AtomicFile.WriteAllText(resolved, json, "disc-health cache"))
             {
-                Directory.CreateDirectory(directory);
+                Serilog.Log.Debug("Disc-health cache {Path} could not be written.", resolved);
             }
-
-            var temporary = resolved + ".tmp";
-            File.WriteAllText(
-                temporary,
-                JsonSerializer.Serialize(cache, DiscHealthCacheJsonContext.Default.DiscHealthCache));
-            File.Move(temporary, resolved, overwrite: true);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception) when (exception is JsonException or NotSupportedException)
         {
-            Serilog.Log.Debug(exception, "Disc-health cache {Path} could not be written.", resolved);
+            Serilog.Log.Debug(exception, "Disc-health cache {Path} could not be serialized.", resolved);
         }
     }
 }

@@ -219,6 +219,14 @@ public sealed class CheatSet
             case CheatWriteStatement write:
                 Write(machine, write.Address, write.Bytes);
                 return write.Bytes.Length;
+            case CheatSequenceStatement sequence:
+                long writes = 0;
+                foreach (CheatStatement action in sequence.Statements)
+                {
+                    writes += Execute(action, machine);
+                }
+
+                return writes;
             case CheatConditionalStatement conditional:
                 return Evaluate(conditional.Condition, machine)
                     ? Execute(conditional.Action, machine)

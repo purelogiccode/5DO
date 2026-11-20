@@ -543,13 +543,19 @@ public sealed unsafe partial class VulkanOffscreenRenderer
         Result acquire = _khrSwapchain.AcquireNextImage(
             _device,
             _swapchain,
-            ulong.MaxValue,
+            100_000_000,
             _imageAvailableSemaphore,
             default,
             &imageIndex);
         if (acquire == Result.ErrorOutOfDateKhr)
         {
             RecreateSwapchain();
+            return;
+        }
+
+        if (acquire is Result.Timeout or Result.ErrorSurfaceLostKhr)
+        {
+            // Never block the UI thread indefinitely on an occluded or minimized surface.
             return;
         }
 

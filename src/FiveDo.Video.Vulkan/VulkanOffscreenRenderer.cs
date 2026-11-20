@@ -290,6 +290,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _hasPresentedFrame = false;
         if (_initialized)
         {
+            // A swapchain present may still be reading the output/FSR images.
+            if (_vk is not null && _device.Handle != 0)
+            {
+                _vk.DeviceWaitIdle(_device);
+            }
+
             DestroyOutputTarget();
             CreateOutputTarget();
             ResizeSwapchain(width, height);
@@ -552,6 +558,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
                     or InvalidOperationException)
             {
                 // Try the next known installation path.
+                Serilog.Log.Debug(exception, "Vulkan runtime candidate {Candidate} could not be loaded.", candidate);
             }
         }
 
@@ -2543,6 +2550,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         return filter switch
         {
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
+            VideoFilter.Bicubic => 3,
             VideoFilter.Crt => 2,
             _ => 1,
         };

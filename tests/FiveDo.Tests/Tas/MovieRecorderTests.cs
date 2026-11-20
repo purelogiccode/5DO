@@ -87,21 +87,37 @@ public sealed class MovieRecorderTests
 
         source.Seek(2);
         Assert.Equal(2, source.Position);
-        Assert.Equal(new byte[] { 0x03 }, source.CurrentPacket);
+        Assert.Equal(new byte[] { 0x03 }, source.CurrentPacket.ToArray());
 
         Assert.True(source.StepBack());
         Assert.Equal(1, source.Position);
-        Assert.Equal(new byte[] { 0x02 }, source.CurrentPacket);
+        Assert.Equal(new byte[] { 0x02 }, source.CurrentPacket.ToArray());
 
         Assert.True(source.StepBack());
         Assert.Equal(0, source.Position);
-        Assert.Equal(new byte[] { 0x01 }, source.CurrentPacket);
+        Assert.Equal(new byte[] { 0x01 }, source.CurrentPacket.ToArray());
 
         Assert.False(source.StepBack());
 
         source.Seek(3);
         Assert.True(source.IsFinished);
-        Assert.Empty(source.CurrentPacket);
+        Assert.Empty(source.CurrentPacket.ToArray());
+    }
+
+    [Fact]
+    public void PlaybackSource_ClearsInputAtTheEndAndKeepsPacketsPrivate()
+    {
+        var movie = new Movie(new MovieHeader(), [[0x01, 0x80]]);
+        var source = new MoviePbusSource(movie);
+        var destination = new byte[PbusEncoder.PacketSize];
+
+        Assert.Equal(2, source.GetPbusData(destination));
+        destination[0] = 0x7F;
+        Assert.Equal(0x01, source.CurrentPacket.Span[0]);
+
+        Assert.Equal(0, source.GetPbusData(destination));
+        Assert.Empty(source.CurrentPacket.ToArray());
+        Assert.All(source.CurrentControllers, state => Assert.Equal(ControllerState.Empty, state));
     }
 
     [Fact]

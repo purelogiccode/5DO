@@ -24,18 +24,26 @@ namespace FiveDo.Diagnostics.Statistics;
 public static class ApplicationStatsClient
 {
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
+    private static readonly Lock Gate = new();
     private static Task? _pending;
 
     /// <summary>Starts a background launch-statistics request unless disabled.</summary>
     public static void TrackLaunch()
     {
-        if (!IsEnabled() || Volatile.Read(ref _pending) is not null)
+        if (!IsEnabled())
         {
             return;
         }
 
-        var task = TrackLaunchAsync(CreateOptions(), Http);
-        _ = Interlocked.CompareExchange(ref _pending, task, null);
+        lock (Gate)
+        {
+            if (_pending is { IsCompleted: false })
+            {
+                return;
+            }
+
+            _pending = TrackLaunchAsync(CreateOptions(), Http);
+        }
     }
 
     /// <summary>Waits briefly for the pending launch request so short CLI runs can finish it.</summary>

@@ -139,6 +139,7 @@ public static class ThreeDoHasher
             or InvalidOperationException or NotSupportedException or InvalidDataException
             or DiscImageException)
         {
+            Serilog.Log.Debug(exception, "The disc hash could not be computed.");
             hash = string.Empty;
             return false;
         }

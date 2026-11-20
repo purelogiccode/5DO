@@ -36,7 +36,7 @@ internal sealed class RcCondSet
 
     internal List<RcCondition> IndirectConditions { get; } = [];
 
-    public static RcCondSet Parse(RcCursor cursor, RcParseState parse)
+    internal static RcCondSet Parse(RcCursor cursor, RcParseState parse)
     {
         if (cursor.Current is 'S' or 's' || cursor.End)
         {
@@ -181,10 +181,10 @@ internal sealed class RcCondSet
         return result;
     }
 
-    public static RcCondSet ParseEmpty() => new();
+    internal static RcCondSet ParseEmpty() => new();
 
     /// <summary>Builds a value condition set from the legacy value parser's conditions.</summary>
-    public static RcCondSet FromLegacyValue(IReadOnlyList<RcCondition> conditions)
+    internal static RcCondSet FromLegacyValue(IReadOnlyList<RcCondition> conditions)
     {
         var result = new RcCondSet();
         result.MeasuredConditions.AddRange(conditions);
@@ -193,7 +193,7 @@ internal sealed class RcCondSet
         return result;
     }
 
-    public void Reset()
+    internal void Reset()
     {
         foreach (RcCondition condition in AllConditions())
         {
@@ -201,7 +201,7 @@ internal sealed class RcCondSet
         }
     }
 
-    public IEnumerable<RcCondition> AllConditions()
+    internal IEnumerable<RcCondition> AllConditions()
     {
         if (Conditions is not null)
         {
@@ -212,7 +212,7 @@ internal sealed class RcCondSet
         }
     }
 
-    public static bool Test(RcCondSet self, RcEvalState evalState)
+    internal static bool Test(RcCondSet self, RcEvalState evalState)
     {
         evalState.MeasuredValue.Type = RcValueType.None;
         evalState.AddHits = 0;

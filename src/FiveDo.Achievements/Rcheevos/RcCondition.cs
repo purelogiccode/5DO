@@ -34,14 +34,14 @@ internal sealed class RcCondition
         or RcConditionType.AndNext
         or RcConditionType.OrNext;
 
-    public static RcCondition Parse(RcCursor cursor, RcParseState parse)
+    internal static RcCondition Parse(RcCursor cursor, RcParseState parse)
     {
         var condition = new RcCondition();
         ParseInternal(condition, cursor, parse);
         return condition;
     }
 
-    public static void ParseInternal(RcCondition condition, RcCursor cursor, RcParseState parse)
+    internal static void ParseInternal(RcCondition condition, RcCursor cursor, RcParseState parse)
     {
         bool canModify = false;
         condition.CurrentHits = 0;
@@ -196,7 +196,7 @@ internal sealed class RcCondition
         }
     }
 
-    public static bool IsModifying(RcOperator oper) => oper is RcOperator.And
+    internal static bool IsModifying(RcOperator oper) => oper is RcOperator.And
         or RcOperator.Xor
         or RcOperator.Div
         or RcOperator.Mult
@@ -205,14 +205,14 @@ internal sealed class RcCondition
         or RcOperator.Sub
         or RcOperator.None;
 
-    public static bool Test(RcCondition condition, RcEvalState evalState)
+    internal static bool Test(RcCondition condition, RcEvalState evalState)
     {
         RcOperand.Evaluate(out RcTypedValue value1, condition.Operand1, evalState);
         RcOperand.Evaluate(out RcTypedValue value2, condition.Operand2, evalState);
         return RcTypedValue.Compare(value1, value2, condition.Oper);
     }
 
-    public static void EvaluateConditionValue(out RcTypedValue value, RcCondition condition, RcEvalState evalState)
+    internal static void EvaluateConditionValue(out RcTypedValue value, RcCondition condition, RcEvalState evalState)
     {
         RcOperand.Evaluate(out value, condition.Operand1, evalState);
         RcOperand.Evaluate(out RcTypedValue amount, condition.Operand2, evalState);
@@ -220,7 +220,7 @@ internal sealed class RcCondition
     }
 
     /// <summary>Mutates the parser state after a condition is parsed.</summary>
-    public static void UpdateParseState(RcCondition condition, RcParseState parse)
+    internal static void UpdateParseState(RcCondition condition, RcParseState parse)
     {
         switch (condition.Type)
         {

@@ -85,6 +85,20 @@ public sealed class DonationVerificationClientTests
     }
 
     [Fact]
+    public async Task VerifyAsync_WhenResponseFormatIsUnsupported_ReturnsUnavailable()
+    {
+        using var http = new HttpClient(new UnsupportedContentHandler());
+
+        DonationVerificationResult result = await DonationVerificationClient.VerifyAsync(
+            "donor@example.com",
+            CreateOptions(),
+            http,
+            CancellationToken.None);
+
+        Assert.Equal(DonationVerificationStatus.Unavailable, result.Status);
+    }
+
+    [Fact]
     public async Task VerifyAsync_WhenTransportFails_ReturnsUnavailable()
     {
         using var http = new HttpClient(new ThrowingHandler());
@@ -161,6 +175,19 @@ public sealed class DonationVerificationClientTests
             {
                 Content = new StringContent(_body, System.Text.Encoding.UTF8, "application/json"),
             };
+        }
+    }
+
+    private sealed class UnsupportedContentHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent([1, 2, 3]),
+            });
         }
     }
 

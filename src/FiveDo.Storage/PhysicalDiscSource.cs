@@ -88,6 +88,7 @@ public sealed class PhysicalDiscSource : IDiscSource
                 {
                     // A drive can disappear or report no media between enumeration and
                     // IsReady; skip it rather than failing the whole list.
+                    Serilog.Log.Debug(exception, "Optical drive {Drive} disappeared while enumerating drives.", drive.Name);
                 }
             }
         }
@@ -223,6 +224,7 @@ public sealed class PhysicalDiscSource : IDiscSource
         catch (Exception exception) when (exception is IOException or NotSupportedException)
         {
             // Device handles commonly report no length through fstat; probe below.
+            Serilog.Log.Debug(exception, "The device length could not be read directly; probing instead.");
         }
 
         if (OperatingSystem.IsWindows())
@@ -286,6 +288,7 @@ public sealed class PhysicalDiscSource : IDiscSource
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            Serilog.Log.Debug(exception, "Sector {Lba} could not be read from the physical disc.", lba);
             return false;
         }
     }

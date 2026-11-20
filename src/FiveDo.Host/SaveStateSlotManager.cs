@@ -149,7 +149,17 @@ public sealed class SaveStateSlotManager
             gameName ?? string.Empty,
             DateTimeOffset.UtcNow,
             machine.FramesExecuted);
-        WriteMetadata(target, metadata);
+        try
+        {
+            WriteMetadata(target, metadata);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
+            or JsonException or NotSupportedException)
+        {
+            // The sidecar is optional; the state file is already complete.
+            Serilog.Log.Debug(exception, "Save-slot metadata could not be written for slot {Slot}.", target);
+        }
+
         CurrentSlot = target;
         return Inspect(target);
     }
@@ -312,9 +322,16 @@ public sealed class SaveStateSlotManager
 
     private static void WriteStateFile(string path, byte[] bytes)
     {
-        string temporary = path + ".tmp";
-        File.WriteAllBytes(temporary, bytes);
-        File.Move(temporary, path, overwrite: true);
+        var temporary = path + "." + Path.GetRandomFileName() + ".tmp";
+        try
+        {
+            File.WriteAllBytes(temporary, bytes);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(temporary);
+        }
     }
 
     private void WriteThumbnail(FiveDoMachine machine, int slot)
@@ -341,9 +358,33 @@ public sealed class SaveStateSlotManager
     private void WriteMetadata(int slot, SaveStateSlotMetadata metadata)
     {
         var path = GetMetadataPath(slot);
-        var temporary = path + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(metadata, SaveStateSlotJsonContext.Default.SaveStateSlotMetadata));
-        File.Move(temporary, path, overwrite: true);
+        var temporary = path + "." + Path.GetRandomFileName() + ".tmp";
+        try
+        {
+            File.WriteAllText(
+                temporary,
+                JsonSerializer.Serialize(metadata, SaveStateSlotJsonContext.Default.SaveStateSlotMetadata));
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(temporary);
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Debug(exception, "The temporary save-slot file {Path} could not be deleted.", path);
+        }
     }
 
     private SaveStateSlotMetadata? ReadMetadata(int slot)

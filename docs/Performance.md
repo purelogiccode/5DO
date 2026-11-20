@@ -120,8 +120,10 @@ native resolution and leaves only a cheap texture-filtering pass at 4K.
 
 ### Upload rules
 
-- Allocate textures once with immutable storage (`TexStorage2D`) sized to the maximum
-  supported source (1280x240), then update with `TexSubImage2D` each frame.
+- Allocate textures once with `TexImage2D` sized to the maximum supported source
+  (1280x240), then update with `TexSubImage2D` each frame. `TexImage2D` is used instead
+  of `TexStorage2D` because the presenter targets desktop GL 3.3/GLES 3.0, while
+  immutable texture storage requires GL 4.2/GLES 3.1.
 - Do **not** call `TexImage2D` per frame; it reallocates storage and can stall the
   driver.
 - Use a small PBO ring or persistent mapped buffer when available; fall back to
@@ -132,9 +134,10 @@ native resolution and leaves only a cheap texture-filtering pass at 4K.
 - Do not allocate delegates, strings, arrays, or LINQ iterators in the per-frame
   path. Cache the renderer callback used by the frame mailbox.
 
-Implemented in `OpenGlRenderer` (desktop GL 3.3): `TexStorage2D` for the indexed,
-CLUT, and parameter textures; `TexSubImage2D` per frame; cached uniform locations;
-separate palette and scale programs; and a native-resolution RGBA FBO for stage 1.
+Implemented in `OpenGlRenderer` (desktop GL 3.3): `TexImage2D` allocation for the
+indexed, CLUT, and parameter textures; `TexSubImage2D` per frame; cached uniform
+locations; separate palette and scale programs; and a native-resolution RGBA FBO for
+stage 1.
 `VdlFrameMailbox` copies only the visible line width, and `Read` copies into a
 caller-owned frame so the mailbox lock is not held during GPU submission.
 `VdlFrameUploader` uses span copies instead of per-pixel loops. The GLES shader
@@ -599,7 +602,7 @@ Resolved in the 2026-10-23 M9P pass:
   low-rate status sink.
 - Two-stage presenter: native-resolution palette expansion into an FBO, then a
   scale/filter pass at output resolution.
-- `TexStorage2D` allocation plus per-frame `TexSubImage2D`; cached uniform locations.
+- `TexImage2D` allocation plus per-frame `TexSubImage2D`; cached uniform locations.
 - Render-on-demand: the Avalonia surface renders only when the mailbox sequence or
   the output size changes.
 - `VdlFrameMailbox` copies only the visible width; the present delegate is cached.

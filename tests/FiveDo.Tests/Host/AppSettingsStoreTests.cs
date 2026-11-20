@@ -37,6 +37,51 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Load_NormalizesNullCollectionsAndInvalidPresentationValues()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        File.WriteAllText(
+            path,
+            """
+            {
+              "SettingsVersion": 10,
+              "RecentDiscs": null,
+              "LibraryFolders": null,
+              "FixModeOverrides": null,
+              "FilterOverrides": null,
+              "RegionOverrides": null,
+              "InputDevices": null,
+              "BiosOverrides": { "ABCD1234": "", "EFGH5678": null },
+              "Bloom": 2.0,
+              "FsrSharpness": -1.0,
+              "CustomAspect": 0.0,
+              "Filter": 99,
+              "Aspect": 99,
+              "Deinterlace": 99,
+              "FrameSkip": 99
+            }
+            """);
+
+        AppSettings settings = AppSettingsStore.Load(path);
+
+        Assert.NotNull(settings.RecentDiscs);
+        Assert.NotNull(settings.LibraryFolders);
+        Assert.NotNull(settings.FixModeOverrides);
+        Assert.NotNull(settings.FilterOverrides);
+        Assert.NotNull(settings.RegionOverrides);
+        Assert.Equal(8, settings.InputDevices.Count);
+        Assert.Empty(settings.BiosOverrides);
+        Assert.Equal(0.35f, settings.Bloom);
+        Assert.Equal(0.8f, settings.FsrSharpness);
+        Assert.Equal(4.0 / 3.0, settings.CustomAspect);
+        Assert.Equal(VideoFilter.SharpBilinear, settings.Filter);
+        Assert.Equal(AspectMode.FourThree, settings.Aspect);
+        Assert.Equal(DeinterlaceMode.Auto, settings.Deinterlace);
+        Assert.Equal(FrameSkipMode.Auto, settings.FrameSkip);
+    }
+
+    [Fact]
     public void SaveAndLoad_RoundTripsTheUiLocale()
     {
         using var temp = new TemporaryDirectory();

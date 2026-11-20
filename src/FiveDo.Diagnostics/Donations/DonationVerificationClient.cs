@@ -124,6 +124,11 @@ public static class DonationVerificationClient
             Serilog.Log.Warning(exception, "The donation verification API returned invalid JSON.");
             return new DonationVerificationResult(DonationVerificationStatus.Unavailable);
         }
+        catch (NotSupportedException exception)
+        {
+            Serilog.Log.Warning(exception, "The donation verification API response format is not supported.");
+            return new DonationVerificationResult(DonationVerificationStatus.Unavailable);
+        }
         catch (InvalidOperationException exception)
         {
             Serilog.Log.Warning(exception, "The donation verification request could not be created.");

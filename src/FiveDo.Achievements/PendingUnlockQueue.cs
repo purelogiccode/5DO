@@ -55,7 +55,7 @@ internal sealed class PendingUnlockQueue
         }
     }
 
-    public IReadOnlyList<PendingUnlock> Snapshot()
+    internal IReadOnlyList<PendingUnlock> Snapshot()
     {
         lock (_gate)
         {
@@ -63,7 +63,7 @@ internal sealed class PendingUnlockQueue
         }
     }
 
-    public bool Add(PendingUnlock entry)
+    internal bool Add(PendingUnlock entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
         if (entry.AchievementId == 0 || entry.AchievementId >= 101_000_000)
@@ -91,7 +91,7 @@ internal sealed class PendingUnlockQueue
         }
     }
 
-    public bool Remove(uint achievementId, string username, bool hardcore)
+    internal bool Remove(uint achievementId, string username, bool hardcore)
     {
         lock (_gate)
         {
@@ -109,7 +109,7 @@ internal sealed class PendingUnlockQueue
         }
     }
 
-    public bool Contains(uint achievementId, string username, bool hardcore)
+    internal bool Contains(uint achievementId, string username, bool hardcore)
     {
         lock (_gate)
         {
@@ -127,7 +127,7 @@ internal sealed class PendingUnlockQueue
         }
     }
 
-    public void Prune()
+    internal void Prune()
     {
         lock (_gate)
         {
@@ -194,8 +194,13 @@ internal sealed class PendingUnlockQueue
                 }
             }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
-            or JsonException or FormatException or ArgumentException or NotSupportedException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A transient read failure must not rename a queue that may still be valid.
+            Log.Warning(exception, "RetroAchievements pending-unlock queue could not be read");
+        }
+        catch (Exception exception) when (exception is JsonException or FormatException
+            or ArgumentException or NotSupportedException)
         {
             Quarantine(exception.Message);
         }
@@ -302,14 +307,31 @@ internal sealed class PendingUnlockQueue
                 Directory.CreateDirectory(directory);
             }
 
-            string temporary = _path + ".tmp";
-            File.WriteAllBytes(temporary, stream.ToArray());
-            if (!OperatingSystem.IsWindows())
+            string temporary = _path + "." + Path.GetRandomFileName() + ".tmp";
+            try
             {
-                File.SetUnixFileMode(temporary, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-            }
+                File.WriteAllBytes(temporary, stream.ToArray());
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(temporary, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                }
 
-            File.Move(temporary, _path, overwrite: true);
+                File.Move(temporary, _path, overwrite: true);
+            }
+            finally
+            {
+                try
+                {
+                    if (File.Exists(temporary))
+                    {
+                        File.Delete(temporary);
+                    }
+                }
+                catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException)
+                {
+                    Log.Debug(cleanup, "The temporary pending-unlock queue {Path} could not be deleted.", temporary);
+                }
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
             or NotSupportedException)

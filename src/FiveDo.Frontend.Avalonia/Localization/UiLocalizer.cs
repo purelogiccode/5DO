@@ -30,7 +30,7 @@ internal static class UiLocalizer
 
     /// <summary>Translates the static text in a window's logical tree.</summary>
     /// <param name="root">Root logical element, usually a window.</param>
-    public static void Apply(ILogical root)
+    internal static void Apply(ILogical root)
     {
         ArgumentNullException.ThrowIfNull(root);
 

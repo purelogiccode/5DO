@@ -165,7 +165,7 @@ loader dependency or install a custom native-asset resolver for the frontend.
 4. **Frontend view construction.** `ViewLocator` (`Type.GetType` plus
    `Activator.CreateInstance`) was removed, and its `Application.DataTemplates`
    registration was deleted. Every window is constructed explicitly (`MainWindow`,
-   `WelcomeWindow`, `SettingsWindow`, `GameLibraryWindow`, `SaveSlotsWindow`,
+   `WelcomeWindow`, `SettingsWindow`, `SaveSlotsWindow`,
    `InputBindingsWindow`, `LogsWindow`). All XAML bindings are compiled:
    `AvaloniaUseCompiledBindingsByDefault=true`, and each window/`DataTemplate`
    declares `x:DataType`. The XAML compiler emits the loader IL at build time, so

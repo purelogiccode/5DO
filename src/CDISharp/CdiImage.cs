@@ -112,7 +112,7 @@ public sealed class CdiImage : IDisposable
 
             return descriptor.Length >= SessionBlockSize + 1
                 && descriptor[0] is > 0 and <= MaxSessions
-                && descriptor[1 + 1] <= MaxTracks
+                && descriptor[1 + 1] is > 0 and <= MaxTracks
                 && LooksLikeSessionBlock(descriptor.AsSpan(1, SessionBlockSize));
         }
         catch (IOException)
@@ -239,7 +239,7 @@ public sealed class CdiImage : IDisposable
         int position = 1;
         int sessionNumber = 0;
 
-        for (var session = 0; session <= maxSessions; session++)
+        for (var session = 0; session < maxSessions; session++)
         {
             Require(descriptor, position, SessionBlockSize, "session header");
             if (!LooksLikeSessionBlock(descriptor.AsSpan(position, SessionBlockSize)))

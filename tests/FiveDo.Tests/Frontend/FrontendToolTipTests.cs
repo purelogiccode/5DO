@@ -7,13 +7,13 @@ using System.Xml.Linq;
 namespace FiveDo.Tests.Frontend;
 
 /// <summary>
-/// Guards the desktop requirement that every interactive element in every window
-/// carries a tooltip. The XAML files are parsed as XML so the check stays independent
-/// of the Avalonia runtime and runs in headless CI.
+/// Guards the desktop requirement that every user-visible control and content element in
+/// every window carries a tooltip. The XAML files are parsed as XML so the check stays
+/// independent of the Avalonia runtime and runs in headless CI.
 /// </summary>
 public sealed class FrontendToolTipTests
 {
-    private static readonly HashSet<string> InteractiveElements = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> TippedElements = new(StringComparer.Ordinal)
     {
         "AutoCompleteBox",
         "Button",
@@ -24,6 +24,7 @@ public sealed class FrontendToolTipTests
         "ComboBox",
         "ComboBoxItem",
         "DatePicker",
+        "Image",
         "ListBox",
         "ListBoxItem",
         "MenuItem",
@@ -33,6 +34,7 @@ public sealed class FrontendToolTipTests
         "TabControl",
         "TabItem",
         "TextBox",
+        "TextBlock",
         "ToggleButton",
         "TreeView",
         "TreeViewItem",
@@ -58,13 +60,13 @@ public sealed class FrontendToolTipTests
 
     [Theory]
     [MemberData(nameof(ViewFiles))]
-    public void EveryInteractiveElement_HasAToolTip(string fileName)
+    public void EveryUserVisibleElement_HasAToolTip(string fileName)
     {
         XDocument document = XDocument.Load(Path.Combine(ViewsDirectory().FullName, fileName));
         var missing = new List<string>();
         foreach (XElement element in document.Descendants())
         {
-            if (!InteractiveElements.Contains(element.Name.LocalName))
+            if (!TippedElements.Contains(element.Name.LocalName))
             {
                 continue;
             }
@@ -80,7 +82,7 @@ public sealed class FrontendToolTipTests
 
         Assert.True(
             missing.Count == 0,
-            $"{fileName} has interactive elements without ToolTip.Tip:{Environment.NewLine}{string.Join(Environment.NewLine, missing)}");
+            $"{fileName} has user-visible elements without ToolTip.Tip:{Environment.NewLine}{string.Join(Environment.NewLine, missing)}");
     }
 
     [Theory]

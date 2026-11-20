@@ -775,6 +775,10 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                     {
                         Interlocked.Increment(ref _alErrors);
                         _lastAlError = error.ToString();
+                        // The buffer was not attached to the source; return it so a
+                        // persistent queue error cannot shrink the pool.
+                        _freeBuffers.Return(buffer);
+                        continue;
                     }
 
                     var slot = BufferSlot(buffer);
@@ -802,7 +806,7 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
                         queuedFrames,
                         underrun,
                         peak,
-                        error == AudioError.NoError ? null : error.ToString());
+                        null);
                 }
 
                 if (batchPeak > 0f)
@@ -857,7 +861,14 @@ public sealed unsafe class OpenAlAudioOutput : IAudioSink, IDisposable
 
         _disposed = true;
         _stop.Cancel();
-        _thread.Join(1000);
+        if (!_thread.Join(1000))
+        {
+            // The fill thread is stuck inside an OpenAL call. Leave the shared context
+            // and tap alive rather than destroying objects it may still be using.
+            Serilog.Log.Warning("The OpenAL fill thread did not stop within the shutdown window.");
+            return;
+        }
+
         _tap?.Dispose();
         _stop.Dispose();
 

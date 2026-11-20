@@ -99,7 +99,6 @@ public sealed class ChdDiscImage : ITrackedDiscSource
             }
 
             ChdTrackInfo? dataTrack = tracks.FirstOrDefault(track => track.TrackType != ChdTrackType.Audio);
-            int dataOffset = dataTrack is null ? 0 : GetUserDataOffset(dataTrack);
             if (dataTrack is not null && dataTrack.Frames <= 0)
             {
                 throw new InvalidDataException($"CHD data track has no sectors: '{path}'.");
@@ -122,7 +121,7 @@ public sealed class ChdDiscImage : ITrackedDiscSource
                     startLba,
                     track.Frames,
                     sectorSize,
-                    GetPayloadOffset(track, dataOffset, sectorSize));
+                    GetPayloadOffset(track));
                 discTracks.Add(discTrack);
                 startLba += track.Frames;
             }
@@ -243,8 +242,7 @@ public sealed class ChdDiscImage : ITrackedDiscSource
             return RawSectorSize;
         }
 
-        int payloadOffset = track.SectorSize == UserDataSectorSize ? 0 : RawSectorSize - track.SectorSize;
-        _rawSector.AsSpan(payloadOffset, track.SectorSize).CopyTo(destination);
+        _rawSector.AsSpan(track.PayloadOffset, track.SectorSize).CopyTo(destination);
         return track.SectorSize;
     }
 
@@ -296,44 +294,38 @@ public sealed class ChdDiscImage : ITrackedDiscSource
         _rawSector.AsSpan(0, UserDataSectorSize).CopyTo(destination);
     }
 
-    private static int GetPayloadOffset(ChdTrackInfo track, int rawPayloadOffset, int sectorSize)
+    private static int GetPayloadOffset(ChdTrackInfo track)
     {
         if (track.TrackType == ChdTrackType.Audio)
         {
             return 0;
         }
 
-        return sectorSize switch
-        {
-            RawSectorSize => rawPayloadOffset,
-            UserDataSectorSize => 0,
-            // Native 2336-byte Mode 2 sectors begin after the 16-byte sync/header.
-            _ => Math.Max(0, rawPayloadOffset - 16),
-        };
+        return GetUserDataOffset(track);
     }
 
     private static int GetUserDataOffset(ChdTrackInfo track)
     {
-        // CHDSharp's ReadSector returns the first 2352 bytes of the 2448-byte frame.
-        // Cooked tracks store their user data at offset 0; raw Mode 1 sectors carry a
-        // 16-byte sync/header; raw Mode 2 Form 1 sectors carry a 24-byte sync/header/subheader.
-        if (track.DataSize == UserDataSectorSize)
+        // CHDSharp returns a 2352-byte sector buffer. Cooked 2048 tracks store the
+        // payload at offset 0; 2336-byte Mode 2 frames start with the 8-byte
+        // subheader; 2324-byte Form 2 frames start with user data; raw 2352 frames
+        // carry the 16-byte sync/header (Mode 1) or 24-byte sync/header/subheader
+        // (Mode 2).
+        return track.DataSize switch
         {
-            return 0;
-        }
-
-        if (track.DataSize != RawSectorSize)
-        {
-            throw new InvalidDataException(
-                $"Unsupported CHD track data size {track.DataSize} ({track.GetTypeString()}); 3DO expects Mode 1 data.");
-        }
-
-        return track.TrackType switch
-        {
-            ChdTrackType.Mode1 or ChdTrackType.Mode1Raw => 16,
-            ChdTrackType.Mode2 or ChdTrackType.Mode2Raw or ChdTrackType.Mode2Form1 or ChdTrackType.Mode2FormMix => 24,
+            UserDataSectorSize => 0,
+            2336 => 8,
+            2324 => 0,
+            RawSectorSize => track.TrackType switch
+            {
+                ChdTrackType.Mode1 or ChdTrackType.Mode1Raw => 16,
+                ChdTrackType.Mode2 or ChdTrackType.Mode2Raw or ChdTrackType.Mode2Form1
+                    or ChdTrackType.Mode2FormMix => 24,
+                _ => throw new InvalidDataException(
+                    $"Unsupported CHD track type {track.TrackType} ({track.GetTypeString()}); 3DO expects Mode 1 or Mode 2 data."),
+            },
             _ => throw new InvalidDataException(
-                $"Unsupported CHD track type {track.TrackType} ({track.GetTypeString()}); 3DO expects Mode 1 data."),
+                $"Unsupported CHD track data size {track.DataSize} ({track.GetTypeString()}); 3DO expects 2048, 2336, 2324, or 2352-byte data."),
         };
     }
 }

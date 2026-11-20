@@ -801,7 +801,8 @@
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <Ellipse x:Name="HealthDot" Width="8" Height="8" VerticalAlignment="Center"
                                  Fill="#FF6E7681" />
-                        <TextBlock x:Name="HealthText" Classes="status" VerticalAlignment="Center" />
+                        <TextBlock x:Name="HealthText" Classes="status" VerticalAlignment="Center"
+                                  ToolTip.Tip="Library health summary: discs that are missing or cannot be read." />
                     </StackPanel>
                 </Border>
                 <TextBlock x:Name="FpsText" Grid.Column="5" Classes="statusStrong"

@@ -17,15 +17,15 @@ internal sealed class RcCursor(string text)
 
     public bool End => Position >= Text.Length;
 
-    public char CharAt(int offset)
+    internal char CharAt(int offset)
     {
         int index = Position + offset;
         return (uint)index < (uint)Text.Length ? Text[index] : '\0';
     }
 
-    public char Advance() => Position < Text.Length ? Text[Position++] : '\0';
+    internal char Advance() => Position < Text.Length ? Text[Position++] : '\0';
 
-    public void Skip(int count) => Position += count;
+    internal void Skip(int count) => Position += count;
 
     public override string ToString() => Position < Text.Length ? Text[Position..] : string.Empty;
 }
@@ -55,7 +55,7 @@ internal sealed class RcParseState
 
     public List<RcValue> Variables { get; } = [];
 
-    public RcMemRef AllocMemRef(uint address, RcMemSize size)
+    internal RcMemRef AllocMemRef(uint address, RcMemSize size)
     {
         foreach (RcMemRefBase memref in MemRefs)
         {
@@ -70,7 +70,7 @@ internal sealed class RcParseState
         return created;
     }
 
-    public RcModifiedMemRef AllocModifiedMemRef(
+    internal RcModifiedMemRef AllocModifiedMemRef(
         RcMemSize size,
         RcOperand parent,
         RcOperator modifierType,
@@ -111,15 +111,15 @@ internal sealed class RcParseState
 /// <summary>Small ASCII parsing helpers matching the C locale used by rcheevos.</summary>
 internal static class RcText
 {
-    public static bool IsAlpha(char value) => value is >= 'a' and <= 'z' or >= 'A' and <= 'Z';
+    internal static bool IsAlpha(char value) => value is >= 'a' and <= 'z' or >= 'A' and <= 'Z';
 
-    public static bool IsDigit(char value) => value is >= '0' and <= '9';
+    internal static bool IsDigit(char value) => value is >= '0' and <= '9';
 
-    public static bool IsAlnum(char value) => IsAlpha(value) || IsDigit(value);
+    internal static bool IsAlnum(char value) => IsAlpha(value) || IsDigit(value);
 
-    public static bool IsSpace(char value) => value is ' ' or '\t' or '\r' or '\n' or '\f' or '\v';
+    internal static bool IsSpace(char value) => value is ' ' or '\t' or '\r' or '\n' or '\f' or '\v';
 
-    public static bool TryParseUnsigned(RcCursor cursor, int radix, out uint value, out int end)
+    internal static bool TryParseUnsigned(RcCursor cursor, int radix, out uint value, out int end)
     {
         int index = cursor.Position;
         string text = cursor.Text;
@@ -166,7 +166,7 @@ internal static class RcText
         return true;
     }
 
-    public static bool TryParseUInt32(RcCursor cursor, int radix, out uint value, out int end)
+    internal static bool TryParseUInt32(RcCursor cursor, int radix, out uint value, out int end)
     {
         if (!TryParseUnsigned(cursor, radix, out value, out end))
         {
@@ -176,7 +176,7 @@ internal static class RcText
         return true;
     }
 
-    public static string FormatInvariant(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
+    internal static string FormatInvariant(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
 
     private static int DigitValue(char value)
     {

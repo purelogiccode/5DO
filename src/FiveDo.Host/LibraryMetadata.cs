@@ -209,6 +209,7 @@ public sealed class LibraryMetadataCatalog
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "Using the unnormalized library metadata path {Path}.", path);
             return path;
         }
     }
@@ -369,6 +370,7 @@ public static class LibraryMetadataStore
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "Using the unnormalized metadata path {Path}.", path);
             return path.Trim();
         }
     }
@@ -382,21 +384,15 @@ public static class LibraryMetadataStore
         var resolved = path ?? DefaultPath;
         try
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(resolved));
-            if (!string.IsNullOrEmpty(directory))
+            var json = JsonSerializer.Serialize(metadata, LibraryMetadataJsonContext.Default.LibraryMetadata);
+            if (!AtomicFile.WriteAllText(resolved, json, "library metadata"))
             {
-                Directory.CreateDirectory(directory);
+                Serilog.Log.Debug("Library metadata {Path} could not be written.", resolved);
             }
-
-            var temporary = resolved + ".tmp";
-            File.WriteAllText(
-                temporary,
-                JsonSerializer.Serialize(metadata, LibraryMetadataJsonContext.Default.LibraryMetadata));
-            File.Move(temporary, resolved, overwrite: true);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception) when (exception is JsonException or NotSupportedException)
         {
-            Serilog.Log.Debug(exception, "Library metadata {Path} could not be written.", resolved);
+            Serilog.Log.Debug(exception, "Library metadata {Path} could not be serialized.", resolved);
         }
     }
 }

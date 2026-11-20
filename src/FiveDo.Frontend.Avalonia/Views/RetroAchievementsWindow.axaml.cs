@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -68,7 +69,12 @@ public partial class RetroAchievementsWindow : Window
         base.OnClosed(e);
     }
 
-    private async void OnLogin(object? sender, RoutedEventArgs e)
+    private void OnLogin(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(LoginAsync, "signing in to RetroAchievements");
+    }
+
+    private async Task LoginAsync()
     {
         string username = UsernameBox.Text?.Trim() ?? string.Empty;
         if (username.Length == 0)
@@ -97,6 +103,11 @@ public partial class RetroAchievementsWindow : Window
         try
         {
             RaLoginResult result = await _service.LoginAsync(username, secret, isToken).ConfigureAwait(true);
+            if (_closed)
+            {
+                return;
+            }
+
             if (result.Success)
             {
                 SecretBox.Text = string.Empty;
@@ -112,11 +123,17 @@ public partial class RetroAchievementsWindow : Window
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
-            StatusText.Text = $"Sign in failed: {exception.Message}";
+            if (!_closed)
+            {
+                StatusText.Text = $"Sign in failed: {exception.Message}";
+            }
         }
         finally
         {
-            LoginButton.IsEnabled = true;
+            if (!_closed)
+            {
+                LoginButton.IsEnabled = true;
+            }
         }
     }
 

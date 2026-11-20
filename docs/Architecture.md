@@ -94,7 +94,7 @@
 | `FiveDo.Tas` | Versioned TAS movie container, per-frame PBUS record/replay, branch/trim editor, frame/PC/state verifier | `MovieFile`, `Movie`, `MovieHeader`, `MovieRecorder`, `MoviePbusSource`, `MovieEditor`, `MovieVerifier` | Core, Input |
 | `FiveDo.Host` | Core thread lifecycle, audio-derived frame pacing, rewind/fast-forward, BIOS/disc/NVRAM loading, audio/input backends, save slots, settings, library, disc browsing/extraction, BIOS/NVRAM inventory, fixes, autopilot | `CoreRunner`, `RewindBuffer`, `RewindOptions`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `BiosResolver`, `BiosInventory`, `NvramStore`, `NvramInventory`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `DiscBrowser`, `DiscBrowserNode`, `DiscInfo`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless command-line interface, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, disc browser/info, BIOS/NVRAM manager, donation banner, OpenGL video surface, embedded Vulkan video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `VulkanVideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `CheatsWindow`, `DiscBrowserWindow`, `DiscInfoWindow`, `BiosNvramManagerWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Cross-platform desktop UI, library/settings/input/slots/logs, disc browser/info, BIOS/NVRAM manager, donation banner, OpenGL video surface, embedded Vulkan video surface, GPU probes | `App`, `MainWindow`, `VideoSurface`, `VulkanVideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `CheatsWindow`, `DiscBrowserWindow`, `DiscInfoWindow`, `BiosNvramManagerWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests (subfolders per subsystem) | test fixtures, ARM assembler/rig, fake chips/MMIO, PNG writer | production projects |
 | `FiveDo.Benchmarks` | Frame benchmark, CI gate, baseline comparison | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 
@@ -277,7 +277,7 @@ VdlFrame (reused double/triple buffer)
 OpenGL/GLES renderer (required desktop path)   CPU FrameAssembler (oracle/fallback)
   stage 1: palette expansion at native res      - used by CLI/headless tests
   stage 2: upscale/filter at output res         - used when no GL context exists
-  persistent textures (TexStorage2D/SubImage2D) - must match GL "Accurate" mode
+  persistent textures (TexImage2D allocation + SubImage2D) - must match GL "Accurate" mode
   present with vsync
         │
         ▼
@@ -333,7 +333,7 @@ Framebuffer -> window / fullscreen (vsync, latest-frame mailbox)
 - Raw indexed upload is ~150 KB/frame for 320x240, plus ~23 KB of per-line CLUT and ~2 KB of line parameters.
 - Palette expansion runs at 320x240 (~77k pixels/frame), not at 4K (~8.3M pixels/frame).
 - 4K output costs the CPU nothing beyond the same small upload; the GPU performs the upscale/filter pass (FSR/xBR/HQx add extra passes and are opt-in).
-- Textures use immutable storage (`TexStorage2D`) plus `TexSubImage2D`/PBO updates; no per-frame `TexImage2D` reallocation.
+- Textures are allocated once with `TexImage2D` (the GL 3.3-compatible storage path) and updated with `TexSubImage2D`/PBO uploads; no per-frame `TexImage2D` reallocation.
 - The core remains single-threaded and deterministic; only presentation is GPU-accelerated.
 - A `FrameMailbox` drops stale frames instead of queueing them; the core never waits for the GPU.
 

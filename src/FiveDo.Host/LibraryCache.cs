@@ -49,7 +49,7 @@ internal sealed class CachedLibraryEntry
     /// <param name="entry">Scanner result.</param>
     /// <param name="info">File information captured during the scan.</param>
     /// <returns>The cache record.</returns>
-    public static CachedLibraryEntry From(GameLibraryEntry entry, FileInfo info)
+    internal static CachedLibraryEntry From(GameLibraryEntry entry, FileInfo info)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(info);
@@ -71,7 +71,7 @@ internal sealed class CachedLibraryEntry
     /// <summary>Returns whether this record still matches a file's identity.</summary>
     /// <param name="info">Current file information.</param>
     /// <returns><see langword="true"/> when the size and timestamp match.</returns>
-    public bool Matches(FileInfo info)
+    internal bool Matches(FileInfo info)
     {
         return FileStamp.Matches(info, Length, LastWriteTimeUtcTicks);
     }
@@ -86,7 +86,7 @@ internal static class LibraryCacheStore
     /// <summary>Loads a cache, returning an empty cache when it is missing or invalid.</summary>
     /// <param name="path">Cache path.</param>
     /// <returns>The loaded cache.</returns>
-    public static LibraryCache Load(string path)
+    internal static LibraryCache Load(string path)
     {
         try
         {
@@ -98,7 +98,39 @@ internal static class LibraryCacheStore
             LibraryCache cache = JsonSerializer.Deserialize(
                 File.ReadAllText(path),
                 LibraryCacheJsonContext.Default.LibraryCache) ?? new LibraryCache();
-            return cache.Version == LibraryCache.CurrentVersion ? cache : new LibraryCache();
+            if (cache.Version != LibraryCache.CurrentVersion)
+            {
+                return new LibraryCache();
+            }
+
+            // JSON can deserialize null entries and null strings despite the
+            // non-nullable annotations. Drop unusable records before the scanner
+            // calls Path/Error/GameId on them.
+            // ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            cache.Entries ??= [];
+            for (var index = cache.Entries.Count - 1; index >= 0; index--)
+            {
+                CachedLibraryEntry? entry = cache.Entries[index];
+                if (entry is null)
+                {
+                    cache.Entries.RemoveAt(index);
+                    continue;
+                }
+
+                entry.Path ??= string.Empty;
+                entry.Format ??= string.Empty;
+                entry.GameId ??= string.Empty;
+                entry.Error ??= string.Empty;
+                // ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                // ReSharper restore NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                if (entry.Path.Length == 0)
+                {
+                    cache.Entries.RemoveAt(index);
+                }
+            }
+
+            return cache;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -110,25 +142,19 @@ internal static class LibraryCacheStore
     /// <summary>Saves a cache atomically.</summary>
     /// <param name="path">Cache path.</param>
     /// <param name="cache">Cache to save.</param>
-    public static void Save(string path, LibraryCache cache)
+    internal static void Save(string path, LibraryCache cache)
     {
         try
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(path));
-            if (!string.IsNullOrEmpty(directory))
+            var json = JsonSerializer.Serialize(cache, LibraryCacheJsonContext.Default.LibraryCache);
+            if (!AtomicFile.WriteAllText(path, json, "library cache"))
             {
-                Directory.CreateDirectory(directory);
+                Serilog.Log.Debug("Library cache {Path} could not be written.", path);
             }
-
-            var temporary = path + ".tmp";
-            File.WriteAllText(
-                temporary,
-                JsonSerializer.Serialize(cache, LibraryCacheJsonContext.Default.LibraryCache));
-            File.Move(temporary, path, overwrite: true);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception) when (exception is JsonException or NotSupportedException)
         {
-            Serilog.Log.Debug(exception, "Library cache {Path} could not be written.", path);
+            Serilog.Log.Debug(exception, "Library cache {Path} could not be serialized.", path);
         }
     }
 }

@@ -89,7 +89,7 @@
 
 **2026-11-20, v1.14.0 high-resolution and input fix release (GitHub Releases).**
 
-- **2,475 tests** are present in the current test assembly.
+- **2,513 tests** are present in the current test assembly.
 - **High-resolution presentation is safe for every title:** `--high-res` keeps the guest
   at native 320x240 and doubles the finished frame in `Vdlp`; a 300-frame Road Rash run
   matches a 2x nearest upscale of the native frame with 0 differing pixels. The OpenGL

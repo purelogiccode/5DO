@@ -43,7 +43,7 @@ internal sealed class RcRuntime
 
     public IReadOnlyList<RcLeaderboardEntry> Leaderboards => _leaderboards;
 
-    public RcError ActivateAchievement(uint id, string memaddr)
+    internal RcError ActivateAchievement(uint id, string memaddr)
     {
         foreach (RcAchievement achievement in _achievements)
         {
@@ -81,7 +81,7 @@ internal sealed class RcRuntime
         }
     }
 
-    public void DeactivateAchievement(uint id)
+    internal void DeactivateAchievement(uint id)
     {
         for (int index = _achievements.Count - 1; index >= 0; index--)
         {
@@ -92,7 +92,7 @@ internal sealed class RcRuntime
         }
     }
 
-    public RcAchievement? GetAchievement(uint id)
+    internal RcAchievement? GetAchievement(uint id)
     {
         foreach (RcAchievement achievement in _achievements)
         {
@@ -105,7 +105,7 @@ internal sealed class RcRuntime
         return null;
     }
 
-    public bool GetAchievementMeasured(uint id, out uint measuredValue, out uint measuredTarget)
+    internal bool GetAchievementMeasured(uint id, out uint measuredValue, out uint measuredTarget)
     {
         RcAchievement? achievement = GetAchievement(id);
         if (achievement is null)
@@ -130,10 +130,10 @@ internal sealed class RcRuntime
         return true;
     }
 
-    public string FormatAchievementMeasured(uint id) =>
+    internal string FormatAchievementMeasured(uint id) =>
         GetAchievement(id)?.Trigger.FormatMeasured() ?? string.Empty;
 
-    public RcError ActivateLeaderboard(uint id, string memaddr)
+    internal RcError ActivateLeaderboard(uint id, string memaddr)
     {
         if (string.IsNullOrEmpty(memaddr))
         {
@@ -176,7 +176,7 @@ internal sealed class RcRuntime
         }
     }
 
-    public void DeactivateLeaderboard(uint id)
+    internal void DeactivateLeaderboard(uint id)
     {
         for (int index = _leaderboards.Count - 1; index >= 0; index--)
         {
@@ -187,7 +187,7 @@ internal sealed class RcRuntime
         }
     }
 
-    public RcLeaderboardEntry? GetLeaderboard(uint id)
+    internal RcLeaderboardEntry? GetLeaderboard(uint id)
     {
         foreach (RcLeaderboardEntry entry in _leaderboards)
         {
@@ -200,7 +200,7 @@ internal sealed class RcRuntime
         return null;
     }
 
-    public RcError ActivateRichPresence(string script)
+    internal RcError ActivateRichPresence(string script)
     {
         if (string.Equals(_richPresenceDefinition, script, StringComparison.Ordinal))
         {
@@ -223,12 +223,12 @@ internal sealed class RcRuntime
         }
     }
 
-    public string GetRichPresence(RcPeek? peek, object? userData) =>
+    internal string GetRichPresence(RcPeek? peek, object? userData) =>
         _richPresence?.GetDisplayString(peek, userData) ?? string.Empty;
 
     public string? RichPresenceDefinition => _richPresenceDefinition;
 
-    public void DoFrame(RcPeek? peek, object? userData, Action<RcRuntimeEvent>? eventHandler)
+    internal void DoFrame(RcPeek? peek, object? userData, Action<RcRuntimeEvent>? eventHandler)
     {
         for (int index = _achievements.Count - 1; index >= 0; index--)
         {
@@ -376,7 +376,7 @@ internal sealed class RcRuntime
         _richPresence?.Update(peek, userData);
     }
 
-    public void Reset()
+    internal void Reset()
     {
         foreach (RcAchievement achievement in _achievements)
         {

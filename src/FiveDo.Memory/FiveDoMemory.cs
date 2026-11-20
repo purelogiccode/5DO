@@ -70,8 +70,15 @@ public sealed class FiveDoMemory : IAddressBus, IRam, IPcAdjustSource, IRomSelec
     /// </remarks>
     public void SetMemoryConfiguration(MemoryConfiguration configuration)
     {
-        _layout = MemoryLayout.For(configuration);
+        MemoryLayout layout = MemoryLayout.For(configuration);
+        if (layout == _layout)
+        {
+            return;
+        }
+
+        _layout = layout;
         _highWaterSize = Math.Max(_highWaterSize, _layout.HiresRamSize);
+        RomChangedHook?.Invoke();
     }
 
     /// <summary>Gets the active ROM bank (0 or 1).</summary>

@@ -644,15 +644,27 @@ public sealed class RetroAchievementsService : IDisposable
 
         _disposed = true;
         _lifetime.Cancel();
-        _client.Dispose();
+        bool queueStopped;
         try
         {
-            _queueTask.Wait(TimeSpan.FromSeconds(2));
+            queueStopped = _queueTask.Wait(TimeSpan.FromSeconds(2));
         }
-        catch (AggregateException)
+        catch (AggregateException exception)
         {
+            // A faulted queue has stopped; log the failure but continue shutting down.
+            queueStopped = _queueTask.IsCompleted;
+            Log.Debug(exception, "The RetroAchievements unlock queue faulted during shutdown.");
         }
 
+        if (!queueStopped)
+        {
+            // Do not dispose the client or the gates under a worker that is still using
+            // them. The process is exiting, so leaving them for the runtime is safer.
+            Log.Debug("The RetroAchievements unlock queue did not stop within the shutdown window.");
+            return;
+        }
+
+        _client.Dispose();
         _lifetime.Dispose();
         _awardGate.Dispose();
         _queueFlushGate.Dispose();
@@ -1096,6 +1108,7 @@ public sealed class RetroAchievementsService : IDisposable
 
     private void UpdateLeaderboard(uint leaderboardId, int value, bool active)
     {
+        List<LeaderboardProgress> leaderboards;
         lock (_gate)
         {
             for (int index = 0; index < _leaderboards.Count; index++)
@@ -1114,9 +1127,11 @@ public sealed class RetroAchievementsService : IDisposable
                 };
                 break;
             }
+
+            leaderboards = [.. _leaderboards];
         }
 
-        UpdateState(state => state with { Leaderboards = BuildLeaderboardState() });
+        UpdateState(state => state with { Leaderboards = BuildLeaderboardState(leaderboards) });
     }
 
     private async Task AwardAsync(
@@ -1340,43 +1355,54 @@ public sealed class RetroAchievementsService : IDisposable
     private void RaiseAchievementState(bool force = false)
     {
         DateTime now = DateTime.UtcNow;
-        if (!force && (now - _lastStateRaiseUtc).TotalMilliseconds < 250)
-        {
-            return;
-        }
-
+        List<AchievementProgress> achievements;
+        List<LeaderboardProgress> leaderboards;
         uint totalPoints = 0;
         uint unlockedPoints = 0;
-        foreach (AchievementEntry entry in _entries)
+        int totalAchievements = 0;
+        int unlockedAchievements = 0;
+        lock (_gate)
         {
-            if (!entry.Definition.IsOfficial)
+            if (!force && (now - _lastStateRaiseUtc).TotalMilliseconds < 250)
             {
-                continue;
+                return;
             }
 
-            totalPoints += entry.Definition.Points;
-            if (entry.Unlocked)
+            _lastStateRaiseUtc = now;
+            achievements = BuildAchievementState(_entries);
+            leaderboards = BuildLeaderboardState(_leaderboards);
+            foreach (AchievementEntry entry in _entries)
             {
-                unlockedPoints += entry.Definition.Points;
+                if (!entry.Definition.IsOfficial)
+                {
+                    continue;
+                }
+
+                totalAchievements++;
+                totalPoints += entry.Definition.Points;
+                if (entry.Unlocked)
+                {
+                    unlockedAchievements++;
+                    unlockedPoints += entry.Definition.Points;
+                }
             }
         }
 
-        _lastStateRaiseUtc = now;
         UpdateState(state => state with
         {
-            Achievements = BuildAchievementState(),
-            Leaderboards = BuildLeaderboardState(),
-            TotalAchievements = _entries.Count(entry => entry.Definition.IsOfficial),
-            UnlockedAchievements = _entries.Count(entry => entry.Definition.IsOfficial && entry.Unlocked),
+            Achievements = achievements,
+            Leaderboards = leaderboards,
+            TotalAchievements = totalAchievements,
+            UnlockedAchievements = unlockedAchievements,
             TotalPoints = totalPoints,
             UnlockedPoints = unlockedPoints,
         });
     }
 
-    private List<AchievementProgress> BuildAchievementState()
+    private static List<AchievementProgress> BuildAchievementState(List<AchievementEntry> entries)
     {
-        var achievements = new List<AchievementProgress>(_entries.Count);
-        foreach (AchievementEntry entry in _entries)
+        var achievements = new List<AchievementProgress>(entries.Count);
+        foreach (AchievementEntry entry in entries)
         {
             string progressText = string.Empty;
             if (!entry.Unlocked && entry.MeasuredTarget != 0)
@@ -1407,12 +1433,13 @@ public sealed class RetroAchievementsService : IDisposable
         return achievements;
     }
 
-    private List<LeaderboardProgress> BuildLeaderboardState()
+    private static List<LeaderboardProgress> BuildLeaderboardState(
+        List<LeaderboardProgress> leaderboards)
     {
-        var leaderboards = new List<LeaderboardProgress>(_leaderboards.Count);
-        foreach (LeaderboardProgress leaderboard in _leaderboards)
+        var state = new List<LeaderboardProgress>(leaderboards.Count);
+        foreach (LeaderboardProgress leaderboard in leaderboards)
         {
-            leaderboards.Add(new LeaderboardProgress
+            state.Add(new LeaderboardProgress
             {
                 Id = leaderboard.Id,
                 Title = leaderboard.Title,
@@ -1421,7 +1448,7 @@ public sealed class RetroAchievementsService : IDisposable
             });
         }
 
-        return leaderboards;
+        return state;
     }
 
     private bool IsCurrentLoad(int generation, string hash)

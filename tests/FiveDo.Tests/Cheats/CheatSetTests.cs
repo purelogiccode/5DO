@@ -74,6 +74,28 @@ public sealed class CheatSetTests
     }
 
     [Fact]
+    public void ConditionalActions_SeparatedBySemicolonsShareTheCondition()
+    {
+        var machine = new FiveDoMachine();
+        var set = new CheatSet();
+        set.Add(
+            "conditional block",
+            string.Empty,
+            "if 0x3000 == 1 then write8 0x3004 = 0xaa; write8 0x3005 = 0xbb",
+            enabled: true);
+
+        machine.Memory.Ram.Write32(0x3000, 0);
+        Assert.Equal(0, set.Apply(machine));
+        Assert.Equal(0, machine.Memory.Ram.Read8(0x3004));
+        Assert.Equal(0, machine.Memory.Ram.Read8(0x3005));
+
+        machine.Memory.Ram.Write32(0x3000, 1);
+        Assert.Equal(2, set.Apply(machine));
+        Assert.Equal(0xaa, machine.Memory.Ram.Read8(0x3004));
+        Assert.Equal(0xbb, machine.Memory.Ram.Read8(0x3005));
+    }
+
+    [Fact]
     public void ButtonCondition_UsesPlayerOnePacket()
     {
         var machine = new FiveDoMachine();

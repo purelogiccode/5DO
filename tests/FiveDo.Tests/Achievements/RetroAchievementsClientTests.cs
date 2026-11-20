@@ -22,6 +22,14 @@ public sealed class RetroAchievementsClientTests
     private int _leaderboardRequests;
 
     [Fact]
+    public void InvalidHostFallsBackToTheDefaultInsteadOfThrowing()
+    {
+        using var client = new RetroAchievementsClient("ftp://example.invalid");
+
+        Assert.Equal(RetroAchievementsClient.DefaultHost, client.Host);
+    }
+
+    [Fact]
     public async Task LoginParsesTokenAndScores()
     {
         var handler = new FakeHandler(_ => Json("""

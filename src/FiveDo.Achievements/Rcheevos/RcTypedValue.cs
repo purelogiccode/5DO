@@ -35,13 +35,13 @@ internal struct RcTypedValue
         set => _bits = unchecked((uint)BitConverter.SingleToInt32Bits(value));
     }
 
-    public static RcTypedValue FromUnsigned(uint value) => new() { Type = RcValueType.Unsigned, U32 = value };
+    internal static RcTypedValue FromUnsigned(uint value) => new() { Type = RcValueType.Unsigned, U32 = value };
 
-    public static RcTypedValue FromSigned(int value) => new() { Type = RcValueType.Signed, I32 = value };
+    internal static RcTypedValue FromSigned(int value) => new() { Type = RcValueType.Signed, I32 = value };
 
-    public static RcTypedValue FromFloat(float value) => new() { Type = RcValueType.Float, F32 = value };
+    internal static RcTypedValue FromFloat(float value) => new() { Type = RcValueType.Float, F32 = value };
 
-    public static void Convert(ref RcTypedValue value, RcValueType newType)
+    internal static void Convert(ref RcTypedValue value, RcValueType newType)
     {
         switch (newType)
         {
@@ -103,14 +103,14 @@ internal struct RcTypedValue
         value.Type = newType;
     }
 
-    public static RcTypedValue Converted(RcTypedValue source, RcValueType newType)
+    internal static RcTypedValue Converted(RcTypedValue source, RcValueType newType)
     {
         RcTypedValue copy = source;
         Convert(ref copy, newType);
         return copy;
     }
 
-    public static void Negate(ref RcTypedValue value)
+    internal static void Negate(ref RcTypedValue value)
     {
         switch (value.Type)
         {
@@ -128,7 +128,7 @@ internal struct RcTypedValue
         }
     }
 
-    public static void Add(ref RcTypedValue value, RcTypedValue amount)
+    internal static void Add(ref RcTypedValue value, RcTypedValue amount)
     {
         RcTypedValue amountCopy = amount;
 
@@ -164,7 +164,7 @@ internal struct RcTypedValue
         }
     }
 
-    public static void Multiply(ref RcTypedValue value, RcTypedValue amount)
+    internal static void Multiply(ref RcTypedValue value, RcTypedValue amount)
     {
         RcTypedValue converted;
 
@@ -235,7 +235,7 @@ internal struct RcTypedValue
         }
     }
 
-    public static void Divide(ref RcTypedValue value, RcTypedValue amount)
+    internal static void Divide(ref RcTypedValue value, RcTypedValue amount)
     {
         RcTypedValue converted;
 
@@ -310,7 +310,7 @@ internal struct RcTypedValue
         value.F32 /= converted.F32;
     }
 
-    public static void Modulus(ref RcTypedValue value, RcTypedValue amount)
+    internal static void Modulus(ref RcTypedValue value, RcTypedValue amount)
     {
         RcTypedValue converted;
 
@@ -385,7 +385,7 @@ internal struct RcTypedValue
         value.F32 = value.F32 % converted.F32;
     }
 
-    public static void Combine(ref RcTypedValue value, ref RcTypedValue amount, RcOperator oper)
+    internal static void Combine(ref RcTypedValue value, ref RcTypedValue amount, RcOperator oper)
     {
         switch (oper)
         {
@@ -424,7 +424,7 @@ internal struct RcTypedValue
         }
     }
 
-    public static bool Compare(RcTypedValue left, RcTypedValue right, RcOperator oper)
+    internal static bool Compare(RcTypedValue left, RcTypedValue right, RcOperator oper)
     {
         RcTypedValue value1 = left;
         RcTypedValue value2 = right;

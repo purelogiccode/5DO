@@ -73,8 +73,9 @@ public sealed class CoverStore
             path = GetImagePath(id);
             return File.Exists(path);
         }
-        catch (ArgumentException)
+        catch (ArgumentException exception)
         {
+            Serilog.Log.Debug(exception, "The cover id {Id} is not a valid cache file name.", id);
             path = string.Empty;
             return false;
         }
@@ -229,17 +230,14 @@ public sealed class CoverStore
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="progress">Optional byte progress.</param>
     /// <returns>The cached image path.</returns>
-    public Task<string> SaveImageAsync(
+    public async Task<string> SaveImageAsync(
         string id,
         ReadOnlyMemory<byte> bytes,
         CancellationToken cancellationToken,
         IProgress<long>? progress = null)
     {
-        return SaveImageAsync(
-            id,
-            new MemoryStream(bytes.ToArray(), writable: false),
-            cancellationToken,
-            progress);
+        using var stream = new MemoryStream(bytes.ToArray(), writable: false);
+        return await SaveImageAsync(id, stream, cancellationToken, progress).ConfigureAwait(false);
     }
 
     /// <summary>Verifies every cached image referenced by a catalog.</summary>
@@ -394,9 +392,16 @@ public sealed class CoverStore
             Directory.CreateDirectory(directory);
         }
 
-        var temporary = path + ".tmp";
-        await File.WriteAllTextAsync(temporary, text, cancellationToken).ConfigureAwait(false);
-        File.Move(temporary, path, overwrite: true);
+        var temporary = path + "." + Path.GetRandomFileName() + ".tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporary, text, cancellationToken).ConfigureAwait(false);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(temporary);
+        }
     }
 
     private static async Task<string> ComputeHashAsync(string path, CancellationToken cancellationToken)

@@ -33,7 +33,7 @@ public enum PbusFormat
 public static class PbusChainEncoder
 {
     /// <summary>Maximum packet size written by the encoder.</summary>
-    public const int MaxPacketSize = 64;
+    public const int MaxPacketSize = 80;
 
     /// <summary>Terminator value used for unused packet bytes.</summary>
     public const byte PadByte = 0xFF;

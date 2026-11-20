@@ -16,7 +16,7 @@ internal sealed class EscapeQuitPolicy
     public bool IsArmed => _armed;
 
     /// <summary>Clears the armed state so the next Escape pauses emulation again.</summary>
-    public void Disarm()
+    internal void Disarm()
     {
         _armed = false;
     }
@@ -27,7 +27,7 @@ internal sealed class EscapeQuitPolicy
     /// <see langword="true"/> when the press should close the application; otherwise
     /// <see langword="false"/> when it should pause or leave emulation paused.
     /// </returns>
-    public bool ShouldQuit(bool running)
+    internal bool ShouldQuit(bool running)
     {
         if (!running && _armed)
         {

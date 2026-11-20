@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
@@ -108,6 +109,17 @@ public sealed class BugReportSink : ILogEventSink, IDisposable
         if (_recent.Count > 256)
         {
             Prune(now);
+
+            // The dedupe window can retain more than 256 distinct messages, so keep a
+            // hard bound by evicting the least recently seen entries.
+            while (_recent.Count > 256)
+            {
+                KeyValuePair<string, DateTimeOffset> oldest = _recent.MinBy(static pair => pair.Value);
+                if (!_recent.TryRemove(oldest.Key, out _))
+                {
+                    break;
+                }
+            }
         }
 
         _queue.Writer.TryWrite(BugReportFormatter.Create(logEvent, _options.ApplicationMode));
@@ -123,22 +135,30 @@ public sealed class BugReportSink : ILogEventSink, IDisposable
 
         _disposed = true;
         _queue.Writer.TryComplete();
-        _stop.Cancel();
         try
         {
-            _ = _worker.Wait(TimeSpan.FromSeconds(2));
+            // Drain events that were already queued before shutdown. The worker exits
+            // when the channel completes; only cancel if a send is taking too long.
+            if (!_worker.Wait(TimeSpan.FromSeconds(2)))
+            {
+                _stop.Cancel();
+                _ = _worker.Wait(TimeSpan.FromSeconds(1));
+            }
         }
         catch (AggregateException)
         {
             // The worker is best-effort; shutdown must not throw.
         }
-
-        if (_ownsHttp)
+        finally
         {
-            _http.Dispose();
-        }
+            _stop.Cancel();
+            if (_ownsHttp)
+            {
+                _http.Dispose();
+            }
 
-        _stop.Dispose();
+            _stop.Dispose();
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

@@ -51,21 +51,25 @@
                         IsEnabled="False" HorizontalAlignment="Stretch"
                         ToolTip.Tip="Replace player 1's buttons on the selected frame." />
                 <Separator />
-                <TextBlock Text="Legend" FontWeight="SemiBold" />
+                <TextBlock Text="Legend" FontWeight="SemiBold"
+                           ToolTip.Tip="Legend for the timeline colors." />
                 <TextBlock Text="Each colored row is a held button. The white line is the selected frame."
-                           TextWrapping="Wrap" Opacity="0.75" FontSize="11" />
+                           TextWrapping="Wrap" Opacity="0.75" FontSize="11"
+                           ToolTip.Tip="Each colored row is a held 3DO pad button; the white vertical line marks the selected frame." />
             </StackPanel>
         </Grid>
 
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto" Margin="0,12,0,0" RowSpacing="6">
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                <TextBlock Grid.Column="0" Text="Frame" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="0" Text="Frame" VerticalAlignment="Center"
+                           ToolTip.Tip="Selected frame number." />
                 <Slider Grid.Column="1" x:Name="FrameSlider" Minimum="0" Maximum="1"
                         ValueChanged="OnFrameChanged" IsSnapToTickEnabled="True"
                         TickFrequency="1"
                         ToolTip.Tip="Select a frame to inspect or edit." />
                 <TextBlock Grid.Column="2" x:Name="FrameText" Text="0" VerticalAlignment="Center"
-                           FontFamily="Consolas" MinWidth="96" />
+                           FontFamily="Consolas" MinWidth="96"
+                           ToolTip.Tip="Selected frame number." />
             </Grid>
             <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" x:Name="StatusText" VerticalAlignment="Center"

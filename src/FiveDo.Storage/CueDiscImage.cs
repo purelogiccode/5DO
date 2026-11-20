@@ -187,8 +187,8 @@ public sealed class CueDiscImage : ITrackedDiscSource
         return info.TrackType switch
         {
             CdTrackType.Mode1Raw => Mode1PayloadOffset,
-            CdTrackType.Mode2Raw or CdTrackType.Mode2FormMix => Mode2PayloadOffset,
-            CdTrackType.Mode2 => Mode2SubheaderSize,
+            CdTrackType.Mode2Raw => Mode2PayloadOffset,
+            CdTrackType.Mode2 or CdTrackType.Mode2FormMix => Mode2SubheaderSize,
             _ => 0,
         };
     }

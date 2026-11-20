@@ -552,7 +552,13 @@ public sealed class Madam : IMadamBus, IStateSection
 
         _readModulo = reader.ReadInt32();
         _writeModulo = reader.ReadInt32();
-        _fsm = (CelFsmState)reader.ReadUInt32();
+        var fsm = (CelFsmState)reader.ReadUInt32();
+        if (!Enum.IsDefined(fsm))
+        {
+            throw new InvalidStateException($"Invalid MADAM CEL FSM state {(uint)fsm}.");
+        }
+
+        _fsm = fsm;
         _result0Temp = reader.ReadDouble();
         _result1Temp = reader.ReadDouble();
         _result2Temp = reader.ReadDouble();

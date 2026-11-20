@@ -11,24 +11,28 @@
 
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
             <StackPanel Grid.Column="0" Spacing="3">
-                <TextBlock Text="RetroAchievements" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock Text="RetroAchievements" FontSize="20" FontWeight="SemiBold"
+                           ToolTip.Tip="RetroAchievements account, options, and achievement progress for the current disc." />
                 <TextBlock x:Name="StatusText" Text="Not signed in." Opacity="0.8"
                            TextWrapping="Wrap"
                            ToolTip.Tip="Login, game identification, sync, and error status." />
             </StackPanel>
             <TextBlock x:Name="TotalsText" Grid.Column="1" VerticalAlignment="Top"
-                       FontWeight="SemiBold" TextAlignment="Right" />
+                       FontWeight="SemiBold" TextAlignment="Right"
+                       ToolTip.Tip="Achievement totals for the current disc." />
         </Grid>
 
         <Border Grid.Row="1" Padding="10" Margin="0,0,0,10"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="4">
             <Grid ColumnDefinitions="Auto,180,Auto,220,Auto,Auto,Auto" RowDefinitions="Auto" >
-                <TextBlock Grid.Column="0" Text="User" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBlock Grid.Column="0" Text="User" VerticalAlignment="Center" Margin="0,0,6,0"
+                           ToolTip.Tip="RetroAchievements account name." />
                 <TextBox x:Name="UsernameBox" Grid.Column="1" Margin="0,0,12,0"
                          PlaceholderText="RetroAchievements username"
                          ToolTip.Tip="Your RetroAchievements account name." />
-                <TextBlock Grid.Column="2" Text="Password / token" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBlock Grid.Column="2" Text="Password / token" VerticalAlignment="Center" Margin="0,0,6,0"
+                           ToolTip.Tip="Password or API token used to sign in." />
                 <TextBox x:Name="SecretBox" Grid.Column="3" PasswordChar="●" Margin="0,0,8,0"
                          PlaceholderText="Password or saved token"
                          ToolTip.Tip="Password or API token. The token is stored in the settings file." />
@@ -74,10 +78,14 @@
             <Grid RowDefinitions="Auto,*">
                 <Grid Grid.Row="0" ColumnDefinitions="*,70,90,90" Margin="10,7"
                       Background="{DynamicResource SurfaceAltBrush}">
-                    <TextBlock Grid.Column="0" Text="Achievement" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="1" Text="Points" FontWeight="SemiBold" TextAlignment="Right" />
-                    <TextBlock Grid.Column="2" Text="Progress" FontWeight="SemiBold" TextAlignment="Right" />
-                    <TextBlock Grid.Column="3" Text="Status" FontWeight="SemiBold" TextAlignment="Right" />
+                    <TextBlock Grid.Column="0" Text="Achievement" FontWeight="SemiBold"
+                               ToolTip.Tip="Achievement title and description." />
+                    <TextBlock Grid.Column="1" Text="Points" FontWeight="SemiBold" TextAlignment="Right"
+                               ToolTip.Tip="RetroAchievements points awarded for each achievement." />
+                    <TextBlock Grid.Column="2" Text="Progress" FontWeight="SemiBold" TextAlignment="Right"
+                               ToolTip.Tip="Measured progress toward each achievement." />
+                    <TextBlock Grid.Column="3" Text="Status" FontWeight="SemiBold" TextAlignment="Right"
+                               ToolTip.Tip="Whether each achievement is locked or unlocked." />
                 </Grid>
                 <ListBox x:Name="AchievementsList" Grid.Row="1" ToolTip.Tip="Achievements for the current disc."
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">

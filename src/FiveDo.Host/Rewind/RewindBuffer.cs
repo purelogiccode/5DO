@@ -43,6 +43,7 @@ public sealed class RewindBuffer : IDisposable
     private readonly RewindOptions _options;
     private readonly List<Keyframe> _keyframes = new();
     private readonly Stack<byte[]> _statePool = new();
+    private const int MaxPooledStateBuffers = 4;
     private readonly MemoryStream _captureStream = new(1024 * 1024);
     private readonly StateWriter _stateWriter = new(1024 * 1024);
     private readonly byte[] _inputs;
@@ -329,7 +330,10 @@ public sealed class RewindBuffer : IDisposable
 
     private void ReturnStateBuffer(byte[] buffer)
     {
-        _statePool.Push(buffer);
+        if (_statePool.Count < MaxPooledStateBuffers)
+        {
+            _statePool.Push(buffer);
+        }
     }
 
     private void TrimCore()

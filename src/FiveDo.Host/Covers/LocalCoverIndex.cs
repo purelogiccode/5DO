@@ -52,7 +52,7 @@ internal sealed class LocalCoverIndex
     /// <param name="directory">Directory to index.</param>
     /// <param name="stripAnnotations">Whether annotations are stripped before matching.</param>
     /// <returns>The index, which may be empty.</returns>
-    public static LocalCoverIndex Build(string directory, bool stripAnnotations)
+    internal static LocalCoverIndex Build(string directory, bool stripAnnotations)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         var index = new LocalCoverIndex(Path.GetFullPath(directory), stripAnnotations);
@@ -81,7 +81,7 @@ internal sealed class LocalCoverIndex
     /// <summary>Finds a cover by exact file base name.</summary>
     /// <param name="baseName">Disc base name.</param>
     /// <returns>The cover path, or <see langword="null"/>.</returns>
-    public string? FindExact(string? baseName)
+    internal string? FindExact(string? baseName)
     {
         if (string.IsNullOrWhiteSpace(baseName))
         {
@@ -101,7 +101,7 @@ internal sealed class LocalCoverIndex
     /// <param name="gameRegions">Game region codes for tie-breaking.</param>
     /// <param name="gameYear">Game release year for tie-breaking.</param>
     /// <returns>The best match, or <see langword="null"/>.</returns>
-    public LocalCoverMatch? Find(
+    internal LocalCoverMatch? Find(
         string? title,
         string? fileName,
         double threshold,

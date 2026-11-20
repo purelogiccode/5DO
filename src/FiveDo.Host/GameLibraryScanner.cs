@@ -378,7 +378,11 @@ public static class GameLibraryScanner
                 Regions = record?.Regions ?? string.Empty,
             };
         }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or DiscImageException or ArgumentException)
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or DiscImageException
+            or UnauthorizedAccessException
+            or ArgumentException)
         {
             Serilog.Log.Debug(exception, "Skipped unreadable library entry {Path}.", path);
             return new GameLibraryEntry(

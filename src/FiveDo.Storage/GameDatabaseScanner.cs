@@ -48,7 +48,7 @@ public sealed record GameDatabaseScanResult(
 
     /// <summary>Gets paths that produced more than one scan entry (diagnostic).</summary>
     public IReadOnlyList<string> DuplicatePaths => Entries
-        .GroupBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase)
+        .GroupBy(entry => entry.Path, PathComparer)
         .Where(group => group.Count() > 1)
         .Select(group => group.Key)
         .Take(10)
@@ -57,8 +57,12 @@ public sealed record GameDatabaseScanResult(
     /// <summary>Gets the number of distinct entry paths (diagnostic).</summary>
     public int UniqueEntryPaths => Entries
         .Select(entry => entry.Path)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Distinct(PathComparer)
         .Count();
+
+    private static StringComparer PathComparer => OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase
+        : StringComparer.Ordinal;
 
     /// <summary>Gets the number of distinct checksums missing from the database.</summary>
     public int MissingCount => UniqueCount - KnownCount;
@@ -67,7 +71,11 @@ public sealed record GameDatabaseScanResult(
 /// <summary>Scans disc images and derives database records.</summary>
 public static class GameDatabaseScanner
 {
-    private static readonly string[] Extensions = [".chd", ".cue", ".iso", ".cdi", ".nrg"];
+    private static readonly string[] Extensions = [".chd", ".cue", ".iso", ".bin", ".cdi", ".nrg"];
+
+    private static StringComparer PathComparer => OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase
+        : StringComparer.Ordinal;
 
     /// <summary>Enumerates supported disc images below a folder.</summary>
     /// <param name="folder">Folder to scan.</param>
@@ -119,8 +127,8 @@ public static class GameDatabaseScanner
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(database);
 
-        var entries = new ConcurrentDictionary<string, GameDatabaseScanEntry>(StringComparer.OrdinalIgnoreCase);
-        var failures = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var entries = new ConcurrentDictionary<string, GameDatabaseScanEntry>(PathComparer);
+        var failures = new ConcurrentDictionary<string, string>(PathComparer);
         Dictionary<string, GameRecord> byName = database.Records
             .GroupBy(record => NormalizeName(record.Name), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
@@ -141,8 +149,8 @@ public static class GameDatabaseScanner
         }
 
         return new GameDatabaseScanResult(
-            entries.Values.OrderBy(entry => entry.Path, StringComparer.OrdinalIgnoreCase).ToList(),
-            failures.Values.OrderBy(failure => failure, StringComparer.OrdinalIgnoreCase).ToList());
+            entries.Values.OrderBy(entry => entry.Path, PathComparer).ToList(),
+            failures.Values.OrderBy(failure => failure, PathComparer).ToList());
 
         void ScanOne(string path)
         {
@@ -223,41 +231,55 @@ public static class GameDatabaseNameParser
     {
         ["usa"] = "US",
         ["us"] = "US",
+        ["u"] = "US",
         ["u.s.a."] = "US",
         ["america"] = "US",
         ["north america"] = "US",
         ["europe"] = "EU",
         ["eu"] = "EU",
+        ["e"] = "EU",
         ["japan"] = "JP",
         ["jp"] = "JP",
+        ["j"] = "JP",
         ["korea"] = "KR",
         ["kr"] = "KR",
+        ["k"] = "KR",
         ["brazil"] = "BR",
         ["br"] = "BR",
+        ["b"] = "BR",
         ["germany"] = "DE",
         ["de"] = "DE",
+        ["g"] = "DE",
         ["france"] = "FR",
         ["fr"] = "FR",
+        ["f"] = "FR",
         ["spain"] = "ES",
         ["es"] = "ES",
+        ["s"] = "ES",
         ["italy"] = "IT",
         ["it"] = "IT",
+        ["i"] = "IT",
         ["australia"] = "AU",
         ["au"] = "AU",
+        ["a"] = "AU",
         ["canada"] = "CA",
         ["ca"] = "CA",
         ["china"] = "CN",
         ["cn"] = "CN",
+        ["c"] = "CN",
         ["taiwan"] = "TW",
         ["tw"] = "TW",
+        ["t"] = "TW",
         ["russia"] = "RU",
         ["ru"] = "RU",
         ["world"] = "WORLD",
+        ["w"] = "WORLD",
         ["asia"] = "ASIA",
         ["hong kong"] = "HK",
         ["hk"] = "HK",
         ["netherlands"] = "NL",
         ["nl"] = "NL",
+        ["n"] = "NL",
         ["sweden"] = "SE",
         ["se"] = "SE",
         ["finland"] = "FI",

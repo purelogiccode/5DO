@@ -28,6 +28,7 @@ public sealed class DiagnosticsBundleTests
                   "RetroAchievementsUsername": "player",
                   "RetroAchievementsToken": "super-secret-token",
                   "RetroAchievementsHost": "https://example.invalid",
+                  "donationEmail": "donor@example.com",
                   "Volume": 0.75,
                   "Notes": "user {{Environment.UserName}}"
                 }
@@ -75,6 +76,8 @@ public sealed class DiagnosticsBundleTests
             Assert.DoesNotContain("RetroAchievementsToken", settings, StringComparison.Ordinal);
             Assert.DoesNotContain("super-secret-token", settings, StringComparison.Ordinal);
             Assert.DoesNotContain("RetroAchievementsHost", settings, StringComparison.Ordinal);
+            Assert.DoesNotContain("donationEmail", settings, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("donor@example.com", settings, StringComparison.Ordinal);
             Assert.DoesNotContain(root, settings, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("0.75", settings, StringComparison.Ordinal);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using FiveDo.Core;
 
@@ -10,9 +11,10 @@ namespace FiveDo.Storage;
 /// <remarks>
 /// 3DO only reads the 2048-byte user data from each sector. Mode 1 stores it at byte 16 and
 /// Mode 2 Form 1 at byte 24; <see cref="DiscImageFactory"/> selects the offset from the image's
-/// mode byte or the CUE sheet.
+/// mode byte or the CUE sheet. The image is exposed as a single data track so DAT verification
+/// and disc diagnostics hash the native 2352-byte sectors.
 /// </remarks>
-public sealed class BinImage : IDiscSource
+public sealed class BinImage : ITrackedDiscSource
 {
     /// <summary>Raw sector size.</summary>
     public const int RawSectorBytes = 2352;
@@ -50,6 +52,7 @@ public sealed class BinImage : IDiscSource
 
         var available = (int)(remaining / RawSectorBytes);
         SectorCount = sectorCount.HasValue ? Math.Min(sectorCount.Value, available) : available;
+        Tracks = [new DiscTrack(1, DiscTrackKind.Data, 0, SectorCount, RawSectorBytes, payloadOffset)];
     }
 
     /// <inheritdoc />
@@ -59,7 +62,41 @@ public sealed class BinImage : IDiscSource
     public int SectorSize => 2048;
 
     /// <inheritdoc />
+    public IReadOnlyList<DiscTrack> Tracks { get; }
+
+    /// <inheritdoc />
+    public int TotalSectorCount => SectorCount;
+
+    /// <inheritdoc />
     public void ReadSector(int lba, Span<byte> destination)
+    {
+        ReadRawSector(lba);
+        var available = Math.Min(2048, destination.Length);
+        _sector.AsSpan(_payloadOffset, available).CopyTo(destination);
+    }
+
+    /// <inheritdoc />
+    public int ReadTrackSector(int lba, Span<byte> destination)
+    {
+        if (destination.Length < RawSectorBytes)
+        {
+            throw new ArgumentException(
+                $"Destination must hold {RawSectorBytes} bytes for the raw track.",
+                nameof(destination));
+        }
+
+        ReadRawSector(lba);
+        _sector.AsSpan(0, RawSectorBytes).CopyTo(destination);
+        return RawSectorBytes;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _stream.Dispose();
+    }
+
+    private void ReadRawSector(int lba)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(lba);
         if (lba >= SectorCount)
@@ -69,13 +106,5 @@ public sealed class BinImage : IDiscSource
 
         _stream.Position = _startOffset + ((long)lba * RawSectorBytes);
         _stream.ReadExactly(_sector);
-        var available = Math.Min(2048, destination.Length);
-        _sector.AsSpan(_payloadOffset, available).CopyTo(destination);
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _stream.Dispose();
     }
 }

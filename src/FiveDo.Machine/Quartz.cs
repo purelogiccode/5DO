@@ -84,6 +84,15 @@ public sealed class Quartz : IStateSection
         UpdateVdlClock();
     }
 
+    /// <summary>Switches the region without resetting the current VDL phase.</summary>
+    /// <param name="region">New video region.</param>
+    /// <remarks>Used when loading a state whose Options section follows the Quartz section.</remarks>
+    public void SetRegionPreservingPhase(VideoRegion region)
+    {
+        _region = VideoRegionProfile.For(region);
+        UpdateVdlClock();
+    }
+
     /// <summary>Gets the VDL lines in one field for the active region.</summary>
     public int VdlFieldLines => _region.FieldLines;
 

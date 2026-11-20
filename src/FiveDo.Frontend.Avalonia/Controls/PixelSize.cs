@@ -18,7 +18,7 @@ internal static class PixelSize
     /// <param name="height">Logical height.</param>
     /// <param name="scaling">Render scaling (1.0 = 100%).</param>
     /// <returns>The physical width and height, each at least one pixel.</returns>
-    public static (int Width, int Height) Compute(double width, double height, double scaling)
+    internal static (int Width, int Height) Compute(double width, double height, double scaling)
     {
         if (!double.IsFinite(width) || !double.IsFinite(height) || !double.IsFinite(scaling) || scaling <= 0)
         {

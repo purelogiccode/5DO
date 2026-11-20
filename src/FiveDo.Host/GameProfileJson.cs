@@ -175,6 +175,9 @@ public static class GameProfileJson
             profile.Overscan = overscan.Clamp();
         }
 
+        // JSON can deserialize null despite the non-nullable annotation.
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        profile.InputDevices ??= [];
         profile.InputDevices = profile.InputDevices.Count == 0
             ? []
             : AppSettings.NormalizeInputDevices(profile.InputDevices).ToList();

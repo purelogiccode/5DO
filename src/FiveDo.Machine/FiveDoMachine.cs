@@ -191,12 +191,16 @@ public sealed class FiveDoMachine
 
     /// <summary>Switches the video region without reloading the machine.</summary>
     /// <param name="region">New video region.</param>
+    /// <param name="preserveQuartzPhase">
+    /// When true, keep the current VDL accumulator/line (used while loading a state whose
+    /// Quartz section was already restored).
+    /// </param>
     /// <remarks>
     /// Frontends call this between frames when a newly resolved BIOS changes the video
     /// standard. The frame store is cleared so stale lines from the old height cannot be
     /// presented.
     /// </remarks>
-    public void SetVideoRegion(VideoRegion region)
+    public void SetVideoRegion(VideoRegion region, bool preserveQuartzPhase = false)
     {
         VideoRegionProfile profile = VideoRegionProfile.For(region);
         if (profile == RegionProfile)
@@ -206,7 +210,15 @@ public sealed class FiveDoMachine
 
         RegionProfile = profile;
         Vdlp.Region = profile;
-        Quartz.SetRegion(region);
+        if (preserveQuartzPhase)
+        {
+            Quartz.SetRegionPreservingPhase(region);
+        }
+        else
+        {
+            Quartz.SetRegion(region);
+        }
+
         _frame.Clear();
         _interlace.Reset();
         _presentedFrame = _frame;
@@ -443,6 +455,7 @@ public sealed class FiveDoMachine
         Xbus.Reset();
         Clio.Reset();
         Dsp.Reset();
+        Dsp.SetRunning(false);
         Diag.Reset(-1);
         Quartz.Reset();
         _frame.Clear();
@@ -453,9 +466,19 @@ public sealed class FiveDoMachine
         FiqLatency.Reset();
         AudioSink?.Reset();
 
-        if (Compatibility.IsAnvil == 30)
+        // Runtime heuristics are per-boot; the game-specific fix mode and the detected
+        // BIOS type survive a reset. Re-apply the tuning-derived presentation flags.
+        FixMode fixMode = Compatibility.FixMode;
+        int isAnvil = Compatibility.IsAnvil;
+        Compatibility.Reset();
+        Compatibility.FixMode = fixMode;
+        Compatibility.IsAnvil = isAnvil;
+        Compatibility.BiosAnvil = isAnvil == 30;
+        Compatibility.HighResolution = Tuning.HighResolution;
+        Compatibility.TrueHighResolution = Tuning.TrueHighResolution;
+        if (Compatibility.TrueHighResolution)
         {
-            Compatibility.BiosAnvil = true;
+            Compatibility.HighResolution = true;
         }
     }
 
@@ -559,13 +582,34 @@ public sealed class FiveDoMachine
     public void SaveStateToFile(string path, string? discHash = null, bool compress = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        var temporary = path + ".tmp";
-        using (FileStream stream = File.Create(temporary))
+        var temporary = path + "." + Path.GetRandomFileName() + ".tmp";
+        try
         {
-            SaveState(stream, discHash, compress);
-        }
+            using (FileStream stream = File.Create(temporary))
+            {
+                SaveState(stream, discHash, compress);
+            }
 
-        File.Move(temporary, path, overwrite: true);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(temporary))
+                {
+                    File.Delete(temporary);
+                }
+            }
+            catch (IOException)
+            {
+                // The state file is complete; a leftover temporary is harmless.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // The state file is complete; a leftover temporary is harmless.
+            }
+        }
     }
 
     /// <summary>Loads a complete machine state from a stream.</summary>
@@ -794,7 +838,9 @@ public sealed class FiveDoMachine
                     {
                         // The frame section is written after the options section, so
                         // switching here clears the stale frame before it is restored.
-                        SetVideoRegion(savedRegion);
+                        // The Quartz section was already restored; preserve its VDL phase
+                        // while switching to the state's region.
+                        SetVideoRegion(savedRegion, preserveQuartzPhase: true);
                         _stateWarnings.Add(
                             $"State video region {savedRegion} differs from the machine region; switched to {savedRegion}.");
                     }
@@ -1058,7 +1104,12 @@ public sealed class FiveDoMachine
             // uses the DSP for resource allocation and semaphore handshakes, not
             // just for sample output.
             uint packedSample = Dsp.Loop();
-            if (!CdAudioMuted && CdAudioVolume > 0 && Cdrom.TryGetAudioSample(out AudioSample cdAudio))
+            // Always advance the CD-DA cursor, even when the mix is muted or at zero
+            // volume; otherwise unmuting replays samples from the start of the muted
+            // interval and cuts off the tail.
+            if (Cdrom.TryGetAudioSample(out AudioSample cdAudio)
+                && !CdAudioMuted
+                && CdAudioVolume > 0)
             {
                 AudioSample mixed = MixCdAudio(AudioSample.FromPacked(packedSample), cdAudio, CdAudioVolume);
                 packedSample = mixed.Packed;

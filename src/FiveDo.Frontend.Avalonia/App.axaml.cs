@@ -98,6 +98,7 @@ public class App : Application
                     DataContext = new MainViewModel(),
                 };
                 desktop.MainWindow = window;
+                desktop.Exit += (_, _) => window.Dispose();
 
                 if (Program.SmokeTest)
                 {

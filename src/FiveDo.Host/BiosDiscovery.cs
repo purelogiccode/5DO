@@ -131,6 +131,7 @@ public static class BiosDiscovery
             }
             catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
             {
+                Serilog.Log.Debug(exception, "Skipping an invalid BIOS discovery path {Path}.", location.Path);
                 continue;
             }
 
@@ -199,6 +200,7 @@ public static class BiosDiscovery
             }
             catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
             {
+                Serilog.Log.Debug(exception, "Skipping a duplicate BIOS location that is not a valid path.");
                 continue;
             }
 
@@ -222,6 +224,7 @@ public static class BiosDiscovery
             or ArgumentException
             or InvalidOperationException)
         {
+            Serilog.Log.Debug(exception, "A default BIOS folder could not be resolved.");
             return null;
         }
     }

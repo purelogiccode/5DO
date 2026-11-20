@@ -212,6 +212,7 @@ public sealed class LibraryState
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
+            Serilog.Log.Debug(exception, "Using the unnormalized library state path {Path}.", path);
             return path;
         }
     }
@@ -253,6 +254,15 @@ public static class LibraryStateStore
             IDictionary<string, LibraryGameState> games = state.Games
                 ?? new Dictionary<string, LibraryGameState>(StringComparer.OrdinalIgnoreCase);
             state.Games = new Dictionary<string, LibraryGameState>(games, StringComparer.OrdinalIgnoreCase);
+            foreach (var key in state.Games.Keys.ToArray())
+            {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                if (state.Games[key] is null)
+                {
+                    state.Games.Remove(key);
+                }
+            }
+
             return state;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
@@ -271,21 +281,15 @@ public static class LibraryStateStore
         var resolved = path ?? DefaultPath;
         try
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(resolved));
-            if (!string.IsNullOrEmpty(directory))
+            var json = JsonSerializer.Serialize(state, LibraryStateJsonContext.Default.LibraryState);
+            if (!AtomicFile.WriteAllText(resolved, json, "library state"))
             {
-                Directory.CreateDirectory(directory);
+                Serilog.Log.Debug("Library state {Path} could not be written.", resolved);
             }
-
-            var temporary = resolved + ".tmp";
-            File.WriteAllText(
-                temporary,
-                JsonSerializer.Serialize(state, LibraryStateJsonContext.Default.LibraryState));
-            File.Move(temporary, resolved, overwrite: true);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception exception) when (exception is JsonException or NotSupportedException)
         {
-            Serilog.Log.Debug(exception, "Library state {Path} could not be written.", resolved);
+            Serilog.Log.Debug(exception, "Library state {Path} could not be serialized.", resolved);
         }
     }
 }

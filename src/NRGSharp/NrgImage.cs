@@ -462,7 +462,9 @@ public sealed class NrgImage : IDisposable
         {
             TaoV0Chunk => 12,
             TaoV1Chunk => 20,
-            _ => 32,
+            // ETN2: 8-byte offset, 8-byte length, 3 reserved bytes, 1 mode byte,
+            // 4-byte start LBA, and 4 unknown bytes.
+            _ => 28,
         };
 
         if (payload.Length % entrySize != 0)

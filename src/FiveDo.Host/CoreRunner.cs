@@ -66,7 +66,7 @@ public sealed class CoreRunner : IDisposable
     private bool _discPresent;
     private int _guestEjectCount;
     private long _lagFrames;
-    private long _lastPbusReadCount;
+    private long _lastPbusReadCount = -1;
     private bool _lastFrameWasLag;
     private int _inputPlayer = 1;
 
@@ -302,6 +302,12 @@ public sealed class CoreRunner : IDisposable
             ResetFrameDelayBuffer();
             _latency.Reset();
             _lastPresentedMachineFrame = _machine.FramesExecuted;
+            _lastPbusReadCount = -1;
+            Interlocked.Exchange(ref _lagFrames, 0);
+            _lastFrameWasLag = false;
+            _trayOpen = _machine.Cdrom.TrayOpen;
+            _discPresent = _machine.Cdrom.DiscPresent;
+            _guestEjectCount = _machine.Cdrom.GuestEjectCount;
             WrapPbusSource();
             _thread = new Thread(Run)
             {
@@ -349,6 +355,15 @@ public sealed class CoreRunner : IDisposable
     /// <summary>Stops the core thread and waits briefly for it to exit.</summary>
     public void Stop()
     {
+        _ = TryStop();
+    }
+
+    /// <summary>Stops the core thread and reports whether it actually exited.</summary>
+    /// <returns><see langword="true"/> when the core thread is no longer running.</returns>
+    public bool StopAndWait() => TryStop();
+
+    private bool TryStop()
+    {
         Thread? thread;
         lock (_stateGate)
         {
@@ -356,16 +371,30 @@ public sealed class CoreRunner : IDisposable
             _pauseRequested = false;
             Monitor.PulseAll(_stateGate);
             thread = _thread;
-            _thread = null;
         }
 
-        if (thread is not null && thread.IsAlive && thread != Thread.CurrentThread)
+        if (thread is not null && thread != Thread.CurrentThread)
         {
-            _ = thread.Join(TimeSpan.FromSeconds(2));
+            if (thread.IsAlive && !thread.Join(TimeSpan.FromSeconds(2)))
+            {
+                // Keep _thread and _stop set: Invoke must not run an action inline while
+                // the core thread can still be mutating the machine.
+                Serilog.Log.Warning("The core thread did not stop within the shutdown window.");
+                return false;
+            }
+
+            lock (_stateGate)
+            {
+                if (ReferenceEquals(_thread, thread))
+                {
+                    _thread = null;
+                }
+            }
         }
 
         _rewind.Clear();
         UnwrapPbusSource();
+        return true;
     }
 
     /// <summary>
@@ -377,10 +406,15 @@ public sealed class CoreRunner : IDisposable
         ArgumentNullException.ThrowIfNull(action);
         lock (_stateGate)
         {
-            if (_thread is null || !_thread.IsAlive || _thread == Thread.CurrentThread || _stop || _faulted)
+            if (_thread is null || !_thread.IsAlive || _thread == Thread.CurrentThread)
             {
                 action();
                 return;
+            }
+
+            if (_stop || _faulted)
+            {
+                throw new InvalidOperationException("The core thread is still stopping.");
             }
         }
 
@@ -389,10 +423,21 @@ public sealed class CoreRunner : IDisposable
             bool wasPaused;
             lock (_stateGate)
             {
-                if (_thread is null || !_thread.IsAlive || _stop || _faulted)
+                if (_thread is null || !_thread.IsAlive)
                 {
                     action();
                     return;
+                }
+
+                if (_thread == Thread.CurrentThread)
+                {
+                    action();
+                    return;
+                }
+
+                if (_stop || _faulted)
+                {
+                    throw new InvalidOperationException("The core thread is still stopping.");
                 }
 
                 wasPaused = _pauseRequested;
@@ -514,8 +559,10 @@ public sealed class CoreRunner : IDisposable
         }
 
         _disposed = true;
-        Stop();
-        _rewind.Dispose();
+        if (TryStop())
+        {
+            _rewind.Dispose();
+        }
     }
 
     private void Run()
@@ -587,6 +634,7 @@ public sealed class CoreRunner : IDisposable
                     presentedAudioSamples = _machine.AudioSamplesProduced;
                     audioPacer.Resync(presentedAudioSamples);
                     _runAheadSnapshot.Invalidate();
+                    ResetFrameDelayBuffer();
                 }
 
                 var runAhead = speed == 1 ? RunAhead : 0;
@@ -910,7 +958,7 @@ public sealed class CoreRunner : IDisposable
 
     /// <summary>Queues or submits the visible frame and records its software latency.</summary>
     /// <param name="frame">Completed frame owned by the machine; the delay path copies it.</param>
-    /// <param name="bypassDelay">When true, submit immediately (fast-forward and stepping).</param>
+    /// <param name="bypassDelay">When true, submit immediately (fast-forward).</param>
     private void SubmitPresentedFrame(VdlFrame frame, bool bypassDelay)
     {
         var inputTimestamp = _lastInputPollTimestamp;

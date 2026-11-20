@@ -151,12 +151,22 @@ public sealed class InstanceLock : IDisposable
 
         try
         {
-            File.Delete(Path);
+            // Delete only when the file still contains this process's owner record.
+            // Another instance may have acquired the lock between close and delete.
+            if (File.Exists(Path)
+                && string.Equals(ReadOwner(Path), Owner, StringComparison.Ordinal))
+            {
+                File.Delete(Path);
+            }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (IOException)
         {
             // The operating system releases the lock when the process exits; a stale
             // file is harmless because opening it exclusively still detects a live owner.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // A read-only data folder leaves a harmless stale lock file.
         }
     }
 

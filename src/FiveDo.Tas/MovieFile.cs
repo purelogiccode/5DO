@@ -175,7 +175,7 @@ public static class MovieFile
             Directory.CreateDirectory(directory);
         }
 
-        var temporaryPath = fullPath + ".tmp";
+        var temporaryPath = fullPath + "." + Path.GetRandomFileName() + ".tmp";
         try
         {
             using (FileStream stream = File.Create(temporaryPath))

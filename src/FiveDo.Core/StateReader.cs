@@ -54,7 +54,7 @@ public class StateReader : IStateReader
         }
 
         var storedLength = (int)length;
-        if (Remaining < storedLength + StateFormat.SectionCrcSize)
+        if (storedLength > Remaining - StateFormat.SectionCrcSize)
         {
             throw new InvalidStateException($"Section 0x{id:X8} is truncated.");
         }

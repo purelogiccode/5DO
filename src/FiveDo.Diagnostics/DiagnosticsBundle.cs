@@ -83,6 +83,7 @@ public static class DiagnosticsBundle
         "RetroAchievementsUsername",
         "RetroAchievementsToken",
         "RetroAchievementsHost",
+        "DonationEmail",
     ];
 
     /// <summary>Writes a diagnostics bundle.</summary>
@@ -106,7 +107,7 @@ public static class DiagnosticsBundle
 
         var entries = new List<string>();
         var scrubHits = 0;
-        var temporary = fullPath + ".tmp";
+        var temporary = fullPath + "." + Path.GetRandomFileName() + ".tmp";
         if (File.Exists(temporary))
         {
             File.Delete(temporary);
@@ -145,10 +146,11 @@ public static class DiagnosticsBundle
                 }
 
                 var logFiles = new JsonArray();
+                var maxLogBytes = Math.Max(0, options.MaxLogBytes);
                 foreach (var log in SelectLogs(options))
                 {
                     var entryName = "logs/" + Path.GetFileName(log);
-                    var text = ReadTail(log, options.MaxLogBytes);
+                    var text = ReadTail(log, maxLogBytes);
                     AddTextEntry(archive, entries, entryName, ScrubText(text, ref scrubHits));
                     logFiles.Add((JsonNode?)JsonValue.Create(entryName));
                 }
@@ -230,10 +232,12 @@ public static class DiagnosticsBundle
             JsonNode? node = JsonNode.Parse(text);
             if (node is JsonObject root)
             {
-                foreach (var key in SensitiveSettingsKeys)
+                foreach (var property in root.ToArray())
                 {
-                    if (root.Remove(key))
+                    if (SensitiveSettingsKeys.Any(key =>
+                            string.Equals(key, property.Key, StringComparison.OrdinalIgnoreCase)))
                     {
+                        root.Remove(property.Key);
                         hits++;
                     }
                 }

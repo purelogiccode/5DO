@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FiveDo.Input;
 
 namespace FiveDo.Cheats;
@@ -28,6 +29,17 @@ internal sealed class CheatWriteStatement : CheatStatement
     public uint Address { get; }
 
     public byte[] Bytes { get; }
+}
+
+/// <summary>Runs a list of actions in order.</summary>
+internal sealed class CheatSequenceStatement : CheatStatement
+{
+    public CheatSequenceStatement(IReadOnlyList<CheatStatement> statements)
+    {
+        Statements = statements;
+    }
+
+    public IReadOnlyList<CheatStatement> Statements { get; }
 }
 
 /// <summary>Runs an action when a condition is true.</summary>

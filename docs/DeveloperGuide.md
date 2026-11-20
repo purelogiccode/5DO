@@ -123,7 +123,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Scripting` | Sandboxed Lua input scripting and frame/button emission | `LuaInputScript` | Core, Input, Tas, MoonSharp |
 | `FiveDo.Host` | Core thread/pacing, settings, BIOS/disc/NVRAM loading, audio/input backends, save slots, library, fixes, autopilot | `CoreRunner`, `AudioFramePacer`, `AppSettings`, `AppSettingsStore`, `NvramStore`, `SaveStateSlotManager`, `StateInspector`, `GameLibraryScanner`, `GameCompatibility`, `MemoryPatch`, `RoadRashAutopilot` | Core, Machine, Storage, Audio, Input, Video, Diagnostics |
 | `FiveDo.Cli` | Headless commands, JSON contracts | `Program`, `CliJsonModels` | Host |
-| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, donation banner, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
+| `FiveDo.Frontend.Avalonia` | Desktop shell, library, settings, input, save slots, logs, donation banner, GPU probes | `MainWindow`, `VideoSurface`, `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `LogsWindow`, `WelcomeWindow`, `DonationEmailWindow`, `GlProbeWindow`, `GlProbeOptions`, `VkProbeRunner`, `VkProbeOptions`, `GlBackendOption`, `PlatformGamepadBackend` | Host, Video.OpenGL, Video.Vulkan, Avalonia |
 | `FiveDo.Tests` | Unit/integration/golden/CLI/frontend tests | subsystem fixtures, ARM test assembler/rig, fake chips/MMIO, PNG writer | all production projects |
 | `FiveDo.Benchmarks` | Synthetic/real-content frame benchmark, gate, baseline | `Program` | Cpu, Madam, Dsp, Diagnostics, Machine, Storage, Video |
 | `FiveDo.DiffHarness` | 5DO vs OperaCore differential runs, manifests, allowlists, reports, baseline gate | `Program`, `DiffManifestLoader`, `DiffComparer`, `OperaCoreHost`, `DiffReportWriter` | Core, Video, Audio, Input, Storage |
@@ -382,7 +382,7 @@ lines from the current VDLP state for the optional multitask path.
 - `MainWindow` owns the shell, session lifecycle, settings, library, logs, screenshots.
 - `VideoSurface` hosts the GL context and `OpenGlRenderer`.
 - `CpuVideoRenderer` + `WriteableBitmap` fallback.
-- `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`, `GameLibraryWindow`,
+- `SettingsWindow`, `InputBindingsWindow`, `SaveSlotsWindow`,
   `LogsWindow`, `WelcomeWindow`.
 - `PlatformGamepadBackend` selects XInput (Windows), evdev (Linux), or IOKit HID
   (macOS); the macOS source maps Generic Desktop joystick/gamepad elements through

@@ -214,7 +214,7 @@ internal sealed class LinuxDisplaySleepBackend : IDisplaySleepBackend
             or InvalidOperationException
             or IOException)
         {
-            Debug.WriteLine($"Screen-saver inhibit failed: {exception.Message}");
+            Serilog.Log.Debug(exception, "Screen-saver inhibit failed.");
             process?.Dispose();
             return false;
         }
@@ -249,7 +249,7 @@ internal sealed class LinuxDisplaySleepBackend : IDisplaySleepBackend
             or NotSupportedException
             or IOException)
         {
-            Debug.WriteLine($"Screen-saver release failed: {exception.Message}");
+            Serilog.Log.Debug(exception, "Screen-saver release failed.");
         }
         finally
         {
@@ -280,7 +280,7 @@ internal sealed class LinuxDisplaySleepBackend : IDisplaySleepBackend
                 or IOException
                 or UnauthorizedAccessException)
             {
-                Debug.WriteLine($"PATH entry rejected: {exception.Message}");
+                Serilog.Log.Debug(exception, "PATH entry rejected while looking for {Name}.", name);
             }
         }
 

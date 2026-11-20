@@ -915,8 +915,8 @@ public sealed class Dsp : IDsp, IStateSection
             }
             else if ((inst.NrofType & 6) == 6)
             {
-                // Immediate format. The reference shifts by the raw one-bit JUSTIFY field:
-                // 0 or 3 (the field is sign-extended to 0/-1, then masked).
+                // Immediate format. JUSTIFY is exposed as 0/-1 and masked to 0 or 3,
+                // matching FreeDO/Opera's IMMEDIATE << (JUSTIFY & 3).
                 var shift = inst.IofJustify & 3;
                 pool[operands] = unchecked((ushort)(inst.IofImmediate << shift));
                 _writeback = pool[operands++];
@@ -1010,6 +1010,7 @@ public sealed class Dsp : IDsp, IStateSection
 
         if ((inst.NrofType & 6) == 6)
         {
+            // FreeDO/Opera shift by JUSTIFY & 3: 0 for JUSTIFY=0, 3 for JUSTIFY=-1.
             var shift = inst.IofJustify & 3;
             return inst.IofImmediate << shift;
         }

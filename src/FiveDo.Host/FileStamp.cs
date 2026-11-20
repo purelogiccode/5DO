@@ -31,8 +31,9 @@ internal static class FileStamp
             value = info.LastWriteTimeUtc;
             return true;
         }
-        catch (ArgumentOutOfRangeException)
+        catch (ArgumentOutOfRangeException exception)
         {
+            Serilog.Log.Debug(exception, "The last-write timestamp for {Path} is outside the supported range.", info.FullName);
             value = default;
             return false;
         }

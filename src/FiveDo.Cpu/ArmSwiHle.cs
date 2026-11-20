@@ -29,7 +29,7 @@ internal static class ArmSwiHle
     /// <param name="registers">The ARM user register file (r0-r15).</param>
     /// <param name="ram">Raw guest RAM accessor.</param>
     /// <returns><see langword="true"/> when the SWI was handled on the host.</returns>
-    public static bool TryExecute(uint instruction, uint[] registers, IRam ram)
+    internal static bool TryExecute(uint instruction, uint[] registers, IRam ram)
     {
         ArgumentNullException.ThrowIfNull(registers);
         ArgumentNullException.ThrowIfNull(ram);

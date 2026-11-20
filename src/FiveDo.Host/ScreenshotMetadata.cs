@@ -117,7 +117,9 @@ public sealed class ScreenshotMetadata
         bool interlaced = false)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        CropInsets crop = settings.ResolveOverscan();
+        CropInsets crop = settings.TryResolveManualCrop(gameId, out CropInsets resolved)
+            ? resolved
+            : default;
         return new ScreenshotMetadata
         {
             Version = CurrentVersion,
@@ -171,11 +173,33 @@ public sealed class ScreenshotMetadata
             Directory.CreateDirectory(directory);
         }
 
-        var temporary = path + ".tmp";
-        File.WriteAllText(
-            temporary,
-            JsonSerializer.Serialize(this, ScreenshotMetadataJsonContext.Default.ScreenshotMetadata));
-        File.Move(temporary, path, overwrite: true);
+        var temporary = path + "." + Path.GetRandomFileName() + ".tmp";
+        try
+        {
+            File.WriteAllText(
+                temporary,
+                JsonSerializer.Serialize(this, ScreenshotMetadataJsonContext.Default.ScreenshotMetadata));
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(temporary);
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Debug(exception, "The temporary screenshot metadata {Path} could not be deleted.", path);
+        }
     }
 
     /// <summary>Loads sidecar metadata for a screenshot.</summary>
@@ -207,6 +231,7 @@ public sealed class ScreenshotMetadata
             or JsonException
             or NotSupportedException)
         {
+            Serilog.Log.Debug(exception, "Screenshot metadata beside {Path} could not be read.", path);
             return null;
         }
     }

@@ -125,6 +125,40 @@ public sealed class CdiNrgDiscImageTests
     }
 
     [Fact]
+    public void CdiImage_SignatureRejectsAZeroTrackCount()
+    {
+        using var folder = new ImageFolder();
+        string path = folder.PathFor("empty.cdi");
+        var descriptor = new byte[1 + 15 + 4];
+        descriptor[0] = 1;
+        descriptor[1 + 9] = 1;
+        descriptor[1 + 13] = 0xFF;
+        descriptor[1 + 14] = 0xFF;
+        BinaryPrimitives.WriteInt32LittleEndian(descriptor.AsSpan(16), descriptor.Length);
+        File.WriteAllBytes(path, descriptor);
+
+        Assert.False(CdiImage.HasSignature(path));
+    }
+
+    [Fact]
+    public void NrgImage_ReadsEtn2EntriesWithA28ByteStride()
+    {
+        using var folder = new ImageFolder();
+        string path = folder.PathFor("etn2.nrg");
+        BuildNrgTaoV2(path, 4, NrgTrackMode.Data, 2048);
+
+        using var image = NrgImage.Open(path);
+        Assert.Equal(4, image.TotalSectorCount);
+        NrgTrack track = Assert.Single(image.Tracks);
+        Assert.Equal(4, track.SectorCount);
+        Assert.Equal(2048, track.SectorSize);
+
+        var sector = new byte[2048];
+        image.ReadSector(2, sector);
+        Assert.Equal(ExpectedSector(2), sector);
+    }
+
+    [Fact]
     public void NrgImage_ReadsDaoV1AndV2CookedMode1AndMatchesTheIsoGameId()
     {
         using var folder = new ImageFolder();
@@ -617,6 +651,38 @@ public sealed class CdiNrgDiscImageTests
             body[footerOffset + 4 + index] = offsetBytes[index];
         }
 
+        File.WriteAllBytes(path, [.. body]);
+    }
+
+    private static void BuildNrgTaoV2(string path, int sectorCount, NrgTrackMode mode, int bytesPerSector)
+    {
+        var body = new List<byte>();
+        for (var lba = 0; lba < sectorCount; lba++)
+        {
+            body.AddRange(BuildImageSector(lba, mode, bytesPerSector, bytesPerSector));
+        }
+
+        // ETN2 entry: 8-byte offset, 8-byte length, 3 reserved bytes, 1 mode byte,
+        // 4-byte start LBA, and 4 unknown bytes.
+        var payload = new List<byte>();
+        payload.AddRange(BigEndian(0ul));
+        payload.AddRange(BigEndian((ulong)(sectorCount * bytesPerSector)));
+        payload.AddRange(new byte[3]);
+        payload.Add((byte)mode);
+        payload.AddRange(BigEndian(0u));
+        payload.AddRange(BigEndian(0u));
+
+        var metadata = new List<byte>();
+        metadata.AddRange("ETN2"u8.ToArray());
+        metadata.AddRange(BigEndian((uint)payload.Count));
+        metadata.AddRange(payload);
+        metadata.AddRange("END!"u8.ToArray());
+        metadata.AddRange(BigEndian(0u));
+
+        int metadataOffset = body.Count;
+        body.AddRange(metadata);
+        body.AddRange("NERO"u8.ToArray());
+        body.AddRange(BigEndian((uint)metadataOffset));
         File.WriteAllBytes(path, [.. body]);
     }
 

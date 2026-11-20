@@ -357,6 +357,7 @@ public static class DoctorReport
                 or InvalidOperationException)
             {
                 // Try the next candidate.
+                Serilog.Log.Debug(exception, "Native runtime candidate {Candidate} could not be loaded.", candidate);
             }
             finally
             {
@@ -366,8 +367,9 @@ public static class DoctorReport
                     {
                         NativeLibrary.Free(handle);
                     }
-                    catch (InvalidOperationException)
+                    catch (InvalidOperationException exception)
                     {
+                        Serilog.Log.Debug(exception, "The native runtime probe handle could not be freed.");
                     }
                 }
             }

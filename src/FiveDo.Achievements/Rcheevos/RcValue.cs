@@ -19,14 +19,14 @@ internal sealed class RcValue : RcMemRefBase
 
     internal void UseMemRefs(List<RcMemRefBase> memrefs) => MemRefs = memrefs;
 
-    public static RcValue Parse(string memaddr)
+    internal static RcValue Parse(string memaddr)
     {
         var cursor = new RcCursor(memaddr);
         var parse = new RcParseState();
         return Parse(cursor, parse);
     }
 
-    public static RcValue Parse(RcCursor cursor, RcParseState parse)
+    internal static RcValue Parse(RcCursor cursor, RcParseState parse)
     {
         var value = new RcValue();
         ParseInternal(value, cursor, parse);
@@ -263,7 +263,7 @@ internal sealed class RcValue : RcMemRefBase
             (uint)position < (uint)cursor.Text.Length ? cursor.Text[position] : '\0';
     }
 
-    public bool EvaluateTyped(out RcTypedValue result, RcPeek? peek, object? userData)
+    internal bool EvaluateTyped(out RcTypedValue result, RcPeek? peek, object? userData)
     {
         if (UpdateMemRefsEnabled)
         {
@@ -310,7 +310,7 @@ internal sealed class RcValue : RcMemRefBase
         return valid;
     }
 
-    public int Evaluate(RcPeek? peek, object? userData)
+    internal int Evaluate(RcPeek? peek, object? userData)
     {
         if (EvaluateTyped(out RcTypedValue result, peek, userData))
         {
@@ -326,7 +326,7 @@ internal sealed class RcValue : RcMemRefBase
         return result.I32;
     }
 
-    public void Reset()
+    internal void Reset()
     {
         for (RcCondSet? condset = Conditions; condset is not null; condset = condset.Next)
         {
@@ -338,7 +338,7 @@ internal sealed class RcValue : RcMemRefBase
         Value.Changed = false;
     }
 
-    public bool IsMeasuredFromHits()
+    internal bool IsMeasuredFromHits()
     {
         for (RcCondSet? condset = Conditions; condset is not null; condset = condset.Next)
         {

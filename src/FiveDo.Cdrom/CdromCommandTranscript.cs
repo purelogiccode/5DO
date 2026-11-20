@@ -66,6 +66,8 @@ public sealed class CdromCommandTranscript
     private int _issuedCount;
     private Action<byte>? _previousOpcodeObserver;
     private Action<byte>? _issuedObserver;
+    private Action? _previousCompletedObserver;
+    private Action? _completedObserver;
 
     /// <summary>Gets the captured entries in execution order.</summary>
     public IReadOnlyList<CdromCommandEntry> Entries => _entries;
@@ -140,15 +142,23 @@ public sealed class CdromCommandTranscript
             CaptureIssued(opcode);
         };
         device.CommandOpcodeObserver = _issuedObserver;
-        device.CommandCompleted = Capture;
+        _previousCompletedObserver = device.CommandCompleted;
+        _completedObserver = () =>
+        {
+            _previousCompletedObserver?.Invoke();
+            Capture();
+        };
+        device.CommandCompleted = _completedObserver;
     }
 
     /// <summary>Detaches from the current device, if any.</summary>
     public void Detach()
     {
-        if (_device is not null && ReferenceEquals(_device.CommandCompleted, (Action)Capture))
+        if (_device is not null
+            && _completedObserver is not null
+            && ReferenceEquals(_device.CommandCompleted, _completedObserver))
         {
-            _device.CommandCompleted = null;
+            _device.CommandCompleted = _previousCompletedObserver;
         }
 
         if (_device is not null
@@ -161,6 +171,8 @@ public sealed class CdromCommandTranscript
         _device = null;
         _issuedObserver = null;
         _previousOpcodeObserver = null;
+        _completedObserver = null;
+        _previousCompletedObserver = null;
     }
 
     /// <summary>Removes all captured entries without detaching.</summary>

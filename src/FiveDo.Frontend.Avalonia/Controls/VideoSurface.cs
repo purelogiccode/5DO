@@ -449,7 +449,8 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _outputTarget.Framebuffer);
         gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)framebuffer);
         gl.Viewport(0, 0, (uint)windowWidth, (uint)windowHeight);
-        gl.ClearColor(0f, 0f, 0f, 1f);
+        (float voidRed, float voidGreen, float voidBlue) = _settings.VoidAreaColorRgb;
+        gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
         gl.Clear(ClearBufferMask.ColorBufferBit);
         gl.BlitFramebuffer(
             sourceRect.X,

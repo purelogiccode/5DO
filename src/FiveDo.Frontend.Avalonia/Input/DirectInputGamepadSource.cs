@@ -27,7 +27,7 @@ internal static class DirectInputStateTranslator
     /// <param name="leftTrigger">Calibrated left trigger value in the range 0-1.</param>
     /// <param name="rightTrigger">Calibrated right trigger value in the range 0-1.</param>
     /// <returns>The translated sample.</returns>
-    public static GamepadState Translate(
+    internal static GamepadState Translate(
         ReadOnlySpan<int> axes,
         ReadOnlySpan<uint> pov,
         ReadOnlySpan<byte> buttons,
@@ -105,9 +105,9 @@ internal static class DirectInputStateTranslator
         return new GamepadState(
             result,
             NormalizeAxis(GetAxis(axes, 0)),
-            NormalizeAxis(GetAxis(axes, 1)),
+            NormalizeAxis(-GetAxis(axes, 1)),
             NormalizeAxis(GetAxis(axes, 3)),
-            NormalizeAxis(GetAxis(axes, 4)),
+            NormalizeAxis(-GetAxis(axes, 4)),
             leftTrigger,
             rightTrigger);
     }

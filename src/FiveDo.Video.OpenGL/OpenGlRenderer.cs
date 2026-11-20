@@ -226,12 +226,13 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _hqxRuleTexture = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, _hqxRuleTexture);
-        gl.TexStorage2D(
-            TextureTarget.Texture2D,
-            1,
+        AllocateTexture(
+            gl,
             SizedInternalFormat.RG32ui,
             HqxRuleTable.PatternCount,
-            HqxRuleTable.RowCount);
+            HqxRuleTable.RowCount,
+            GlPixelFormat.RGInteger,
+            PixelType.UnsignedInt);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
@@ -718,7 +719,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _fsrTexture = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, _fsrTexture);
-        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        AllocateTexture(gl, SizedInternalFormat.Rgba8, width, height, GlPixelFormat.Rgba, PixelType.UnsignedByte);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
@@ -757,7 +758,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _xbrTexture = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, _xbrTexture);
-        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        AllocateTexture(gl, SizedInternalFormat.Rgba8, width, height, GlPixelFormat.Rgba, PixelType.UnsignedByte);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
@@ -801,7 +802,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _hqxTexture = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, _hqxTexture);
-        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        AllocateTexture(gl, SizedInternalFormat.Rgba8, width, height, GlPixelFormat.Rgba, PixelType.UnsignedByte);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
@@ -845,7 +846,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
         _mmpxTexture = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, _mmpxTexture);
-        gl.TexStorage2D(TextureTarget.Texture2D, 1, SizedInternalFormat.Rgba8, (uint)width, (uint)height);
+        AllocateTexture(gl, SizedInternalFormat.Rgba8, width, height, GlPixelFormat.Rgba, PixelType.UnsignedByte);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
@@ -869,34 +870,57 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _mmpxHeight = height;
     }
 
+    private static unsafe void AllocateTexture(
+        GL gl,
+        SizedInternalFormat internalFormat,
+        int width,
+        int height,
+        GlPixelFormat pixelFormat,
+        PixelType pixelType)
+    {
+        gl.TexImage2D(
+            (GLEnum)TextureTarget.Texture2D,
+            0,
+            (int)internalFormat,
+            (uint)width,
+            (uint)height,
+            0,
+            (GLEnum)pixelFormat,
+            (GLEnum)pixelType,
+            null);
+    }
+
     private void AllocateUploadTextures(GL gl)
     {
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, _pixelTexture);
-        gl.TexStorage2D(
-            TextureTarget.Texture2D,
-            1,
+        AllocateTexture(
+            gl,
             SizedInternalFormat.R16ui,
             VdlFrameUploader.MaxWidth,
-            VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.MaxHeight,
+            GlPixelFormat.RedInteger,
+            PixelType.UnsignedShort);
 
         gl.ActiveTexture(TextureUnit.Texture1);
         gl.BindTexture(TextureTarget.Texture2D, _clutTexture);
-        gl.TexStorage2D(
-            TextureTarget.Texture2D,
-            1,
+        AllocateTexture(
+            gl,
             SizedInternalFormat.Rgb8,
             VdlFrameUploader.ClutEntries,
-            VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.MaxHeight,
+            GlPixelFormat.Rgb,
+            PixelType.UnsignedByte);
 
         gl.ActiveTexture(TextureUnit.Texture2);
         gl.BindTexture(TextureTarget.Texture2D, _paramTexture);
-        gl.TexStorage2D(
-            TextureTarget.Texture2D,
-            1,
+        AllocateTexture(
+            gl,
             SizedInternalFormat.RG32ui,
             1,
-            VdlFrameUploader.MaxHeight);
+            VdlFrameUploader.MaxHeight,
+            GlPixelFormat.RGInteger,
+            PixelType.UnsignedInt);
     }
 
     private void UploadTextures(GL gl, int width, int height)

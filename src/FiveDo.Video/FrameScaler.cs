@@ -22,7 +22,7 @@ internal static class FrameScaler
     /// Height of one source row relative to a square output pixel. Defaults to 1; woven
     /// 480i/576i frames pass 0.5.
     /// </param>
-    public static void Scale(
+    internal static void Scale(
         FrameBuffer source,
         FrameBuffer destination,
         RendererSettings settings,

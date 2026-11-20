@@ -345,19 +345,15 @@ public static class UpdateChecker
 
         try
         {
-            var directory = Path.GetDirectoryName(Path.GetFullPath(path));
-            if (!string.IsNullOrEmpty(directory))
+            var json = JsonSerializer.Serialize(entry, UpdateCacheJsonContext.Default.UpdateCacheEntry);
+            if (!AtomicFile.WriteAllText(path, json, "update check cache"))
             {
-                Directory.CreateDirectory(directory);
+                Serilog.Log.Debug("Update check cache {Path} could not be written.", path);
             }
-
-            File.WriteAllText(
-                path,
-                JsonSerializer.Serialize(entry, UpdateCacheJsonContext.Default.UpdateCacheEntry));
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (Exception exception) when (exception is JsonException or NotSupportedException)
         {
-            Serilog.Log.Debug(exception, "Update check cache could not be written.");
+            Serilog.Log.Debug(exception, "Update check cache {Path} could not be serialized.", path);
         }
     }
 

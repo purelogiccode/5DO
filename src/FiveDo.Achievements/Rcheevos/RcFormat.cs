@@ -8,7 +8,7 @@ namespace FiveDo.Achievements.Rcheevos;
 /// <summary>rcheevos value formatting.</summary>
 internal static class RcFormatter
 {
-    public static RcFormat Parse(string format)
+    internal static RcFormat Parse(string format)
     {
         if (format.StartsWith("FRAMES", StringComparison.Ordinal))
         {
@@ -47,13 +47,13 @@ internal static class RcFormatter
         };
     }
 
-    public static string FormatValue(int value, RcFormat format)
+    internal static string FormatValue(int value, RcFormat format)
     {
         RcTypedValue typed = RcTypedValue.FromSigned(value);
         return FormatTyped(typed, format);
     }
 
-    public static string FormatTyped(RcTypedValue value, RcFormat format)
+    internal static string FormatTyped(RcTypedValue value, RcFormat format)
     {
         RcTypedValue converted = value;
 

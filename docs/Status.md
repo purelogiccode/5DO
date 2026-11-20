@@ -1116,7 +1116,7 @@ plan/next actions in [`ImplementationPlan.md`](ImplementationPlan.md).
   hashes remain the oracle, and the GPU HQx rule table matches them in the opt-in
   parity tests.
 - **Performance:** the machine runs on a dedicated core thread paced by the 44.1 kHz
-  audio clock (60 Hz fallback) with a frame pacer; the UI renders on demand; uploads use `TexStorage2D` + `TexSubImage2D`;
+  audio clock (60 Hz fallback) with a frame pacer; the UI renders on demand; uploads use `TexImage2D` allocation + `TexSubImage2D`;
   uniform locations and the present delegate are cached; physical-pixel sizing is
   implemented and unit-tested at 100/125/150/200% scaling. The benchmark reports
   p50/p95/p99 and per-stage allocations, and the

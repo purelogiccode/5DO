@@ -22,9 +22,9 @@ internal sealed class RcOperand
 
     public bool IsCombining;
 
-    public RcOperand Clone() => (RcOperand)MemberwiseClone();
+    internal RcOperand Clone() => (RcOperand)MemberwiseClone();
 
-    public static RcOperand Const(uint value) => new()
+    internal static RcOperand Const(uint value) => new()
     {
         Type = RcOperandType.Const,
         Size = RcMemSize.Bits32,
@@ -32,7 +32,7 @@ internal sealed class RcOperand
         Num = value,
     };
 
-    public static RcOperand FloatConst(double value) => new()
+    internal static RcOperand FloatConst(double value) => new()
     {
         Type = RcOperandType.Float,
         Size = RcMemSize.Float,
@@ -40,7 +40,7 @@ internal sealed class RcOperand
         Double = value,
     };
 
-    public static bool AreEqual(RcOperand left, RcOperand right)
+    internal static bool AreEqual(RcOperand left, RcOperand right)
     {
         if (ReferenceEquals(left, right))
         {
@@ -125,19 +125,19 @@ internal sealed class RcOperand
         }
     }
 
-    public static bool IsMemRefType(RcOperandType type) => type is not (RcOperandType.Const
+    internal static bool IsMemRefType(RcOperandType type) => type is not (RcOperandType.Const
         or RcOperandType.Float or RcOperandType.Func or RcOperandType.Recall);
 
-    public static bool IsTransform(RcOperandType type) => type is RcOperandType.Bcd or RcOperandType.Inverted;
+    internal static bool IsTransform(RcOperandType type) => type is RcOperandType.Bcd or RcOperandType.Inverted;
 
-    public static RcOperand Parse(RcCursor cursor, RcParseState parse)
+    internal static RcOperand Parse(RcCursor cursor, RcParseState parse)
     {
         var self = new RcOperand();
         ParseInto(self, cursor, parse);
         return self;
     }
 
-    public static void ParseInto(RcOperand self, RcCursor cursor, RcParseState parse)
+    internal static void ParseInto(RcOperand self, RcCursor cursor, RcParseState parse)
     {
         self.IsCombining = false;
         char current = cursor.Current;
@@ -252,7 +252,7 @@ internal sealed class RcOperand
         }
     }
 
-    public static void Evaluate(out RcTypedValue result, RcOperand self, RcEvalState? evalState)
+    internal static void Evaluate(out RcTypedValue result, RcOperand self, RcEvalState? evalState)
     {
         switch (self.Type)
         {
@@ -307,7 +307,7 @@ internal sealed class RcOperand
     }
 
     /// <summary>Converts a condition into an operand, allocating a modified memory reference for modifiers.</summary>
-    public static void FromCondition(RcCondition condition, RcOperand operand, RcParseState parse)
+    internal static void FromCondition(RcCondition condition, RcOperand operand, RcParseState parse)
     {
         if (condition.Oper == RcOperator.None)
         {
@@ -335,7 +335,7 @@ internal sealed class RcOperand
         operand.Size = newSize;
     }
 
-    public static void Copy(RcOperand source, RcOperand destination)
+    internal static void Copy(RcOperand source, RcOperand destination)
     {
         destination.MemRef = source.MemRef;
         destination.Num = source.Num;
@@ -347,7 +347,7 @@ internal sealed class RcOperand
     }
 
     /// <summary>Combines the operand with the current AddSource/SubSource accumulator.</summary>
-    public static void AddSource(RcOperand self, RcParseState parse, RcMemSize newSize)
+    internal static void AddSource(RcOperand self, RcParseState parse, RcMemSize newSize)
     {
         RcModifiedMemRef modified;
         if (self.Type is RcOperandType.Delta or RcOperandType.Prior && self.Type == parse.AddSourceParent.Type)

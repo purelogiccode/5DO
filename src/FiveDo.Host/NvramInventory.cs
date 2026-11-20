@@ -233,13 +233,13 @@ public static class NvramInventory
             Directory.CreateDirectory(directory);
         }
 
-        var temporary = destination + ".tmp";
+        var temporary = destination + "." + Path.GetRandomFileName() + ".tmp";
         try
         {
             File.WriteAllBytes(temporary, data.ToArray());
             File.Move(temporary, destination, overwrite: true);
         }
-        catch
+        finally
         {
             try
             {
@@ -251,9 +251,8 @@ public static class NvramInventory
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
                 // Best effort; the original exception is more useful.
+                Serilog.Log.Debug(exception, "Could not delete the temporary NVRAM file {Path}.", temporary);
             }
-
-            throw;
         }
     }
 }

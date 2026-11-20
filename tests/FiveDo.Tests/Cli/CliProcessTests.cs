@@ -1074,7 +1074,7 @@ public sealed class CliProcessTests
             CliResult json = Invoke("disc", "tracks", path, "--json");
             Assert.Equal(0, json.Code);
             Assert.Contains("\"tracks\"", json.Output, StringComparison.Ordinal);
-            Assert.Contains("\"dataSize\": 2048", json.Output, StringComparison.Ordinal);
+            Assert.Contains("\"dataSize\": 6144", json.Output, StringComparison.Ordinal);
         }
         finally
         {

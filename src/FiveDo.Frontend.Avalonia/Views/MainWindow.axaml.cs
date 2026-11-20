@@ -137,6 +137,7 @@ public partial class MainWindow : Window, IDisposable
     private volatile bool _waitingForFirstFrame;
     private volatile bool _firstVisibleFrameSubmitted;
     private bool _shuttingDown;
+    private bool _disposed;
     private bool _biosLoaded;
     private string _biosMd5 = string.Empty;
     private string _bios2Md5 = string.Empty;
@@ -560,6 +561,7 @@ public partial class MainWindow : Window, IDisposable
             or ArgumentException
             or InvalidOperationException)
         {
+            Serilog.Log.Debug(exception, "BIOS discovery for the welcome guide failed.");
             return null;
         }
     }
@@ -1222,7 +1224,13 @@ public partial class MainWindow : Window, IDisposable
         AsyncEvent.Run(() => ImportDroppedPathsAsync(paths), "importing dropped files");
     }
 
-    private async Task ImportDroppedPathsAsync(string[] paths)
+    private Task ImportDroppedPathsAsync(string[] paths)
+    {
+        ImportDroppedPaths(paths);
+        return Task.CompletedTask;
+    }
+
+    private void ImportDroppedPaths(string[] paths)
     {
         if (paths.Length == 1 && IsPlaylistPath(paths[0]))
         {
@@ -1626,10 +1634,13 @@ public partial class MainWindow : Window, IDisposable
             LibraryStateStore.Save(_libraryState);
             RefreshLibraryDecorations();
             ReloadCheats();
-            Video.Settings = _settings.ToRendererSettings(_gameId);
+            RendererSettings presentationSettings = _settings.ToRendererSettings(_gameId);
+            Video.Settings = presentationSettings;
+            Direct3DVideo.Settings = presentationSettings;
+            VulkanVideo.Settings = presentationSettings;
             if (_cpuVideo is not null)
             {
-                _cpuVideo.Settings = _settings.ToRendererSettings(_gameId);
+                _cpuVideo.Settings = presentationSettings;
             }
 
             UpdateRendererText();
@@ -1884,7 +1895,14 @@ public partial class MainWindow : Window, IDisposable
 
         // Stop, not pause: join the core thread and reset the machine so a later
         // Start (or a new game selection) begins from a known state.
-        _runner?.Stop();
+        if (_runner?.StopAndWait() == false)
+        {
+            StatusText.Text = "The core thread did not stop; try again before resetting the machine.";
+            _logger.ForCategory(LogCategory.Host).Warning(
+                "Emulation stop timed out; the machine was not reset.");
+            return;
+        }
+
         _playtime.Stop();
         RefreshLibraryDecorations();
         FlushNvram();
@@ -1988,16 +2006,35 @@ public partial class MainWindow : Window, IDisposable
         }
 
         var slot = _slots.CurrentSlot;
-        _runner!.Invoke(() =>
+        try
         {
-            var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
-            _slots.Save(
-                _machine,
-                discHash,
-                _gameName,
-                slot,
-                retroAchievementsState: _achievements?.ExportProgress());
-        });
+            _runner!.Invoke(() =>
+            {
+                var discHash = _disc is null ? string.Empty : GameId.Compute(_disc);
+                _slots.Save(
+                    _machine,
+                    discHash,
+                    _gameName,
+                    slot,
+                    retroAchievementsState: _achievements?.ExportProgress());
+            });
+        }
+        catch (Exception exception) when (exception is InvalidStateException
+            or IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            StatusText.Text = $"State could not be saved: {exception.Message}";
+            ShowOsd($"State save failed: {exception.Message}", OsdSeverity.Warning);
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                exception,
+                "State save to slot {Slot} failed.",
+                slot + 1);
+            return;
+        }
+
         PersistSlot();
         UpdateSlotText();
         StatusText.Text = $"State saved: slot {slot + 1} ({_gameName}).";
@@ -2030,15 +2067,40 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        Exception? loadError = null;
         _runner!.Invoke(() =>
         {
-            _slots.LoadWithProgress(_machine, slot, _gameId, out byte[]? achievementsProgress);
-            if (achievementsProgress is null
-                || _achievements?.ImportProgress(achievementsProgress) != true)
+            try
             {
-                _achievements?.ResetRuntime();
+                _slots.LoadWithProgress(_machine, slot, _gameId, out byte[]? achievementsProgress);
+                _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
+                if (achievementsProgress is null
+                    || _achievements?.ImportProgress(achievementsProgress) != true)
+                {
+                    _achievements?.ResetRuntime();
+                }
+            }
+            catch (Exception exception) when (exception is InvalidStateException
+                or IOException
+                or InvalidDataException
+                or UnauthorizedAccessException
+                or ArgumentException
+                or NotSupportedException)
+            {
+                loadError = exception;
             }
         });
+        if (loadError is not null)
+        {
+            StatusText.Text = $"State could not be loaded: {loadError.Message}";
+            ShowOsd($"State load failed: {loadError.Message}", OsdSeverity.Warning);
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                loadError,
+                "State load from slot {Slot} failed.",
+                slot + 1);
+            return;
+        }
+
         if (_machine.StateWarnings.Count > 0)
         {
             StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
@@ -2293,7 +2355,22 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        UpdateAudioSink();
+        try
+        {
+            UpdateAudioSink();
+        }
+        catch (InvalidOperationException exception)
+        {
+            // The core thread is stopping; keep the sink attached until it is safe to
+            // detach rather than disposing a recorder that may still be in use.
+            _audioRecorder = recorder;
+            _audioRecordingPath = path;
+            _logger.ForCategory(LogCategory.Audio).Warning(
+                exception,
+                "Audio recording could not be detached from the stopping core thread.");
+            return;
+        }
+
         long frames = recorder.SampleCount;
         recorder.Dispose();
         RecordAudioMenuItem.Header = "Record Audio...";
@@ -2311,6 +2388,17 @@ public partial class MainWindow : Window, IDisposable
     }
 
     private void UpdateAudioSink()
+    {
+        if (_runner is not null && _machine is not null)
+        {
+            _runner.Invoke(UpdateAudioSinkCore);
+            return;
+        }
+
+        UpdateAudioSinkCore();
+    }
+
+    private void UpdateAudioSinkCore()
     {
         if (_machine is null)
         {
@@ -2753,19 +2841,43 @@ public partial class MainWindow : Window, IDisposable
         }
 
         StopMovie(save: true);
+        Exception? movieStateError = null;
         _runner.Invoke(() =>
         {
             if (movie.State is not null)
             {
-                using var state = new MemoryStream(movie.State);
-                _machine.LoadState(state);
-                _achievements?.ResetRuntime();
+                try
+                {
+                    using var state = new MemoryStream(movie.State);
+                    _machine.LoadState(state);
+                    _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
+                    _achievements?.ResetRuntime();
+                }
+                catch (Exception exception) when (exception is InvalidStateException
+                    or IOException
+                    or InvalidDataException
+                    or UnauthorizedAccessException
+                    or ArgumentException
+                    or NotSupportedException)
+                {
+                    movieStateError = exception;
+                    return;
+                }
             }
 
             _moviePlayback = movie;
             _moviePlaybackSource = new MoviePbusSource(movie);
             _machine.PbusSource = _moviePlaybackSource;
         });
+        if (movieStateError is not null)
+        {
+            StatusText.Text = $"Movie state could not be loaded: {movieStateError.Message}";
+            _logger.ForCategory(LogCategory.Host).WithoutBugReport().Warning(
+                movieStateError,
+                "Movie state load failed: {Path}.",
+                path);
+            return;
+        }
 
         StopMovieMenuItem.IsEnabled = true;
         if (!_running)
@@ -3222,13 +3334,31 @@ public partial class MainWindow : Window, IDisposable
 
         if (_machine is not null)
         {
+            long frames = 0;
+            uint pc = 0;
+            uint dspPc = 0;
+            void ReadMachine()
+            {
+                frames = _machine.FramesExecuted;
+                pc = _machine.Cpu.ProgramCounter;
+                dspPc = _machine.Dsp.ProgramCounter;
+            }
+
+            if (_runner is not null)
+            {
+                _runner.Invoke(ReadMachine);
+            }
+            else
+            {
+                ReadMachine();
+            }
+
             text.AppendLine(
                 System.Globalization.CultureInfo.InvariantCulture,
-                $"Machine: frame {_machine.FramesExecuted}, PC 0x{_machine.Cpu.ProgramCounter:x8}, "
-                + $"DSP 0x{_machine.Dsp.ProgramCounter:x4}.");
+                $"Machine: frame {frames}, PC 0x{pc:x8}, DSP 0x{dspPc:x4}.");
         }
 
-        _gamepad?.Poll();
+        _ = ReadGamepadPreview();
 
         if (!string.IsNullOrWhiteSpace(_gameName))
         {
@@ -4831,6 +4961,7 @@ public partial class MainWindow : Window, IDisposable
                     _runner!.Invoke(() =>
                     {
                         _slots.LoadWithProgress(_machine, slot, _gameId, out byte[]? achievementsProgress);
+                        _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
                         if (achievementsProgress is null
                             || _achievements?.ImportProgress(achievementsProgress) != true)
                         {
@@ -6293,8 +6424,8 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        var sourceWidth = _machine?.Frame.SourceWidth ?? 0;
-        var sourceHeight = _machine?.Frame.SourceHeight ?? 0;
+        var sourceWidth = _overscanFrame?.SourceWidth ?? _machine?.Frame.SourceWidth ?? 0;
+        var sourceHeight = _overscanFrame?.SourceHeight ?? _machine?.Frame.SourceHeight ?? 0;
         if (sourceWidth <= 0 || sourceHeight <= 0)
         {
             sourceWidth = EmulatorConstants.VideoWidth;
@@ -7072,8 +7203,19 @@ public partial class MainWindow : Window, IDisposable
         _playtime.Stop();
         StopInputRecording(save: true);
         _logTimer.Stop();
+        _movieTimer?.Stop();
+        _movieTimer = null;
+        StopAudioRecording();
+        StopGifRecording();
+        StopMovie(save: true);
+        _coverCts?.Cancel();
+        _coverCts?.Dispose();
+        _coverCts = null;
+        _coverService.Dispose();
         _runner?.Dispose();
         _runner = null;
+        _achievements?.Dispose();
+        _achievements = null;
         FlushNvram();
         AppSettingsStore.Save(_settings);
         if (_audio is not null)
@@ -7105,6 +7247,8 @@ public partial class MainWindow : Window, IDisposable
         _nvramStore.Dispose();
         _audio?.Dispose();
         _gamepad?.Dispose();
+        _libraryScanCts?.Dispose();
+        _libraryScanCts = null;
         ClearLibraryItems();
         _logger.ForCategory(LogCategory.Host).Information("Desktop shell shut down.");
     }
@@ -7190,21 +7334,48 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
-        int frameWidth = _machine?.RegionProfile.Width ?? EmulatorConstants.VideoWidth;
-        int frameHeight = _machine?.RegionProfile.Height ?? EmulatorConstants.VideoHeight;
+        int frameWidth = _overscanFrame?.SourceWidth
+            ?? (_machine?.Frame.SourceWidth ?? EmulatorConstants.VideoWidth);
+        int frameHeight = _overscanFrame?.SourceHeight
+            ?? (_machine?.Frame.SourceHeight ?? EmulatorConstants.VideoHeight);
+        if (frameWidth <= 0)
+        {
+            frameWidth = EmulatorConstants.VideoWidth;
+        }
+
+        if (frameHeight <= 0)
+        {
+            frameHeight = EmulatorConstants.VideoHeight;
+        }
+
+        RendererSettings rendererSettings = _settings.ToRendererSettings(_gameId);
+        double pixelAspect = _overscanFrame?.PixelAspect ?? _machine?.Frame.PixelAspect ?? 1.0;
+        ViewportRect viewport = ViewportCalculator.Compute(
+            frameWidth,
+            frameHeight,
+            Math.Max(1, (int)Math.Round(width)),
+            Math.Max(1, (int)Math.Round(height)),
+            rendererSettings,
+            pixelAspect);
+        double normalizedX = viewport.Width > 0
+            ? Math.Clamp((position.X - viewport.X) / viewport.Width, 0.0, 1.0)
+            : 0.0;
+        double normalizedY = viewport.Height > 0
+            ? Math.Clamp((position.Y - viewport.Y) / viewport.Height, 0.0, 1.0)
+            : 0.0;
         (int screenX, int screenY) = _settings.MapPointer(
-            position.X / width,
-            position.Y / height,
+            normalizedX,
+            normalizedY,
             frameWidth,
             frameHeight);
         var deltaX = 0;
         var deltaY = 0;
         if (_lastPointerPosition is { } last)
         {
-            deltaX = (int)Math.Round(
-                (position.X - last.X) * frameWidth / width * _settings.PointerScale);
-            deltaY = (int)Math.Round(
-                (position.Y - last.Y) * frameHeight / height * _settings.PointerScale);
+            double scaleX = viewport.Width > 0 ? (double)frameWidth / viewport.Width : 1.0;
+            double scaleY = viewport.Height > 0 ? (double)frameHeight / viewport.Height : 1.0;
+            deltaX = (int)Math.Round((position.X - last.X) * scaleX * _settings.PointerScale);
+            deltaY = (int)Math.Round((position.Y - last.Y) * scaleY * _settings.PointerScale);
         }
 
         _lastPointerPosition = position;
@@ -7530,6 +7701,7 @@ public partial class MainWindow : Window, IDisposable
 
         if (_runner.Rewind(frames))
         {
+            _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
             _runner.Invoke(() => _achievements?.ResetRuntime());
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
             ShowOsd($"Rewound to frame {_machine.FramesExecuted}");
@@ -7684,37 +7856,15 @@ public partial class MainWindow : Window, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_shuttingDown)
+        if (_disposed)
         {
             return;
         }
 
-        _shuttingDown = true;
+        _disposed = true;
         try
         {
-            _libraryScanCts?.Cancel();
-            _coverCts?.Cancel();
-            _coverCts?.Dispose();
-            _coverCts = null;
-            _coverService.Dispose();
-            _logTimer.Stop();
-            _movieTimer?.Stop();
-            StopAudioRecording();
-            StopGifRecording();
-            StopMovie(save: true);
-            _runner?.Dispose();
-            _runner = null;
-            _achievements?.Dispose();
-            _achievements = null;
-            _disc?.Dispose();
-            _cpuTimer?.Stop();
-            _cpuTimer = null;
-            _cpuVideo?.Dispose();
-            _cpuVideo = null;
-            _nvramStore.Dispose();
-            _audio?.Dispose();
-            _gamepad?.Dispose();
-            ClearLibraryItems();
+            Shutdown();
         }
         catch (Exception exception)
         {

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using FiveDo.Core;
 
@@ -111,14 +110,6 @@ internal sealed class RecordingFrameSink : IFrameSink
     public void OnFrameTrigger()
     {
         TriggerCount++;
-    }
-}
-
-internal sealed class ZeroPbusSource : IPbusSource
-{
-    public int GetPbusData(Span<byte> destination)
-    {
-        return 0;
     }
 }
 

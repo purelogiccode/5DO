@@ -56,7 +56,7 @@ internal static class GlBackendOption
     /// <summary>Gets the Avalonia rendering-mode preference list for a backend.</summary>
     /// <param name="backend">Requested backend.</param>
     /// <returns>The ordered rendering modes.</returns>
-    public static global::Avalonia.Win32RenderingMode[] ToRenderingModes(GlBackend backend)
+    internal static global::Avalonia.Win32RenderingMode[] ToRenderingModes(GlBackend backend)
     {
         return backend switch
         {

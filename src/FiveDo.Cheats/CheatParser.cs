@@ -24,7 +24,7 @@ namespace FiveDo.Cheats;
 /// </remarks>
 internal static class CheatParser
 {
-    public static CheatProgram Parse(string code)
+    internal static CheatProgram Parse(string code)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
         var statements = new List<CheatStatement>();
@@ -32,7 +32,7 @@ internal static class CheatParser
         {
             var tokens = Lex(part);
             var parser = new StatementParser(tokens, part);
-            statements.Add(parser.ParseStatement());
+            statements.AddRange(parser.ParseLine());
             parser.ExpectEnd();
         }
 
@@ -51,14 +51,9 @@ internal static class CheatParser
         foreach (var line in normalized.Split('\n'))
         {
             var withoutComment = StripComment(line);
-            foreach (var part in withoutComment.Split(
-                ';',
-                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            if (withoutComment.Length > 0)
             {
-                if (part.Length > 0)
-                {
-                    yield return part;
-                }
+                yield return withoutComment;
             }
         }
     }
@@ -147,7 +142,7 @@ internal static class CheatParser
                 }
             }
 
-            if (character is '(' or ')' or '=' or '<' or '>')
+            if (character is '(' or ')' or '=' or '<' or '>' or ';')
             {
                 tokens.Add(new Token(TokenKind.Symbol, character.ToString(), 0, position));
                 index++;
@@ -245,13 +240,36 @@ internal static class CheatParser
 
         private Token Current => _tokens[_index];
 
+        public List<CheatStatement> ParseLine()
+        {
+            var statements = new List<CheatStatement>();
+            while (Current.Kind != TokenKind.End)
+            {
+                statements.Add(ParseStatement());
+                if (!MatchSymbol(";"))
+                {
+                    break;
+                }
+            }
+
+            return statements;
+        }
+
         public CheatStatement ParseStatement()
         {
             if (MatchIdentifier("if"))
             {
                 CheatCondition condition = ParseCondition();
                 ExpectIdentifier("then");
-                return new CheatConditionalStatement(condition, ParseStatement());
+                var actions = new List<CheatStatement> { ParseStatement() };
+                while (MatchSymbol(";") && Current.Kind != TokenKind.End)
+                {
+                    actions.Add(ParseStatement());
+                }
+
+                return new CheatConditionalStatement(
+                    condition,
+                    actions.Count == 1 ? actions[0] : new CheatSequenceStatement(actions));
             }
 
             if (MatchIdentifier("write"))

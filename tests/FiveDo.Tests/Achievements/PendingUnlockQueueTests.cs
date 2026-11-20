@@ -88,6 +88,29 @@ public sealed class PendingUnlockQueueTests
     }
 
     [Fact]
+    public void DoesNotQuarantineOnATransientReadFailure()
+    {
+        string directory = CreateDirectory();
+        string path = Path.Combine(directory, "pending.json");
+        try
+        {
+            File.WriteAllText(path, "not json", Encoding.UTF8);
+            using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var queue = new PendingUnlockQueue(path);
+                Assert.Equal(0, queue.Count);
+            }
+
+            Assert.True(File.Exists(path));
+            Assert.False(File.Exists(path + ".bad"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void QuarantinesInvalidChecksum()
     {
         string directory = CreateDirectory();

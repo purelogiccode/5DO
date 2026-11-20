@@ -60,7 +60,9 @@ public sealed class LatencyTests
         runner.RunAhead = depth;
 
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => presented.Count >= 10, TimeSpan.FromSeconds(5)));
+        Assert.True(
+            SpinWait.SpinUntil(() => presented.Count >= 10, TimeSpan.FromSeconds(5)),
+            $"presented={presented.Count} frames={runner.Frames} presentedFrames={runner.PresentedFrames}");
         runner.Pause();
 
         long displayed = runner.Frames;
