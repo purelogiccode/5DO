@@ -884,7 +884,8 @@ remains unsigned.
   `disc audio` for extracting Red Book tracks to WAV from an image or a host drive,
   makes `disc verify` print progress and honor mixed-mode track totals, and records the
   1,366-CHD/496-title optical sweep, 26-case BIOS matrix, and issue #8 physical CD-R
-  hash match. Suite 2,579/2,579.
+  hash match. Suite 2,579/2,579; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44962202917>.
 - **v1.16.0 (2026-11-21):** physical CD-DA and disc read-error release -
   `PhysicalDiscSource` exposes the host drive TOC through `ITrackedDiscSource`, raw
   Red Book frames use `IOCTL_CDROM_RAW_READ`/`CDROMREADAUDIO`, and mixed-mode CD-DA end

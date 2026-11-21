@@ -75,11 +75,14 @@ the burn contains no Red Book audio, even if the game has data-streamed music.
   `dotnet format --verify-no-changes`, and `jb inspectcode` at warning severity.
 - CI covers Windows, Linux, and macOS, the NativeAOT apphosts, trimmed publishes, Linux
   packages, and all five bundles.
-- Windows x64 bundle: `selftest` 15/15 and `FRONTEND SMOKE OK 1.16.1`.
-- Linux AppImage/tarball: FUSE or extract-and-run, frontend smoke, detached `.asc`, and
-  `AppImageUpdate` resolution.
-- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; the five
-  bundles match `SHA256SUMS.txt`.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44962202917> passed all five bundle
+  jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
+  downloaded bundles match `SHA256SUMS.txt`.
+- Windows x64 bundle: 1.16.1, `selftest` 15/15, `FRONTEND SMOKE OK 1.16.1`, and
+  `disc audio` extracts a non-silent A&M track 2 WAV (112.33 s, peak 32312, RMS 4777.15).
+- Linux AppImage: FUSE reports 1.16.1, writes `FRONTEND SMOKE OK 1.16.1`, the detached
+  `.asc` verifies, and the embedded `.upd_info`/`.zsync` target the versioned image.
 
 ## Known issues
 

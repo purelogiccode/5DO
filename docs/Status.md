@@ -11,7 +11,14 @@ errors, and a 26-case BIOS matrix. The issue #8 reporter's Way of the Warrior CD
 157,996/157,996 sectors with hash `0x84b2bef01d157a9f`, matching the CHD; that burn is
 data-only and has no CD-DA tracks. The FZ-10 audio-only player transport remains SYS-01.
 The suite is **2,579/2,579**; build, `dotnet format`, and `jb inspectcode` are clean.
-Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
+Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44962202917> passed all five bundle
+jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
+downloaded bundles match `SHA256SUMS.txt`; the win-x64 bundle reports 1.16.1, `selftest`
+15/15, writes `FRONTEND SMOKE OK 1.16.1`, and `disc audio` extracts a non-silent A&M
+track. The x64 AppImage runs through FUSE, reports 1.16.1, passes the smoke, verifies
+with its detached `.asc`, and its embedded `.upd_info`/`.zsync` target the versioned
+1.16.1 image. Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
 [Compatibility.md](Compatibility.md) §10.8, and [KnownIssues.md](KnownIssues.md).
 
 **2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships

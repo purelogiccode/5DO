@@ -66,12 +66,16 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       reports no CD-DA tracks.
 - [x] Full suite green (**2,579 tests**), `dotnet build` 0 warnings/0 errors,
       `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
-- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+- [x] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
       and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
       win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.16.1`.
-- [ ] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
+      Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release
+      run <https://github.com/purelogiccode/5DO/actions/runs/44962202917>.
+- [x] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
       passes the frontend smoke, resolves the 1.16.1 `.zsync`, and its detached `.asc`
-      verifies with the release key.
+      verifies with the release key. FUSE reports 1.16.1 and writes
+      `FRONTEND SMOKE OK 1.16.1`; the `.upd_info` uses `gh-releases-zsync` and the
+      `.zsync` URL points at the versioned 1.16.1 AppImage.
 
 ## 1.16.0 physical CD-DA and disc read-error gate
 

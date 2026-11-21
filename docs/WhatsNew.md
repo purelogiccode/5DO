@@ -64,10 +64,13 @@ player's inert transport (SYS-01).
 
 - 2,579/2,579 tests, build 0 warnings/0 errors, `dotnet format`, and `jb inspectcode`
   clean.
-- Windows x64 bundle `selftest` 15/15 and `FRONTEND SMOKE OK 1.16.1`.
-- Linux AppImage/tarball smoke, detached `.asc`, and `AppImageUpdate` resolution.
-- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; the five
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44962202917>. The five downloaded
   bundles match `SHA256SUMS.txt`.
+- Windows x64 bundle reports 1.16.1, `selftest` 15/15,
+  `FRONTEND SMOKE OK 1.16.1`, and a non-silent A&M track 2 WAV.
+- Linux AppImage: FUSE 1.16.1, frontend smoke, detached `.asc`, and versioned
+  `.zsync`/`.upd_info`.
 
 ## Known issues
 
