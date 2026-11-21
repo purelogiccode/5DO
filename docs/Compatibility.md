@@ -941,7 +941,9 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 The reporter's CD-R boot closes the SYS-21 `Done when` line. Physical CD-DA is
 implemented from the drive TOC and raw-audio requests; the Windows TOC and cooked read
 paths were validated on a mounted virtual optical drive, but a real mixed-mode audio CD
-has not yet been exercised on this development host (it has no optical drive).
+has not yet been exercised on this development host (it has no optical drive). The
+v1.16.0 release workflow repeated the Windows x64 (CLI + desktop smoke) and Linux x64
+(CLI + desktop smoke, `.deb`/`.rpm` install) checks; all passed.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

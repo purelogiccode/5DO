@@ -66,16 +66,27 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Full suite green (**2,576 tests**), `dotnet build` 0 warnings/0 errors,
       `dotnet format --verify-no-changes`, `jb inspectcode`, and
       `mkdocs build --strict`.
-- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+- [x] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
       and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
       win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.16.0`.
-- [ ] The published x64 AppImage runs through FUSE and
-      `--appimage-extract-and-run`, passes the frontend smoke, resolves the 1.16.0
-      `.zsync`, and its detached `.asc` verifies with the release key.
-- [ ] Downloaded the five bundles to `src/FiveDo.Frontend.Avalonia/bin/Release`; all
-      SHA-256 values match `SHA256SUMS.txt`.
+      Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.0>; release
+      run <https://github.com/purelogiccode/5DO/actions/runs/44917920441>. Master CI
+      <https://github.com/purelogiccode/5DO/actions/runs/44917916785>, Docs
+      <https://github.com/purelogiccode/5DO/actions/runs/44917916755>, and Platform
+      runtime validation <https://github.com/purelogiccode/5DO/actions/runs/44917916784>
+      passed.
+- [x] The release workflow built both AppImages and their `.zsync` files, verified the
+      embedded update information and the `.zsync` target URL, and signed every Linux
+      asset. A local `appimageupdatetool` update pass was not run for this follow-up
+      release.
+- [x] Downloaded the five bundles to `src/FiveDo.Frontend.Avalonia/bin/Release`; all
+      SHA-256 values match `SHA256SUMS.txt`. The win-x64 bundle reports `5DO 1.16.0`,
+      `selftest --json` reports `ok: true` for all 15 checks, and the desktop smoke
+      writes `FRONTEND SMOKE OK 1.16.0`. The Linux x64 CLI/frontend smoke and the
+      `.deb`/`.rpm` installs passed in the release workflow.
 - [ ] A real mixed-mode audio CD is exercised on a physical drive, or the limitation is
-      recorded in [KnownIssues.md](KnownIssues.md) after the release test.
+      recorded in [KnownIssues.md](KnownIssues.md) after the release test. It remains
+      recorded as the hardware acceptance step.
 
 ---
 

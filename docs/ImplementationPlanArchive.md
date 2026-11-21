@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.15.0.
+> history through v1.16.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -878,8 +878,17 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.15.0)
+## 14. Release history (v1.9.1 - v1.16.0)
 
+- **v1.16.0 (2026-11-21):** physical CD-DA and disc read-error release -
+  `PhysicalDiscSource` exposes the host drive TOC through `ITrackedDiscSource`, raw
+  Red Book frames use `IOCTL_CDROM_RAW_READ`/`CDROMREADAUDIO`, and mixed-mode CD-DA end
+  addressing follows the physical track table. A failed host sector read (issue #8's CRC
+  error at sector 103777) is zero-filled, reported as MEI receive-ECC, and logged while
+  the transfer continues; screenshot and save-slot thumbnail writes are guarded.
+  Suite 2,576/2,576; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44917920441>. A real mixed-mode
+  audio CD remains the hardware check.
 - **v1.15.0 (2026-11-21):** Steam Deck, Arcade CRT, and optical-drive release - the
   welcome guide detects Deck/SteamOS/gamescope and uses a 960x680 layout with the BIOS
   folder, Scan, and Open Folder; `ArcadeCrt` adds thick scanlines, an RGB triad mask,

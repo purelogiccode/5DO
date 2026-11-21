@@ -85,15 +85,22 @@ thread. Native screenshots and save-slot thumbnails share the guard.
   transfer, boot-probe fallback), and the TOC/coverage logic by
   `PhysicalDiscTocTests`.
 - CI runs on Windows, Linux, and macOS, including the NativeAOT apphosts, trimmed
-  publishes, Linux packages, and all five bundles.
+  publishes, Linux packages, and all five bundles. Master CI
+  <https://github.com/purelogiccode/5DO/actions/runs/44917916785>, Docs
+  <https://github.com/purelogiccode/5DO/actions/runs/44917916755>, and Platform runtime
+  validation <https://github.com/purelogiccode/5DO/actions/runs/44917916784> passed.
 - Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.0>; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/REPLACE_WITH_RUN> passed all five
-  bundle jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
-  downloaded bundles match `SHA256SUMS.txt`.
-- Windows x64 bundle: `5DO 1.16.0`, `selftest` 15/15, 600-frame hash `0x110E7DC5` and
-  3,000-frame hash `0xAD4F370C`, and `FRONTEND SMOKE OK 1.16.0`.
-- Linux x64 tarball: `5DO 1.16.0`, `selftest` 15/15, frontend smoke on hardware
-  OpenGL 4.2, and the same frame hashes.
+  <https://github.com/purelogiccode/5DO/actions/runs/44917920441> passed all five bundle
+  jobs, both AppImage/Flatpak package jobs, signing, and the publish job.
+- The five downloaded bundles match `SHA256SUMS.txt`.
+- Windows x64 bundle: `5DO 1.16.0`, `selftest --json` reports `ok: true` for all 15
+  checks, and the desktop smoke writes `FRONTEND SMOKE OK 1.16.0`
+  (`locale=en`, `firstMenuHeader=File`, `windowState=Normal`).
+- Linux x64 bundle: the release workflow's CLI and frontend smoke passed, and the
+  `.deb`/`.rpm` installs were smoke-tested in CI. The Linux x64 tarball and both
+  AppImages are GPG-signed with the release key.
+- AppImage `.zsync`/embedded update metadata was built and signed by CI; a local
+  `appimageupdatetool` pass was not run this cycle.
 
 ## Still in 1.15.0
 

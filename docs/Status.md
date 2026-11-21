@@ -11,9 +11,15 @@ the volume-header data limit. A failed host read (the issue #8 CRC report at sec
 103777) is zero-filled, reported to the guest as MEI receive-ECC, and logged while the
 transfer continues; the boot-time volume-header probe and CD-DA sample reads share the
 guard. The suite is **2,576/2,576**; build, `dotnet format`, and `jb inspectcode` are
-clean. A real mixed-mode audio CD remains the hardware check because the development
-host has no optical drive; the Windows TOC and cooked paths were validated on a mounted
-virtual optical drive. Evidence is recorded in
+clean. Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.0>;
+release run <https://github.com/purelogiccode/5DO/actions/runs/44917920441> passed all
+five bundle jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The
+five downloaded bundles match `SHA256SUMS.txt`. The win-x64 bundle reports 1.16.0,
+passes `selftest --json` with all 15 checks, and writes `FRONTEND SMOKE OK 1.16.0`; the
+Linux x64 CLI/frontend smoke and the `.deb`/`.rpm` installs passed in CI. A real
+mixed-mode audio CD remains the hardware check because the development host has no
+optical drive; the Windows TOC and cooked paths were validated on a mounted virtual
+optical drive. Evidence is recorded in
 [ReleaseNotes-1.16.0.md](ReleaseNotes-1.16.0.md), [Compatibility.md](Compatibility.md)
 §10.7, and [KnownIssues.md](KnownIssues.md).
 
