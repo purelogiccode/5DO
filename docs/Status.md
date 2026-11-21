@@ -1,5 +1,19 @@
 # Project Status and Next Steps
 
+**2026-11-21, v1.16.1 release:** the optical verification and CD-DA diagnostics patch
+release adds `disc audio <disc> --track N --out trackN.wav` for extracting Red Book
+tracks from a CUE/CHD image or a host optical drive, with automatic first-audio selection
+and a clear data-only message. `disc verify` now prints opening/progress lines on
+non-JSON runs and uses the native track total so mixed-mode audio does not report a short
+disc. The release also records the full optical sweep: 1,366 CHDs / 496 unique game IDs
+opened and track-probed, 496 unique-title representatives fully sector-verified with 0
+errors, and a 26-case BIOS matrix. The issue #8 reporter's Way of the Warrior CD-R read
+157,996/157,996 sectors with hash `0x84b2bef01d157a9f`, matching the CHD; that burn is
+data-only and has no CD-DA tracks. The FZ-10 audio-only player transport remains SYS-01.
+The suite is **2,579/2,579**; build, `dotnet format`, and `jb inspectcode` are clean.
+Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
+[Compatibility.md](Compatibility.md) §10.8, and [KnownIssues.md](KnownIssues.md).
+
 **2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships
 CD-DA playback from a host optical drive, guest-reported disc read errors instead of a
 faulted core, and guarded screenshot/thumbnail writes. `PhysicalDiscSource` implements

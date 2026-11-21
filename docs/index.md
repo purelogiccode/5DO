@@ -16,15 +16,15 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.16.0 physical CD-DA and disc read-error release"
-    5DO is at v1.16.0. A host optical drive's table of contents now supplies data and
-    audio tracks, and CD-DA plays from a burned mixed-mode CD through the 3DO player or a
-    game. A damaged or failing disc read, such as a CRC error on a scratched CD-R, is
-    reported to the guest instead of stopping the core, and a failed screenshot or
-    save-slot thumbnail write no longer crashes the UI. `--high-res` remains a
-    presentation-only 2x upscale, and retail Gamegun titles keep a joypad on port 1.
-    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
-    **Alt+Enter** toggles fullscreen.
+!!! important "v1.16.1 optical verification and CD-DA diagnostics release"
+    5DO is at v1.16.1. `disc audio` extracts Red Book tracks to WAV from a CUE/CHD image
+    or a host optical drive, so CD-DA can be checked directly without the FZ-10 BIOS
+    player. `disc verify` prints progress and honors mixed-mode track totals. The
+    release records a 1,366-image/496-title optical sweep, a 26-case BIOS matrix, and the
+    issue #8 physical CD-R hash match. `--high-res` remains a presentation-only 2x
+    upscale, and retail Gamegun titles keep a joypad on port 1. **P** pauses, **Space**
+    toggles fast-forward, **F1** connects the Gamegun, and **Alt+Enter** toggles
+    fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
     DMG. GPG-signed Linux artifacts use the keyring fingerprint
@@ -85,21 +85,25 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.16.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.16.1.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-21, v1.16.0 physical CD-DA and disc read-error release (GitHub Releases).**
+**2026-11-21, v1.16.1 optical verification and CD-DA diagnostics release (GitHub Releases).**
 
 - **2,579 tests** are present in the current test assembly.
+- **Direct CD-DA extraction:** `disc audio <disc> --track N --out trackN.wav` writes a
+  44.1 kHz stereo WAV from a CUE/CHD audio track or a host optical drive. Without
+  `--track`, it selects the first audio track; a data-only disc explains that it has no
+  CD-DA. This bypasses the FZ-10 player's inert transport (SYS-01).
 - **Optical collection sweep:** all **1,366** local CHDs opened and every track's first,
   middle, and last native sector read; **496 unique-title representatives**, including
   all three audio-only discs, were fully sector-verified with **0 read errors**. A
   26-case BIOS matrix (FZ-1/FZ-10/GoldStar/Sanyo, FZ-10J+Kanji, FZ-10E Anvil,
   patched FZ-10 + `3do_arcade_saot`) booted every test. Non-JSON `disc verify` now
-  prints progress, and the FZ-10 audio-only transport remains the documented SYS-01
-  limitation.
+  prints progress, and the issue #8 physical CD-R read 157,996/157,996 sectors with hash
+  `0x84b2bef01d157a9f`, matching the CHD.
 - **Physical CD-DA:** a host drive's table of contents is exposed through
   `ITrackedDiscSource`, and raw 2352-byte Red Book frames use
   `IOCTL_CDROM_RAW_READ` (Windows) or `CDROMREADAUDIO` (Linux). CD-DA end addressing
@@ -200,7 +204,7 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.16.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.16.0)
+- v1.16.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.16.1)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See

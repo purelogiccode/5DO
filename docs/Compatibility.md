@@ -2,12 +2,12 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-21):** v1.16.0 adds physical CD-DA playback from a host
-optical drive and turns failed disc reads into guest-reported errors instead of a faulted
-core; screenshot and thumbnail writes are guarded as well. It retains the 1.15.0 Steam
-Deck/SteamOS first-run setup, `ArcadeCrt` filter, Windows optical-drive discovery, JIT
-soft-reset, and single-pad PBUS fixes, and does not change the default 320x240
-compatibility path or the documented title matrix.
+**Current release (2026-11-21):** v1.16.1 adds `disc audio` CD-DA extraction and
+`disc verify` progress/mixed-mode totals, and records the 1,366-image/496-title optical
+sweep and 26-case BIOS matrix. It retains the 1.16.0 physical CD-DA and read-error work,
+the 1.15.0 Steam Deck/SteamOS first-run setup, `ArcadeCrt` filter, Windows optical-drive
+discovery, JIT soft-reset, and single-pad PBUS fixes, and does not change the default
+320x240 compatibility path or the documented title matrix.
 
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven

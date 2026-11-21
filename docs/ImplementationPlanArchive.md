@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.16.0.
+> history through v1.16.1.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -878,8 +878,13 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.16.0)
+## 14. Release history (v1.9.1 - v1.16.1)
 
+- **v1.16.1 (2026-11-21):** optical verification and CD-DA diagnostics patch - adds
+  `disc audio` for extracting Red Book tracks to WAV from an image or a host drive,
+  makes `disc verify` print progress and honor mixed-mode track totals, and records the
+  1,366-CHD/496-title optical sweep, 26-case BIOS matrix, and issue #8 physical CD-R
+  hash match. Suite 2,579/2,579.
 - **v1.16.0 (2026-11-21):** physical CD-DA and disc read-error release -
   `PhysicalDiscSource` exposes the host drive TOC through `ITrackedDiscSource`, raw
   Red Book frames use `IOCTL_CDROM_RAW_READ`/`CDROMREADAUDIO`, and mixed-mode CD-DA end

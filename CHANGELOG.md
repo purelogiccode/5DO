@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.16.0, the physical CD-DA and
-disc read-error release.
+All notable changes are recorded here. The project is at v1.16.1, the optical
+verification and CD-DA diagnostics patch release.
 
-## [Unreleased]
+## [1.16.1] - 2026-11-21
 
 ### Added
 

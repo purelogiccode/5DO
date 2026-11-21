@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.16.1" date="2026-11-21">
+      <description>
+        <p>
+          CD-DA extraction to WAV with `disc audio`, `disc verify` progress and
+          mixed-mode track totals, and the optical collection/BIOS verification
+          evidence. Retains physical CD-DA, disc read-error, Steam Deck, Arcade CRT,
+          and optical-drive fixes.
+        </p>
+      </description>
+    </release>
     <release version="1.16.0" date="2026-11-21">
       <description>
         <p>

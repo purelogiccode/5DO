@@ -1,11 +1,13 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.16.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.16.1 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.16.0 adds physical CD-DA playback from a host
-optical drive and reports failed disc reads to the guest instead of faulting the core,
-with guarded screenshot and save-slot thumbnail writes. v1.15.0 added Steam Deck/SteamOS
+v1.2.x. macOS is published as a DMG. v1.16.1 adds `disc audio` CD-DA extraction and
+`disc verify` progress/mixed-mode totals, and records the optical collection/BIOS sweep.
+v1.16.0 added physical CD-DA playback from a host optical drive and reports failed disc
+reads to the guest instead of faulting the core, with guarded screenshot and save-slot
+thumbnail writes. v1.15.0 added Steam Deck/SteamOS
 first-run setup and the Arcade CRT filter, and fixed physical optical-drive discovery, a
 JIT soft-reset state overwrite, and single-pad PBUS input. v1.14.2 was the packaging and
 diagnostics bug-fix release for the Windows app-local MSVC runtime, AppImage update
@@ -45,6 +47,31 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.16.1 optical verification and CD-DA diagnostics gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.16.1`.
+- [x] `disc audio <disc> --track N --out trackN.wav` extracts a CD-DA track to a 44.1 kHz
+      stereo WAV from a CUE/CHD image or a host drive. Omitting `--track` selects the
+      first audio track; data-only discs explain that they have no CD-DA. `CliProcessTests`
+      covers both the audio extraction and the data-only message.
+- [x] Non-JSON `disc verify` prints opening/progress lines; `--json` stays clean. The
+      verifier uses `ITrackedDiscSource.TotalSectorCount` for mixed-mode discs.
+- [x] Optical collection sweep: 1,366 CHDs opened and track-probed, 496 unique-title
+      representatives fully sector-verified with 0 errors, and a 26-case BIOS matrix at
+      3,000 frames.
+- [x] Issue #8 physical CD-R: `disc verify E:` read 157,996/157,996 sectors, hash
+      `0x84b2bef01d157a9f`, matching the CHD. The burn is data-only; `disc audio` correctly
+      reports no CD-DA tracks.
+- [x] Full suite green (**2,579 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
+- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+      and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
+      win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.16.1`.
+- [ ] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
+      passes the frontend smoke, resolves the 1.16.1 `.zsync`, and its detached `.asc`
+      verifies with the release key.
 
 ## 1.16.0 physical CD-DA and disc read-error gate
 

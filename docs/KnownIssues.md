@@ -1,10 +1,11 @@
 # Known Issues
 
-**Snapshot:** 2026-11-21, v1.16.0. The 1.16.0 release adds physical CD-DA playback from a
-host optical drive and turns failed disc reads into guest-reported errors instead of a
-faulted core; screenshot and thumbnail writes are guarded too. It retains the 1.15.0
-Steam Deck/SteamOS first-run setup, Arcade CRT filter, Windows physical optical-drive
-discovery, JIT soft-reset, and single-pad PBUS fixes. The 1.14.2 release
+**Snapshot:** 2026-11-21, v1.16.1. The 1.16.1 release adds `disc audio` CD-DA extraction
+and `disc verify` progress/mixed-mode totals, and records the 1,366-image/496-title
+optical sweep and 26-case BIOS matrix. It retains the 1.16.0 physical CD-DA and
+read-error work, the 1.15.0 Steam Deck/SteamOS first-run setup, Arcade CRT filter,
+Windows physical optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes. The
+1.14.2 release
 fixed the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog HTTP
 fallback, and expected-condition bug reports. The 1.14.1 deep-review release fixed CHD
 Mode 2 sectors, crop dimensions, persistence, and shutdown races. The list below remains
