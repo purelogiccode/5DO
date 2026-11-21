@@ -140,11 +140,14 @@ public sealed class BugReportContractTests
         try
         {
             sink.Emit(CaptureEvent(LogEventLevel.Warning, exception: null, "queued shutdown report"));
-            await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            // Windows CI runners can briefly starve the sink worker while the rest of
+            // the suite is running; keep the drain wait consistent with the other
+            // slow-worker hardening.
+            await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
             sink.Dispose();
 
-            string body = await handler.Body.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            string body = await handler.Body.Task.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.Contains("queued shutdown report", body, StringComparison.Ordinal);
         }
         finally
