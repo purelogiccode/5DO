@@ -97,9 +97,21 @@ unsupported; use a BIN/CUE or CHD image for audio.
   `dotnet format --verify-no-changes`, and `jb inspectcode` at warning severity.
 - CI runs on Windows, Linux, and macOS, including the NativeAOT apphosts, trimmed
   publishes, Linux packages, and all five bundles.
-- Windows x64 bundle: `selftest`, CLI smoke, and frontend `--smoke-test` report 1.15.0.
-- Linux x64 AppImage: FUSE and `--appimage-extract-and-run`, frontend smoke, detached
-  `.asc` verification, and `AppImageUpdate` resolution of the 1.15.0 release.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.15.0>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44905930950> passed all five bundle
+  jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
+  downloaded bundles match `SHA256SUMS.txt`.
+- Windows x64 bundle: `5DO 1.15.0`, `selftest` 15/15, 600-frame Theme Park hash
+  `0x110E7DC5` / PC `0x596C`, 3,000-frame hash `0xAD4F370C` / PC `0x7AEF8`, and
+  `FRONTEND SMOKE OK 1.15.0`.
+- Linux x64 tarball: `5DO 1.15.0`, `selftest` 15/15, frontend smoke on hardware
+  OpenGL 4.2, and the same 600/3,000-frame hashes.
+- Linux x64 AppImage: FUSE and `--appimage-extract-and-run` report 1.15.0, frontend
+  smoke passes, the detached `.asc` verifies, `appimageupdatetool -j` reports
+  "AppImage already up to date", and the `.zsync`/embedded update metadata target the
+  versioned 1.15.0 image. Updating the published 1.14.2 image reported "Update
+  available"; `-d` fetched 52,845,048 bytes, the resulting 1.15.0 image hash matches
+  `SHA256SUMS.txt`, and it passed the 1.15.0 frontend smoke.
 - Physical CD-R boot: issue #8 reporter, Windows 11 x64 + Pioneer BD-RW BDR-S13JX.
 
 ## Still in 1.14.2

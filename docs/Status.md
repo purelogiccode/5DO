@@ -7,10 +7,21 @@ and the software fallback, and the issue #8 optical-drive discovery fix. It also
 the JIT soft-reset state overwrite and the single-joypad PBUS packet selection, centers
 and sizes the welcome guide for its discovered-BIOS panel, and aligns the Direct3D
 Arcade CRT clamps with the other backends. The suite is **2,561/2,561**; build,
-`dotnet format`, and `jb inspectcode` are clean. The release tag is `v1.15.0`; the five
-bundles, both AppImages with `.zsync`, both Flatpaks, and the signed Linux packages are
-built from the tagged source. Release and post-release evidence is recorded in
-[ReleaseNotes-1.15.0.md](ReleaseNotes-1.15.0.md),
+`dotnet format`, and `jb inspectcode` are clean. Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.15.0>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44905930950> passed all five bundle
+jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
+downloaded bundles match `SHA256SUMS.txt`. The win-x64 bundle reports 1.15.0, passes
+`selftest` 15/15, the 600-frame Theme Park hash `0x110E7DC5` / PC `0x596C` and the
+3,000-frame hash `0xAD4F370C` / PC `0x7AEF8`, and writes
+`FRONTEND SMOKE OK 1.15.0`. The Linux x64 tarball reports 1.15.0, passes `selftest` and
+the frontend smoke on hardware OpenGL 4.2, and reproduces the same 600/3,000-frame
+hashes. The x64 AppImage runs through FUSE and `--appimage-extract-and-run`, reports
+1.15.0, passes the frontend smoke, and its detached `.asc` verifies with the release
+key. `appimageupdatetool -j` on the published 1.14.2 AppImage reported an update
+available; `-d` fetched 52,845,048 bytes and produced a 1.15.0 AppImage whose SHA-256
+matches `SHA256SUMS.txt`, and the updated image passed the 1.15.0 smoke. Evidence is
+recorded in [ReleaseNotes-1.15.0.md](ReleaseNotes-1.15.0.md),
 [Compatibility.md](Compatibility.md) §10.7, and [KnownIssues.md](KnownIssues.md).
 
 **2026-11-21, v1.14.2 release:** the packaging and diagnostics bug-fix release ships the

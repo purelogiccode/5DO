@@ -69,9 +69,16 @@ The `.asc` files are signatures, the `.zsync` files feed `AppImageUpdate`, and
   `dotnet format --verify-no-changes`, and `jb inspectcode` at warning severity.
 - CI covers Windows, Linux, and macOS, the NativeAOT apphosts, trimmed publishes, Linux
   packages, and all five bundles.
-- Windows x64 bundle: `selftest`, CLI smoke, and frontend smoke report 1.15.0.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.15.0>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44905930950>.
+- Windows x64 bundle: `selftest` 15/15, 600-frame hash `0x110E7DC5` / PC `0x596C`,
+  3,000-frame hash `0xAD4F370C` / PC `0x7AEF8`, and `FRONTEND SMOKE OK 1.15.0`.
+- Linux x64 tarball: `selftest`, frontend smoke on hardware OpenGL 4.2, and matching
+  600/3,000-frame hashes.
 - Linux x64 AppImage: FUSE and `--appimage-extract-and-run`, frontend smoke, detached
-  `.asc` verification, and `AppImageUpdate` resolution of the 1.15.0 release.
+  `.asc`, and `appimageupdatetool -j` reporting the 1.15.0 image is up to date. The
+  published 1.14.2 image updates to 1.15.0 (`-d` fetched 52,845,048 bytes), and the
+  result hash matches `SHA256SUMS.txt`.
 - Physical CD-R boot: issue #8 reporter, Windows 11 x64 + Pioneer BD-RW BDR-S13JX.
 
 ## Still in 1.14.2

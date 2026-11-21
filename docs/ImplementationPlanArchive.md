@@ -888,7 +888,10 @@ remains unsigned.
   through `IOCTL_STORAGE_CHECK_VERIFY2` and `\\.\CdRomN` when the 3DO filesystem is not
   mountable (issue #8, CD-R boot closes SYS-21); JIT soft resets keep their reset state,
   and one active joypad with inactive `None` ports uses the legacy 16-byte PBUS packet.
-  Suite 2,561/2,561.
+  Suite 2,561/2,561; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44905930950>. The published x64
+  AppImage updated from 1.14.2 with 52,845,048 fetched bytes and matched the 1.15.0
+  `SHA256SUMS.txt` hash.
 - **v1.14.2 (2026-11-21):** packaging and diagnostics bug-fix release - Windows bundles
   ship the app-local MSVC runtime OpenAL Soft needs, AppImage update metadata uses
   `gh-releases-zsync` with a versioned `.zsync` target, cover-catalog HTTP failures fall

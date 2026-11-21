@@ -71,12 +71,21 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       the Direct3D 11 Arcade CRT scanline/mask clamps match OpenGL and Vulkan.
 - [x] Full suite green (**2,561 tests**), `dotnet build` 0 warnings/0 errors,
       `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
-- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+- [x] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
       and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
       win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.15.0`.
-- [ ] The published x64 AppImage runs through FUSE and
+      Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.15.0>; release
+      run <https://github.com/purelogiccode/5DO/actions/runs/44905930950>.
+- [x] The published x64 AppImage runs through FUSE and
       `--appimage-extract-and-run`, passes the frontend smoke, resolves the 1.15.0
       `.zsync`, and its detached `.asc` verifies with the release key.
+      `appimageupdatetool -j` reports "AppImage already up to date"; `-d` verified the
+      1.15.0 target checksum. The embedded `.upd_info` points at
+      `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync`,
+      and the `.zsync` URL points at the versioned 1.15.0 AppImage. Updating the
+      published 1.14.2 image reported "Update available"; `-d` fetched 52,845,048
+      bytes, the resulting 1.15.0 image hash matches `SHA256SUMS.txt`, and it passed
+      the 1.15.0 frontend smoke.
 
 ## 1.14.2 packaging and diagnostics gate
 
