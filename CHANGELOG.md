@@ -3,6 +3,18 @@
 All notable changes are recorded here. The project is at v1.16.0, the physical CD-DA and
 disc read-error release.
 
+## [Unreleased]
+
+### Fixed
+
+- **`disc verify` shows progress and handles mixed-mode audio correctly.** A non-JSON
+  verification prints the opening path, total sectors, and periodic track/sector/MiB
+  progress to stderr, so a slow physical drive no longer looks hung. The verifier now
+  compares against `ITrackedDiscSource.TotalSectorCount`, so audio tracks after a data
+  volume do not make a healthy disc report short. The local collection's 1,366 CHDs were
+  opened and track-probed; 496 unique-title representatives, including all three
+  audio-only discs, were fully sector-verified with 0 errors.
+
 ## [1.16.0] - 2026-11-21
 
 ### Added

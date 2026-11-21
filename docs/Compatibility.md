@@ -945,6 +945,33 @@ has not yet been exercised on this development host (it has no optical drive). T
 v1.16.0 release workflow repeated the Windows x64 (CLI + desktop smoke) and Linux x64
 (CLI + desktop smoke, `.deb`/`.rpm` install) checks; all passed.
 
+### 10.8 3DO collection optical sweep (2026-11-21, Windows x64)
+
+The local `J:\Panasonic 3DO` collection has **1,366 CHD images** and **496 unique game
+IDs**. Every image opened and every track's first, middle, and last native sector read
+successfully. One representative per unique game ID, including all three audio-only
+discs, was fully sector-verified:
+
+| Check | Result |
+|---|---|
+| Images opened / track TOC parsed | **1,366/1,366**, 0 errors |
+| Unique game IDs | **496**, all database-known |
+| Track layouts | 1,363 single-data; 3 audio-only (4, 14, and 99 tracks); no mixed-mode images |
+| First/middle/last native-sector probe | **0 errors** across every track |
+| Full native-sector verification | **496/496 unique-title representatives**, 0 read errors |
+| Audio-only full verification | A&M 102,265; Oyaji 55,745; D's Diner 96,962 sectors, all verified |
+| BIOS boot matrix | **26/26 cases** at 3,000 frames, `ok: true`, no errors |
+| US BIOSes | FZ-1, FZ-10, GoldStar, Sanyo; auto selected FZ-10 |
+| Arcade BIOSes | patched FZ-10 + `3do_arcade_saot`; Crime Patrol auto-selected patched |
+| Japan BIOSes | FZ-10J; WorldCup Super Stadium and Shiru Miru also loaded the Kanji BIOS2 |
+| PAL BIOSes | FZ-10E Anvil; auto selected Anvil |
+| Audio-only player | TOC lists tracks, transport remains STOP (SYS-01; 4DO has the same BIOS limitation) |
+
+Non-JSON `disc verify` now prints opening/progress lines to stderr; `--json` stays a
+single document. The verifier uses the native track total for mixed-mode discs, so audio
+tracks after the data volume do not make a healthy disc look short. Full suite
+**2,577/2,577**, build/format/InspectCode clean.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

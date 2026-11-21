@@ -52,6 +52,57 @@ public sealed class DiscVerifierTests
         Assert.Equal((3 * 2048) + (2 * 2352), result.BytesVerified);
     }
 
+    [Fact]
+    public void Verify_ReportsProgressAndUsesTheTrackTotalForMixedModeDiscs()
+    {
+        using var disc = new DataVolumeTrackedDisc();
+        var progress = new List<DiscVerificationProgress>();
+
+        DiscVerificationResult result = DiscVerifier.Verify(disc, progress: progress.Add);
+
+        Assert.True(result.Ok);
+        Assert.Equal(5, result.Sectors);
+        Assert.Equal(5, result.SectorsVerified);
+        Assert.Equal(2, result.Tracks);
+        Assert.Equal(0, progress[0].SectorsVerified);
+        Assert.Equal(5, progress[^1].SectorsVerified);
+        Assert.All(progress, item => Assert.Equal(5, item.TotalSectors));
+        Assert.Equal(2, progress[^1].TrackCount);
+    }
+
+    private sealed class DataVolumeTrackedDisc : ITrackedDiscSource
+    {
+        private static readonly DiscTrack[] DiscTracks =
+        [
+            new DiscTrack(1, DiscTrackKind.Data, 0, 3, 2048),
+            new DiscTrack(2, DiscTrackKind.Audio, 3, 2, 2352),
+        ];
+
+        public int SectorCount => 3;
+
+        public int SectorSize => 2048;
+
+        public IReadOnlyList<DiscTrack> Tracks => DiscTracks;
+
+        public int TotalSectorCount => 5;
+
+        public int ReadTrackSector(int lba, Span<byte> destination)
+        {
+            DiscTrack track = DiscTracks[lba < 3 ? 0 : 1];
+            destination[..track.SectorSize].Fill((byte)(lba - track.StartLba));
+            return track.SectorSize;
+        }
+
+        public void ReadSector(int lba, Span<byte> destination)
+        {
+            destination[..2048].Fill((byte)lba);
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
     private sealed class FakeDisc : IDiscSource
     {
         private readonly int _failAt;

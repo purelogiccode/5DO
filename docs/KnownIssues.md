@@ -127,6 +127,18 @@ checksums are attached, and legal/attribution sign-off is recorded.
   now a **Warning** and emulation continues. The disc's drive still spends a moment on
   its own error recovery when that sector is reached, so the Way of the Warrior FMV can
   pause briefly before continuing; a CHD/image or a clean burn avoids the pause.
+- **The local collection is clean at the image level.** All 1,366 CHDs opened and every
+  track's first/middle/last native sector read; 496 unique-title representatives,
+  including all three audio-only discs, were fully sector-verified with 0 errors. The
+  collection contains no mixed-mode data+audio images, so physical CD-DA still needs the
+  reporter's burned mixed-mode/hardware pass. A 26-case BIOS matrix (FZ-1, FZ-10,
+  GoldStar, Sanyo, FZ-10J+Kanji, FZ-10E Anvil, patched FZ-10 + `3do_arcade_saot`) booted
+  every test at 3,000 frames.
+- **Non-JSON `disc verify` now shows progress.** It prints the opening path, total
+  sectors, and periodic track/sector/MiB lines to stderr; `--json` stays a single clean
+  document. A physical disc can still take minutes because the command reads every data
+  and audio sector. The FZ-10 audio-only player transport remains inert (SYS-01); the
+  TOC and track listing work, and 4DO documents the same BIOS limitation.
 - Windows discovery no longer requires `DriveInfo.IsReady`. A 3DO disc's custom
   filesystem is not mountable by Windows, so the drive may have no ready volume or no
   drive letter even though the media is present. `GetOpticalDriveNames` opens the

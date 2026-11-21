@@ -647,6 +647,11 @@ internal static class Program
         GameRecord? gameRecord = null;
         if (discPath is not null)
         {
+            if (!options.Json)
+            {
+                Console.Error.WriteLine($"Opening disc {discPath}...");
+            }
+
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
@@ -1697,6 +1702,11 @@ internal static class Program
         GameRecord? gameRecord = null;
         if (discPath is not null)
         {
+            if (!options.Json)
+            {
+                Console.Error.WriteLine($"Opening disc {discPath}...");
+            }
+
             disc = DiscImageFactory.Open(discPath, prefetch: HasFlag(args, "--prefetch"));
             gameId = GameId.Compute(disc);
             gameRecord = GameDatabase.Default.FindByChecksum(gameId);
@@ -3356,10 +3366,50 @@ internal static class Program
         {
             ParsedOptions options = Parse(args, startIndex: 2);
             var verifyPath = options.Positional ?? throw new ArgumentException("disc verify needs a disc path.", nameof(args));
+            if (!options.Json)
+            {
+                Console.Error.WriteLine($"Opening {verifyPath}...");
+            }
+
             using IDiscSource source = DiscImageFactory.Open(verifyPath);
+            int totalSectors = source is ITrackedDiscSource trackedSource
+                ? trackedSource.TotalSectorCount
+                : source.SectorCount;
+            if (!options.Json)
+            {
+                Console.Error.WriteLine(
+                    $"Verifying {totalSectors} sectors (data and audio). This can take several minutes on a physical disc.");
+            }
+
+            var progressClock = Stopwatch.StartNew();
+            long lastProgressMs = -1000;
+            Action<DiscVerificationProgress>? progress = options.Json
+                ? null
+                : value =>
+                {
+                    long now = progressClock.ElapsedMilliseconds;
+                    if (value.SectorsVerified != 0
+                        && value.SectorsVerified != value.TotalSectors
+                        && now - lastProgressMs < 1000)
+                    {
+                        return;
+                    }
+
+                    lastProgressMs = now;
+                    int percent = value.TotalSectors > 0
+                        ? (int)Math.Min(100, ((long)value.SectorsVerified * 100) / value.TotalSectors)
+                        : 0;
+                    string track = value.TrackNumber > 0
+                        ? $", track {value.TrackNumber}/{value.TrackCount}"
+                        : string.Empty;
+                    Console.Error.WriteLine(
+                        $"verified {value.SectorsVerified}/{value.TotalSectors} sectors "
+                        + $"({percent}%{track}, {value.BytesVerified / (1024d * 1024d):0.0} MiB)");
+                };
             DiscVerificationResult verification = DiscVerifier.Verify(
                 source,
-                options.GetInt("--max-errors", 32));
+                options.GetInt("--max-errors", 32),
+                progress);
             var datPath = options.Get("--dat");
             CliDiscDatResult? datResult = null;
             if (datPath is not null)

@@ -615,7 +615,9 @@ Reads every data and audio track sector through the native-sector path, so
 CHD/CUE/BIN/CDI/NRG corruption surfaces without booting. The report includes the declared and verified
 sector counts, tracks, native bytes read, an FNV-1a content hash, and up to
 `--max-errors` failures with LBA numbers. The command exits 1 when any sector cannot be
-read or the verified count is short.
+read or the verified count is short. Without `--json`, it prints the opening path and
+progress to stderr while it reads; a physical disc can take several minutes. With
+`--json`, the progress lines are suppressed so stdout remains one JSON document.
 
 With `--dat <path>`, the command also parses a Redump/No-Intro XML DAT and hashes each
 native track with CRC-32, MD5, and SHA-1. A track matches when its size and every hash

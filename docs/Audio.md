@@ -434,10 +434,18 @@ The Q subchannel is packed into bit 6 of each subcode byte (MSB first) and carri
 control/ADR, track, index, absolute MSF, relative MSF, and the inverted CRC-16/CCITT.
 `READ SUB-Q` still returns its 10-byte payload.
 
-The FZ-10 BIOS CD player can now read the A&M Music Sampler's TOC and shows track 1 at
-`0:00` with the `STOP` transport; the controls remain inert and the WAV capture is
-silent. The 4DO reference documents the same BIOS limitation, so audio-only playback
-is tracked as SYS-01 in the blocked section of the plan.
+The FZ-10 BIOS CD player can read the audio-only TOC and shows track 1 at `0:00` with
+the `STOP` transport; the controls remain inert and the WAV capture is silent. The 4DO
+reference documents the same BIOS limitation, so audio-only playback is tracked as
+SYS-01 in the blocked section of the plan.
+
+The local collection's three audio-only CHDs were fully sector-verified: A&M Music
+Sampler (14 tracks, 102,265 sectors), D's Diner Director's Cut CD-Audio (99 tracks,
+96,962 sectors), and Oyaji Hunter Mahjong CD-Audio (4 tracks, 55,745 sectors). All three
+reach the FZ-10 player and list their TOC; the transport limitation above is unchanged.
+A synthetic `TrackedMemoryDisc` covers `PLAY_AUDIO_TRACK`, physical track-end addressing,
+and the 2352+96 subcode transfer, so the image CD-DA path is verified independently of
+the BIOS player UI.
 
 A host optical drive exposes the same track table through `ITrackedDiscSource`.
 `PhysicalDiscSource` reads raw 2352-byte CDDA frames with `IOCTL_CDROM_RAW_READ` on

@@ -92,7 +92,14 @@
 
 **2026-11-21, v1.16.0 physical CD-DA and disc read-error release (GitHub Releases).**
 
-- **2,576 tests** are present in the current test assembly.
+- **2,577 tests** are present in the current test assembly.
+- **Optical collection sweep:** all **1,366** local CHDs opened and every track's first,
+  middle, and last native sector read; **496 unique-title representatives**, including
+  all three audio-only discs, were fully sector-verified with **0 read errors**. A
+  26-case BIOS matrix (FZ-1/FZ-10/GoldStar/Sanyo, FZ-10J+Kanji, FZ-10E Anvil,
+  patched FZ-10 + `3do_arcade_saot`) booted every test. Non-JSON `disc verify` now
+  prints progress, and the FZ-10 audio-only transport remains the documented SYS-01
+  limitation.
 - **Physical CD-DA:** a host drive's table of contents is exposed through
   `ITrackedDiscSource`, and raw 2352-byte Red Book frames use
   `IOCTL_CDROM_RAW_READ` (Windows) or `CDROMREADAUDIO` (Linux). CD-DA end addressing

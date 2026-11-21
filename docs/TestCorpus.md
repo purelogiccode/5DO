@@ -4743,3 +4743,43 @@ aligned the Direct3D 11 Arcade CRT scanline/mask clamps with OpenGL and Vulkan.
 
 **Verification.** Full suite **2,561/2,561**, build 0 warnings/0 errors,
 `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.
+
+### 1.1ci 3DO collection optical sweep and BIOS matrix (2026-11-21)
+
+**Inventory and track probe.** The local `J:\Panasonic 3DO` collection contains **1,366
+CHD images** and **496 unique game IDs**, all known to the database. Every image opened
+successfully with `DiscImageFactory.Open`, and for every track the first, middle, and
+last native sector was read without an error. Track layout: **1,363 single-data-track**
+images, one 4-track audio-only disc (Oyaji Hunter Mahjong CD-Audio), one 14-track
+audio-only disc (A&M Music Sampler), and one 99-track audio-only disc (D's Diner
+Director's Cut CD-Audio). There are no mixed-mode data+audio images in this collection.
+
+**Full sector verification.** One representative image for each of the 496 unique game
+IDs, including all three audio-only discs, was read end-to-end with `DiscVerifier`:
+**496/496 verified, 0 read errors, 0 short reads**. The three audio-only discs were also
+verified separately (102,265 + 55,745 + 96,962 sectors). The verification uses the
+native track path, so audio frames are checked, not just 2048-byte data sectors.
+
+**BIOS matrix.** 26 boot cases at 3,000 frames all returned `ok: true` with no errors:
+
+- US NTSC: WOTW USA and Gridders USA with `panafz1`, `panafz10`, `goldstar`, and
+  `sanyotry`; auto-selection chose FZ-10.
+- Arcade: Crime Patrol, Mad Dog II, Orbatak, and Shootout at Old Tucson RE3 with
+  `panafz10-patched` + `3do_arcade_saot`; Crime Patrol auto-selected the patched FZ-10.
+- Japan: Oyaji Hunter Mahjong, D's Diner Disc A, 3DO de Shiru Miru Asobu, WorldCup Super
+  Stadium, and Gridders with `panafz10j`; the two Kanji-dependent titles also loaded
+  `panafz10ja-anvil-kanji` as BIOS2.
+- PAL: WOTW Europe and Gridders Europe with `panafz10e-anvil`; auto-selection chose the
+  Anvil FZ-10E.
+- Audio-only: A&M with FZ-10, FZ-10J, GoldStar, Sanyo, and FZ-1; D's Diner CD-Audio and
+  Oyaji CD-Audio with FZ-10/FZ-10J. The player lists the TOC but the FZ-10 transport
+  stays at STOP; the same behavior is documented for 4DO (SYS-01).
+
+**`disc verify` progress.** Non-JSON verification now prints the opening path, total
+sector count, and periodic progress (track, sectors, percentage, MiB) to stderr; `--json`
+remains a single clean document. The verifier also uses `ITrackedDiscSource.TotalSectorCount`
+for `ok`, so a mixed-mode disc with audio after the data volume is not reported short.
+`DiscVerifierTests` covers the progress callback and the data-volume/mixed-mode case.
+
+**Verification.** Full suite **2,577/2,577**, build 0 warnings/0 errors,
+`dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.

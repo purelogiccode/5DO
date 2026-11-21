@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using FiveDo.Core;
 
 namespace FiveDo.Storage;
@@ -22,6 +23,20 @@ public sealed record DiscVerificationResult(
     ulong Hash,
     IReadOnlyList<string> Errors);
 
+/// <summary>Progress from a full disc verification pass.</summary>
+/// <param name="SectorsVerified">Sectors read so far.</param>
+/// <param name="TotalSectors">Sectors the disc reports.</param>
+/// <param name="BytesVerified">Native track bytes read so far.</param>
+/// <param name="TrackNumber">Current one-based track number, or zero before the first read.</param>
+/// <param name="TrackCount">Number of tracks in the pass.</param>
+[StructLayout(LayoutKind.Auto)]
+public readonly record struct DiscVerificationProgress(
+    int SectorsVerified,
+    int TotalSectors,
+    long BytesVerified,
+    int TrackNumber,
+    int TrackCount);
+
 /// <summary>
 /// Reads every sector of a disc image to surface CHD/CUE/BIN corruption without booting.
 /// </summary>
@@ -38,9 +53,13 @@ public static class DiscVerifier
     /// <summary>Verifies every sector of a disc source.</summary>
     /// <param name="disc">Disc source to read. The verifier does not dispose it.</param>
     /// <param name="maxErrors">Maximum errors to retain. Default 32.</param>
+    /// <param name="progress">Optional progress callback, called periodically.</param>
     /// <returns>The verification result.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="disc"/> is null.</exception>
-    public static DiscVerificationResult Verify(IDiscSource disc, int maxErrors = 32)
+    public static DiscVerificationResult Verify(
+        IDiscSource disc,
+        int maxErrors = 32,
+        Action<DiscVerificationProgress>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(disc);
         ArgumentOutOfRangeException.ThrowIfNegative(maxErrors);
@@ -48,11 +67,15 @@ public static class DiscVerifier
         ulong hash = Fnv64Offset;
         long bytes = 0;
         var verified = 0;
-        var tracks = disc is ITrackedDiscSource tracked ? tracked.Tracks.Count : 1;
+        var trackCount = disc is ITrackedDiscSource tracked ? tracked.Tracks.Count : 1;
+        var totalSectors = disc is ITrackedDiscSource trackedSource
+            ? trackedSource.TotalSectorCount
+            : disc.SectorCount;
+        progress?.Invoke(new DiscVerificationProgress(0, totalSectors, 0, 0, trackCount));
 
-        if (disc is ITrackedDiscSource trackedSource)
+        if (disc is ITrackedDiscSource trackedDisc)
         {
-            foreach (DiscTrack track in trackedSource.Tracks)
+            foreach (DiscTrack track in trackedDisc.Tracks)
             {
                 var buffer = new byte[Math.Max(1, track.SectorSize)];
                 for (var i = 0; i < track.SectorCount; i++)
@@ -60,7 +83,7 @@ public static class DiscVerifier
                     int lba = track.StartLba + i;
                     try
                     {
-                        int read = trackedSource.ReadTrackSector(lba, buffer);
+                        int read = trackedDisc.ReadTrackSector(lba, buffer);
                         if (read <= 0)
                         {
                             AddError(errors, maxErrors, lba, "empty sector");
@@ -78,6 +101,16 @@ public static class DiscVerifier
                     catch (Exception exception) when (exception is not OutOfMemoryException)
                     {
                         AddError(errors, maxErrors, lba, exception.Message);
+                    }
+
+                    if (verified % 4096 == 0)
+                    {
+                        progress?.Invoke(new DiscVerificationProgress(
+                            verified,
+                            totalSectors,
+                            bytes,
+                            track.Number,
+                            trackCount));
                     }
                 }
             }
@@ -102,14 +135,30 @@ public static class DiscVerifier
                 {
                     AddError(errors, maxErrors, lba, exception.Message);
                 }
+
+                if (verified % 4096 == 0)
+                {
+                    progress?.Invoke(new DiscVerificationProgress(
+                        verified,
+                        totalSectors,
+                        bytes,
+                        1,
+                        1));
+                }
             }
         }
 
+        progress?.Invoke(new DiscVerificationProgress(
+            verified,
+            totalSectors,
+            bytes,
+            trackCount,
+            trackCount));
         return new DiscVerificationResult(
-            Ok: verified == disc.SectorCount && errors.Count == 0 && disc.SectorCount > 0,
-            Sectors: disc.SectorCount,
+            Ok: verified == totalSectors && errors.Count == 0 && totalSectors > 0,
+            Sectors: totalSectors,
             SectorsVerified: verified,
-            Tracks: tracks,
+            Tracks: trackCount,
             BytesVerified: bytes,
             Hash: hash,
             Errors: errors);
