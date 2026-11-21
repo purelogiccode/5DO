@@ -4,6 +4,20 @@ All notable changes are recorded here. The project is at v1.14.1, a bug-fix rele
 the deep-review pass across the host, emulation core, storage, achievements, diagnostics,
 and desktop frontend.
 
+## [Unreleased]
+
+### Fixed
+
+- **Cover catalog server errors are handled as a failed refresh, not an application
+  crash.** Transient HTTP responses now remain `CoverHttpException` subclasses, so the
+  retry loop's final failure falls back to the cached catalog (or local covers) instead
+  of escaping as "Cover resolution failed unexpectedly" (issues #69954).
+- **Expected user conditions no longer file bug reports.** Loading a save state written
+  with a different BIOS, disc, machine option, or clock, opting into the experimental
+  true 2x CEL mode, and running a partially extracted bundle now log with
+  `WithoutBugReport()`. The missing-native startup message also names the application
+  folder. The input-device trace is informational (issues #69944-#69950).
+
 ## [1.14.1] - 2026-11-20
 
 ### Fixed

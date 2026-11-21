@@ -292,6 +292,34 @@ public sealed class CoverTests
     }
 
     [Fact]
+    public async Task Service_KeepsCachedCatalogWhenRefreshReturnsServerError()
+    {
+        using var temp = new TempDirectory();
+        byte[] image = [71, 72, 73];
+        var catalog = CreateCatalog(image, "Battle Chess", "04116B14", "Battle Chess");
+        string catalogJson = JsonSerializer.Serialize(catalog, CoverCatalogJsonContext.Default.CoverCatalog);
+        using var handler = new CatalogServerErrorHandler(catalogJson);
+        using var http = new HttpClient(handler);
+        var options = new CoverServiceOptions
+        {
+            CatalogUri = new Uri("https://example.test/v1/catalog.json"),
+            UseOnlineCovers = true,
+            CacheDirectory = Path.Combine(temp.Path, "cache"),
+        };
+        using var service = new CoverService(options, http);
+
+        CoverCatalogRefreshResult first = await service.RefreshCatalogAsync(force: true);
+        CoverCatalogRefreshResult second = await service.RefreshCatalogAsync(force: true);
+
+        Assert.True(first.Success, first.Error);
+        Assert.True(second.Success, second.Error);
+        Assert.True(second.FromCache);
+        Assert.Equal(1, second.CoverCount);
+        Assert.Contains("HTTP 500", second.Error, StringComparison.Ordinal);
+        Assert.Equal(1 + 3, handler.Requests);
+    }
+
+    [Fact]
     public void ServiceOptions_FromSettingsNormalizesThresholdAndUrl()
     {
         var settings = new AppSettings
@@ -341,6 +369,34 @@ public sealed class CoverTests
     private static string Hash(byte[] bytes)
     {
         return Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+    }
+
+    private sealed class CatalogServerErrorHandler : HttpMessageHandler
+    {
+        private readonly string _catalogJson;
+
+        internal CatalogServerErrorHandler(string catalogJson)
+        {
+            _catalogJson = catalogJson;
+        }
+
+        internal int Requests { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            Requests++;
+            if (Requests == 1)
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(_catalogJson, Encoding.UTF8, "application/json"),
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        }
     }
 
     private sealed class FakeHttpHandler : HttpMessageHandler

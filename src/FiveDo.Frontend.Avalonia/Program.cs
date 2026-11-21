@@ -342,9 +342,12 @@ internal static class Program
                         missingNatives,
                         nativePlatform);
                     Console.Error.WriteLine(nativeMessage);
-                    Serilog.Log.Error(
-                        "Missing native runtime files: {Files}.",
-                        string.Join(", ", missingNatives));
+                    // A partial extraction is an expected deployment error: report it in
+                    // the log and on screen, but never file it as an application bug.
+                    Serilog.Log.ForContext(BugReportSink.SuppressProperty, false).Error(
+                        "Missing native runtime files: {Files}. Folder: {Folder}",
+                        string.Join(", ", missingNatives),
+                        AppContext.BaseDirectory);
                     if (!IsAutomatedRun(args) && OperatingSystem.IsWindows())
                     {
                         ShowStartupError(nativeMessage);

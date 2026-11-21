@@ -2105,7 +2105,9 @@ public partial class MainWindow : Window, IDisposable
         {
             StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
             ShowOsd($"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}", OsdSeverity.Warning);
-            _logger.ForCategory(LogCategory.State).Warning(
+            // A state saved with a different BIOS, disc, option set, or clock loads
+            // successfully with warnings; that is a user condition, not a defect.
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
                 "State loaded from slot {Slot} with warnings: {Warnings}",
                 slot + 1,
                 string.Join(" ", _machine.StateWarnings));
@@ -6626,7 +6628,9 @@ public partial class MainWindow : Window, IDisposable
             };
             if (tuning.TrueHighResolution && !TrueHighResolutionCompatibility.IsValidated(gameId))
             {
-                _logger.ForCategory(LogCategory.Video).Warning(
+                // The user explicitly opted into the experimental renderer; the notice
+                // is expected for every unvalidated title and is not a bug report.
+                _logger.ForCategory(LogCategory.Video).WithoutBugReport().Warning(
                     "True 2x CEL mode is experimental for this title; "
                     + "bitmap/SPORT content and framebuffer reads may render incorrectly.");
             }

@@ -18,7 +18,7 @@ namespace FiveDo.Host;
 public sealed record CoverCatalogHttpResult(bool NotModified, string Json, string ETag);
 
 /// <summary>An HTTP failure with an optional status code.</summary>
-public sealed class CoverHttpException : Exception
+public class CoverHttpException : Exception
 {
     /// <summary>Creates an empty exception.</summary>
     public CoverHttpException()
@@ -453,7 +453,7 @@ public sealed class CoverDownloader : IDisposable
         "Roslynator",
         "RCS1194",
         Justification = "Internal marker exception; only the message constructor is used.")]
-    private sealed class TransientCoverHttpException : Exception
+    private sealed class TransientCoverHttpException : CoverHttpException
     {
         internal TransientCoverHttpException(string message)
             : base(message)
