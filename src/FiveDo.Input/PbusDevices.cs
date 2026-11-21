@@ -251,10 +251,30 @@ public sealed class InputDeviceSet
         _portCount = Math.Max(_portCount, port + 1);
     }
 
-    /// <summary>Gets a value indicating whether any port uses a non-joypad device.</summary>
-    public bool HasPeripheral => Array.Exists(
-        _devices,
-        static device => device != InputDeviceType.Joypad);
+    /// <summary>
+    /// Gets a value indicating whether any active port uses a non-joypad device.
+    /// </summary>
+    /// <remarks>
+    /// Ports above <see cref="PortCount"/> are not part of the packet. In particular,
+    /// a disabled 7-8 slot left at <see cref="InputDeviceType.None"/> must not force the
+    /// daisy-chain format for a single joypad: the 3DO BIOS expects the legacy 16-byte
+    /// packet in that configuration.
+    /// </remarks>
+    public bool HasPeripheral
+    {
+        get
+        {
+            for (var port = 0; port < _portCount; port++)
+            {
+                if (_devices[port] != InputDeviceType.Joypad)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
 
     /// <summary>Gets the joypad state on a port.</summary>
     /// <param name="port">Zero-based port index.</param>

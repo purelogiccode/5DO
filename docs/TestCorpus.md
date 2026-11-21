@@ -2170,7 +2170,8 @@ a legacy version-2 memory section.
 
 - `PbusEncoder.MaxPorts` is 8; `MaxControllers` remains 6 for the legacy 4DO packet.
   `InputDeviceSet`, `PbusSource`, `InputManager`, the chain encoder/decoder, settings,
-  and the CLI accept ports 1-8. Ports 7-8, or any peripheral, select the Opera chain.
+  and the CLI accept ports 1-8. Active ports 7-8, or any active peripheral, select the
+  Opera chain; disabled ports left at `None` do not force it.
 - `--active-devices 0-8` and Settings > Emulation > **Active input devices** cap the
   polled ports. Automatic (the default) keeps the historical one-joypad packet and grows
   to the highest configured peripheral port; `0` reports an empty chain.
@@ -3641,8 +3642,9 @@ still requires a BIN/CUE or CHD image. `PhysicalDiscSourceTests` (27 cases) cove
 drive-root recognition, `CdRomN` recognition and rejection, image-path rejection,
 non-drive open rejection, and drive enumeration. A Windows virtual optical drive with
 its letter removed was used to validate `doctor` reporting `\\.\CdRom0` and
-`info \\.\CdRom0` reading 22 sectors. The hardware `Done when` line remains open until a
-physical 3DO disc is available.
+`info \\.\CdRom0` reading 22 sectors. The issue #8 reporter then booted burned CD-R
+games on a Pioneer BD-RW and reached their FMV intro sequences, closing the SYS-21
+hardware `Done when` line. Physical CD-DA tracks remain unsupported.
 
 **DirectInput/HID gamepads (SYS-23).** `DirectInputGamepadSource` loads `dinput8.dll`
 dynamically, enumerates attached game controllers, opens each with
@@ -4710,3 +4712,27 @@ deploy, and wiki publishing.
 `5do-1.9.1-osx-x64.dmg`, `5do-1.9.1-osx-arm64.dmg`, and `SHA256SUMS.txt` at
 <https://github.com/purelogiccode/5DO/releases/tag/v1.9.1>. All six checksums verify;
 the assets are copied into `src/FiveDo.Frontend.Avalonia/bin/Release`.
+
+### 1.1ch Optical-drive follow-ups (2026-11-21)
+
+**Hardware boot.** The issue #8 reporter booted burned CD-R games on a Pioneer BD-RW
+BDR-S13JX and reached their FMV intro sequences, closing the SYS-21 hardware `Done when`
+line. Physical CD-DA remains unsupported.
+
+**JIT soft reset.** `Arm60.SoftReset` now leaves a pending flag that `FlushJitContext`
+honors. Before the fix, a CLIO CSTAT store triggered the reset inside a compiled block,
+then the block's interrupted PC/CPSR overwrote it (the local PC could become
+`0xFFFFFFFC`). The reset PC/CPSR and `R14_svc` now survive the block boundary and the
+next instruction executes from address zero. `ArmJitSoftResetTests` reproduces the
+store-triggered reset with a custom bus and checks PC, CPSR, R14, SPSR_svc, the cleared
+JIT cache, and the first instruction after the reset; the test fails without the fix.
+
+**Input packet format.** `InputDeviceSet.HasPeripheral` now checks only active ports.
+Disabled ports 7-8 left at `None` previously counted as peripherals and forced the Opera
+daisy-chain packet for a single joypad. The 3DO BIOS expects the legacy 16-byte packet
+in that configuration, so keyboard and gamepad input were missing. `InputManagerTests`
+covers both the legacy and chain selections; the existing `PbusChainEncoderTests` still
+cover an active peripheral within the port count.
+
+**Verification.** Full suite **2,558/2,558**, build 0 warnings/0 errors,
+`dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.

@@ -93,7 +93,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.14.2` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,547 tests** in the current test assembly |
+| Automated tests | **2,558 tests** in the current test assembly |
 | macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |

@@ -60,6 +60,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
     private int _ldmAddress;
     private int _ldmValue;
     private int _ldmInUse;
+    private bool _softResetPending;
 
     /// <summary>Initializes a new instance of the <see cref="Arm60"/> class.</summary>
     /// <param name="bus">CPU address bus.</param>
@@ -275,6 +276,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
         _ldmAddress = 0;
         _ldmValue = 0;
         _ldmInUse = 0;
+        _softResetPending = false;
         ResetCycleClassUsage();
         ClearJitCache();
     }
@@ -296,6 +298,7 @@ public sealed partial class Arm60 : ICpuBackend, IStateSection
         _state.User[15] = 0;
         _state.DataAbortPending = false;
         _state.FiqPending = false;
+        _softResetPending = true;
         NotifyMemoryMapChanged();
     }
 

@@ -185,7 +185,7 @@ every serialized property in `AppSettings`.
 | `RewindEnabled` | bool | `true` | Record compressed keyframes and input for rewind. |
 | `RewindSeconds` | int | `60` | Rewind history length in seconds, 30..300. |
 | `FastForwardMultiplier` | int | `4` | Fast-forward speed, 2..10. Audio is muted while active. |
-| `InputDevices` | string[] | eight `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. Ports 7-8 use the Opera daisy chain; the legacy 4DO packet carries six. |
+| `InputDevices` | string[] | eight `"Joypad"` entries | PBUS device per port: `Joypad`, `Flightstick`, `Mouse`, `Lightgun`, `ArcadeLightgun`, `OrbatakTrackball`, or `None`. Active ports 7-8 use the Opera daisy chain; the legacy 4DO packet carries six. |
 | `ActiveInputDevices` | int? | `null` (automatic) | Maximum polled PBUS devices, 0-8. `0` reports no devices; `8` allows every port. Automatic keeps one joypad and grows to the highest configured peripheral port. |
 | `InputDeviceOverrides` | object | `{}` | Per-game eight-device lists keyed by game ID. An override wins over `InputDevices`. |
 | `AutoInputDevices` | bool | `true` | Seed a lightgun or Orbatak trackball override for known titles when the game has no override. |
@@ -541,8 +541,9 @@ desktop shell applies the list through `AppSettings.ApplyInputDevices`; the conn
 port count only grows to the highest non-joypad port, preserving the historical
 single-pad packet for default configurations.
 
-Selecting a peripheral switches the packet to the Opera daisy-chain layout. The
-legacy 16-byte 4DO layout remains active while every port is a joypad. The CLI mirrors
+Selecting an active peripheral, or enabling ports 7-8, switches the packet to the Opera
+daisy-chain layout. The legacy 16-byte 4DO layout remains active while every active port
+is a joypad; a disabled port left at `None` does not force the chain. The CLI mirrors
 the setting with `--input-device 1=mouse,3=lightgun` and can force either layout with
 `--pbus-format legacy|opera`. Retail American Laser Games titles use
 `1=joypad,2=lightgun`, keeping the pad on port 1 for menus and non-lightgun sections

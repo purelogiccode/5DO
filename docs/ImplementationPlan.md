@@ -106,7 +106,7 @@ is hosted. Evidence: [Installers.md](Installers.md),
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **SYS-21** | Awaiting hardware | M | **Physical CD-ROM drive support**: boot from a host optical drive. `PhysicalDiscSource`, **File > Boot Optical Drive...**, and the CLI drive-root path are implemented. Windows discovery now probes the optical device instead of the mounted volume and falls back to `\\.\CdRomN`, because a 3DO disc's custom filesystem is not mountable and may have no drive letter. Only the physical-disc boot pass is missing. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. |
+| **SYS-21** | Done | M | **Physical CD-ROM drive support**: boot from a host optical drive. `PhysicalDiscSource`, **File > Boot Optical Drive...**, and the CLI drive-root path read a burned CD-R through the cooked block interface. Windows discovery probes the optical device with `IOCTL_STORAGE_CHECK_VERIFY2` and falls back to `\\.\CdRomN`, because a 3DO disc's custom filesystem is not mountable and may have no drive letter. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. Issue #8 validated burned CD-R boot on a Pioneer BD-RW; physical CD-DA remains out of scope. |
 | **SYS-23** | Awaiting hardware | M | **Windows DirectInput/generic HID gamepad backend**: `DirectInputGamepadSource`/`WindowsGamepadSource` enumerate devices, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as fallback; axis/POV/trigger tests pass. Only a physical DirectInput-only pad check is missing. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 ---
@@ -166,8 +166,8 @@ was measured and closed with a documented limitation, not that it is unachievabl
    implementation only if the probe is clean.
 6. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe.
-7. **Hardware evidence:** `SYS-21` and `SYS-23` as soon as an optical drive and a
-   DirectInput-only pad are available; both are code-complete and tested.
+7. **Hardware evidence:** `SYS-23` as soon as a DirectInput-only pad is available;
+   `SYS-21` is closed by the CD-R boot in issue #8.
 8. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
 
 **Stop rule:** do not start P3 product work while a P1 platform or packaging smoke is

@@ -35,8 +35,19 @@ without a letter. The picker labels those entries **no drive letter**, and the C
 startup path, and `doctor` accept the same form. Evidence: a 3DO ISO was rejected by
 Windows `Mount-DiskImage` as an unreadable filesystem; a valid ISO mounted as a virtual
 DVD drive, its drive letter was removed with `mountvol`, `doctor` then reported
-`\\.\CdRom0`, and `info \\.\CdRom0` opened the device and read all 22 sectors. The suite
-is **2,554/2,554**. A physical 3DO disc boot remains the SYS-21 hardware acceptance step.
+`\\.\CdRom0`, and `info \\.\CdRom0` opened the device and read all 22 sectors. The issue
+reporter then confirmed that burned CD-R games boot and play their FMV intro sequences,
+closing the SYS-21 hardware `Done when` line. The suite is **2,558/2,558**.
+
+**2026-11-21, optical-drive follow-ups:** two issue #8 regressions found after the CD-R
+boot report are fixed. The JIT backend no longer lets an interrupted block's local
+PC/CPSR overwrite a CLIO CSTAT soft reset; the reset resumes at address zero with
+`R14_svc`/`SPSR_svc` intact. `InputDeviceSet.HasPeripheral` now examines only active
+ports, so a single joypad with disabled ports 7-8 left at `None` uses the legacy 16-byte
+PBUS packet instead of the Opera daisy chain, restoring keyboard and gamepad input.
+`ArmJitSoftResetTests` covers the JIT reset path, and `InputManagerTests` covers both
+packet-format choices. The Opera soft-reset path itself remains opt-in and still needs a
+CSTAT/DIPIR boot transcript for full accuracy validation.
 
 **2026-11-21, REL-10 Steam Deck first-run:** the welcome guide now detects
 `SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope and uses a 960x680 layout with 54 px

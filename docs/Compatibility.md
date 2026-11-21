@@ -919,6 +919,26 @@ The Windows-specific findings are:
   fullscreen D3D surface blocks GDI capture, so the fullscreen evidence uses the
   software presenter.
 
+### 10.7 Windows x64 physical optical drive (2026-11-21, issue #8)
+
+Validated with the post-1.14.2 commit `57c8c20` on the issue reporter's Windows 11 x64
+machine and a Pioneer BD-RW BDR-S13JX. The drive has a 3DO disc's custom filesystem, so
+Windows does not expose a mounted volume and may not assign a drive letter; the old
+`DriveInfo.IsReady` filter reported "No optical drive with media was found."
+
+| Check | Result |
+|---|---|
+| Drive discovery | `\\.\CdRomN` device probe with `IOCTL_STORAGE_CHECK_VERIFY2`; lettered drives keep their letter |
+| Virtual letterless drive | `doctor` reported `\\.\CdRom0`; `info \\.\CdRom0` read all 22 sectors |
+| Burned CD-R boot | Reporter confirmed the games boot and reach their FMV intro sequences |
+| Physical CD-DA | Not supported; use a BIN/CUE or CHD image for audio tracks |
+| Follow-up: JIT soft reset | Reset PC/CPSR/R14_svc survive the compiled-block boundary (`ArmJitSoftResetTests`) |
+| Follow-up: input | One active joypad with disabled `None` ports uses the legacy 16-byte PBUS packet (`InputManagerTests`) |
+| Full suite | **2,558/2,558** in Debug, build 0 warnings/0 errors, format and InspectCode clean |
+
+The reporter's CD-R boot closes the SYS-21 `Done when` line. The remaining follow-up is
+a post-fix input re-test on that machine; physical CD-DA playback remains out of scope.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

@@ -178,11 +178,12 @@ of connected controllers.
 
 ### Input devices
 
-**Settings > Emulation > Input devices** selects the PBUS device on each of the six
+**Settings > Emulation > Input devices** selects the PBUS device on each of the eight
 ports: joypad, flightstick, mouse, lightgun, arcade lightgun, Orbatak trackball, or
-none. Joypads remain the default and keep the historical packet. Selecting a
-peripheral switches to the 3DO daisy-chain packet used by Opera. **Override input
-devices for this game** stores the six choices by game ID; known lightgun and Orbatak
+none. Joypads remain the default and keep the historical packet. Selecting an active
+peripheral, or enabling ports 7-8, switches to the 3DO daisy-chain packet used by Opera;
+a disabled port left at `None` does not. **Override input
+devices for this game** stores the eight choices by game ID; known lightgun and Orbatak
 titles are seeded automatically when `AutoInputDevices` is on, and an explicit override
 always wins.
 

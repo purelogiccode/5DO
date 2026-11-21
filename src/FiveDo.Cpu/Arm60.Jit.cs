@@ -277,6 +277,9 @@ public sealed partial class Arm60
     /// </remarks>
     public int RunJitBlock(int cyclesSinceEvent)
     {
+        // A flag left by an interpreter Step is stale at this boundary. A soft reset
+        // raised inside this call is consumed by FlushJitContext.
+        _softResetPending = false;
         if (!RuntimeFeature.IsDynamicCodeSupported
             || _tuning.CpuBackend != CpuBackendKind.Jit
             || CycleClassTelemetryEnabled
@@ -445,8 +448,20 @@ public sealed partial class Arm60
 
     private void FlushJitContext(ref uint pc, ref uint cpsr, ref int cycles, ref int instructions)
     {
-        _state.ProgramCounter = pc;
-        _state.Cpsr = cpsr;
+        if (_softResetPending)
+        {
+            // SoftReset already installed the reset PC/CPSR and cleared the JIT cache.
+            // The block's local context still describes the interrupted path, so writing
+            // it back here would overwrite the reset (and the CLIO store epilogue may
+            // have left the local PC at 0xFFFFFFFC).
+            _softResetPending = false;
+        }
+        else
+        {
+            _state.ProgramCounter = pc;
+            _state.Cpsr = cpsr;
+        }
+
         _cyclesExecuted += cycles;
         _instructionsExecuted += instructions;
         _cycles = 0;

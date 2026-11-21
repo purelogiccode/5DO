@@ -115,8 +115,13 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - Windows and Linux drive paths are implemented and unit-tested. Discovery and sector
   reads were validated with a Windows virtual optical drive whose letter was removed:
   `doctor` reported `\\.\CdRom0` and `info \\.\CdRom0` read the expected 22 sectors.
-  macOS physical drives are not validated. A physical 3DO disc has not yet been booted
-  from a drive on the validation host; the SYS-21 `Done when` line remains open.
+  The issue #8 reporter then booted burned CD-R games on a Pioneer BD-RW and reached
+  their FMV intro sequences, closing the SYS-21 hardware `Done when` line. macOS
+  physical drives are not validated, and physical CD-DA tracks remain unsupported.
+- A single active joypad with disabled ports 7-8 left at `None` used to emit the Opera
+  daisy-chain PBUS packet; that configuration now uses the legacy 16-byte packet, so
+  keyboard and gamepad input work. If input is still missing, check **Settings >
+  Emulation > Active input devices** and the per-game override.
 
 ## Windows gamepads (2026-11-13)
 
@@ -640,6 +645,11 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   cycles and register clobbers. AutoBahn Tokio and Ballz boot and run with HLE but
   produce different frame hashes; leave it off for compatibility or use a per-game
   profile. `--swi-comments` shows which SWIs a title calls.
+- **Opera soft-reset path** (`--opera-soft-reset`, **Settings > Emulation**) remains
+  opt-in and experimental. A JIT state-overwrite bug that could lose the reset PC/CPSR
+  was fixed on 2026-11-21, but enabling the path without a guest CSTAT/DIPIR boot
+  transcript can still change the boot path; leave it off unless you are collecting
+  accuracy evidence. The default remains the FreeDO-compatible CSTAT behavior.
 
 ## Logging and bug reports
 

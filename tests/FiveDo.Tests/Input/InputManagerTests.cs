@@ -1,3 +1,4 @@
+using FiveDo.Host;
 using FiveDo.Input;
 
 namespace FiveDo.Tests.Input;
@@ -47,6 +48,62 @@ public sealed class InputManagerTests
         Assert.Equal(0x81, packet[3]);
         Assert.Equal(0x80, packet[4]);
         Assert.Equal(0x80, packet[5]);
+    }
+
+    [Fact]
+    public void InputManager_IgnoresInactiveNonePortsWhenChoosingPacketFormat()
+    {
+        var manager = new InputManager(InputProfile.CreateDefault());
+        manager.Devices.SetDevice(7, InputDeviceType.None);
+        manager.ControllerCount = 1;
+
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        int length = manager.GetPbusData(packet);
+
+        Assert.Equal(PbusEncoder.PacketSize, length);
+    }
+
+    [Fact]
+    public void ApplyInputDevices_OneActivePadWithInactiveNonePorts_KeepsTheLegacyPacket()
+    {
+        var settings = new AppSettings
+        {
+            ActiveInputDevices = 1,
+            InputDevices =
+            [
+                "Joypad",
+                "Joypad",
+                "Joypad",
+                "Joypad",
+                "Joypad",
+                "Joypad",
+                "None",
+                "None",
+            ],
+        };
+        var manager = new InputManager(InputProfile.CreateDefault());
+        settings.ApplyInputDevices(manager);
+        manager.Keyboard.SetKey("Z", pressed: true);
+
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        int length = manager.GetPbusData(packet);
+
+        Assert.Equal(PbusEncoder.PacketSize, length);
+        Assert.Equal(0x01, packet[3] & 0x01);
+    }
+
+    [Fact]
+    public void InputManager_UsesTheChainForAnActivePeripheral()
+    {
+        var manager = new InputManager(InputProfile.CreateDefault());
+        manager.Devices.SetDevice(0, InputDeviceType.Mouse);
+        manager.ControllerCount = 1;
+
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+        int length = manager.GetPbusData(packet);
+
+        Assert.NotEqual(PbusEncoder.PacketSize, length);
+        Assert.True(length > 0);
     }
 
     private sealed class FakeGamepad : IGamepadBackend

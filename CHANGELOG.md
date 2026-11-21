@@ -14,6 +14,14 @@ failures, and expected-condition reporting.
   probes the optical device with `IOCTL_STORAGE_CHECK_VERIFY2` (with a CD-ROM geometry
   fallback), enumerates `\\.\CdRomN` for letterless drives, and accepts the fallback path
   on the command line and in `doctor`. Fixes issue #8.
+- **A JIT soft reset no longer loses the reset state.** When a guest store triggered the
+  CLIO CSTAT soft-reset path, the JIT block flushed its interrupted PC/CPSR over the
+  reset, leaving the CPU at an invalid address. The reset PC/CPSR and `R14_svc` now
+  survive the block boundary, and the next instruction executes from address zero.
+- **One active joypad no longer forces the daisy-chain PBUS packet.** Disabled ports
+  7-8 left at `None` were counted as peripherals, so a single-pad configuration emitted
+  the Opera chain instead of the legacy 16-byte packet. The chain is now selected only
+  by active ports, restoring keyboard and gamepad input in that configuration.
 
 ### Added
 
