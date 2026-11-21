@@ -61,7 +61,8 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       bundles match `SHA256SUMS.txt`, and the win-x64 CLI `selftest` and frontend smoke
       report `FRONTEND SMOKE OK 1.14.2`. Published at
       <https://github.com/purelogiccode/5DO/releases/tag/v1.14.2>; release run
-      <https://github.com/purelogiccode/5DO/actions/runs/44861080545>.
+      <https://github.com/purelogiccode/5DO/actions/runs/44861080545>; post-release CI
+      run <https://github.com/purelogiccode/5DO/actions/runs/44863848266> passed.
 - [x] The published x64 AppImage resolves the latest release, reports
       `FRONTEND SMOKE OK 1.14.2`, and its detached `.asc` verifies with the release key.
       `appimageupdatetool -d` resolved the 1.14.2 `.zsync`, `-j` reported no update, and

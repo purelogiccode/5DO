@@ -80,7 +80,9 @@ signatures need.
 - Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.14.2> (release run
   <https://github.com/purelogiccode/5DO/actions/runs/44861080545>). The five downloaded
   bundles match `SHA256SUMS.txt`; the published win-x64 CLI `selftest` and frontend smoke
-  report `FRONTEND SMOKE OK 1.14.2`.
+  report `FRONTEND SMOKE OK 1.14.2`. Post-release CI run
+  <https://github.com/purelogiccode/5DO/actions/runs/44863848266> passed on Windows,
+  Linux, and macOS.
 
 ## Known limits
 

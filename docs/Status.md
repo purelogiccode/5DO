@@ -10,7 +10,9 @@ built from the tagged source. The suite is **2,535/2,535**, `dotnet build` repor
 <https://github.com/purelogiccode/5DO/actions/runs/44861080545> passed all five bundle
 jobs, both Linux package jobs, signing, and the publish job. The five downloaded bundles
 match `SHA256SUMS.txt`; the published win-x64 CLI `selftest` and frontend smoke report
-`FRONTEND SMOKE OK 1.14.2`. Evidence is recorded in
+`FRONTEND SMOKE OK 1.14.2`. Post-release CI run
+<https://github.com/purelogiccode/5DO/actions/runs/44863848266> passed on Windows, Linux,
+and macOS. Evidence is recorded in
 [ReleaseNotes-1.14.2.md](ReleaseNotes-1.14.2.md),
 [Compatibility.md](Compatibility.md) §10.6, and [KnownIssues.md](KnownIssues.md).
 
