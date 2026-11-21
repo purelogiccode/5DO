@@ -110,18 +110,23 @@ checksums are attached, and legal/attribution sign-off is recorded.
   now exposed through `ITrackedDiscSource`, so data and CD-DA tracks are listed and
   CD-DA plays through the 3DO player or a game. Audio frames are read with
   `IOCTL_CDROM_RAW_READ` (CDDA) on Windows and `CDROMREADAUDIO` on Linux.
-- Physical CD-DA is implemented but **not yet validated on real mixed-mode media** on
-  this development host, which has no optical drive. The Windows TOC parse and cooked
-  read paths were checked against a mounted virtual optical drive; raw CDDA reads and a
-  real audio track still need a hardware pass. A drive that rejects the raw-audio
-  request reports a sector read error and stops CD-DA playback rather than faulting the
-  core. Audio-only discs remain covered by the image-path evidence.
+- Physical CD-DA is implemented and the reporter's **Red Book audio CD** reaches the
+  FZ-10 BIOS CD player with track 1 listed. The transport still shows **STOP** and does
+  not start playback; this is the known audio-only BIOS-player residual (SYS-01), not a
+  hang — the emulator keeps running at 59.9 fps. On this development host, which has no
+  optical drive, the Windows TOC parse and cooked read paths were checked against a
+  mounted virtual optical drive; a raw CDDA read of a real audio track still needs a
+  hardware pass. A drive that rejects the raw-audio request reports a sector read error
+  and stops CD-DA playback rather than faulting the core.
 - **A damaged or failing disc no longer stops emulation.** A host sector read that
   throws (for example a CRC error on a scratched CD-R) is zero-filled, recorded as MEI
   receive-ECC for the guest's READ_ERROR command, and logged by the host. The transfer
   continues with the next sector. The same guard covers the boot-time volume-header
   probe and CD-DA sample reads; screenshot and save-slot thumbnail writes have their own
-  guarded path.
+  guarded path. The issue #8 reporter confirmed this on 1.16.0: the sector-103777 CRC is
+  now a **Warning** and emulation continues. The disc's drive still spends a moment on
+  its own error recovery when that sector is reached, so the Way of the Warrior FMV can
+  pause briefly before continuing; a CHD/image or a clean burn avoids the pause.
 - Windows discovery no longer requires `DriveInfo.IsReady`. A 3DO disc's custom
   filesystem is not mountable by Windows, so the drive may have no ready volume or no
   drive letter even though the media is present. `GetOpticalDriveNames` opens the
@@ -142,11 +147,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   the accuracy/DIPIR option prevents the boot; the Opera soft-reset path is reported to
   boot when used on its own. The DIPIR path remains opt-in and needs a CSTAT/DIPIR boot
   transcript from a physical disc before it can be recommended.
-- **Way of the Warrior from a burned CD-R still crashes during an FMV** on the reporter's
-  machine while 4DO plays the same disc. The exact error text and 5DO log are still
-  needed; a host read failure at that point is now reported to the guest (MEI
-  receive-ECC) instead of stopping the core, so the crash mechanism may already be
-  covered by the read-error guard.
+- **Way of the Warrior from a burned CD-R no longer crashes on the FMV; it pauses for a
+  moment while the drive recovers the bad sector and then continues.** The reporter
+  confirmed this on 1.16.0. The pause comes from the disc's CRC at sector 103777 and the
+  drive's own retry, not from an emulator fault; a CHD/image or a clean burn avoids it.
+  4DO may hide the retry differently, but the sector is physically marginal.
 - A single active joypad with disabled ports 7-8 left at `None` used to emit the Opera
   daisy-chain PBUS packet; that configuration now uses the legacy 16-byte packet, so
   keyboard and gamepad input work. If input is still missing, check **Settings >

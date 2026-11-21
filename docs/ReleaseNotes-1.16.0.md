@@ -118,13 +118,17 @@ thread. Native screenshots and save-slot thumbnails share the guard.
 
 ## Known issues
 
-- **Way of the Warrior from a burned CD-R** still crashes during an FMV on the issue
-  reporter's machine. A host read failure at that point is now reported to the guest
-  instead of stopping the core; if the crash persists, the exact error text and 5DO log
-  are needed to separate a disc read from a title-specific decoder fault.
-- **The opt-in Opera DIPIR path** can still block a physical boot. The default path
-  boots burned CD-R games; `--opera-dipir` needs a CSTAT/DIPIR boot transcript before it
-  can be recommended. The Opera soft-reset path is reported to boot when used on its own.
+- **Way of the Warrior from a burned CD-R** no longer crashes on the FMV; the reporter
+  confirmed it pauses for a moment while the drive recovers the bad sector and then
+  continues. The pause comes from the disc's CRC at sector 103777 and the drive's own
+  retry, not from an emulator fault; a CHD/image or a clean burn avoids it.
+- **A Red Book audio CD reaches the FZ-10 CD player** with track 1 listed, but the
+  transport remains at **STOP** (the known audio-only BIOS-player residual, SYS-01). The
+  emulator keeps running at 59.9 fps; this is not a hang.
+- **The opt-in Opera DIPIR path** still blocks a physical boot in the reporter's test.
+  The default path boots burned CD-R games; `--opera-dipir` needs a CSTAT/DIPIR boot
+  transcript before it can be recommended. The Opera soft-reset path is reported to boot
+  when used on its own.
 - Physical CD-DA playback awaits a real mixed-mode audio CD hardware pass; image-based
   CD-DA remains covered by the CUE/CHD fixtures.
 - `--opera-soft-reset` remains opt-in and experimental.

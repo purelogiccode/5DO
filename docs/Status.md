@@ -16,8 +16,12 @@ release run <https://github.com/purelogiccode/5DO/actions/runs/44917920441> pass
 five bundle jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The
 five downloaded bundles match `SHA256SUMS.txt`. The win-x64 bundle reports 1.16.0,
 passes `selftest --json` with all 15 checks, and writes `FRONTEND SMOKE OK 1.16.0`; the
-Linux x64 CLI/frontend smoke and the `.deb`/`.rpm` installs passed in CI. A real
-mixed-mode audio CD remains the hardware check because the development host has no
+Linux x64 CLI/frontend smoke and the `.deb`/`.rpm` installs passed in CI. The issue #8
+reporter's 1.16.0 test confirms the sector-103777 CRC is now a Warning and emulation
+continues; the Way of the Warrior FMV pauses for the drive's recovery and then resumes.
+A Red Book audio CD reaches the FZ-10 CD player with track 1 listed, but the transport
+remains inert (SYS-01), and the opt-in DIPIR path still has to be off for a disc boot. A
+real mixed-mode audio CD remains the hardware check because the development host has no
 optical drive; the Windows TOC and cooked paths were validated on a mounted virtual
 optical drive. Evidence is recorded in
 [ReleaseNotes-1.16.0.md](ReleaseNotes-1.16.0.md), [Compatibility.md](Compatibility.md)

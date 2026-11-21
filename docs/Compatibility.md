@@ -932,8 +932,8 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 | Drive discovery | `\\.\CdRomN` device probe with `IOCTL_STORAGE_CHECK_VERIFY2`; lettered drives keep their letter |
 | Virtual letterless drive | `doctor` reported `\\.\CdRom0`; `info \\.\CdRom0` read all 22 sectors |
 | Burned CD-R boot | Reporter confirmed the games boot and reach their FMV intro sequences |
-| Physical CD-DA | v1.16.0: the drive TOC is exposed through `ITrackedDiscSource`, and raw 2352-byte frames use `IOCTL_CDROM_RAW_READ` (CDDA) or Linux `CDROMREADAUDIO` |
-| Host read errors | A failed sector is zero-filled, reported as MEI receive-ECC, and does not stop the core |
+| Physical CD-DA | v1.16.0: the drive TOC is exposed through `ITrackedDiscSource`, and raw 2352-byte frames use `IOCTL_CDROM_RAW_READ` (CDDA) or Linux `CDROMREADAUDIO`. The reporter's Red Book audio CD reaches the FZ-10 CD player with track 1 listed; the transport remains inert (SYS-01) |
+| Host read errors | v1.16.0 confirmed on the reporter's machine: the sector-103777 CRC is a Warning, emulation continues, and the FMV resumes after the drive's recovery pause |
 | Follow-up: JIT soft reset | Reset PC/CPSR/R14_svc survive the compiled-block boundary (`ArmJitSoftResetTests`) |
 | Follow-up: input | One active joypad with disabled `None` ports uses the legacy 16-byte PBUS packet (`InputManagerTests`) |
 | Full suite | **2,576/2,576** in Debug, build 0 warnings/0 errors |

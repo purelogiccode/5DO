@@ -92,12 +92,14 @@ The `.asc` files are signatures, the `.zsync` files feed `AppImageUpdate`, and
 
 ## Known issues
 
-- **Way of the Warrior from a burned CD-R** still crashes during an FMV on the issue
-  reporter's machine. A host read failure at that point now becomes a guest read error
-  instead of stopping the core; if the crash persists, the exact error text and log are
-  needed.
-- **The opt-in Opera DIPIR path** can still block a physical boot. The default path
-  boots burned CD-R games; the Opera soft-reset path is reported to boot on its own.
+- **Way of the Warrior from a burned CD-R** no longer crashes on the FMV; it pauses for a
+  moment while the drive recovers the bad sector (CRC at sector 103777) and then
+  continues. A CHD/image or a clean burn avoids the pause.
+- **A Red Book audio CD reaches the FZ-10 CD player** with track 1 listed, but the
+  transport remains at **STOP** (the known audio-only BIOS-player residual, SYS-01); the
+  emulator keeps running at 59.9 fps.
+- **The opt-in Opera DIPIR path** still blocks a physical boot. The default path boots
+  burned CD-R games; the Opera soft-reset path is reported to boot on its own.
 - Physical CD-DA awaits a real mixed-mode hardware pass.
 - `--opera-soft-reset` remains opt-in and experimental.
 - The EmuDeck/RetroDeck 3DO entry and Flathub listing remain upstream/hosted-repository
