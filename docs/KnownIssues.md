@@ -1,8 +1,9 @@
 # Known Issues
 
-**Snapshot:** 2026-11-20, v1.14.1. The 1.14.1 deep-review release fixes CHD Mode 2
-native track sectors, stale cropped-frame dimensions, malformed-persistence recovery,
-and shutdown races; it adds no new known issues. The list below remains the supported
+**Snapshot:** 2026-11-21, v1.14.2. The 1.14.2 release fixes the Windows app-local MSVC
+runtime, AppImage update metadata, cover-catalog HTTP fallback, and expected-condition
+bug reports. The 1.14.1 deep-review release fixed CHD Mode 2 sectors, crop dimensions,
+persistence, and shutdown races. The list below remains the supported
 corpus and prototype-state record. Jurassic Park Interactive reaches the in-park Raptor
 Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
 images, the Windows OpenAL bundle
@@ -480,12 +481,12 @@ limitations are environmental:
 
 The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
 
-- **Bundled OpenAL requires the Visual C++ 2015-2022 redistributable.** On a clean
-  Windows 11 ARM64 image the emulator logs `Could not load from any of the possible
-  library names`, disables audio, and continues silently. Install
-  `https://aka.ms/vs/17/release/vc_redist.arm64.exe`; the .NET 11 runtime is embedded but
-  the MSVC runtime is not. The Windows x64 bundle uses the same OpenAL Soft build, so
-  expect the same requirement on clean images.
+- **The bundled OpenAL runtime no longer needs the VC++ redistributable.** 1.13.x
+  bundles logged `Could not load from any of the possible library names` on a clean
+  image and ran silently until `https://aka.ms/vs/17/release/vc_redist.arm64.exe` was
+  installed. Current bundles ship the app-local MSVC runtime beside `OpenAL32.dll`, and
+  a clean image without the redistributable reports `OpenAL: loaded OpenAL32.dll`. Keep
+  the redistributable step only for 1.13.x or older bundles.
 - **The Azure Windows 11 ARM64 VM has no GPU and no audio endpoint.** Direct3D 11 and
   ANGLE (OpenGL ES 3.0) run on the Microsoft Basic Render Driver, `--vk-probe` fails
   with `ErrorIncompatibleDriver`, and OpenAL cannot open a device. Use
@@ -501,6 +502,14 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
 
 ## Packaging and platforms
 
+- **The published 1.14.1 AppImages cannot auto-update to the next release.** They embed
+  `zsync|https://github.com/.../releases/latest/download/5do-1.14.1-linux-<arch>.AppImage.zsync`,
+  which stops resolving once 1.14.1 is no longer the latest release, and the published
+  `.zsync` target points at the `.zsync` instead of the AppImage. Download the next
+  release manually. The tooling is fixed for the next release: `build-appimage.sh`
+  separates the update information from the `.zsync` target, validates both, and CI
+  embeds `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`.
+  See [LinuxDistribution.md](LinuxDistribution.md) §5.
 - CI builds five bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
   smoke on macOS arm64, Linux arm64, and Windows arm64. Intel macOS support was dropped

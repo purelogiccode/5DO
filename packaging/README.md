@@ -28,7 +28,9 @@ pass `-Version` to `package-bundle.ps1` to override it. On macOS the script also
 
 The bundles are **self-contained**. The .NET 11 runtime is embedded in each
 single-file executable; no separate runtime install is required and no `runtime/`
-folder is staged.
+folder is staged. The Windows bundles also ship the three MSVC runtime DLLs that
+the bundled OpenAL Soft library imports, so a clean Windows image does not need the
+Visual C++ redistributable.
 
 - Download: <https://dotnet.microsoft.com/download/dotnet/11.0>
 - The apphosts print the standard ".NET runtime not found" message when the runtime is
@@ -40,6 +42,9 @@ folder is staged.
 FiveDo.Cli[.exe]              single-file apphost
 FiveDo[.exe] single-file apphost
 OpenAL32.dll / soft_oal.dll   native OpenAL Soft (Windows)
+vcruntime140.dll / msvcp140.dll
+                              app-local MSVC runtime for OpenAL Soft (Windows)
+vcruntime140_1.dll            x64 SEH helper for the MSVC runtime
 libopenal.so / libopenal.dylib
 libSkiaSharp.*, av_libglesv2.dll, ...
 5do.desktop                   portable launcher (Linux, Exec=FiveDo)
@@ -64,6 +69,14 @@ PACKAGE.txt
 The Windows bundle must contain **both** `OpenAL32.dll` and `soft_oal.dll`;
 `OpenAL32.dll` is the name Silk.NET.OpenAL passes to the loader. `package-bundle.ps1`
 and the bundle workflow reject an archive without the loader-named runtime.
+
+The Windows bundle must also contain `vcruntime140.dll` and `msvcp140.dll` beside the
+apphosts (and `vcruntime140_1.dll` on x64). OpenAL Soft imports the MSVC runtime, and
+the .NET runtime does not provide it. `package-bundle.ps1` copies the files for the
+target architecture from the Visual Studio redistributable folder and rejects a
+wrong-architecture or missing DLL. On a machine without Visual Studio, pass
+`-VcRuntimeDirectory` pointing at a folder that contains the required DLLs for the
+target architecture.
 
 The apphosts are published with:
 
@@ -177,15 +190,17 @@ bash packaging/linux/build-rpm.sh \
 APPIMAGETOOL=/path/to/appimagetool/AppRun \
 bash packaging/linux/build-appimage.sh \
   --bundle artifacts/bundle/linux-x64 --version 1.12.0 \
-  --output artifacts/installers --name 5do-x86_64.AppImage
+  --output artifacts/installers --name 5do-1.12.0-linux-x86_64.AppImage \
+  --zsync-url "https://github.com/purelogiccode/5DO/releases/download/v1.12.0/5do-1.12.0-linux-x86_64.AppImage" \
+  --update-information "gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync"
 
 bash packaging/linux/build-flatpak.sh \
   --bundle artifacts/bundle/linux-x64 --rid linux-x64 --version 1.12.0 \
   --output artifacts/installers
 ```
 
-The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), `appimagetool`, and
-`flatpak` plus `flatpak-builder`. `build-flatpak.sh` writes `5do-<arch>.flatpak` from
+The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), `appimagetool`,
+`zsyncmake` (zsync), and `flatpak` plus `flatpak-builder`. `build-flatpak.sh` writes `5do-<arch>.flatpak` from
 `packaging/linux/io.github.purelogiccode.FiveDO.yml`, installs the
 `org.freedesktop.Platform//26.08` runtime/SDK from Flathub when it is missing (pass
 `--no-install-deps` to skip), and keeps the OSTree repository with `--repo-dir` for a

@@ -2,10 +2,11 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-20):** v1.14.1 is a deep-review bug-fix release for CHD Mode
-2 native sectors, stale crop dimensions, atomic persistence, malformed-data recovery,
-and shutdown/device-loss handling. It does not change the default 320x240 compatibility
-path or the documented title matrix; the 1.14.0 feature baseline remains current.
+**Current release (2026-11-21):** v1.14.2 is a packaging and diagnostics bug-fix
+release. It ships the app-local MSVC runtime in the Windows bundles, corrects AppImage
+update metadata, makes cover-catalog HTTP failures fall back to the cached catalog, and
+stops expected user conditions from filing bug reports. It does not change the default
+320x240 compatibility path, the documented title matrix, or the 1.14.0 feature baseline.
 
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
@@ -895,13 +896,21 @@ report the ARM64 PE machine type, and the bundle contains no PDB or XML files.
 
 The Windows-specific findings are:
 
-- **The bundled OpenAL Soft DLL needs the MSVC runtime.** On the clean image, audio
-  startup logs `Could not load from any of the possible library names` and the emulator
-  runs silently. Installing the Visual C++ 2015-2022 ARM64 redistributable
-  (`vc_redist.arm64.exe`) makes OpenAL load; the VM still has no audio endpoint, so the
-  soak uses `ALSOFT_DRIVERS=null` (0 dropped samples, 347 underruns over 5 s on 2 vCPU).
-  The bundle embeds the .NET runtime but not the VC++ runtime, so this is a documented
-  prerequisite rather than a codec defect.
+- **The bundled OpenAL Soft runtime now loads on a clean image.** The 1.13.x bundle
+  needed the Visual C++ 2015-2022 ARM64 redistributable: without it, OpenAL reported
+  `Could not load from any of the possible library names` and the emulator ran silently.
+  The current Windows bundles ship the app-local MSVC runtime (`vcruntime140.dll` and
+  `msvcp140.dll`, plus `vcruntime140_1.dll` on x64) beside `OpenAL32.dll`. On a clean
+  Windows 11 ARM64 image with the redistributable uninstalled, the old bundle reported
+  `OpenAL: not found (OpenAL32.dll)` while the new ARM64 bundle reported
+  `OpenAL: loaded OpenAL32.dll`; the x64 bundle also loaded its app-local runtime under
+  x64 emulation. A 600-frame Theme Park run on the clean ARM64 image produced frame hash
+  `0x110E7DC5` and PC `22892`, identical to Windows x64, and `selftest --json` passed
+  all 15 checks. A 60-frame `--audio openal` run with `ALSOFT_DRIVERS=null` exited 0
+  and produced 44,144 samples, and the desktop `--smoke-test` reported
+  `FRONTEND SMOKE OK 1.14.1` with a clean shell shutdown. The VM still has no audio
+  endpoint, so real-device playback remains unvalidated; `ALSOFT_DRIVERS=null` is still
+  required for audio-path tests.
 - **The VM has no Vulkan driver.** `--vk-probe` fails with `ErrorIncompatibleDriver`;
   the validated presentation paths are ANGLE/GL ES 3.0 and Direct3D 11 on the Basic
   Render Driver. Hardware GPU evidence remains the Windows x64 desktop.

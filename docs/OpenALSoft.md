@@ -26,6 +26,22 @@ The Windows copies are performed by `Directory.Build.targets`
 The library is loaded dynamically at runtime; 5DO does not statically link it into
 the executable.
 
+### MSVC runtime
+
+OpenAL Soft's Windows build imports the Microsoft Visual C++ runtime
+(`vcruntime140.dll` and `msvcp140.dll`, plus the x64-only `vcruntime140_1.dll`
+helper). The .NET runtime does not provide these DLLs. Every Windows bundle therefore
+ships the target-architecture files app-local beside `OpenAL32.dll`; a clean Windows
+image no longer needs `vc_redist.*.exe`.
+
+`packaging/package-bundle.ps1` copies the DLLs for the target architecture from the
+Visual Studio redistributable folder (found through `vswhere`), or from the
+same-architecture system folder on a matching build host. The script and
+`.github/workflows/build-bundle.yml` reject a bundle with a missing DLL or a DLL whose
+PE machine does not match `win-x64`/`win-arm64`. For a builder without Visual Studio,
+pass `-VcRuntimeDirectory` with a folder containing the required target-architecture
+DLLs.
+
 Both Windows names are intentional: `soft_oal.dll` is the upstream package file, while
 `OpenAL32.dll` is the name Silk.NET.OpenAL passes to the Windows loader. Publish must
 copy both after `dotnet publish`; a bundle that contains only `soft_oal.dll` can load a
@@ -105,6 +121,11 @@ Every release bundle built by `packaging/package-bundle.ps1` includes:
 - `docs/OpenALSoft.md` (this notice and source offer),
 - `docs/OpenAL-Soft-COPYING.txt` (the LGPL-2.0 text),
 - `THIRD-PARTY-NOTICES.md` and `docs/Licensing.md` (the dependency summary).
+
+Windows bundles additionally include `vcruntime140.dll` and `msvcp140.dll` (and
+`vcruntime140_1.dll` on x64). These are Microsoft Visual C++ redistributable files,
+not part of OpenAL Soft, and are governed by the Microsoft Visual Studio
+redistributable terms.
 
 The `PACKAGE.txt` manifest lists the component, RID, version, commit, and build
 time. The release notes list the same files in the archive summary.

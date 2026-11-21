@@ -12,7 +12,12 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $OutputDirectory,
 
-    [string] $Version
+    [string] $Version,
+
+    # Optional folder containing the app-local MSVC runtime DLLs for the target
+    # architecture. When omitted, the script locates the Visual Studio redistributable
+    # files, or the same-architecture system copies on a matching host.
+    [string] $VcRuntimeDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -105,6 +110,131 @@ function Copy-PublishTree {
     }
 }
 
+function Get-PeMachine {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $LiteralPath
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($LiteralPath)
+    if ($bytes.Length -lt 0x40) {
+        throw "'$LiteralPath' is too small to be a PE file."
+    }
+
+    $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+    if ($peOffset -lt 0 -or ($peOffset + 6) -gt $bytes.Length) {
+        throw "'$LiteralPath' has an invalid PE header offset."
+    }
+
+    return [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+}
+
+function Resolve-VcRuntimeDirectory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Rid,
+
+        [string] $Override
+    )
+
+    $architecture = if ($Rid -eq 'win-arm64') { 'arm64' } else { 'x64' }
+    $expectedMachine = if ($Rid -eq 'win-arm64') { 0xAA64 } else { 0x8664 }
+    # ARM64 C++ exception handling lives in vcruntime140.dll; vcruntime140_1.dll is
+    # the x64 helper and the ARM64 redistributable does not ship an ARM64 copy.
+    $required = if ($Rid -eq 'win-arm64') {
+        @('vcruntime140.dll', 'msvcp140.dll')
+    }
+    else {
+        @('vcruntime140.dll', 'vcruntime140_1.dll', 'msvcp140.dll')
+    }
+
+    function Assert-VcRuntimeDirectory {
+        param(
+            [Parameter(Mandatory = $true)]
+            [string] $Directory
+        )
+
+        $resolved = (Resolve-Path -LiteralPath $Directory).Path
+        $missing = @($required | Where-Object {
+            -not (Test-Path -LiteralPath (Join-Path $resolved $_))
+        })
+        if ($missing.Count -gt 0) {
+            throw ("The VC++ runtime directory '$resolved' is missing " +
+                "$($missing -join ', ') for $Rid. Pass -VcRuntimeDirectory with the " +
+                "$architecture Microsoft Visual C++ redistributable files.")
+        }
+
+        foreach ($name in $required) {
+            $machine = Get-PeMachine (Join-Path $resolved $name)
+            if ($machine -ne $expectedMachine) {
+                throw ("The VC++ runtime '$name' in '$resolved' has PE machine " +
+                    "0x$($machine.ToString('X4')); $Rid requires 0x$($expectedMachine.ToString('X4')). " +
+                    "Pass -VcRuntimeDirectory with the $architecture redistributable files.")
+            }
+        }
+
+        return $resolved
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Override)) {
+        return Assert-VcRuntimeDirectory -Directory $Override
+    }
+
+    $candidates = [System.Collections.Generic.List[string]]::new()
+
+    # GitHub windows-latest images install Visual Studio (2022 or newer), including the
+    # ARM64 redistributable when the ARM64 C++ tools are present. vswhere is the stable
+    # way to find the installation regardless of drive, edition, or version folder.
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (Test-Path -LiteralPath $vswhere) {
+        $installations = @(& $vswhere -all -products * -property installationPath 2>$null)
+        foreach ($installation in $installations) {
+            if ([string]::IsNullOrWhiteSpace($installation)) {
+                continue
+            }
+
+            $redistRoot = Join-Path $installation 'VC\Redist\MSVC'
+            if (-not (Test-Path -LiteralPath $redistRoot)) {
+                continue
+            }
+
+            foreach ($versionDirectory in Get-ChildItem -LiteralPath $redistRoot -Directory |
+                Sort-Object Name -Descending) {
+                $architectureRoot = Join-Path $versionDirectory.FullName $architecture
+                if (-not (Test-Path -LiteralPath $architectureRoot)) {
+                    continue
+                }
+
+                foreach ($crtDirectory in Get-ChildItem -LiteralPath $architectureRoot -Directory -Filter 'Microsoft.VC*.CRT') {
+                    $candidates.Add($crtDirectory.FullName)
+                }
+            }
+        }
+    }
+
+    # A host of the same architecture can supply the system copies for local x64
+    # packaging. Cross-architecture packaging must use the redistributable folder,
+    # because the PE machine is validated above.
+    $processArchitecture = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
+    if (($architecture -eq 'x64' -and $processArchitecture -eq 'X64') -or
+        ($architecture -eq 'arm64' -and $processArchitecture -eq 'Arm64')) {
+        $candidates.Add((Join-Path $env:SystemRoot 'System32'))
+    }
+
+    foreach ($candidate in $candidates) {
+        try {
+            return Assert-VcRuntimeDirectory -Directory $candidate
+        }
+        catch {
+            # Try the next installation or redistributable version.
+        }
+    }
+
+    throw ("Could not find the $architecture Microsoft Visual C++ redistributable " +
+        "($($required -join ', ')). Install the Visual Studio C++ ARM64/x64 build tools, " +
+        "or pass -VcRuntimeDirectory pointing at a folder that contains them.")
+}
+
 try {
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
 
@@ -135,6 +265,29 @@ try {
         if (-not (Test-Path -LiteralPath $runtimePath)) {
             throw ("The bundle is missing the OpenAL Soft runtime '$runtimeName'. " +
                 'Publish must copy the loader-named native library beside the apphosts.')
+        }
+    }
+
+    # OpenAL Soft imports the MSVC runtime. The .NET runtime is embedded, but the VC++
+    # runtime is a separate deployment dependency on a clean Windows image. Keep the
+    # target-architecture DLLs app-local so the bundle works without vc_redist.
+    if ($Rid -like 'win-*') {
+        $vcRuntimeSource = Resolve-VcRuntimeDirectory -Rid $Rid -Override $VcRuntimeDirectory
+        $vcRuntimeFiles = if ($Rid -eq 'win-arm64') {
+            @('vcruntime140.dll', 'msvcp140.dll')
+        }
+        else {
+            @('vcruntime140.dll', 'vcruntime140_1.dll', 'msvcp140.dll')
+        }
+        $expectedMachine = if ($Rid -eq 'win-arm64') { 0xAA64 } else { 0x8664 }
+        foreach ($name in $vcRuntimeFiles) {
+            $destination = Join-Path $staging $name
+            Copy-Item -LiteralPath (Join-Path $vcRuntimeSource $name) -Destination $destination -Force
+            $machine = Get-PeMachine $destination
+            if ($machine -ne $expectedMachine) {
+                throw ("The bundled VC++ runtime '$name' has PE machine " +
+                    "0x$($machine.ToString('X4')); $Rid requires 0x$($expectedMachine.ToString('X4')).")
+            }
         }
     }
 
@@ -262,6 +415,15 @@ try {
         './FiveDo.Cli --help  |  ./FiveDo'
     }
 
+    $runtimeNotice = 'runtime: .NET 11 embedded; no separate runtime install required'
+    if ($Rid -like 'win-*') {
+        $runtimeNotice += if ($Rid -eq 'win-arm64') {
+            '; VC++ runtime (vcruntime140, msvcp140) is app-local'
+        }
+        else {
+            '; VC++ runtime (vcruntime140, vcruntime140_1, msvcp140) is app-local'
+        }
+    }
     $manifest = @(
         '5DO portable bundle'
         'component: bundle'
@@ -269,7 +431,7 @@ try {
         "version: $Version"
         "commit: $commit"
         "built: $([DateTimeOffset]::UtcNow.ToString('u'))"
-        'runtime: .NET 11 embedded; no separate runtime install required'
+        $runtimeNotice
         'apps: FiveDo.Cli and FiveDo (self-contained single-file apphosts)'
         "launch: $launch"
         ''

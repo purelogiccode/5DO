@@ -16,15 +16,14 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.14.1 deep-review bug-fix release"
-    5DO is at v1.14.1. This bug-fix release aligns CHD Mode 2 native track sectors,
-    clears stale cropped-frame dimensions after auto-crop stops, and hardens atomic
-    persistence, malformed-settings recovery, CD-ROM/state validation, and shutdown for
-    audio, RetroAchievements, Vulkan, and Direct3D workers. The 1.14.0 feature baseline
-    is unchanged: `--high-res` remains a presentation-only 2x upscale, the OpenGL
-    480-line upload is fixed, and retail Gamegun titles keep a joypad on port 1.
-    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
-    **Alt+Enter** toggles fullscreen.
+!!! important "v1.14.2 packaging and diagnostics bug-fix release"
+    5DO is at v1.14.2. Windows bundles now include the app-local MSVC runtime OpenAL
+    Soft needs, AppImage update metadata resolves the next release, cover-catalog HTTP
+    failures fall back to the cached catalog, and expected user conditions no longer
+    file bug reports. The 1.14.0 feature baseline is unchanged: `--high-res` remains a
+    presentation-only 2x upscale, the OpenGL 480-line upload is fixed, and retail
+    Gamegun titles keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward,
+    **F1** connects the Gamegun, and **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all eight filters and a
     packaged DMG. GPG-signed Linux artifacts use the keyring fingerprint
@@ -85,14 +84,23 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.14.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.14.2.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-20, v1.14.1 deep-review bug-fix release (GitHub Releases).**
+**2026-11-21, v1.14.2 packaging and diagnostics bug-fix release (GitHub Releases).**
 
-- **2,534 tests** are present in the current test assembly.
+- **2,535 tests** are present in the current test assembly.
+- **Windows bundles are self-contained for audio:** `vcruntime140.dll` and
+  `msvcp140.dll` (plus the x64-only `vcruntime140_1.dll`) ship beside `OpenAL32.dll`,
+  so a clean Windows image no longer needs the Visual C++ redistributable.
+- **AppImage updates resolve the next release:** the embed uses
+  `gh-releases-zsync`, the `.zsync` target points at the versioned AppImage, and the
+  build validates both. The 1.14.1 AppImages predate the fix, so update those manually.
+- **Diagnostics are quieter:** cover-catalog HTTP failures fall back to the cached
+  catalog, and expected state/experimental/deployment warnings no longer file bug
+  reports.
 - **CHD Mode 2 sectors and crop dimensions are fixed:** native 2336-byte and 2324-byte
   track sectors start at frame offset zero for raw-sector consumers and DAT hashing, and
   clearing auto-crop or a manual crop returns pointer mapping and CPU presentation to the
@@ -169,7 +177,7 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.14.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.14.1)
+- v1.14.2 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.14.2)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See

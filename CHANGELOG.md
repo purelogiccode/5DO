@@ -1,13 +1,25 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.14.1, a bug-fix release for
-the deep-review pass across the host, emulation core, storage, achievements, diagnostics,
-and desktop frontend.
+All notable changes are recorded here. The project is at v1.14.2, a packaging and
+diagnostics bug-fix release for the Windows bundles, AppImage updates, cover-catalog
+failures, and expected-condition reporting.
 
-## [Unreleased]
+## [1.14.2] - 2026-11-21
 
 ### Fixed
 
+- **AppImage update metadata now targets the next release.** `build-appimage.sh`
+  separates the embedded update information from the `.zsync` target URL and validates
+  both; CI embeds `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`
+  and the `.zsync` now points at the versioned AppImage. A local zsync pass from the
+  rebuilt 1.14.1 image to a test 1.14.2 image fetched 27 KB over an HTTP Range server and
+  matched the target hash (REL-07).
+- **Windows bundles now include the MSVC runtime required by OpenAL Soft.**
+  `vcruntime140.dll` and `msvcp140.dll` (plus `vcruntime140_1.dll` on x64) are staged
+  beside `OpenAL32.dll`, so a clean Windows image no longer needs the Visual C++
+  redistributable. `package-bundle.ps1` resolves the target-architecture files and
+  rejects missing or wrong-architecture DLLs; `build-bundle.yml` verifies the bundle
+  (REL-11).
 - **Cover catalog server errors are handled as a failed refresh, not an application
   crash.** Transient HTTP responses now remain `CoverHttpException` subclasses, so the
   retry loop's final failure falls back to the cached catalog (or local covers) instead
@@ -17,6 +29,13 @@ and desktop frontend.
   true 2x CEL mode, and running a partially extracted bundle now log with
   `WithoutBugReport()`. The missing-native startup message also names the application
   folder. The input-device trace is informational (issues #69944-#69950).
+
+### Changed
+
+- **Linux AppImage signatures remain detached.** The release publishes
+  `5do-<version>-linux-<arch>.AppImage.asc` and the signed `SHA256SUMS-linux.txt`; CI
+  does not embed an AppImage signature, so `--appimage-signature` is not used. The
+  corresponding-source, relinking, and replacement notices are unchanged.
 
 ## [1.14.1] - 2026-11-20
 

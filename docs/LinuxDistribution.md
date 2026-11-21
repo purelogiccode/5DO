@@ -5,7 +5,7 @@ and what else can move Linux adoption. It is the working reference for
 [Installers.md](Installers.md) and the Linux rows in
 [ImplementationPlan.md](ImplementationPlan.md) §3.3.
 
-**Snapshot:** 2026-11-20, v1.14.1. Linux x64 is a validated target (hardware
+**Snapshot:** 2026-11-21, v1.14.2. Linux x64 is a validated target (hardware
 OpenGL/Vulkan, real-device audio, evdev gamepads, display-sleep inhibit, full
 acceptance pass); Linux arm64 passes native runtime smoke.
 
@@ -202,9 +202,11 @@ There is **no project-hosted APT/RPM repository and no second repository to main
 `apt` and `dnf` install a local file directly (a path containing `/` is treated as a
 package file), and dependency resolution still comes from the distribution's own
 archives. Release assets are immutable per tag, so the versioned packages always
-resolve; `releases/latest/download/5do-<version>-linux-x86_64.AppImage` and
-`releases/latest/download/5do-<version>-linux-x86_64.flatpak` are the stable URLs only for the
-unversioned single-file artifacts.
+resolve. The AppImage embeds `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`,
+so `AppImageUpdate` resolves the newest release's `.zsync` dynamically; that `.zsync`
+records the versioned AppImage URL as its target. Do not use a version-pinned
+`releases/latest/download/` URL for update information: it stops resolving after the
+next release.
 
 ### 5.1 Optional: mirror the packages
 
@@ -320,7 +322,10 @@ Evidence: [TestCorpus.md](TestCorpus.md) §1.1cp.
 bash packaging/linux/build-deb.sh  --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-rpm.sh  --bundle artifacts/bundle/linux-x64 --rid linux-x64
 APPIMAGETOOL=/path/to/appimagetool/AppRun bash packaging/linux/build-appimage.sh \
-  --bundle artifacts/bundle/linux-x64 --output artifacts/installers --name 5do-<version>-linux-x86_64.AppImage
+  --bundle artifacts/bundle/linux-x64 --output artifacts/installers \
+  --name 5do-<version>-linux-x86_64.AppImage \
+  --zsync-url "https://github.com/purelogiccode/5DO/releases/download/v<version>/5do-<version>-linux-x86_64.AppImage" \
+  --update-information "gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync"
 bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64 \
   --output artifacts/installers --runtime-version 26.08
 bash packaging/linux/sign-artifacts.sh --key-id "$KEY" \
@@ -330,7 +335,7 @@ bash packaging/linux/build-apt-repo.sh --repo-dir artifacts/mirror/apt \
 bash packaging/linux/build-rpm-repo.sh --repo-dir artifacts/mirror/rpm \
   --base-url https://mirror.example.org/5do/rpm --key-id "$KEY" --gpgcheck 0 \
   artifacts/installers
-sudo apt install ./artifacts/installers/5do_1.14.1_amd64.deb
+sudo apt install ./artifacts/installers/5do_1.14.2_amd64.deb
 ```
 
 CI (`linux-packages.yml`, called by `release.yml`) already:
@@ -357,7 +362,7 @@ sudo apt install ./5do_<version>_amd64.deb
 
 # Fedora
 sudo dnf install ./5do-<version>-1.linux.x86_64.rpm
-rpm --checksig ./5do-1.14.1-1.linux.x86_64.rpm
+rpm --checksig ./5do-1.14.2-1.linux.x86_64.rpm
 
 # AppImage without FUSE (containers, minimal installs)
 ./5do-<version>-linux-x86_64.AppImage --appimage-extract-and-run --version
@@ -434,7 +439,7 @@ steps, is `packaging/linux/aur/` in this repository.
 # PKGBUILD sketch for 5do-bin. Fill in both checksums from the release.
 # The maintained copy is packaging/linux/aur/PKGBUILD.
 pkgname=5do-bin
-pkgver=1.14.1
+pkgver=1.14.2
 pkgrel=1
 pkgdesc="3DO Interactive Multiplayer emulator"
 arch=('x86_64' 'aarch64')

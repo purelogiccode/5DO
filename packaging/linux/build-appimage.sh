@@ -13,7 +13,8 @@
 #
 # Optional:
 #   --sign-key <gpg-key-id>   Embed an AppImage signature (appimagetool --sign).
-#   --zsync-url <url>         Embed update information and write a .zsync file.
+#   --zsync-url <url>         AppImage download URL recorded in the .zsync file.
+#   --update-information <s>  Embedded update information (default zsync|<url>).
 #   --name <file>             Output file name (default 5do-<version>-linux-<arch>.AppImage).
 #
 set -euo pipefail
@@ -27,11 +28,12 @@ output_dir=""
 arch="x86_64"
 sign_key=""
 zsync_url=""
+update_information=""
 name=""
 appimagetool="${APPIMAGETOOL:-}"
 
 usage() {
-    sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -42,6 +44,7 @@ while [[ $# -gt 0 ]]; do
         --arch) arch="${2:-}"; shift 2 ;;
         --sign-key) sign_key="${2:-}"; shift 2 ;;
         --zsync-url) zsync_url="${2:-}"; shift 2 ;;
+        --update-information) update_information="${2:-}"; shift 2 ;;
         --name) name="${2:-}"; shift 2 ;;
         --appimagetool) appimagetool="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
@@ -158,7 +161,9 @@ arguments=(--comp zstd)
 if "$appimagetool" --help 2>&1 | grep -q -- '--no-appstream'; then
     arguments+=(--no-appstream)
 fi
-if [[ -n "$zsync_url" ]]; then
+if [[ -n "$update_information" ]]; then
+    arguments+=(--updateinformation "$update_information")
+elif [[ -n "$zsync_url" ]]; then
     arguments+=(--updateinformation "zsync|$zsync_url")
 fi
 if [[ -n "$sign_key" ]]; then
@@ -177,6 +182,26 @@ chmod 0755 "$output"
 
 if [[ -n "$zsync_url" ]] && command -v zsyncmake >/dev/null 2>&1; then
     zsyncmake -u "$zsync_url" -o "$output.zsync" "$output"
+fi
+
+if [[ -n "$update_information" ]]; then
+    embedded_update_information="$("$output" --appimage-updateinfo)"
+    if [[ "$embedded_update_information" != "$update_information" ]]; then
+        echo "Embedded update information mismatch: expected '$update_information', got '$embedded_update_information'." >&2
+        exit 1
+    fi
+fi
+
+if [[ -n "$zsync_url" ]]; then
+    if [[ ! -f "$output.zsync" ]]; then
+        echo "zsyncmake is required to publish a .zsync file for '$zsync_url'." >&2
+        exit 1
+    fi
+    zsync_target="$(grep -a -m1 '^URL: ' "$output.zsync" | sed 's/^URL: //')"
+    if [[ "$zsync_target" != "$zsync_url" ]]; then
+        echo "The .zsync URL '$zsync_target' does not match the AppImage URL '$zsync_url'." >&2
+        exit 1
+    fi
 fi
 
 if [[ "$(uname -m)" == "$arch" ]]; then

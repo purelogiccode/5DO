@@ -47,8 +47,9 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
       CHDSharp, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
-      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 11 runtime, and
-      the bundled OpenAL Soft 1.23.1 runtime.
+      XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 11 runtime,
+      the bundled OpenAL Soft 1.23.1 runtime, and the Windows app-local Microsoft
+      Visual C++ runtime.
 - [x] The OpenAL Soft native runtime is included in the Windows, Linux, and macOS x64
       bundles through `Silk.NET.OpenAL.Soft.Native`; Windows copies `soft_oal.dll` as
       `OpenAL32.dll`. This adds an LGPL-2.0-or-later binary-distribution obligation to
@@ -58,17 +59,22 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
       LGPL-2.0 text. Both files are copied into every bundle by
       `packaging/package-bundle.ps1`. The native library stays outside the single-file
       apphosts, so users can replace it.
-- [x] The .NET 11 runtime is a **host prerequisite** and is not redistributed in the
-      bundles. Users install it from Microsoft; the .NET runtime is MIT licensed and is
-      listed in `THIRD-PARTY-NOTICES.md`.
+- [x] The Windows bundles redistribute `vcruntime140.dll` and `msvcp140.dll` (plus
+      `vcruntime140_1.dll` on x64) app-local beside OpenAL Soft. These Microsoft Visual
+      C++ redistributable files are deployed under the Microsoft Visual Studio
+      redistributable terms; `THIRD-PARTY-NOTICES.md` and `docs/OpenALSoft.md` record the
+      files and their purpose. The files are not covered by the project licence.
+- [x] The .NET 11 runtime is embedded in the self-contained single-file apphosts; no
+      separate runtime install is required. It is MIT licensed and listed in
+      `THIRD-PARTY-NOTICES.md`.
 - [x] The desktop About dialog reports the version, renderer state, and the
       FreeDO modified GNU LGPL notice, and states that no BIOS ROMs or game images are
       included.
 - [x] The CLI prints the product/version and does not bundle BIOS/disc content.
 - [x] FreeDO/4DO/Opera source headers and attribution remain in the repository.
-- [x] The bundles contain no `References/` file, no FreeDO/4DO/Opera binary, no .NET
-      runtime, no PDB or XML documentation files, and no BIOS ROM, disc image, extracted
-      asset, screenshot, or WAV capture.
+- [x] The bundles contain no `References/` file, no FreeDO/4DO/Opera binary, no
+      separate `runtime/` folder, no PDB or XML documentation files, and no BIOS ROM,
+      disc image, extracted asset, screenshot, or WAV capture.
 
 ## 3. Decisions and residual risks
 
@@ -130,5 +136,8 @@ attribution portion.
 |---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, CHDSharp, HQx, and NuGet notices shipped; .NET is a host prerequisite | 2026-11-02 |
-| Bundle layout | Framework-dependent single-file CLI + desktop app; no bundled .NET runtime | 2026-11-02 |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, HQx, and NuGet notices shipped; .NET 11 is embedded | 2026-11-20 |
+| Bundle layout | Self-contained single-file CLI + desktop app; no separate runtime folder; Windows MSVC runtime app-local | 2026-11-20 |
+
+The 2026-11-20 rows update the bundle facts for REL-11; the distribution and licence
+decision remains the 2026-11-02 sign-off.

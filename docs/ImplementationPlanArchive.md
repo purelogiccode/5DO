@@ -383,6 +383,23 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-20 - REL-11 Windows app-local MSVC runtime.** The Windows bundles now stage
+  `vcruntime140.dll` and `msvcp140.dll` (and `vcruntime140_1.dll` on x64) beside
+  `OpenAL32.dll`. `package-bundle.ps1` resolves the target-architecture files through
+  `vswhere`, falls back to the same-architecture system copies on a matching host, or
+  accepts `-VcRuntimeDirectory`, and rejects a missing or wrong-machine DLL;
+  `build-bundle.yml` verifies the extracted files. On the clean Windows 11 ARM64 VM with
+  the VC++ redistributable uninstalled, the old 1.13.1 bundle reported
+  `OpenAL: not found (OpenAL32.dll)` while the new ARM64 bundle reported
+  `OpenAL: loaded OpenAL32.dll`; the x64 bundle loaded its app-local runtime under x64
+  emulation. `selftest --json` passed 15/15, and a 600-frame Theme Park run produced
+  frame hash `0x110E7DC5` and PC `22892`, matching Windows x64. A 60-frame
+  `--audio openal` run with `ALSOFT_DRIVERS=null` exited 0 with 44,144 samples, and the
+  desktop smoke reported `FRONTEND SMOKE OK 1.14.1`. Evidence:
+  [Compatibility.md](Compatibility.md) §10.6, [OpenALSoft.md](OpenALSoft.md) §1,
+  [Troubleshooting.md](Troubleshooting.md) §1, `packaging/package-bundle.ps1`,
+  `.github/workflows/build-bundle.yml`.
+
 - **2026-11-18 - REL-06 software-center metadata.** Installed `5do_1.12.0_amd64.deb` on
   Linux Mint 22.3 with GNOME Software 46.0. After `appstreamcli refresh --force` the
   Installed list shows *5DO* with the 256 px icon, and the details page renders the icon,
@@ -734,7 +751,7 @@ Release history for v1.9.1–v1.12.0 is in §14.
 
 ## 11. Completed stable IDs
 
-**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, QUAL-01 … QUAL-04,
+**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, REL-11, QUAL-01 … QUAL-04,
 QUAL-03A … QUAL-03D, QUAL-05A, ACC-01 … ACC-04, AUD-01, AUD-02, PLAT-01 … PLAT-04,
 PLAT-07 … PLAT-13, PLAT-15, PLAT-16, PLAT-18, TEST-06/07/08, CORE-11/16, FND-05, ECO-04,
 ENG-01/09, SYS-06/07/08/12/17/18/22/24, UX-09, UX-25, UX-26, UX-28 … UX-32, UX-34, UX-35,
@@ -754,7 +771,7 @@ quality pass; `QUAL-03A`…`QUAL-03D` and `QUAL-05A` completed the follow-on scr
 aliases, old gates, and dated evidence entries are in Part I. Do not reopen a completed ID
 without new measurement.
 
-## 12. Completed backlog rows (2026-11-09 → 2026-11-19)
+## 12. Completed backlog rows (2026-11-09 → 2026-11-20)
 
 | ID | Priority | Completed result | Evidence |
 |---|---|---|---|
@@ -801,6 +818,7 @@ without new measurement.
 | **UX-35** | P3 | `5do-cli doctor` host report: read-only OS/session, data-folder, disk-space, OpenGL/Vulkan/OpenAL, evdev/optical, settings, and BIOS-discovery report with `--json` and `--strict`. | `DoctorReport`, `DoctorCommand`, `DoctorReportTests` (3) (2026-11-17) |
 | **SYS-26** | P1 | Movie verification false failure: the header records the emulated frame span (`EmulatedFrames`, null on older movies) and verification compares that span instead of the packet counter, so a 600-frame recording verifies its 599 packets over 600 frames. Playback and verification resolve the recorded disc by file name beside the movie or in the working directory and the BIOS by MD5 in the default folders, and fail with an actionable message instead of replaying without them; `movie record --disc` now matches `movie play --disc`. A 600-frame Theme Park movie and a 300-frame `--state-in` branch verify with exit 0; suite 2,443/2,443. | [Tas.md](Tas.md) §4, `MovieVerifierTests`, `MovieFileTests`, `MovieRecordAndVerify_RoundtripFromState`, [Compatibility.md](Compatibility.md) §10.6 |
 | **UX-36** | P3 | Startup preflight for partial extractions: the desktop frontend verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the apphost before Avalonia initializes, then shows a "5DO cannot start" message naming the missing files and the extraction steps (Windows dialog; stderr for automated runs) and exits 1 at Error level, so no fatal crash or bug report is produced. Issues #69923/#69924 (`SkiaSharp.SKImageInfo`/`Dll was not found` from a bundle run out of `Downloads`) reproduce it and now receive the actionable message. A published win-x64 apphost run alone shows the dialog; the complete folder passes the smoke test. | `NativeRuntimeCheck`, `NativeRuntimeCheckTests` (6), [Troubleshooting.md](Troubleshooting.md) §1, README bundle notes, issues #69923/#69924 |
+| **REL-11** | P1 | Windows bundles ship the app-local MSVC runtime required by OpenAL Soft: `vcruntime140.dll` and `msvcp140.dll` (and `vcruntime140_1.dll` on x64) sit beside `OpenAL32.dll`. `package-bundle.ps1` resolves them through `vswhere` or `-VcRuntimeDirectory` and rejects missing/wrong-architecture files; `build-bundle.yml` verifies the extracted bundle. On a clean Windows 11 ARM64 image with the VC++ redistributable uninstalled, the old bundle reported `OpenAL: not found (OpenAL32.dll)` and the new bundle reported `OpenAL: loaded OpenAL32.dll`; the x64 bundle loaded under x64 emulation. `selftest --json` passed 15/15, a 600-frame Theme Park run matched Windows x64 at `0x110E7DC5` / PC `22892`, and the frontend smoke reported `FRONTEND SMOKE OK 1.14.1`. | [Compatibility.md](Compatibility.md) §10.6, [OpenALSoft.md](OpenALSoft.md) §1, [Troubleshooting.md](Troubleshooting.md) §1, `packaging/package-bundle.ps1`, `.github/workflows/build-bundle.yml` |
 
 `UX-16` unsigned scaffolding is also complete: the Windows Inno Setup installer with
 `.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, the Linux `.deb`/`.rpm` with desktop and

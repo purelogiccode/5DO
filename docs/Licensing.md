@@ -72,7 +72,10 @@ Suggested About text:
 The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NOTICES.md` as they are added:
 
 - Avalonia UI (MIT)
-- .NET 11 runtime (MIT; required on the host and **not bundled** in the release artifacts)
+- .NET 11 runtime (MIT; embedded in the self-contained single-file apphosts)
+- Microsoft Visual C++ Redistributable (`vcruntime140.dll` and `msvcp140.dll`, plus
+  the x64-only `vcruntime140_1.dll` helper; app-local in the Windows bundles under the
+  Microsoft Visual Studio redistributable terms)
 - CommunityToolkit.Mvvm (MIT)
 - Microsoft.Extensions.* (MIT)
 - xUnit (Apache-2.0)

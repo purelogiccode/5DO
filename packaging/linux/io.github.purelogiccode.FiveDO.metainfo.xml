@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.14.2" date="2026-11-21">
+      <description>
+        <p>
+          Packaging and diagnostics bug-fix release: Windows bundles include the
+          app-local MSVC runtime OpenAL Soft needs, AppImage update metadata resolves
+          the next release, cover-catalog HTTP failures fall back to the cached
+          catalog, and expected user conditions no longer file bug reports.
+        </p>
+      </description>
+    </release>
     <release version="1.14.1" date="2026-11-20">
       <description>
         <p>

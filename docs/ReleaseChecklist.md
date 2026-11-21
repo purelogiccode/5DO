@@ -1,14 +1,13 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.14.1 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.14.2 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.14.1 is a deep-review bug-fix release for CHD
-Mode 2 native sectors, stale crop dimensions, atomic persistence, malformed-data
-recovery, and shutdown/device-loss handling. v1.14.0 made `--high-res`
-presentation-only, fixed the OpenGL 480-line upload, and completed the Gamegun/input
-defaults; v1.13.2 was a bug-fix release for movie verification and partial-extraction
-diagnostics.
+v1.2.x. macOS is published as a DMG. v1.14.2 is a packaging and diagnostics bug-fix
+release for the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog
+HTTP fallback, and expected-condition reporting. v1.14.1 was the deep-review bug-fix
+release for CHD Mode 2 native sectors, stale crop dimensions, atomic persistence,
+malformed-data recovery, and shutdown/device-loss handling.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -42,6 +41,29 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.14.2 packaging and diagnostics gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.14.2`.
+- [x] Windows bundles stage `vcruntime140.dll` and `msvcp140.dll` (plus
+      `vcruntime140_1.dll` on x64) beside `OpenAL32.dll`; `package-bundle.ps1` and
+      `build-bundle.yml` reject missing or wrong-architecture files. A clean Windows
+      ARM64 image without the VC++ redistributable loads OpenAL, passes `selftest`, and
+      matches the Windows x64 600-frame hash `0x110E7DC5` / PC `22892`.
+- [x] AppImage update information uses `gh-releases-zsync` and the `.zsync` target
+      points at the versioned AppImage; `build-appimage.sh` validates both. A local
+      zsync pass fetched the changed blocks and matched the target hash.
+- [x] Transient cover-catalog HTTP failures fall back to the cached catalog, and
+      expected state/experimental/deployment warnings no longer file bug reports.
+- [x] Full suite green (**2,535 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.- [ ] Tagged release publishes the five bundles and the signed Linux assets; the five
+      bundles match `SHA256SUMS.txt`, and the win-x64 CLI `selftest` and frontend smoke
+      report `FRONTEND SMOKE OK 1.14.2`.
+- [ ] The published x64 AppImage resolves the latest release, reports
+      `FRONTEND SMOKE OK 1.14.2`, and its detached `.asc` verifies with the release key.
+      `AppImageUpdate` from 1.14.2 is validated against the next release, or the
+      documented local zsync path stands in until that release exists.
 
 ## 1.14.1 deep-review bug-fix gate
 
@@ -196,6 +218,10 @@ below still apply to the signed release.
 - [ ] The release page lists the `.deb`/`.rpm` files, both AppImages (+ `.zsync`), both
       Flatpak bundles, the keyring, and both checksum manifests; no repository is hosted
       or required.
+- [ ] Each AppImage's `--appimage-updateinfo` reports
+      `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`, the
+      `.zsync` `URL:` points at the versioned AppImage, and `AppImageUpdate` finds the
+      next release through the published `.zsync`.
 - [ ] The key fingerprint, run links, and install commands are recorded in
       [Installers.md](Installers.md), [TestCorpus.md](TestCorpus.md), and the release
       notes; any unsigned run is labeled "unsigned".

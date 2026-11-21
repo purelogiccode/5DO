@@ -191,6 +191,32 @@ jobs:
             Write-Host "$name $((Get-Item -LiteralPath $path).Length) bytes"
           }
 
+      - name: Verify bundled VC++ runtime (Windows)
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        run: |
+          $expected = if ('${{ matrix.arch }}' -eq 'arm64') { 0xAA64 } else { 0x8664 }
+          $names = if ('${{ matrix.arch }}' -eq 'arm64') {
+            @('vcruntime140.dll', 'msvcp140.dll')
+          }
+          else {
+            @('vcruntime140.dll', 'vcruntime140_1.dll', 'msvcp140.dll')
+          }
+          foreach ($name in $names) {
+            $path = Join-Path 'artifacts/bundle-smoke' $name
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "The bundle is missing the app-local VC++ runtime '$name'."
+            }
+
+            $bytes = [System.IO.File]::ReadAllBytes($path)
+            $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+            $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+            if ($machine -ne $expected) {
+              throw "$name has PE machine 0x$($machine.ToString('X4')); expected 0x$($expected.ToString('X4'))."
+            }
+            Write-Host "$name PE machine=0x$($machine.ToString('X4'))"
+          }
+
       - name: Verify bundled Vulkan/MoltenVK runtime (macOS)
         if: matrix.rid == 'osx-arm64'
         shell: pwsh

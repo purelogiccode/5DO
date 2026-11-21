@@ -98,6 +98,20 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   on request through the project issue tracker. The library is dynamically
   loaded, so users may replace it with a compatible build without rebuilding 5DO.
 
+### Microsoft Visual C++ Redistributable (Windows bundle)
+
+- Files: `vcruntime140.dll` and `msvcp140.dll` (plus the x64-only
+  `vcruntime140_1.dll` helper), copied app-local beside the Windows apphosts.
+- Copyright: Microsoft Corporation.
+- License: Microsoft Visual Studio redistributable terms; the files are deployed
+  app-local under the redistribution terms that accompany Visual Studio
+  (<https://visualstudio.microsoft.com/license-terms/>). They are not covered by
+  this project's licence.
+- Use: OpenAL Soft's Windows build imports this runtime. The .NET runtime does not
+  provide it, so the bundle carries the target-architecture copies to work on a clean
+  Windows image without `vc_redist.*.exe`. See
+  [`docs/OpenALSoft.md`](docs/OpenALSoft.md) §1.
+
 ### Vulkan Loader and MoltenVK (macOS arm64 bundle)
 
 - Version: Vulkan Loader 1.4.363 and MoltenVK 1.4.x (Homebrew `vulkan-loader` and

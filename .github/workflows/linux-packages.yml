@@ -238,7 +238,8 @@ jobs:
             --output artifacts/installers \
             --appimagetool "$tool_dir/squashfs-root/AppRun" \
             --name "$name" \
-            --zsync-url "https://github.com/purelogiccode/5DO/releases/latest/download/$name.zsync"
+            --zsync-url "https://github.com/purelogiccode/5DO/releases/download/v${VERSION}/$name" \
+            --update-information "gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-${IMAGE_ARCH}.AppImage.zsync"
           test -x "artifacts/installers/$name"
 
       - name: Build Flatpak bundle
