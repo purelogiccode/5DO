@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using FiveDo.Core;
+using FiveDo.Storage;
 
 namespace FiveDo.Host;
 
@@ -83,6 +84,10 @@ public static class DoctorReport
         if (OperatingSystem.IsLinux())
         {
             ProbeLinuxInput(checks);
+        }
+
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsWindows())
+        {
             ProbeOpticalDrives(checks);
         }
 
@@ -411,16 +416,22 @@ public static class DoctorReport
 
     private static void ProbeOpticalDrives(List<DoctorCheck> checks)
     {
-        var drives = SafeEnumerate("/dev", "sr*");
-        checks.Add(drives.Length == 0
-            ? new DoctorCheck(
-                "Optical drive",
-                DoctorStatus.Info,
-                "No /dev/sr* device. File > Boot Optical Drive needs an attached drive.")
-            : new DoctorCheck(
+        IReadOnlyList<string> drives = PhysicalDiscSource.GetOpticalDriveNames();
+        if (drives.Count > 0)
+        {
+            checks.Add(new DoctorCheck(
                 "Optical drive",
                 DoctorStatus.Ok,
                 string.Join(", ", drives)));
+            return;
+        }
+
+        checks.Add(new DoctorCheck(
+            "Optical drive",
+            DoctorStatus.Info,
+            OperatingSystem.IsWindows()
+                ? "No optical drive with readable media. Insert a disc and use File > Boot Optical Drive."
+                : "No /dev/sr* device. File > Boot Optical Drive needs an attached drive."));
     }
 
     private static void ProbeSettings(List<DoctorCheck> checks)

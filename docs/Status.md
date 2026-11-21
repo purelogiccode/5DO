@@ -25,6 +25,19 @@ scaling. `--gl-probe-filter arcade-crt` and the Vulkan/Direct3D probe aliases pa
 `filterFallback: false`; captured frames show the effect on all three backends. The suite
 is **2,547/2,547**.
 
+**2026-11-21, physical optical-drive discovery (issue #8):** **File > Boot Optical
+Drive...** no longer relies on `DriveInfo.IsReady`. A 3DO disc's custom filesystem is not
+mountable by Windows, so the drive can have no ready volume or no drive letter even with
+a disc inserted. `PhysicalDiscSource.GetOpticalDriveNames` now opens the optical device
+and probes media with `IOCTL_STORAGE_CHECK_VERIFY2`, falls back to the CD-ROM geometry
+request, maps letters through `QueryDosDevice`, and enumerates `\\.\CdRomN` for drives
+without a letter. The picker labels those entries **no drive letter**, and the CLI,
+startup path, and `doctor` accept the same form. Evidence: a 3DO ISO was rejected by
+Windows `Mount-DiskImage` as an unreadable filesystem; a valid ISO mounted as a virtual
+DVD drive, its drive letter was removed with `mountvol`, `doctor` then reported
+`\\.\CdRom0`, and `info \\.\CdRom0` opened the device and read all 22 sectors. The suite
+is **2,554/2,554**. A physical 3DO disc boot remains the SYS-21 hardware acceptance step.
+
 **2026-11-21, REL-10 Steam Deck first-run:** the welcome guide now detects
 `SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope and uses a 960x680 layout with 54 px
 buttons, the BIOS folder path, **Scan**, and **Open Folder**. Discovery still prefers

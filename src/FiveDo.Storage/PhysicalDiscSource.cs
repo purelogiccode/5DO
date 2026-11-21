@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -19,15 +20,26 @@ namespace FiveDo.Storage;
 /// drive until a raw-audio reader is added.
 /// </para>
 /// <para>
-/// Windows drive roots are written as <c>D:</c>, <c>D:\</c>, or <c>\\.\D:</c>; Linux and
-/// macOS devices are written as <c>/dev/sr0</c> or the platform's block-device path. The
-/// source is read-only and never writes to the disc.
+/// Windows drives are written as <c>D:</c>, <c>D:\</c>, <c>\\.\D:</c>, or
+/// <c>\\.\CdRom0</c>; Linux and macOS devices are written as <c>/dev/sr0</c> or the
+/// platform's block-device path. The <c>CdRomN</c> form is used when Windows cannot
+/// mount the disc's filesystem: a 3DO disc does not use ISO 9660, so it commonly has no
+/// drive letter even though the drive and media are ready. Media is detected through
+/// the device itself, not through the mounted volume. The source is read-only and never
+/// writes to the disc.
 /// </para>
 /// </remarks>
 public sealed class PhysicalDiscSource : IDiscSource
 {
     /// <summary>Gets the size of one 3DO user-data sector.</summary>
     public const int SectorBytes = 2048;
+
+    private const int MaxOpticalDevices = 32;
+    private const uint DriveTypeCdRom = 5;
+    private const uint IoctlStorageCheckVerify2 = 0x002D0800;
+    private const uint IoctlCdromGetDriveGeometry = 0x0002404C;
+    private const int ErrorNotReady = 21;
+    private const int GeometryBufferBytes = 24;
 
     private readonly FileStream _stream;
     private readonly Lock _gate = new();
@@ -65,42 +77,71 @@ public sealed class PhysicalDiscSource : IDiscSource
 
     /// <summary>Lists attached optical drives that currently contain media.</summary>
     /// <returns>Device paths suitable for <see cref="Open(string)"/>.</returns>
+    /// <remarks>
+    /// Windows media detection is performed through <c>IOCTL_STORAGE_CHECK_VERIFY2</c>
+    /// rather than <see cref="DriveInfo.IsReady"/>. The latter asks whether a filesystem
+    /// volume is mounted, and a 3DO disc has a custom filesystem that Windows cannot
+    /// mount. Drives without a drive letter are enumerated through their <c>CdRomN</c>
+    /// device names.
+    /// </remarks>
     public static IReadOnlyList<string> GetOpticalDriveNames()
     {
-        var drives = new List<string>();
-        if (OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows())
         {
-            foreach (DriveInfo drive in DriveInfo.GetDrives())
-            {
-                if (drive.DriveType != DriveType.CDRom)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    if (drive.IsReady)
-                    {
-                        drives.Add(drive.Name);
-                    }
-                }
-                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-                {
-                    // A drive can disappear or report no media between enumeration and
-                    // IsReady; skip it rather than failing the whole list.
-                    Serilog.Log.Debug(exception, "Optical drive {Drive} disappeared while enumerating drives.", drive.Name);
-                }
-            }
-        }
-        else
-        {
+            var linuxDrives = new List<string>();
             for (var index = 0; index < 8; index++)
             {
                 var device = $"/dev/sr{index}";
                 if (File.Exists(device))
                 {
-                    drives.Add(device);
+                    linuxDrives.Add(device);
                 }
+            }
+
+            return linuxDrives;
+        }
+
+        var lettersByDeviceIndex = new Dictionary<int, string>();
+        var unmappedLetters = new List<string>();
+        for (var letter = 'A'; letter <= 'Z'; letter++)
+        {
+            var root = string.Concat(letter, ":\\");
+            if (GetDriveTypeW(root) != DriveTypeCdRom)
+            {
+                continue;
+            }
+
+            if (TryGetCdRomIndex(letter, out var deviceIndex))
+            {
+                lettersByDeviceIndex[deviceIndex] = string.Concat(letter, ":");
+            }
+            else
+            {
+                unmappedLetters.Add(string.Concat(letter, ":"));
+            }
+        }
+
+        var drives = new List<string>();
+        for (var index = 0; index < MaxOpticalDevices; index++)
+        {
+            var devicePath = $@"\\.\CdRom{index}";
+            if (!HasOpticalMedia(devicePath))
+            {
+                continue;
+            }
+
+            drives.Add(lettersByDeviceIndex.TryGetValue(index, out var letterPath)
+                ? letterPath
+                : devicePath);
+        }
+
+        // A virtual or filter-driver optical device may not use the CdRomN names.
+        // Keep lettered drives that could not be matched to a CdRomN device.
+        foreach (var letterPath in unmappedLetters)
+        {
+            if (HasOpticalMedia(letterPath))
+            {
+                drives.Add(letterPath);
             }
         }
 
@@ -295,11 +336,110 @@ public sealed class PhysicalDiscSource : IDiscSource
 
     private static bool IsCdRomDrive(string devicePath)
     {
+        // A CdRomN device name identifies an optical device directly; the drive-type
+        // query only applies to lettered roots.
+        if (TryParseCdRomDeviceName(devicePath, out _))
+        {
+            return true;
+        }
+
         // Normalization always produces \\.\X:, so the drive root is X:\.
         var root = devicePath.Length >= 6
             ? devicePath[4..] + "\\"
             : devicePath;
-        return GetDriveTypeW(root) == 5;
+        return GetDriveTypeW(root) == DriveTypeCdRom;
+    }
+
+    private static bool HasOpticalMedia(string devicePath)
+    {
+        try
+        {
+            using var stream = new FileStream(
+                devicePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite,
+                SectorBytes,
+                FileOptions.None);
+            IntPtr handle = stream.SafeFileHandle.DangerousGetHandle();
+
+            // CHECK_VERIFY2 works without a mounted filesystem, which is required for a
+            // 3DO disc: Windows does not recognize its custom filesystem and therefore
+            // does not create a ready volume or a drive letter.
+            if (DeviceIoControlNoOutput(handle, IoctlStorageCheckVerify2))
+            {
+                return true;
+            }
+
+            if (Marshal.GetLastWin32Error() == ErrorNotReady)
+            {
+                return false;
+            }
+
+            if (WindowsDiskLength(stream) > 0)
+            {
+                return true;
+            }
+
+            // Some filter drivers do not implement CHECK_VERIFY2. The CD-ROM geometry
+            // request is the older, widely supported media-presence probe.
+            var geometry = new byte[GeometryBufferBytes];
+            return DeviceIoControlBuffer(handle, IoctlCdromGetDriveGeometry, geometry);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or NotSupportedException
+            or ArgumentException)
+        {
+            Serilog.Log.Debug(
+                exception,
+                "Optical device {Device} could not be probed for media.",
+                devicePath);
+            return false;
+        }
+    }
+
+    private static bool TryGetCdRomIndex(char letter, out int index)
+    {
+        index = -1;
+        var target = new char[64];
+        var length = QueryDosDeviceW(
+            string.Concat(letter, ":"),
+            target,
+            (uint)target.Length);
+        if (length == 0)
+        {
+            return false;
+        }
+
+        var targetText = new string(target).TrimEnd('\0');
+        return TryParseCdRomTarget(targetText, out index);
+    }
+
+    private static bool TryParseCdRomTarget(string target, out int index)
+    {
+        const string prefix = @"\Device\CdRom";
+        index = -1;
+        return target.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(
+                target.AsSpan(prefix.Length),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out index);
+    }
+
+    private static bool TryParseCdRomDeviceName(string value, out int index)
+    {
+        const string prefix = @"\\.\CdRom";
+        index = -1;
+        return value.Length > prefix.Length
+            && value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(
+                value.AsSpan(prefix.Length),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out index)
+            && index < MaxOpticalDevices;
     }
 
     private static long WindowsDiskLength(FileStream stream)
@@ -312,6 +452,35 @@ public sealed class PhysicalDiscSource : IDiscSource
         }
 
         return length;
+    }
+
+    private static bool DeviceIoControlNoOutput(IntPtr handle, uint controlCode)
+    {
+        return DeviceIoControl(
+            handle,
+            controlCode,
+            IntPtr.Zero,
+            0,
+            IntPtr.Zero,
+            0,
+            out _,
+            IntPtr.Zero);
+    }
+
+    private static bool DeviceIoControlBuffer(
+        IntPtr handle,
+        uint controlCode,
+        byte[] output)
+    {
+        return DeviceIoControl(
+            handle,
+            controlCode,
+            IntPtr.Zero,
+            0,
+            output,
+            output.Length,
+            out _,
+            IntPtr.Zero);
     }
 
     private static long LinuxBlockDeviceLength(FileStream stream)
@@ -332,6 +501,12 @@ public sealed class PhysicalDiscSource : IDiscSource
         }
 
         var value = path.Trim();
+        if (TryParseCdRomDeviceName(value, out var cdRomIndex))
+        {
+            devicePath = $@"\\.\CdRom{cdRomIndex}";
+            return true;
+        }
+
         if (value.Length is >= 6 and <= 7
             && (value.StartsWith(@"\\.\", StringComparison.Ordinal)
                 || value.StartsWith(@"\\?\", StringComparison.Ordinal))
@@ -365,6 +540,12 @@ public sealed class PhysicalDiscSource : IDiscSource
     [DllImport("kernel32.dll", EntryPoint = "GetDriveTypeW", CharSet = CharSet.Unicode)]
     private static extern uint GetDriveTypeW(string rootPathName);
 
+    [DllImport("kernel32.dll", EntryPoint = "QueryDosDeviceW", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint QueryDosDeviceW(
+        string deviceName,
+        [Out] char[] targetPath,
+        uint maximumLength);
+
     [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DeviceIoControl(
@@ -373,6 +554,30 @@ public sealed class PhysicalDiscSource : IDiscSource
         IntPtr input,
         int inputSize,
         out long output,
+        int outputSize,
+        out int bytesReturned,
+        IntPtr overlapped);
+
+    [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeviceIoControl(
+        IntPtr device,
+        uint controlCode,
+        IntPtr input,
+        int inputSize,
+        IntPtr output,
+        int outputSize,
+        out int bytesReturned,
+        IntPtr overlapped);
+
+    [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeviceIoControl(
+        IntPtr device,
+        uint controlCode,
+        IntPtr input,
+        int inputSize,
+        [Out] byte[] output,
         int outputSize,
         out int bytesReturned,
         IntPtr overlapped);

@@ -11,6 +11,8 @@ public sealed class PhysicalDiscSourceTests
     [InlineData("D:/")]
     [InlineData("\\\\.\\D:")]
     [InlineData("\\\\?\\D:")]
+    [InlineData("\\\\.\\CdRom0")]
+    [InlineData("\\\\.\\cdrom7")]
     [InlineData("/dev/sr0")]
     [InlineData(" /dev/cdrom ")]
     [InlineData("\\\\?\\D:\\")]
@@ -29,6 +31,11 @@ public sealed class PhysicalDiscSourceTests
     [InlineData("D")]
     [InlineData(@"\\?\Volume{00000000-0000-0000-0000-000000000000}\")]
     [InlineData(@"\\.\PhysicalDrive0")]
+    [InlineData(@"\\.\CdRom")]
+    [InlineData(@"\\.\CdRomX")]
+    [InlineData(@"\\.\CdRom0\")]
+    [InlineData(@"\\.\CdRom0\game.iso")]
+    [InlineData(@"\\.\CdRom999")]
     public void ImagePathsAndFiles_AreNotMistakenForDrives(string? path)
     {
         Assert.False(PhysicalDiscSource.IsOpticalDrivePath(path));

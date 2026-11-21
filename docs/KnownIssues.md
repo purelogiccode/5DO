@@ -98,17 +98,25 @@ checksums are attached, and legal/attribution sign-off is recorded.
   (achievement 579967). Leaderboard submission was not exercised because the tested 3DO
   sets had no leaderboards.
 
-## Physical optical drives (2026-11-13)
+## Physical optical drives (2026-11-21)
 
 - **File > Boot Optical Drive...** and drive-root CLI arguments read the host's cooked
   block interface. Data-only 3DO discs are supported; physical CD-DA tracks are not.
   Audio-only discs still need a BIN/CUE or CHD image.
+- Windows discovery no longer requires `DriveInfo.IsReady`. A 3DO disc's custom
+  filesystem is not mountable by Windows, so the drive may have no ready volume or no
+  drive letter even though the media is present. `GetOpticalDriveNames` opens the
+  optical device and uses `IOCTL_STORAGE_CHECK_VERIFY2` (with a geometry fallback), and
+  it enumerates `\\.\CdRomN` for drives without a letter. The picker labels those entries
+  as **no drive letter**, and both the GUI and CLI accept the path.
 - The source is read-only, but some Windows systems require an elevated process for raw
   optical-device access. A permission failure is reported as a disc-open error and does
   not crash the shell.
-- Windows and Linux drive paths are implemented and unit-tested. macOS physical drives
-  are not validated. A physical 3DO disc has not yet been booted from a drive on the
-  validation host; the SYS-21 `Done when` line remains open.
+- Windows and Linux drive paths are implemented and unit-tested. Discovery and sector
+  reads were validated with a Windows virtual optical drive whose letter was removed:
+  `doctor` reported `\\.\CdRom0` and `info \\.\CdRom0` read the expected 22 sectors.
+  macOS physical drives are not validated. A physical 3DO disc has not yet been booted
+  from a drive on the validation host; the SYS-21 `Done when` line remains open.
 
 ## Windows gamepads (2026-11-13)
 

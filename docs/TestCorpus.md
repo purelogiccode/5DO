@@ -3628,14 +3628,21 @@ externalized. CLI evidence: `--list-locales` printed `de\tDeutsch` and `en\tEngl
 
 **Physical optical drive (SYS-21).** `PhysicalDiscSource` opens a Windows CD/DVD drive
 through the cooked block interface (read-only, shared) and exposes 2048-byte user-data
-sectors to the existing disc abstraction. `DriveInfo` enumeration drives **File > Boot
-Optical Drive...**, and `DiscImageFactory.Open` accepts `D:`, `D:\`, `\\.\D:`, and
-`/dev/sr0` drive roots for CLI and startup paths. Length falls back from `GetFileSizeEx`
-to `IOCTL_DISK_GET_LENGTH_INFO`, the Linux `BLKGETSIZE64` ioctl, and a bounded read
-probe. Audio tracks are not exposed through `ITrackedDiscSource`; CD-DA still requires a
-BIN/CUE or CHD image. `PhysicalDiscSourceTests` (13 cases) cover drive-root recognition,
-image-path rejection, non-drive open rejection, and drive enumeration. The hardware
-`Done when` line remains open until a physical 3DO disc is available.
+sectors to the existing disc abstraction. Windows enumeration walks the optical class
+devices (`\\.\CdRomN`) and probes media with `IOCTL_STORAGE_CHECK_VERIFY2`, with a
+CD-ROM geometry fallback, instead of relying on `DriveInfo.IsReady`. This matters for
+3DO discs: their custom filesystem is not mountable by Windows, so the drive can have no
+ready volume or no drive letter. The picker uses the letter when available and
+`\\.\CdRomN` otherwise; `DiscImageFactory.Open` accepts `D:`, `D:\`, `\\.\D:`,
+`\\.\CdRomN`, and `/dev/sr0` drive roots for CLI and startup paths. Length falls back
+from `GetFileSizeEx` to `IOCTL_DISK_GET_LENGTH_INFO`, the Linux `BLKGETSIZE64` ioctl, and
+a bounded read probe. Audio tracks are not exposed through `ITrackedDiscSource`; CD-DA
+still requires a BIN/CUE or CHD image. `PhysicalDiscSourceTests` (27 cases) cover
+drive-root recognition, `CdRomN` recognition and rejection, image-path rejection,
+non-drive open rejection, and drive enumeration. A Windows virtual optical drive with
+its letter removed was used to validate `doctor` reporting `\\.\CdRom0` and
+`info \\.\CdRom0` reading 22 sectors. The hardware `Done when` line remains open until a
+physical 3DO disc is available.
 
 **DirectInput/HID gamepads (SYS-23).** `DirectInputGamepadSource` loads `dinput8.dll`
 dynamically, enumerates attached game controllers, opens each with

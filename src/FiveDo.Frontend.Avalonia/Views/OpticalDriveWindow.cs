@@ -14,6 +14,7 @@ namespace FiveDo.Frontend.Avalonia.Views;
 internal sealed class OpticalDriveWindow : Window
 {
     private readonly ListBox _drives;
+    private readonly IReadOnlyList<string> _paths;
 
     /// <summary>Creates the picker.</summary>
     /// <param name="drives">Optical drive paths that currently contain media.</param>
@@ -25,9 +26,16 @@ internal sealed class OpticalDriveWindow : Window
         Height = 260;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
+        _paths = drives;
+        var labels = new List<string>(drives.Count);
+        foreach (var drive in drives)
+        {
+            labels.Add(FormatDrive(drive));
+        }
+
         _drives = new ListBox
         {
-            ItemsSource = drives,
+            ItemsSource = labels,
             SelectedIndex = drives.Count > 0 ? 0 : -1,
             MinHeight = 120,
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -81,9 +89,21 @@ internal sealed class OpticalDriveWindow : Window
 
     private void CloseSelected()
     {
-        if (_drives.SelectedItem is string drive)
+        int index = _drives.SelectedIndex;
+        if (index >= 0 && index < _paths.Count)
         {
-            Close(drive);
+            Close(_paths[index]);
         }
+    }
+
+    private static string FormatDrive(string path)
+    {
+        // A 3DO disc has a custom filesystem, so Windows may not assign a drive letter.
+        // The CdRomN fallback path is still usable; label it so it does not look like a
+        // malformed drive root in the picker.
+        const string prefix = @"\\.\CdRom";
+        return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? $"{path} (no drive letter)"
+            : path;
     }
 }

@@ -6,6 +6,15 @@ failures, and expected-condition reporting.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Physical optical drives are found when Windows cannot mount the disc.** A 3DO disc
+  uses a custom filesystem, so Windows may leave the drive without a ready volume or a
+  drive letter even though the media is present. **File > Boot Optical Drive...** now
+  probes the optical device with `IOCTL_STORAGE_CHECK_VERIFY2` (with a CD-ROM geometry
+  fallback), enumerates `\\.\CdRomN` for letterless drives, and accepts the fallback path
+  on the command line and in `doctor`. Fixes issue #8.
+
 ### Added
 
 - **Arcade CRT filter.** A stronger old-television/arcade-monitor preset adds thicker

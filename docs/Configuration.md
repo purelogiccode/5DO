@@ -724,9 +724,15 @@ drives that currently contain media. A drive root can also be passed directly:
 interface, so data discs present the same 2048-byte user-data sectors as an image file.
 The drive is opened read-only with shared access and is never written. Audio tracks are
 not exposed through `ITrackedDiscSource` yet, so CD-DA playback from a physical drive is
-not available; use a BIN/CUE or CHD image for CD audio. Windows accepts `D:`, `D:\`, and
-`\\.\D:`; Linux accepts `/dev/sr0` and similar block devices. macOS physical drives are
-not validated.
+not available; use a BIN/CUE or CHD image for CD audio.
+
+Windows media detection is performed through the optical device, not through
+`DriveInfo.IsReady`: a 3DO disc uses a custom filesystem that Windows cannot mount, so the
+drive commonly has no ready volume and may have no drive letter at all. The picker uses
+a letter when one exists and falls back to `\\.\CdRomN` otherwise. Both forms are accepted
+on the command line, for example `5do info \\.\CdRom0`. `5do doctor` reports the physical
+optical drives it can read. Linux accepts `/dev/sr0` and similar block devices. macOS
+physical drives are not validated.
 
 Library entries are sorted by title then path. Cover art is matched by file name: a
 sibling image with the same base name and an extension of `.png`, `.jpg`, `.jpeg`, or
