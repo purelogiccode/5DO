@@ -716,7 +716,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             sourceWidth,
             sourceHeight,
             filterMode,
-            bloom: _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
+            bloom: _settings.Filter is VideoFilter.Crt or VideoFilter.ArcadeCrt ? _settings.Bloom : 0f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
         var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
         _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue));
@@ -773,6 +773,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
             VideoFilter.Crt => 2,
             VideoFilter.Bicubic => 3,
+            VideoFilter.ArcadeCrt => 4,
             _ => 1,
         };
     }

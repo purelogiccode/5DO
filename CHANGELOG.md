@@ -4,6 +4,22 @@ All notable changes are recorded here. The project is at v1.14.2, a packaging an
 diagnostics bug-fix release for the Windows bundles, AppImage updates, cover-catalog
 failures, and expected-condition reporting.
 
+## [Unreleased]
+
+### Added
+
+- **Arcade CRT filter.** A stronger old-television/arcade-monitor preset adds thicker
+  scanlines, an RGB triad mask, slight phosphor fringing, warm halation, more curvature,
+  and a heavier vignette. It is available on OpenGL/GLES, Vulkan, and Direct3D 11, with
+  a scanline/mask/vignette fallback in the software presenter. The existing `Crt` filter
+  remains the lighter option.
+- **Steam Deck first-run BIOS offer and non-Steam setup.** The welcome guide detects
+  `SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope, switches to a 960x680 layout with
+  large buttons, shows the BIOS folder, and offers **Scan** and **Open Folder**.
+  [Installation.md](Installation.md) documents Desktop Mode, the BIOS folder, adding the
+  AppImage/Flatpak as a non-Steam game, `--fullscreen`, and a trackpad controller layout
+  (REL-10).
+
 ## [1.14.2] - 2026-11-21
 
 ### Fixed

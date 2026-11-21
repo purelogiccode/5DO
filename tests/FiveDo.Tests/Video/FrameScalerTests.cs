@@ -54,6 +54,29 @@ public sealed class FrameScalerTests
         Assert.True(foundIntermediate, "Bicubic should produce an intermediate value across an edge.");
     }
 
+    [Fact]
+    public void ArcadeCrt_DarkensAlternatingScanlines()
+    {
+        var source = new FrameBuffer(1, 1);
+        Fill(source, 0xC0, 0xC0, 0xC0);
+
+        var destination = new FrameBuffer(3, 6);
+        FrameScaler.Scale(
+            source,
+            destination,
+            new RendererSettings
+            {
+                Aspect = AspectMode.Stretch,
+                Filter = VideoFilter.ArcadeCrt,
+                ScanlineStrength = 0.8f,
+            });
+
+        var evenRow = destination.PixelSpan[(1 * 4) + 1];
+        var oddRow = destination.PixelSpan[(1 * destination.Stride) + (1 * 4) + 1];
+
+        Assert.True(evenRow > oddRow, $"Expected even row {evenRow} to be brighter than odd row {oddRow}.");
+    }
+
     private static void Fill(FrameBuffer frame, byte b, byte g, byte r)
     {
         for (var i = 0; i < frame.PixelSpan.Length; i += 4)

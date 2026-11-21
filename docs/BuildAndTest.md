@@ -310,7 +310,7 @@ Options:
 | `--gl-probe-size WxH` | 3840x2160 | Physical output size, 16x16..16384x16384. |
 | `--gl-probe-frames N` | 120 | Measured frames, 1..100000. |
 | `--gl-probe-warmup N` | 30 | Unmeasured warm-up frames, 0..10000. |
-| `--gl-probe-filter <name>` | `sharp-bilinear` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`, `fsr` (aliases accepted). |
+| `--gl-probe-filter <name>` | `sharp-bilinear` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `arcade-crt`, `xbr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`, `fsr` (aliases accepted). |
 | `--gl-probe-vsync` | off | Request vsync. |
 | `--gl-probe-offscreen` | off | Render to an offscreen FBO at the requested size. |
 | `--gl-probe-capture <path>` | none | Write a PNG of the presented frame. |
@@ -339,7 +339,7 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 | `--vk-probe-size WxH` | 1920x1080 | Output size, 16x16..16384x16384. |
 | `--vk-probe-frames N` | 60 | Measured frames, 1..100000. |
 | `--vk-probe-warmup N` | 10 | Unmeasured warm-up frames, 0..10000. |
-| `--vk-probe-filter <name>` | `accurate` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`; HQx uses the GPU rule table. |
+| `--vk-probe-filter <name>` | `accurate` | `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `arcade-crt`, `xbr`, `fsr`, `hqx`, `hqx3x`, `hqx4x`, `mmpx`; HQx uses the GPU rule table. |
 | `--vk-probe-capture <path>` | none | Write a PNG of the rendered frame. |
 | `--vk-probe-timeout N` | 30 | Overall timeout in seconds, 1..600. |
 

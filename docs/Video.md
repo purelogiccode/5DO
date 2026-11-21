@@ -228,6 +228,7 @@ them; the core never waits for the GPU.
 | `SharpBilinear` | Integer prescale then hardware bilinear sub-texel blend. | Default enhanced mode; crisp at integer scales, cheap. |
 | `Bicubic` | Catmull-Rom 4x4 sampling at output resolution. | Opt-in; 16 taps per output pixel; smooth 3D/FMV. |
 | `Crt` | Barrel distortion, scanlines, 3-pixel aperture mask, vignette, 3x3 bloom. | Opt-in; more GPU work. |
+| `ArcadeCrt` | Stronger curvature, thick scanlines, RGB triad mask, phosphor fringing, warm 5x5 halation, heavy vignette. | Opt-in; heavier than `Crt` at 4K. |
 | `Xbr` | GPU palette expansion, xBR-lv2 4x edge-directed pass, sharp-bilinear finish. | Opt-in; 1280x960 intermediate for 320x240; 4K WGL present 0.28/1.47 ms. |
 | `Hqx` | GPU palette expansion, HQx 2x rule-table pass, sharp-bilinear finish. | Opt-in; 4K WGL present 0.23/0.32 ms, GPU 0.11 ms. |
 | `Hqx3x` | HQx 3x rule-table pass, same finish. | Opt-in; 4K WGL present 0.32/0.53 ms, GPU 0.13 ms. |
@@ -270,11 +271,27 @@ The CRT shader (`uFilter == 2`) applies:
 - Vignette: `1 - 0.12 * dot(centered, centered)`.
 - Bloom: 3x3 native-resolution glow around pixels above `BloomThreshold`, scaled by
   `Bloom`. Sampling the native source keeps the glow soft and resolution-independent.
-  Bloom is only active in CRT mode.
+  Bloom is active in both `Crt` and `ArcadeCrt` modes.
 
 `RendererSettings.ScanlineStrength` defaults to 0.25; `Bloom` defaults to 0.35;
 `BloomThreshold` defaults to 0.6. Settings exposes Bloom (and FSR sharpness); the other
 values are renderer defaults.
+
+### Arcade CRT
+
+The `ArcadeCrt` filter (`uFilter == 4`) is the stronger old-television/arcade-monitor
+preset. It shares the CRT path but adds:
+
+- More barrel curvature (`0.10` instead of `0.055`).
+- Thicker scanlines driven by both the output row and the native source row.
+- A stronger RGB triad mask.
+- A 0.35-texel horizontal phosphor fringe on the red and blue channels.
+- A 5x5 warm halation glow around bright areas.
+- A heavier vignette (`0.26` instead of `0.12`).
+
+It uses the same **CRT bloom** setting and is available on OpenGL/GLES, Vulkan, and
+Direct3D 11. The software fallback applies the scanline, mask, and vignette pass after
+bilinear scaling; bloom and phosphor fringing are GPU-only.
 
 ### xBR
 
@@ -446,8 +463,8 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
   --vk-probe-filter sharp-bilinear
 ```
 
-Supported filters are `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`, `xbr`,
-`fsr`, `hqx`/`hqx3x`/`hqx4x`, and `mmpx`. xBR runs as a 4x GPU pass over the GPU-expanded
+Supported filters are `accurate`, `nearest`, `sharp-bilinear`, `bicubic`, `crt`,
+`arcade-crt`, `xbr`, `fsr`, `hqx`/`hqx3x`/`hqx4x`, and `mmpx`. xBR runs as a 4x GPU pass over the GPU-expanded
 native frame and finishes with sharp-bilinear; FSR runs EASU into a viewport-sized target,
 then RCAS into the output. HQx 2x/3x/4x run as GPU rule-table passes over the
 palette texture and finish with sharp-bilinear; MMPX runs a 2x GPU rule pass and finishes
@@ -589,8 +606,8 @@ dotnet run -c Release --project src/FiveDo.Frontend.Avalonia -- `
 
 Options are listed in [`BuildAndTest.md`](BuildAndTest.md) section 5. `--gl-probe-filter`
 accepts `accurate`, `nearest`, `sharp-bilinear`/`sharp`, `bicubic`/`catmull-rom`, `crt`,
-`xbr`/`xbrlv2`, `fsr`/`fsr1`/`fsr10`, `hqx`/`hqx2x`/`hq2x`, `hqx3x`/`hq3x`,
-`hqx4x`/`hq4x`, and `mmpx`/`mmpx2x`.
+`arcade-crt`/`old-crt`, `xbr`/`xbrlv2`, `fsr`/`fsr1`/`fsr10`, `hqx`/`hqx2x`/`hq2x`,
+`hqx3x`/`hq3x`, `hqx4x`/`hq4x`, and `mmpx`/`mmpx2x`.
 
 ### Report fields
 
@@ -684,7 +701,7 @@ See [`Performance.md`](Performance.md) for the full budget and methodology.
 | `VdlFrameMailboxTests` | Snapshot copy, sequence, no retention. |
 | `VideoAllocationTests` | Zero-allocation uploader/mailbox steady state. |
 | `OffscreenRenderTargetTests` | Offscreen probe target creation. |
-| `ShaderSourceTests` | GLSL 330/ES 300 sources, uniforms, FSR/CRT strings. |
+| `ShaderSourceTests` | GLSL 330/ES 300 sources, uniforms, FSR/CRT/Arcade CRT strings. |
 | `HqxFilterTests` | 2x/3x/4x reference hashes, uniform image, allocation. |
 | `MmpxFilterTests` | 2x expansion, uniform image, single-pixel feature preservation, validation. |
 | `FrameScalerTests` | Bicubic uniform/interpolation behavior. |

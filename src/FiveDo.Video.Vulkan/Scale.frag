@@ -93,10 +93,11 @@ void main()
         uv = (texelFloored + blended) / vec2(pc.sourceSize);
     }
 
-    if (pc.filterMode == 2)
+    if (pc.filterMode == 2 || pc.filterMode == 4)
     {
         vec2 centered = uv * 2.0 - 1.0;
-        centered *= 1.0 + (0.055 * dot(centered, centered));
+        float curve = pc.filterMode == 4 ? 0.10 : 0.055;
+        centered *= 1.0 + (curve * dot(centered, centered));
         uv = centered * 0.5 + 0.5;
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
         {
@@ -141,6 +142,52 @@ void main()
 
             color += (bloomColor / weightSum) * pc.bloom;
         }
+    }
+    else if (pc.filterMode == 4)
+    {
+        float scanStrength = clamp(pc.scanline * 1.7, 0.0, 0.85);
+        float outputLine = mod(floor(gl_FragCoord.y), 2.0);
+        float nativeLine = 0.5 + 0.5 * cos(uv.y * float(pc.sourceSize.y) * 6.2831853);
+        color *= 1.0 - (scanStrength * (0.35 + (0.65 * outputLine))
+            * (0.70 + (0.30 * (1.0 - nativeLine))));
+
+        float aperture = mod(floor(gl_FragCoord.x), 3.0);
+        vec3 mask = aperture < 1.0
+            ? vec3(1.0, 0.72, 0.72)
+            : aperture < 2.0
+                ? vec3(0.72, 1.0, 0.72)
+                : vec3(0.72, 0.72, 1.0);
+        color *= mix(vec3(1.0), mask, clamp(pc.scanline * 1.5, 0.0, 0.85));
+
+        vec2 texel = 1.0 / vec2(pc.sourceSize);
+        vec3 fringed;
+        fringed.r = texture(uExpanded, clamp(uv + vec2(texel.x * 0.35, 0.0), vec2(0.0), vec2(1.0))).r;
+        fringed.g = texture(uExpanded, clamp(uv, vec2(0.0), vec2(1.0))).g;
+        fringed.b = texture(uExpanded, clamp(uv - vec2(texel.x * 0.35, 0.0), vec2(0.0), vec2(1.0))).b;
+        color = mix(color, fringed, 0.20);
+
+        if (pc.bloom > 0.0)
+        {
+            vec2 glowTexel = 2.0 / vec2(pc.sourceSize);
+            vec3 halation = vec3(0.0);
+            float weightSum = 0.0;
+            for (int y = -2; y <= 2; y++)
+            {
+                for (int x = -2; x <= 2; x++)
+                {
+                    float weight = (3.0 - abs(float(x))) * (3.0 - abs(float(y)));
+                    vec2 offset = vec2(float(x), float(y)) * glowTexel;
+                    vec3 sampleColor = texture(uExpanded, clamp(uv + offset, vec2(0.0), vec2(1.0))).rgb;
+                    halation += max(sampleColor - vec3(pc.bloomThreshold), vec3(0.0)) * weight;
+                    weightSum += weight;
+                }
+            }
+
+            color += (halation / weightSum) * pc.bloom * vec3(1.05, 0.95, 0.82);
+        }
+
+        vec2 centered = uv * 2.0 - 1.0;
+        color *= clamp(1.0 - (0.26 * dot(centered, centered)), 0.0, 1.0);
     }
 
     fragColor = vec4(color, 1.0);

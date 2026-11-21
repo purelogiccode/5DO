@@ -226,6 +226,10 @@ internal sealed record GlProbeOptions(
             case "NEAREST":
                 filter = VideoFilter.Nearest;
                 return true;
+            case "ARCADECRT":
+            case "OLDCRT":
+                filter = VideoFilter.ArcadeCrt;
+                return true;
             case "CRT":
                 filter = VideoFilter.Crt;
                 return true;

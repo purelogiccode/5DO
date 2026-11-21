@@ -485,7 +485,10 @@ public partial class MainWindow : Window, IDisposable
     {
         try
         {
-            var welcome = new WelcomeWindow(DiscoverBiosForWelcome());
+            var welcome = new WelcomeWindow(
+                DiscoverBiosForWelcome(),
+                DeckMode.IsDeckSession(),
+                DiscoverBiosForWelcome);
             welcome.Closed += (_, _) =>
             {
                 IsEnabled = true;
@@ -550,11 +553,11 @@ public partial class MainWindow : Window, IDisposable
     /// instead of sending a new user into a file picker. Never throws: discovery is a
     /// convenience, and a failure must not block the guide.
     /// </summary>
-    private static BiosProfile? DiscoverBiosForWelcome()
+    private static BiosDiscoveryResult? DiscoverBiosForWelcome()
     {
         try
         {
-            return BiosDiscovery.DiscoverDefault().PreferredPrimary;
+            return BiosDiscovery.DiscoverDefault();
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -5868,6 +5871,8 @@ public partial class MainWindow : Window, IDisposable
             {
                 VideoFilter.Accurate or VideoFilter.Nearest => "Nearest (CPU)",
                 VideoFilter.Bicubic => "Bicubic (CPU)",
+                VideoFilter.Crt => "CRT (CPU)",
+                VideoFilter.ArcadeCrt => "Arcade CRT (CPU)",
                 VideoFilter.Mmpx => "MMPX (CPU)",
                 _ => "Bilinear (CPU)",
             },
@@ -5884,6 +5889,7 @@ public partial class MainWindow : Window, IDisposable
             VideoFilter.SharpBilinear => "SharpBilinear",
             VideoFilter.Bicubic => "Bicubic",
             VideoFilter.Crt => "CRT",
+            VideoFilter.ArcadeCrt => "Arcade CRT",
             VideoFilter.Xbr => "xBR",
             VideoFilter.Hqx => "HQx 2x",
             VideoFilter.Hqx3x => "HQx 3x",

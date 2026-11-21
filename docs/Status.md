@@ -16,6 +16,24 @@ and macOS. Evidence is recorded in
 [ReleaseNotes-1.14.2.md](ReleaseNotes-1.14.2.md),
 [Compatibility.md](Compatibility.md) §10.6, and [KnownIssues.md](KnownIssues.md).
 
+**2026-11-21, Arcade CRT filter:** a new `ArcadeCrt` video filter adds a stronger
+old-television/arcade-monitor look: thicker scanlines, an RGB triad mask, slight
+phosphor fringing, warm 5x5 halation, more curvature, and a heavier vignette. It is
+available on OpenGL/GLES, Vulkan, and Direct3D 11 and uses the existing CRT bloom
+control; the software presenter applies the scanline/mask/vignette pass after bilinear
+scaling. `--gl-probe-filter arcade-crt` and the Vulkan/Direct3D probe aliases pass with
+`filterFallback: false`; captured frames show the effect on all three backends. The suite
+is **2,547/2,547**.
+
+**2026-11-21, REL-10 Steam Deck first-run:** the welcome guide now detects
+`SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope and uses a 960x680 layout with 54 px
+buttons, the BIOS folder path, **Scan**, and **Open Folder**. Discovery still prefers
+the `5DO data folder/bios` location, and the BIOS requirement remains visible for
+keyboard-less sessions. [Installation.md](Installation.md) documents Desktop Mode,
+copying the BIOS, adding the AppImage/Flatpak as a non-Steam game, `--fullscreen`, and a
+trackpad controller layout. The upstream EmuDeck/RetroDeck entry is the only remaining
+REL-10 item. `DeckModeTests` covers environment detection and the larger layout.
+
 **2026-11-21, REL-07 closed:** the published `5do-1.14.2-linux-x86_64.AppImage` reports
 `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync`, and its
 `.zsync` URL points at the versioned AppImage. On the LAN Linux x64 host it runs through

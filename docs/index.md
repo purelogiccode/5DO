@@ -91,7 +91,7 @@
 
 **2026-11-21, v1.14.2 packaging and diagnostics bug-fix release (GitHub Releases).**
 
-- **2,535 tests** are present in the current test assembly.
+- **2,547 tests** are present in the current test assembly.
 - **Windows bundles are self-contained for audio:** `vcruntime140.dll` and
   `msvcp140.dll` (plus the x64-only `vcruntime140_1.dll`) ship beside `OpenAL32.dll`,
   so a clean Windows image no longer needs the Visual C++ redistributable.

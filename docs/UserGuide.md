@@ -31,6 +31,10 @@ If you choose **Open Disc** before a BIOS is loaded, 5DO asks for the BIOS first
 continues to the disc picker. The first-run guide is shown only once. **About** always
 shows the current BIOS, disc, renderer, machine state, and paths.
 
+On a Steam Deck/gamescope session the first-run guide uses a larger layout with 54 px
+buttons, the detected BIOS folder, and **Scan** / **Open Folder** actions. See
+[Installation.md](Installation.md#steam-deck-and-steamos) for the non-Steam-game setup.
+
 ### BIOS manager and automatic selection
 
 Settings > Paths now edits a BIOS folder, a primary BIOS, an optional BIOS2/Kanji font,
@@ -409,6 +413,9 @@ Available filters:
   opt-in and costs 16 texture taps per output pixel.
 - **CRT**: scanlines, aperture mask, curvature, vignette, and a configurable bloom
   glow (Settings -> Video -> CRT bloom).
+- **ArcadeCrt**: a stronger old-television/arcade-monitor look with thicker scanlines,
+  an RGB triad mask, slight phosphor fringing, warm halation, more curvature, and a
+  heavier vignette. It uses the same CRT bloom control.
 - **Xbr**: Hyllian's xBR-lv2 edge-directed 4x pass, followed by a sharp-bilinear finish.
   This is an opt-in filter and costs more GPU time at 4K.
 - **Hqx / Hqx3x / Hqx4x**: HQx 2x/3x/4x pixel-art smoothing as a GPU rule-table pass over the

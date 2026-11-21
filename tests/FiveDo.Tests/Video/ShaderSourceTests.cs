@@ -74,6 +74,7 @@ public sealed class ShaderSourceTests
         Assert.Contains("uFilter == 1", source, StringComparison.Ordinal);
         Assert.Contains("uFilter == 2", source, StringComparison.Ordinal);
         Assert.Contains("uFilter == 3", source, StringComparison.Ordinal);
+        Assert.Contains("uFilter == 4", source, StringComparison.Ordinal);
         Assert.Contains("pickWeight", source, StringComparison.Ordinal);
         Assert.Contains("uScanline", source, StringComparison.Ordinal);
         Assert.Contains("uBloom", source, StringComparison.Ordinal);

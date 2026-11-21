@@ -543,16 +543,20 @@ decision as Flathub.
 
 ### 8.5 Steam Deck and EmuDeck
 
-The evdev gamepad path and display-sleep inhibit are validated on real hardware, so the
-remaining work is packaging and presentation:
+The evdev gamepad path and display-sleep inhibit are validated on real hardware. The
+Deck-facing pieces now ship:
 
-- Publish an AppImage with an embedded `--fullscreen` desktop action, and document
-  adding it as a non-Steam game.
-- Add 5DO as an option in EmuDeck/RetroDeck's 3DO emulator list through an upstream
-  pull request. Those tools install Flatpaks/AppImages for the user and put the entry
-  where Deck users look.
-- Keep the BIOS requirement in the first-run dialog; Deck users often have no
-  keyboard.
+- The AppImage has a **Play in fullscreen** desktop action, and
+  [Installation.md](Installation.md) has the non-Steam-game setup: Desktop Mode, BIOS
+  folder, **Add a Non-Steam Game**, `--fullscreen`, and a trackpad-based controller
+  layout.
+- The first-run guide detects `SteamDeck`, `SteamOS`, `SteamGamepadUI`, or a
+  `gamescope` desktop and uses a 960x680 layout with larger buttons, the BIOS folder
+  path, **Scan**, and **Open Folder**. The BIOS requirement stays visible because Deck
+  users often have no keyboard.
+- Adding 5DO to EmuDeck/RetroDeck's 3DO emulator list still needs an upstream pull
+  request. Those tools install Flatpaks/AppImages for the user and put the entry where
+  Deck users look.
 
 ### 8.6 Press and community
 
@@ -619,7 +623,7 @@ committed until it has an ID.
 | P0 | **`5do-cli doctor`** | A single command that dumps distro, session type, GL/Vulkan renderer, audio device, gamepad permissions (`input` group, `/dev/uinput`), XDG paths, and the last 200 log lines. Cuts support round-trips and gives useful bug reports. **Implemented:** `5do-cli doctor [--json] [--strict]` reports session, data-folder access, disk space, native libraries, evdev/optical devices, settings, and BIOS discovery | M |
 | P0 | **Wayland guidance and fallback check** | X11/XWayland works today; Wayland-only sessions fall back to the slower offscreen path. Detect `WAYLAND_DISPLAY` without `DISPLAY`, warn once, and document the XWayland workaround. **Implemented:** `5do-cli doctor` reports the case and the shell logs it once and shows a status-line hint | S |
 | P1 | **AppImage auto-update** | Embed zsync info and surface a newer release. **Implemented:** the AppImage embeds zsync update information and the existing startup/`update` check offers the release page; remaining work is an in-app download if wanted | M |
-| P1 | **Steam Deck preset** | A Deck-friendly on-screen hint for the BIOS step and documented non-Steam-game setup. **Implemented:** the desktop entry has a **Play in fullscreen** action; the BIOS hint and EmuDeck entry stay as `REL-10` | S |
+| P1 | **Steam Deck preset** | A Deck-friendly on-screen hint for the BIOS step and documented non-Steam-game setup. **Implemented:** the first-run guide detects Deck/gamescope sessions, uses a 960x680 layout with large buttons, shows the BIOS folder, and can re-scan; [Installation.md](Installation.md) documents the non-Steam flow. The upstream EmuDeck/RetroDeck entry remains as `REL-10`. | S |
 | P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub. **Implemented:** `build-flatpak.sh` produces `5do-<version>-linux-<arch>.flatpak` bundles for x64 and arm64, covered by the GPG signatures; a hosted repository is optional | M |
 | P1 | **EmuDeck/RetroDeck entry** | Where Deck users actually look for emulators | S |
 | P1 | **Flatpak on Flathub** | Largest Linux app store; needs the licence decision and a network-free build | L |

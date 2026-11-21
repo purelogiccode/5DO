@@ -560,13 +560,13 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             gl.Uniform2(_uScaleOutput, (float)_outputWidth, (float)_outputHeight);
             gl.Uniform1(_uScaleFilter, scaleFilter);
             gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
-            gl.Uniform1(_uScaleBloom, _settings.Filter == VideoFilter.Crt ? _settings.Bloom : 0f);
+            gl.Uniform1(_uScaleBloom, _settings.Filter is VideoFilter.Crt or VideoFilter.ArcadeCrt ? _settings.Bloom : 0f);
             gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
             gl.Uniform3(_uVoidColor, voidRed, voidGreen, voidBlue);
 
             gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, filterSource);
-            var linearFilter = useXbr || useHqx || useMmpx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt;
+            var linearFilter = useXbr || useHqx || useMmpx || _settings.Filter is VideoFilter.SharpBilinear or VideoFilter.Crt or VideoFilter.ArcadeCrt;
             var textureFilter = (int)(linearFilter ? GLEnum.Linear : GLEnum.Nearest);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, textureFilter);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, textureFilter);
@@ -1000,6 +1000,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
             VideoFilter.Crt => 2,
             VideoFilter.Bicubic => 3,
+            VideoFilter.ArcadeCrt => 4,
             _ => 1,
         };
     }

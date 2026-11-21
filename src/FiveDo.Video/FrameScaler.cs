@@ -62,6 +62,55 @@ internal static class FrameScaler
         else
         {
             ScaleBilinear(source, destination, rect);
+            if (settings.Filter is VideoFilter.Crt or VideoFilter.ArcadeCrt)
+            {
+                ApplyCrt(
+                    destination,
+                    rect,
+                    settings.ScanlineStrength,
+                    settings.Filter == VideoFilter.ArcadeCrt);
+            }
+        }
+    }
+
+    private static void ApplyCrt(
+        FrameBuffer destination,
+        ViewportRect rect,
+        float strength,
+        bool arcade)
+    {
+        if (strength <= 0f)
+        {
+            return;
+        }
+
+        Span<byte> pixels = destination.PixelSpan;
+        var scanline = (arcade ? 0.55f : 0.30f) * strength;
+        var mask = (arcade ? 0.65f : 0.35f) * strength;
+        var vignette = (arcade ? 0.26f : 0.12f) * strength;
+        for (var y = 0; y < rect.Height; y++)
+        {
+            var globalY = rect.Y + y;
+            var rowFactor = (globalY & 1) == 0 ? 1f : 1f - scanline;
+            var normalizedY = (((y + 0.5f) / rect.Height) * 2f) - 1f;
+            for (var x = 0; x < rect.Width; x++)
+            {
+                var globalX = rect.X + x;
+                var offset = (globalY * destination.Stride) + (globalX * 4);
+                var phase = globalX % 3;
+                var redFactor = phase == 0 ? 1f : 1f - mask;
+                var greenFactor = phase == 1 ? 1f : 1f - mask;
+                var blueFactor = phase == 2 ? 1f : 1f - mask;
+                var normalizedX = (((x + 0.5f) / rect.Width) * 2f) - 1f;
+                var vignetteFactor = Math.Clamp(
+                    1f - (vignette * ((normalizedX * normalizedX) + (normalizedY * normalizedY))),
+                    0f,
+                    1f);
+                var factor = rowFactor * vignetteFactor;
+                pixels[offset] = (byte)Math.Clamp(pixels[offset] * factor * blueFactor, 0f, 255f);
+                pixels[offset + 1] = (byte)Math.Clamp(pixels[offset + 1] * factor * greenFactor, 0f, 255f);
+                pixels[offset + 2] = (byte)Math.Clamp(pixels[offset + 2] * factor * redFactor, 0f, 255f);
+            }
         }
     }
 

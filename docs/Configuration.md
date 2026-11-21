@@ -196,8 +196,8 @@ The legacy `PreferOpenGl` boolean is still read when loading older files; `false
 
 ### Enum values
 
-`Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Bicubic`, `Crt`, `Xbr`,
-`Hqx`, `Hqx3x`, `Hqx4x`, `Mmpx`, `Fsr`.
+`Filter` (string): `Accurate`, `Nearest`, `SharpBilinear`, `Bicubic`, `Crt`, `ArcadeCrt`,
+`Xbr`, `Hqx`, `Hqx3x`, `Hqx4x`, `Mmpx`, `Fsr`.
 
 `FrameSkip` (string): `Off`, `Auto`, `OneInTwo`, `OneInThree`, `OneInFour`,
 `OneInFive`. `Auto` skips a presentation frame only after three presented frames exceed
@@ -857,7 +857,7 @@ Save slots:
 | `CdAudioVolume` | CD-DA mix level, clamped 0..1. |
 | `CdAudioMuted` | Removes CD-DA from the mix while playback continues. |
 | `AutoSwapOnEject` | ODE-style automatic advance to the next playlist disc after a guest eject. |
-| `Bloom` | CRT bloom only; 0 disables. |
+| `Bloom` | CRT/Arcade CRT bloom only; 0 disables. |
 | `FsrSharpness` | FSR RCAS sharpness; 0 soft, 1 maximum. |
 
 The CLI matches the CD-DA controls with `run --cd-volume 0..1` and `--mute-cd`. The CD

@@ -61,6 +61,8 @@ public sealed class GlProbeOptionsTests
     [InlineData("nearest", VideoFilter.Nearest)]
     [InlineData("sharp", VideoFilter.SharpBilinear)]
     [InlineData("crt", VideoFilter.Crt)]
+    [InlineData("arcade-crt", VideoFilter.ArcadeCrt)]
+    [InlineData("old-crt", VideoFilter.ArcadeCrt)]
     [InlineData("bicubic", VideoFilter.Bicubic)]
     [InlineData("catmull-rom", VideoFilter.Bicubic)]
     [InlineData("xbr", VideoFilter.Xbr)]

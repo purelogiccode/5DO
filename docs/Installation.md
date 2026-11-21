@@ -96,6 +96,35 @@ dotnet run --project src/FiveDo.Cli -- run "game.chd" --bios "panafz1.bin" `
   --frames 600 --frame-out frame.png
 ```
 
+## Steam Deck and SteamOS
+
+5DO runs as a non-Steam AppImage or Flatpak on SteamOS. The first-run guide detects a
+Steam Deck/gamescope session and switches to a larger layout with bigger buttons, the
+BIOS folder path, and **Scan** / **Open Folder** actions, so the initial BIOS step works
+with the touchscreen or the Deck's trackpad.
+
+1. Switch to **Desktop Mode**.
+2. Download `5do-<version>-linux-x86_64.AppImage` from
+   [GitHub Releases](https://github.com/purelogiccode/5DO/releases/latest) and make it
+   executable (`chmod +x`). The Flatpak bundle works the same way if you prefer a sandbox.
+3. Put a legally obtained 1 MB BIOS such as `panafz1.bin` in
+   `~/.local/share/5DO/bios`. For the Flatpak, use the app's data folder shown in
+   **Settings > Paths** (normally
+   `~/.var/app/io.github.purelogiccode.FiveDO/data/5DO/bios`). You can also keep it in a
+   `bios` folder beside the app or in `~/BIOS`.
+4. In Steam, choose **Games > Add a Non-Steam Game...**, browse to the AppImage (or the
+   Flatpak launcher), and add it as **5DO**.
+5. Open the game's **Properties > Launch Options** and enter `--fullscreen`. In
+   **Controller**, use a layout with a mouse trackpad (for example **Gamepad with Mouse
+   Trackpad**); the Deck's touchscreen also works.
+6. Return to **Gaming Mode** and launch 5DO. The first-run guide offers the discovered
+   BIOS with **Use this BIOS**. If you add or move the ROM while the guide is open,
+   press **Scan** to run discovery again.
+
+5DO is not yet listed in EmuDeck/RetroDeck's 3DO emulator list; use the non-Steam method
+above until the upstream entry lands. The AppImage and Flatpak both keep the BIOS
+requirement visible because DRM-free BIOS files cannot be bundled.
+
 ## BIOS management
 
 The desktop **File > BIOS / NVRAM Manager...** dialog scans a folder, validates images,

@@ -156,7 +156,7 @@ internal static class Shaders
         uniform sampler2D uExpanded;  // native-resolution RGB texture
         uniform ivec2 uSource;
         uniform vec4 uRect;           // x, y, width, height in output pixels
-        uniform int uFilter;          // 0 nearest, 1 sharp-bilinear, 2 CRT
+        uniform int uFilter;          // 0 nearest, 1 sharp-bilinear, 2 CRT, 3 bicubic, 4 arcade CRT
         uniform float uScanline;
         uniform float uBloom;
         uniform float uBloomThreshold;
@@ -235,12 +235,14 @@ internal static class Shaders
                 uv = (texelFloored + blended) / vec2(uSource);
             }
 
-            if (uFilter == 2)
+            if (uFilter == 2 || uFilter == 4)
             {
-                // Mild barrel distortion for the CRT mode. The output stays black
+                // Barrel distortion for the CRT modes. The output stays void-colored
                 // outside the curved screen instead of stretching the edge texels.
+                // The arcade preset curves a little more than the standard CRT mode.
                 vec2 centered = uv * 2.0 - 1.0;
-                centered *= 1.0 + (0.055 * dot(centered, centered));
+                float curve = uFilter == 4 ? 0.10 : 0.055;
+                centered *= 1.0 + (curve * dot(centered, centered));
                 uv = centered * 0.5 + 0.5;
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 {
@@ -286,6 +288,55 @@ internal static class Shaders
 
                     color += (bloom / weightSum) * uBloom;
                 }
+            }
+            else if (uFilter == 4)
+            {
+                // Old-television/arcade monitor preset: stronger scanlines, an RGB
+                // triad mask, slight horizontal phosphor fringing, warmer halation,
+                // and a heavier vignette than the standard CRT mode.
+                float scanStrength = clamp(uScanline * 1.7, 0.0, 0.85);
+                float outputLine = mod(floor(gl_FragCoord.y), 2.0);
+                float nativeLine = 0.5 + 0.5 * cos(uv.y * float(uSource.y) * 6.2831853);
+                color *= 1.0 - (scanStrength * (0.35 + (0.65 * outputLine))
+                    * (0.70 + (0.30 * (1.0 - nativeLine))));
+
+                float aperture = mod(floor(gl_FragCoord.x), 3.0);
+                vec3 mask = aperture < 1.0
+                    ? vec3(1.0, 0.72, 0.72)
+                    : aperture < 2.0
+                        ? vec3(0.72, 1.0, 0.72)
+                        : vec3(0.72, 0.72, 1.0);
+                color *= mix(vec3(1.0), mask, clamp(uScanline * 1.5, 0.0, 0.85));
+
+                vec2 texel = 1.0 / vec2(uSource);
+                vec3 fringed;
+                fringed.r = texture(uExpanded, clamp(uv + vec2(texel.x * 0.35, 0.0), vec2(0.0), vec2(1.0))).r;
+                fringed.g = texture(uExpanded, clamp(uv, vec2(0.0), vec2(1.0))).g;
+                fringed.b = texture(uExpanded, clamp(uv - vec2(texel.x * 0.35, 0.0), vec2(0.0), vec2(1.0))).b;
+                color = mix(color, fringed, 0.20);
+
+                if (uBloom > 0.0)
+                {
+                    vec2 glowTexel = 2.0 / vec2(uSource);
+                    vec3 halation = vec3(0.0);
+                    float weightSum = 0.0;
+                    for (int y = -2; y <= 2; y++)
+                    {
+                        for (int x = -2; x <= 2; x++)
+                        {
+                            float weight = (3.0 - abs(float(x))) * (3.0 - abs(float(y)));
+                            vec2 offset = vec2(float(x), float(y)) * glowTexel;
+                            vec3 sampleColor = texture(uExpanded, clamp(uv + offset, vec2(0.0), vec2(1.0))).rgb;
+                            halation += max(sampleColor - vec3(uBloomThreshold), vec3(0.0)) * weight;
+                            weightSum += weight;
+                        }
+                    }
+
+                    color += (halation / weightSum) * uBloom * vec3(1.05, 0.95, 0.82);
+                }
+
+                vec2 centered = uv * 2.0 - 1.0;
+                color *= clamp(1.0 - (0.26 * dot(centered, centered)), 0.0, 1.0);
             }
 
             fragColor = vec4(color, 1.0);

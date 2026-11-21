@@ -64,7 +64,7 @@ test harness designed for reproducible compatibility evidence.
   recording, screenshots, GIF/WAV capture, a disc browser, controller mapping, a loading overlay,
   RetroAchievements, and a diagnostics bundle.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
-  sharp-bilinear, bicubic, CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
+  sharp-bilinear, bicubic, CRT, arcade CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
   MMPX 2x filters, plus
   480i/240p field handling (auto detection, bob, weave, and blend). Optional Vulkan 1.0
   and Direct3D 11 backends mirror the pipeline for desktop and headless probes.
@@ -93,7 +93,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.14.2` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,535 tests** in the current test assembly |
+| Automated tests | **2,547 tests** in the current test assembly |
 | macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
 | Library | **414 unique titles** across **1,371 images**; 3 audio-only CHDs catalogued |
@@ -216,7 +216,8 @@ app; it now reports the missing files by name instead of crashing inside Skia.
 - OpenGL 3.3 desktop and OpenGL ES 3.0/3.1 paths, including ANGLE on Windows.
 - Accurate pixel-for-pixel mode matching the CPU frame assembler.
 - Nearest, sharp-bilinear, bicubic, CRT (scanlines, aperture mask, curvature, vignette, bloom),
-  xBR-lv2 4x, FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and MMPX 2x.
+  arcade CRT (thicker scanlines, RGB triad mask, halation, stronger vignette), xBR-lv2 4x,
+  FSR 1.0 (EASU + RCAS), HQx 2x/3x/4x, and MMPX 2x.
 - Integer scaling, custom aspect ratios, fullscreen, vsync, and 4K output.
 - Optional Vulkan 1.0 backend with build-time SPIR-V shaders and a native Win32
   swapchain path.

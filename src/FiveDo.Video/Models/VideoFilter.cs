@@ -20,6 +20,9 @@ public enum VideoFilter
     /// <summary>CRT scanlines and aperture mask.</summary>
     Crt,
 
+    /// <summary>Stronger old-television/arcade CRT with thick scanlines, an RGB triad mask, halation, and a heavier vignette.</summary>
+    ArcadeCrt,
+
     /// <summary>xBR/HQx-family smoothing (opt-in).</summary>
     Xbr,
 

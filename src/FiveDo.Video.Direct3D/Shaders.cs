@@ -184,10 +184,11 @@ internal static class Direct3D11Shaders
                 uv = (texelFloored + blended) / (float2)SourceSize;
             }
 
-            if (FilterMode == 2)
+            if (FilterMode == 2 || FilterMode == 4)
             {
                 float2 centered = (uv * 2.0) - 1.0;
-                centered *= 1.0 + (0.055 * dot(centered, centered));
+                float curve = FilterMode == 4 ? 0.10 : 0.055;
+                centered *= 1.0 + (curve * dot(centered, centered));
                 uv = (centered * 0.5) + 0.5;
                 if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 {
@@ -233,6 +234,56 @@ internal static class Direct3D11Shaders
 
                     color += (bloomColor / weightSum) * Params.y;
                 }
+            }
+            else if (FilterMode == 4)
+            {
+                float scanStrength = saturate(Params.x * 1.7);
+                float outputLine = fmod(floor(input.position.y), 2.0);
+                float nativeLine = 0.5 + (0.5 * cos(uv.y * (float)SourceSize.y * 6.2831853));
+                color *= 1.0 - (scanStrength * (0.35 + (0.65 * outputLine))
+                    * (0.70 + (0.30 * (1.0 - nativeLine))));
+
+                float aperture = fmod(floor(input.position.x), 3.0);
+                float3 mask = aperture < 1.0
+                    ? float3(1.0, 0.72, 0.72)
+                    : aperture < 2.0
+                        ? float3(0.72, 1.0, 0.72)
+                        : float3(0.72, 0.72, 1.0);
+                color *= lerp(float3(1.0, 1.0, 1.0), mask, saturate(Params.x * 1.5));
+
+                float2 texel = 1.0 / (float2)SourceSize;
+                float3 fringed;
+                fringed.r = Expanded.Sample(LinearSampler, saturate(uv + float2(texel.x * 0.35, 0.0))).r;
+                fringed.g = Expanded.Sample(LinearSampler, saturate(uv)).g;
+                fringed.b = Expanded.Sample(LinearSampler, saturate(uv - float2(texel.x * 0.35, 0.0))).b;
+                color = lerp(color, fringed, 0.20);
+
+                if (Params.y > 0.0)
+                {
+                    float2 glowTexel = 2.0 / (float2)SourceSize;
+                    float3 halation = float3(0.0, 0.0, 0.0);
+                    float weightSum = 0.0;
+                    [unroll]
+                    for (int y = -2; y <= 2; y++)
+                    {
+                        [unroll]
+                        for (int x = -2; x <= 2; x++)
+                        {
+                            float weight = (3.0 - abs((float)x)) * (3.0 - abs((float)y));
+                            float2 offset = float2((float)x, (float)y) * glowTexel;
+                            float3 sampleColor = Expanded.Sample(
+                                LinearSampler,
+                                saturate(uv + offset)).rgb;
+                            halation += max(sampleColor - float3(Params.z, Params.z, Params.z), 0.0) * weight;
+                            weightSum += weight;
+                        }
+                    }
+
+                    color += (halation / weightSum) * Params.y * float3(1.05, 0.95, 0.82);
+                }
+
+                float2 centered = (uv * 2.0) - 1.0;
+                color *= clamp(1.0 - (0.26 * dot(centered, centered)), 0.0, 1.0);
             }
 
             return float4(color, 1.0);

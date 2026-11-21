@@ -2464,7 +2464,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             SourceHeight = sourceHeight,
             Filter = filterMode,
             Scanline = _settings.ScanlineStrength,
-            Bloom = filter == VideoFilter.Crt ? _settings.Bloom : 0f,
+            Bloom = filter is VideoFilter.Crt or VideoFilter.ArcadeCrt ? _settings.Bloom : 0f,
             BloomThreshold = _settings.BloomThreshold,
             VoidColor = new System.Numerics.Vector4(
                 _settings.VoidAreaColorRgb.Red,
@@ -2552,6 +2552,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             VideoFilter.Accurate or VideoFilter.Nearest => 0,
             VideoFilter.Bicubic => 3,
             VideoFilter.Crt => 2,
+            VideoFilter.ArcadeCrt => 4,
             _ => 1,
         };
     }

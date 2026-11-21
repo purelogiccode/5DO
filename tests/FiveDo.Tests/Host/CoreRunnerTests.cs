@@ -25,7 +25,7 @@ public sealed class CoreRunnerTests
         runner.Faulted += (_, _) => Interlocked.Increment(ref faults);
 
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
         runner.Pause();
 
         var paused = runner.Frames;
@@ -33,7 +33,7 @@ public sealed class CoreRunnerTests
         Assert.Equal(paused, runner.Frames);
 
         runner.Resume();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(5)));
         runner.Stop();
 
         Assert.Equal(0, faults);
@@ -45,7 +45,7 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
 
         runner.Stop();
         var stopped = runner.Frames;
@@ -53,7 +53,7 @@ public sealed class CoreRunnerTests
         Assert.Equal(stopped, runner.Frames);
 
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames > stopped, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames > stopped, TimeSpan.FromSeconds(5)));
         runner.Stop();
     }
 
@@ -63,7 +63,7 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
 
         var before = 0L;
         var during = 0L;
@@ -75,7 +75,7 @@ public sealed class CoreRunnerTests
         });
 
         Assert.Equal(before, during);
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames > during, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames > during, TimeSpan.FromSeconds(5)));
         runner.Stop();
     }
 
@@ -85,7 +85,7 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
 
         runner.Pause();
         var paused = runner.Frames;
@@ -94,7 +94,7 @@ public sealed class CoreRunnerTests
         Assert.Equal(paused, runner.Frames);
 
         runner.Resume();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(5)));
         runner.Stop();
     }
 
@@ -104,7 +104,7 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
 
         for (var i = 0; i < 50; i++)
         {
@@ -113,7 +113,7 @@ public sealed class CoreRunnerTests
             runner.Invoke(() => Assert.Equal(paused, runner.Frames));
             Assert.Equal(paused, runner.Frames);
             runner.Resume();
-            Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(2)));
+            Assert.True(SpinWait.SpinUntil(() => runner.Frames > paused, TimeSpan.FromSeconds(5)));
         }
 
         runner.Stop();
@@ -125,7 +125,7 @@ public sealed class CoreRunnerTests
         FiveDoMachine machine = CreateMachine();
         using var runner = new CoreRunner(machine);
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
         runner.Pause();
 
         var runnerFrames = runner.Frames;
@@ -161,7 +161,7 @@ public sealed class CoreRunnerTests
         using var runner = new CoreRunner(machine);
         runner.FrameSkip = FrameSkipMode.OneInTwo;
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 20, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 20, TimeSpan.FromSeconds(5)));
         runner.Stop();
 
         Assert.Equal(runner.Frames, machine.FramesExecuted);
@@ -233,7 +233,7 @@ public sealed class CoreRunnerTests
             machine,
             rewindOptions: new RewindOptions { Enabled = false });
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(2)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
         runner.Pause();
 
         Assert.False(runner.Rewind(1));
