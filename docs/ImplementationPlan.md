@@ -1,11 +1,11 @@
 # 5DO — Missing Features
 
 **Snapshot:** 2026-11-21
-**Release:** v1.14.2
+**Release:** v1.15.0
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
-**Open items:** 15 — 3 platform, 3 release/packaging, 5 product, 2 rendering, 2 awaiting hardware.
+**Open items:** 14 - 3 platform, 3 release/packaging, 5 product, 2 rendering, 1 awaiting hardware.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items

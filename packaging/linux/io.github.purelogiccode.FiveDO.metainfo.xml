@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.15.0" date="2026-11-21">
+      <description>
+        <p>
+          Steam Deck/SteamOS first-run setup with a larger BIOS layout, the Arcade CRT
+          filter on OpenGL/GLES, Vulkan, Direct3D 11, and the software fallback, and
+          fixes for Windows physical optical-drive discovery, JIT soft-reset state,
+          and single-pad PBUS input.
+        </p>
+      </description>
+    </release>
     <release version="1.14.2" date="2026-11-21">
       <description>
         <p>

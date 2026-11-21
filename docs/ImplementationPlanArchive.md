@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.14.2.
+> history through v1.15.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -878,9 +878,18 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.14.2)
+## 14. Release history (v1.9.1 - v1.15.0)
 
-- **v1.14.2 (2026-11-21):** packaging and diagnostics bug-fix release — Windows bundles
+- **v1.15.0 (2026-11-21):** Steam Deck, Arcade CRT, and optical-drive release - the
+  welcome guide detects Deck/SteamOS/gamescope and uses a 960x680 layout with the BIOS
+  folder, Scan, and Open Folder; `ArcadeCrt` adds thick scanlines, an RGB triad mask,
+  phosphor fringing, warm halation, and a heavier vignette on OpenGL/GLES, Vulkan,
+  Direct3D 11, and the software fallback; Windows physical optical drives are found
+  through `IOCTL_STORAGE_CHECK_VERIFY2` and `\\.\CdRomN` when the 3DO filesystem is not
+  mountable (issue #8, CD-R boot closes SYS-21); JIT soft resets keep their reset state,
+  and one active joypad with inactive `None` ports uses the legacy 16-byte PBUS packet.
+  Suite 2,561/2,561.
+- **v1.14.2 (2026-11-21):** packaging and diagnostics bug-fix release - Windows bundles
   ship the app-local MSVC runtime OpenAL Soft needs, AppImage update metadata uses
   `gh-releases-zsync` with a versioned `.zsync` target, cover-catalog HTTP failures fall
   back to the cached catalog, and expected state/experimental/deployment conditions no

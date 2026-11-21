@@ -21,6 +21,7 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// </summary>
 public partial class WelcomeWindow : Window
 {
+    private readonly bool _deckLayout;
     private readonly Func<BiosDiscoveryResult?>? _rescan;
 
     /// <summary>Creates the dialog without a discovered BIOS.</summary>
@@ -49,6 +50,7 @@ public partial class WelcomeWindow : Window
         Func<BiosDiscoveryResult?>? rescan)
     {
         InitializeComponent();
+        _deckLayout = deckLayout;
         _rescan = rescan;
         ApplyLayout(deckLayout);
         ApplyDiscovery(discovery);
@@ -83,8 +85,10 @@ public partial class WelcomeWindow : Window
         ContentPanel.Spacing = deckLayout ? 16 : 12;
         ContentPanel.Width = Math.Max(0, layout.Width - 40);
         CanResize = deckLayout;
-        MinWidth = deckLayout ? 720 : 0;
-        MinHeight = deckLayout ? 560 : 0;
+        // The content width is fixed to the designed Deck width. Do not let a resize
+        // shrink the window below it, or the StackPanel would be clipped horizontally.
+        MinWidth = deckLayout ? layout.Width : 0;
+        MinHeight = deckLayout ? layout.Height : 0;
 
         foreach (Button button in new[]
         {
@@ -108,15 +112,24 @@ public partial class WelcomeWindow : Window
         {
             DiscoveredBiosPanel.IsVisible = false;
             DiscoveredBiosText.Text = string.Empty;
-            return;
+        }
+        else
+        {
+            DiscoveredBiosPanel.IsVisible = true;
+            DiscoveredBiosText.Text = Localizer.Format(
+                "ui.found_bios_on_this_computer",
+                DiscoveredBios.Name,
+                DiscoveredBios.RegionLabel,
+                DiscoveredBios.FileName);
         }
 
-        DiscoveredBiosPanel.IsVisible = true;
-        DiscoveredBiosText.Text = Localizer.Format(
-            "ui.found_bios_on_this_computer",
-            DiscoveredBios.Name,
-            DiscoveredBios.RegionLabel,
-            DiscoveredBios.FileName);
+        if (!_deckLayout)
+        {
+            // The discovered-BIOS panel adds a button and a second text block. Keep
+            // the fixed desktop layout tall enough instead of clipping the BIOS folder
+            // panel at the bottom.
+            Height = DiscoveredBios is null ? 500 : 620;
+        }
     }
 
     private static string? FindBiosFolder(BiosDiscoveryResult? discovery)

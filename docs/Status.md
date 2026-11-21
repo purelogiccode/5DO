@@ -1,5 +1,18 @@
 # Project Status and Next Steps
 
+**2026-11-21, v1.15.0 release:** the Steam Deck first-run, Arcade CRT, and physical
+optical-drive release ships the Deck/gamescope welcome layout with **Scan** and
+**Open Folder**, the stronger `ArcadeCrt` filter on OpenGL/GLES, Vulkan, Direct3D 11,
+and the software fallback, and the issue #8 optical-drive discovery fix. It also fixes
+the JIT soft-reset state overwrite and the single-joypad PBUS packet selection, centers
+and sizes the welcome guide for its discovered-BIOS panel, and aligns the Direct3D
+Arcade CRT clamps with the other backends. The suite is **2,561/2,561**; build,
+`dotnet format`, and `jb inspectcode` are clean. The release tag is `v1.15.0`; the five
+bundles, both AppImages with `.zsync`, both Flatpaks, and the signed Linux packages are
+built from the tagged source. Release and post-release evidence is recorded in
+[ReleaseNotes-1.15.0.md](ReleaseNotes-1.15.0.md),
+[Compatibility.md](Compatibility.md) §10.7, and [KnownIssues.md](KnownIssues.md).
+
 **2026-11-21, v1.14.2 release:** the packaging and diagnostics bug-fix release ships the
 app-local MSVC runtime in the Windows bundles, corrected AppImage update metadata,
 cover-catalog HTTP fallback, and quieter bug reports for expected conditions. The five

@@ -2,11 +2,11 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-21):** v1.14.2 is a packaging and diagnostics bug-fix
-release. It ships the app-local MSVC runtime in the Windows bundles, corrects AppImage
-update metadata, makes cover-catalog HTTP failures fall back to the cached catalog, and
-stops expected user conditions from filing bug reports. It does not change the default
-320x240 compatibility path, the documented title matrix, or the 1.14.0 feature baseline.
+**Current release (2026-11-21):** v1.15.0 adds Steam Deck/SteamOS first-run setup and
+the stronger `ArcadeCrt` filter, and fixes Windows physical optical-drive discovery,
+a JIT soft-reset state overwrite, and single-pad PBUS packet selection. It also records
+the burned CD-R boot that closes SYS-21 and does not change the default 320x240
+compatibility path, the documented title matrix, or the 1.14.0 feature baseline.
 
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
@@ -921,7 +921,7 @@ The Windows-specific findings are:
 
 ### 10.7 Windows x64 physical optical drive (2026-11-21, issue #8)
 
-Validated with the post-1.14.2 commit `57c8c20` on the issue reporter's Windows 11 x64
+Validated with the v1.15.0 optical-drive work (commit `57c8c20`) on the issue reporter's Windows 11 x64
 machine and a Pioneer BD-RW BDR-S13JX. The drive has a 3DO disc's custom filesystem, so
 Windows does not expose a mounted volume and may not assign a drive letter; the old
 `DriveInfo.IsReady` filter reported "No optical drive with media was found."
@@ -934,7 +934,7 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 | Physical CD-DA | Not supported; use a BIN/CUE or CHD image for audio tracks |
 | Follow-up: JIT soft reset | Reset PC/CPSR/R14_svc survive the compiled-block boundary (`ArmJitSoftResetTests`) |
 | Follow-up: input | One active joypad with disabled `None` ports uses the legacy 16-byte PBUS packet (`InputManagerTests`) |
-| Full suite | **2,558/2,558** in Debug, build 0 warnings/0 errors, format and InspectCode clean |
+| Full suite | **2,561/2,561** in Debug, build 0 warnings/0 errors, format and InspectCode clean |
 
 The reporter's CD-R boot closes the SYS-21 `Done when` line. The remaining follow-up is
 a post-fix input re-test on that machine; physical CD-DA playback remains out of scope.

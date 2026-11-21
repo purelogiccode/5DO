@@ -93,6 +93,17 @@ public sealed class InputManagerTests
     }
 
     [Fact]
+    public void InputManager_NonePortDoesNotGrowTheChain()
+    {
+        var manager = new InputManager(InputProfile.CreateDefault());
+        manager.SetDevice(7, InputDeviceType.None);
+        var packet = new byte[PbusEncoder.PacketSize];
+
+        Assert.Equal(1, manager.ControllerCount);
+        Assert.Equal(PbusEncoder.PacketSize, manager.GetPbusData(packet));
+    }
+
+    [Fact]
     public void InputManager_UsesTheChainForAnActivePeripheral()
     {
         var manager = new InputManager(InputProfile.CreateDefault());

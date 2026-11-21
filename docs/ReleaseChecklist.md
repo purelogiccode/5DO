@@ -1,9 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.14.2 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.15.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.14.2 is a packaging and diagnostics bug-fix
+v1.2.x. macOS is published as a DMG. v1.15.0 adds Steam Deck/SteamOS first-run setup and
+the Arcade CRT filter, and fixes physical optical-drive discovery, a JIT soft-reset state
+overwrite, and single-pad PBUS input. v1.14.2 was the packaging and diagnostics bug-fix
 release for the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog
 HTTP fallback, and expected-condition reporting. v1.14.1 was the deep-review bug-fix
 release for CHD Mode 2 native sectors, stale crop dimensions, atomic persistence,
@@ -41,6 +43,40 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.15.0 Steam Deck, Arcade CRT, and optical-drive gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.15.0`.
+- [x] Steam Deck/SteamOS/gamescope first-run layout with 960x680 sizing, 54 px buttons,
+      the BIOS folder, **Scan**, and **Open Folder**; `DeckModeTests` covers detection
+      and layout, and [Installation.md](Installation.md#steam-deck-and-steamos) documents
+      the non-Steam-game flow. The upstream EmuDeck/RetroDeck entry remains external.
+- [x] `ArcadeCrt` is implemented on OpenGL/GLES, Vulkan, Direct3D 11, and the software
+      fallback; probe aliases `arcade-crt`/`old-crt` pass with `filterFallback: false`,
+      captured frames show the effect on all three GPU paths, and `FrameScalerTests`
+      covers the software scanline pass.
+- [x] Physical optical-drive discovery probes the device with
+      `IOCTL_STORAGE_CHECK_VERIFY2`, falls back to the CD-ROM geometry request and
+      `\\.\CdRomN`, and is accepted by the picker, CLI, startup path, and `doctor`.
+      A virtual optical drive with its letter removed reported `\\.\CdRom0` and read all
+      22 sectors; the issue #8 reporter booted burned CD-R games and reached their FMV
+      intros, closing SYS-21.
+- [x] JIT soft reset preserves the reset PC/CPSR/R14_svc across a compiled block;
+      `ArmJitSoftResetTests` fails without the fix and passes with it.
+- [x] One active joypad with inactive `None` ports uses the legacy 16-byte PBUS packet;
+      automatic port counting ignores `None`; `InputManagerTests`,
+      `PbusEncoderTests`, and `InputDeviceSettingsTests` cover the cases.
+- [x] The welcome guide is centered on screen and grows for the discovered-BIOS panel;
+      the Direct3D 11 Arcade CRT scanline/mask clamps match OpenGL and Vulkan.
+- [x] Full suite green (**2,561 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
+- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+      and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
+      win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.15.0`.
+- [ ] The published x64 AppImage runs through FUSE and
+      `--appimage-extract-and-run`, passes the frontend smoke, resolves the 1.15.0
+      `.zsync`, and its detached `.asc` verifies with the release key.
 
 ## 1.14.2 packaging and diagnostics gate
 

@@ -4734,5 +4734,12 @@ in that configuration, so keyboard and gamepad input were missing. `InputManager
 covers both the legacy and chain selections; the existing `PbusChainEncoderTests` still
 cover an active peripheral within the port count.
 
-**Verification.** Full suite **2,558/2,558**, build 0 warnings/0 errors,
+**Release review.** The same pass made the automatic PBUS port count ignore trailing
+`None` slots, stopped direct `SetDevice(None)` calls from growing the polled chain,
+centered the welcome guide on the screen and sized it for the discovered-BIOS panel, and
+aligned the Direct3D 11 Arcade CRT scanline/mask clamps with OpenGL and Vulkan.
+`InputDeviceSettingsTests`, `PbusEncoderTests`, `InputManagerTests`, and the
+`ShaderSourceTests` cover the changed paths.
+
+**Verification.** Full suite **2,561/2,561**, build 0 warnings/0 errors,
 `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.

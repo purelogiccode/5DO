@@ -836,8 +836,10 @@ public sealed class AppSettings
         {
             InputDeviceType device = ParseDevice(devices[port]);
             input.Devices.SetDevice(port, device);
-            if (device != InputDeviceType.Joypad)
+            if (device is not (InputDeviceType.Joypad or InputDeviceType.None))
             {
+                // None is a disabled slot, not a peripheral. Automatic mode must not
+                // grow the chain for a trailing None port.
                 count = port + 1;
             }
         }

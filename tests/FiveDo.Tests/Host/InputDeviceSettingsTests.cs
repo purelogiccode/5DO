@@ -95,6 +95,22 @@ public sealed class InputDeviceSettingsTests
     }
 
     [Fact]
+    public void ApplyInputDevices_AutomaticCountIgnoresNonePorts()
+    {
+        var settings = new AppSettings();
+        settings.SetInputDevice(7, InputDeviceType.None);
+        var input = new InputManager(InputProfile.CreateDefault());
+        var packet = new byte[PbusChainEncoder.MaxPacketSize];
+
+        settings.ApplyInputDevices(input);
+        int length = input.GetPbusData(packet);
+
+        Assert.Null(settings.ActiveInputDevices);
+        Assert.Equal(1, input.ControllerCount);
+        Assert.Equal(PbusEncoder.PacketSize, length);
+    }
+
+    [Fact]
     public void EightJoypads_UseTheOperaDaisyChain()
     {
         var settings = new AppSettings

@@ -6178,7 +6178,7 @@ internal static class Program
         var count = 1;
         for (var i = 0; i < devices.Length; i++)
         {
-            if (devices[i] != InputDeviceType.Joypad)
+            if (devices[i] is not (InputDeviceType.Joypad or InputDeviceType.None))
             {
                 count = i + 1;
             }

@@ -3,7 +3,7 @@
         x:Class="FiveDo.Frontend.Avalonia.Views.WelcomeWindow"
         Title="Welcome to 5DO"
         Width="560" Height="500"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         CanResize="False">
 
     <Grid RowDefinitions="*,Auto" Margin="20">

@@ -1,10 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.14.2, a packaging and
-diagnostics bug-fix release for the Windows bundles, AppImage updates, cover-catalog
-failures, and expected-condition reporting.
+All notable changes are recorded here. The project is at v1.15.0, the Steam Deck
+first-run, Arcade CRT, and physical optical-drive release.
 
-## [Unreleased]
+## [1.15.0] - 2026-11-21
 
 ### Fixed
 
@@ -21,7 +20,13 @@ failures, and expected-condition reporting.
 - **One active joypad no longer forces the daisy-chain PBUS packet.** Disabled ports
   7-8 left at `None` were counted as peripherals, so a single-pad configuration emitted
   the Opera chain instead of the legacy 16-byte packet. The chain is now selected only
-  by active ports, restoring keyboard and gamepad input in that configuration.
+  by active ports, and automatic port-count selection ignores trailing `None` slots,
+  restoring keyboard and gamepad input in that configuration.
+- **The welcome guide is centered and sized for its content.** It now opens on the
+  screen instead of centering on a possibly oversized owner, and grows when a discovered
+  BIOS adds the extra panel so the BIOS folder is not clipped on a smaller desktop.
+- **Arcade CRT Direct3D parity.** The Direct3D 11 scanline and mask strengths now use
+  the same clamps as the OpenGL and Vulkan shaders.
 
 ### Added
 

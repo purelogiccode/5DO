@@ -1,9 +1,12 @@
 # Known Issues
 
-**Snapshot:** 2026-11-21, v1.14.2. The 1.14.2 release fixes the Windows app-local MSVC
-runtime, AppImage update metadata, cover-catalog HTTP fallback, and expected-condition
-bug reports. The 1.14.1 deep-review release fixed CHD Mode 2 sectors, crop dimensions,
-persistence, and shutdown races. The list below remains the supported
+**Snapshot:** 2026-11-21, v1.15.0. The 1.15.0 release adds Steam Deck/SteamOS first-run
+setup and the Arcade CRT filter, and fixes Windows physical optical-drive discovery, a
+JIT soft-reset state overwrite, and single-pad PBUS packet selection. The 1.14.2 release
+fixed the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog HTTP
+fallback, and expected-condition bug reports. The 1.14.1 deep-review release fixed CHD
+Mode 2 sectors, crop dimensions, persistence, and shutdown races. The list below remains
+the supported
 corpus and prototype-state record. Jurassic Park Interactive reaches the in-park Raptor
 Maze and SECURITY BREACH outcome, with a default-CEL-pacing residual; CDI and NRG disc
 images, the Windows OpenAL bundle

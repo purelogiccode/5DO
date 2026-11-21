@@ -107,6 +107,17 @@ public sealed class PbusEncoderTests
     }
 
     [Fact]
+    public void PbusSource_NonePortDoesNotGrowTheChain()
+    {
+        var source = new PbusSource();
+        source.SetDevice(7, InputDeviceType.None);
+        var packet = new byte[PbusEncoder.PacketSize];
+
+        Assert.Equal(1, source.ControllerCount);
+        Assert.Equal(PbusEncoder.PacketSize, source.GetPbusData(packet));
+    }
+
+    [Fact]
     public void PbusSource_NonJoypadDeviceSelectsTheChain()
     {
         var source = new PbusSource();

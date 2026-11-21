@@ -133,10 +133,23 @@ public sealed class PbusSource : IPbusSource
     /// <summary>Sets the device type on a port.</summary>
     /// <param name="port">Zero-based port index.</param>
     /// <param name="device">Device type.</param>
+    /// <remarks>
+    /// A joypad or a disabled <see cref="InputDeviceType.None"/> slot does not grow the
+    /// polled chain; only a real peripheral does. Use <see cref="SetControllerCount"/>
+    /// to poll additional joypad ports.
+    /// </remarks>
     public void SetDevice(int port, InputDeviceType device)
     {
+        int count = ControllerCount;
         _devices.SetDevice(port, device);
-        ControllerCount = Math.Max(ControllerCount, port + 1);
+        if (device is not (InputDeviceType.Joypad or InputDeviceType.None))
+        {
+            ControllerCount = Math.Max(count, port + 1);
+        }
+        else
+        {
+            _devices.SetPortCount(count);
+        }
     }
 
     /// <summary>Gets the device type on a port.</summary>

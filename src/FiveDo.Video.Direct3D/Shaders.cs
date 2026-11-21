@@ -237,7 +237,7 @@ internal static class Direct3D11Shaders
             }
             else if (FilterMode == 4)
             {
-                float scanStrength = saturate(Params.x * 1.7);
+                float scanStrength = min(Params.x * 1.7, 0.85);
                 float outputLine = fmod(floor(input.position.y), 2.0);
                 float nativeLine = 0.5 + (0.5 * cos(uv.y * (float)SourceSize.y * 6.2831853));
                 color *= 1.0 - (scanStrength * (0.35 + (0.65 * outputLine))
@@ -249,7 +249,7 @@ internal static class Direct3D11Shaders
                     : aperture < 2.0
                         ? float3(0.72, 1.0, 0.72)
                         : float3(0.72, 0.72, 1.0);
-                color *= lerp(float3(1.0, 1.0, 1.0), mask, saturate(Params.x * 1.5));
+                color *= lerp(float3(1.0, 1.0, 1.0), mask, min(Params.x * 1.5, 0.85));
 
                 float2 texel = 1.0 / (float2)SourceSize;
                 float3 fringed;
