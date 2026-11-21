@@ -902,13 +902,13 @@ The Windows-specific findings are:
   The current Windows bundles ship the app-local MSVC runtime (`vcruntime140.dll` and
   `msvcp140.dll`, plus `vcruntime140_1.dll` on x64) beside `OpenAL32.dll`. On a clean
   Windows 11 ARM64 image with the redistributable uninstalled, the old bundle reported
-  `OpenAL: not found (OpenAL32.dll)` while the new ARM64 bundle reported
+  `OpenAL: not found (OpenAL32.dll)` while the published 1.14.2 ARM64 bundle reported
   `OpenAL: loaded OpenAL32.dll`; the x64 bundle also loaded its app-local runtime under
   x64 emulation. A 600-frame Theme Park run on the clean ARM64 image produced frame hash
   `0x110E7DC5` and PC `22892`, identical to Windows x64, and `selftest --json` passed
   all 15 checks. A 60-frame `--audio openal` run with `ALSOFT_DRIVERS=null` exited 0
   and produced 44,144 samples, and the desktop `--smoke-test` reported
-  `FRONTEND SMOKE OK 1.14.1` with a clean shell shutdown. The VM still has no audio
+  `FRONTEND SMOKE OK 1.14.2` with a clean shell shutdown. The VM still has no audio
   endpoint, so real-device playback remains unvalidated; `ALSOFT_DRIVERS=null` is still
   required for audio-path tests.
 - **The VM has no Vulkan driver.** `--vk-probe` fails with `ErrorIncompatibleDriver`;

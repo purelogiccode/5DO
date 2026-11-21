@@ -74,10 +74,13 @@ signatures need.
   produces 44,144 samples.
 - The x64 AppImage runs through FUSE and `--appimage-extract-and-run`, passes the
   desktop smoke on hardware OpenGL, and its detached `.asc` verifies with the release
-  key. A local zsync pass from the rebuilt 1.14.1 image to a test 1.14.2 image fetched
-  27 KB and matched the target hash.
-- CI publishes the five bundles, both Flatpaks, both AppImages with `.zsync`, the
-  signed Linux packages, the keyring, and the checksum manifests.
+  key. `appimageupdatetool -d` resolved the latest 1.14.2 `.zsync`, `-j` reported no
+  update, and a local 1.14.2-to-test-1.14.3 pass fetched 2,570 bytes and matched the
+  target hash.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.14.2> (release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44861080545>). The five downloaded
+  bundles match `SHA256SUMS.txt`; the published win-x64 CLI `selftest` and frontend smoke
+  report `FRONTEND SMOKE OK 1.14.2`.
 
 ## Known limits
 

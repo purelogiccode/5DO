@@ -5,24 +5,26 @@ app-local MSVC runtime in the Windows bundles, corrected AppImage update metadat
 cover-catalog HTTP fallback, and quieter bug reports for expected conditions. The five
 bundles, both AppImages with `.zsync`, both Flatpaks, and the signed Linux packages are
 built from the tagged source. The suite is **2,535/2,535**, `dotnet build` reports
-0 warnings/0 errors, and `dotnet format` and `jb inspectcode` are clean. Evidence is
-recorded in [ReleaseNotes-1.14.2.md](ReleaseNotes-1.14.2.md),
+0 warnings/0 errors, and `dotnet format` and `jb inspectcode` are clean. Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.14.2>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44861080545> passed all five bundle
+jobs, both Linux package jobs, signing, and the publish job. The five downloaded bundles
+match `SHA256SUMS.txt`; the published win-x64 CLI `selftest` and frontend smoke report
+`FRONTEND SMOKE OK 1.14.2`. Evidence is recorded in
+[ReleaseNotes-1.14.2.md](ReleaseNotes-1.14.2.md),
 [Compatibility.md](Compatibility.md) §10.6, and [KnownIssues.md](KnownIssues.md).
 
-**2026-11-20, REL-07 x64 AppImage and update metadata:** the published
-`5do-1.14.1-linux-x86_64.AppImage` ran on the LAN Linux x64 host through FUSE and
-`--appimage-extract-and-run` (`--version` 1.14.1), passed the frontend smoke
-(`FRONTEND SMOKE OK 1.14.1`) on hardware OpenGL 4.2, and its detached `.asc` verifies
-with the release key. The update metadata was broken for the next release: the embedded
-URL was version-pinned and the `.zsync` target pointed at the `.zsync` rather than the
-AppImage. `build-appimage.sh` now accepts separate `--zsync-url` and
-`--update-information` values and validates both, while CI embeds
-`gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`. A local
-zsync pass from the rebuilt 1.14.1 image to a test 1.14.2 image fetched 27 KB over an
-HTTP Range server and matched the target hash. Remaining: one `AppImageUpdate` pass against the next published release (the
-1.14.1 assets predate the fix). Evidence:
-[LinuxDistribution.md](LinuxDistribution.md) §5, [ImplementationPlan.md](ImplementationPlan.md)
-§3.3.
+**2026-11-21, REL-07 closed:** the published `5do-1.14.2-linux-x86_64.AppImage` reports
+`gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync`, and its
+`.zsync` URL points at the versioned AppImage. On the LAN Linux x64 host it runs through
+FUSE and `--appimage-extract-and-run`, reports 1.14.2, passes the frontend smoke
+(`FRONTEND SMOKE OK 1.14.2`) on hardware OpenGL 4.2, and its detached `.asc` verifies
+with the release key. `appimageupdatetool -d` resolved the latest 1.14.2 `.zsync`,
+`-j` reported no update, and a local 1.14.2-to-test-1.14.3 pass fetched 2,570 bytes over
+an HTTP Range server and matched the target hash. CI does not embed an AppImage
+signature, so detached `.asc` remains the signing format. Evidence:
+[LinuxDistribution.md](LinuxDistribution.md) §5,
+[ImplementationPlanArchive.md](ImplementationPlanArchive.md) §9.
 
 **2026-11-20, REL-11 Windows app-local MSVC runtime:** the Windows bundles now ship
 `vcruntime140.dll` and `msvcp140.dll` (plus `vcruntime140_1.dll` on x64) beside
@@ -30,12 +32,12 @@ HTTP Range server and matched the target hash. Remaining: one `AppImageUpdate` p
 the target-architecture files through `vswhere` (or an explicit `-VcRuntimeDirectory`) and
 rejects missing or wrong-architecture DLLs; `build-bundle.yml` verifies the extracted
 bundle. On the Windows 11 ARM64 VM with the VC++ redistributable uninstalled, the old
-bundle reported `OpenAL: not found (OpenAL32.dll)` and the new 1.14.1 ARM64 bundle
+bundle reported `OpenAL: not found (OpenAL32.dll)` and the new 1.14.2 ARM64 bundle
 reported `OpenAL: loaded OpenAL32.dll`; the x64 bundle also loaded its app-local runtime
 under x64 emulation. `selftest --json` passed 15/15, and a 600-frame Theme Park run
 produced frame hash `0x110E7DC5` and PC `22892`, matching Windows x64. A 60-frame
 `--audio openal` run with `ALSOFT_DRIVERS=null` exited 0 with 44,144 samples,
-and the desktop smoke reported `FRONTEND SMOKE OK 1.14.1`. The suite is
+and the desktop smoke reported `FRONTEND SMOKE OK 1.14.2`. The suite is
 **2,535/2,535**; build, `dotnet format`, and `jb inspectcode` are clean. The VM was
 deallocated after the pass. Evidence:
 [Compatibility.md](Compatibility.md) §10.6, [KnownIssues.md](KnownIssues.md).

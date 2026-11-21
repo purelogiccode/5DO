@@ -57,13 +57,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Transient cover-catalog HTTP failures fall back to the cached catalog, and
       expected state/experimental/deployment warnings no longer file bug reports.
 - [x] Full suite green (**2,535 tests**), `dotnet build` 0 warnings/0 errors,
-      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.- [ ] Tagged release publishes the five bundles and the signed Linux assets; the five
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.- [x] Tagged release publishes the five bundles and the signed Linux assets; the five
       bundles match `SHA256SUMS.txt`, and the win-x64 CLI `selftest` and frontend smoke
-      report `FRONTEND SMOKE OK 1.14.2`.
-- [ ] The published x64 AppImage resolves the latest release, reports
+      report `FRONTEND SMOKE OK 1.14.2`. Published at
+      <https://github.com/purelogiccode/5DO/releases/tag/v1.14.2>; release run
+      <https://github.com/purelogiccode/5DO/actions/runs/44861080545>.
+- [x] The published x64 AppImage resolves the latest release, reports
       `FRONTEND SMOKE OK 1.14.2`, and its detached `.asc` verifies with the release key.
-      `AppImageUpdate` from 1.14.2 is validated against the next release, or the
-      documented local zsync path stands in until that release exists.
+      `appimageupdatetool -d` resolved the 1.14.2 `.zsync`, `-j` reported no update, and
+      a local 1.14.2-to-test-1.14.3 pass fetched 2,570 bytes and matched the target hash.
+      CI publishes detached `.asc` signatures rather than embedding one, so
+      `--appimage-signature` is not used.
 
 ## 1.14.1 deep-review bug-fix gate
 

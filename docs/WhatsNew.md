@@ -68,7 +68,10 @@ The `.asc` files are signatures, the `.zsync` files feed `AppImageUpdate`, and
   samples.
 - The x64 AppImage runs through FUSE and `--appimage-extract-and-run`, passes the
   desktop smoke on hardware OpenGL, and its detached `.asc` verifies with the release
-  key.
+  key. `appimageupdatetool` resolved the latest 1.14.2 `.zsync`, and a local
+  1.14.2-to-test-1.14.3 pass matched the target hash.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.14.2>; the five
+  bundles match `SHA256SUMS.txt`.
 
 ## Still in 1.14.1
 

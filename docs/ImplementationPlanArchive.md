@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.14.1.
+> history through v1.14.2.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -383,6 +383,22 @@ dotnet run --project src/FiveDo.Frontend.Avalonia -c Release -- --smoke-test --f
 
 Append new entries here; do not delete history. Each entry is a completed canonical item or a release milestone.
 
+- **2026-11-21 - REL-07 AppImage updates.** The published
+  `5do-1.14.2-linux-x86_64.AppImage` embeds
+  `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync`, and
+  its `.zsync` URL points at the versioned AppImage. On the LAN Linux x64 host the image
+  ran through FUSE and `--appimage-extract-and-run`, reported 1.14.2, passed the desktop
+  smoke (`FRONTEND SMOKE OK 1.14.2`) on hardware OpenGL 4.2, and its detached `.asc`
+  verified with the release key. `appimageupdatetool -d` resolved the latest 1.14.2
+  `.zsync`, `-j` reported no update, and a local 1.14.2-to-test-1.14.3 pass fetched
+  2,570 bytes over an HTTP Range server and matched the target hash. The prior 1.14.1
+  assets embedded a version-pinned URL and a `.zsync` that targeted the `.zsync`; those
+  users must download 1.14.2 manually. CI keeps detached `.asc` signatures instead of
+  embedding an AppImage signature. Evidence:
+  [LinuxDistribution.md](LinuxDistribution.md) §5,
+  [ImplementationPlan.md](ImplementationPlan.md) §3.3,
+  `packaging/linux/build-appimage.sh`.
+
 - **2026-11-20 - REL-11 Windows app-local MSVC runtime.** The Windows bundles now stage
   `vcruntime140.dll` and `msvcp140.dll` (and `vcruntime140_1.dll` on x64) beside
   `OpenAL32.dll`. `package-bundle.ps1` resolves the target-architecture files through
@@ -751,7 +767,7 @@ Release history for v1.9.1–v1.12.0 is in §14.
 
 ## 11. Completed stable IDs
 
-**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, REL-11, QUAL-01 … QUAL-04,
+**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, REL-07, REL-11, QUAL-01 … QUAL-04,
 QUAL-03A … QUAL-03D, QUAL-05A, ACC-01 … ACC-04, AUD-01, AUD-02, PLAT-01 … PLAT-04,
 PLAT-07 … PLAT-13, PLAT-15, PLAT-16, PLAT-18, TEST-06/07/08, CORE-11/16, FND-05, ECO-04,
 ENG-01/09, SYS-06/07/08/12/17/18/22/24, UX-09, UX-25, UX-26, UX-28 … UX-32, UX-34, UX-35,
@@ -771,7 +787,7 @@ quality pass; `QUAL-03A`…`QUAL-03D` and `QUAL-05A` completed the follow-on scr
 aliases, old gates, and dated evidence entries are in Part I. Do not reopen a completed ID
 without new measurement.
 
-## 12. Completed backlog rows (2026-11-09 → 2026-11-20)
+## 12. Completed backlog rows (2026-11-09 → 2026-11-21)
 
 | ID | Priority | Completed result | Evidence |
 |---|---|---|---|
@@ -819,6 +835,7 @@ without new measurement.
 | **SYS-26** | P1 | Movie verification false failure: the header records the emulated frame span (`EmulatedFrames`, null on older movies) and verification compares that span instead of the packet counter, so a 600-frame recording verifies its 599 packets over 600 frames. Playback and verification resolve the recorded disc by file name beside the movie or in the working directory and the BIOS by MD5 in the default folders, and fail with an actionable message instead of replaying without them; `movie record --disc` now matches `movie play --disc`. A 600-frame Theme Park movie and a 300-frame `--state-in` branch verify with exit 0; suite 2,443/2,443. | [Tas.md](Tas.md) §4, `MovieVerifierTests`, `MovieFileTests`, `MovieRecordAndVerify_RoundtripFromState`, [Compatibility.md](Compatibility.md) §10.6 |
 | **UX-36** | P3 | Startup preflight for partial extractions: the desktop frontend verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the apphost before Avalonia initializes, then shows a "5DO cannot start" message naming the missing files and the extraction steps (Windows dialog; stderr for automated runs) and exits 1 at Error level, so no fatal crash or bug report is produced. Issues #69923/#69924 (`SkiaSharp.SKImageInfo`/`Dll was not found` from a bundle run out of `Downloads`) reproduce it and now receive the actionable message. A published win-x64 apphost run alone shows the dialog; the complete folder passes the smoke test. | `NativeRuntimeCheck`, `NativeRuntimeCheckTests` (6), [Troubleshooting.md](Troubleshooting.md) §1, README bundle notes, issues #69923/#69924 |
 | **REL-11** | P1 | Windows bundles ship the app-local MSVC runtime required by OpenAL Soft: `vcruntime140.dll` and `msvcp140.dll` (and `vcruntime140_1.dll` on x64) sit beside `OpenAL32.dll`. `package-bundle.ps1` resolves them through `vswhere` or `-VcRuntimeDirectory` and rejects missing/wrong-architecture files; `build-bundle.yml` verifies the extracted bundle. On a clean Windows 11 ARM64 image with the VC++ redistributable uninstalled, the old bundle reported `OpenAL: not found (OpenAL32.dll)` and the new bundle reported `OpenAL: loaded OpenAL32.dll`; the x64 bundle loaded under x64 emulation. `selftest --json` passed 15/15, a 600-frame Theme Park run matched Windows x64 at `0x110E7DC5` / PC `22892`, and the frontend smoke reported `FRONTEND SMOKE OK 1.14.1`. | [Compatibility.md](Compatibility.md) §10.6, [OpenALSoft.md](OpenALSoft.md) §1, [Troubleshooting.md](Troubleshooting.md) §1, `packaging/package-bundle.ps1`, `.github/workflows/build-bundle.yml` |
+| **REL-07** | P1 | AppImage update metadata now resolves the next release: the 1.14.2 x64 image embeds `gh-releases-zsync`, its `.zsync` URL points at the versioned AppImage, and `build-appimage.sh` validates both. The image runs through FUSE and `--appimage-extract-and-run`, reports 1.14.2, passes the desktop smoke on hardware OpenGL 4.2, and its detached `.asc` verifies. `appimageupdatetool -d` resolved the latest 1.14.2 `.zsync`, `-j` reported no update, and a local 1.14.2-to-test-1.14.3 pass fetched 2,570 bytes and matched the target hash. | [LinuxDistribution.md](LinuxDistribution.md) §5, [Compatibility.md](Compatibility.md) §10.3, `packaging/linux/build-appimage.sh` |
 
 `UX-16` unsigned scaffolding is also complete: the Windows Inno Setup installer with
 `.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, the Linux `.deb`/`.rpm` with desktop and
@@ -861,8 +878,14 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.14.1)
+## 14. Release history (v1.9.1 - v1.14.2)
 
+- **v1.14.2 (2026-11-21):** packaging and diagnostics bug-fix release — Windows bundles
+  ship the app-local MSVC runtime OpenAL Soft needs, AppImage update metadata uses
+  `gh-releases-zsync` with a versioned `.zsync` target, cover-catalog HTTP failures fall
+  back to the cached catalog, and expected state/experimental/deployment conditions no
+  longer file bug reports. Suite 2,535/2,535; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/44861080545>.
 - **v1.14.1 (2026-11-20):** deep-review bug-fix release - CHD Mode 2 native track
   sectors, stale crop dimensions, atomic persistence, malformed cache/settings recovery,
   state/CD validation, and shutdown/device-loss hardening; suite 2,534/2,534.

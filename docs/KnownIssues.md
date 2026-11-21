@@ -502,14 +502,13 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
 
 ## Packaging and platforms
 
-- **The published 1.14.1 AppImages cannot auto-update to the next release.** They embed
+- **The published 1.14.1 AppImages cannot auto-update to 1.14.2.** They embed
   `zsync|https://github.com/.../releases/latest/download/5do-1.14.1-linux-<arch>.AppImage.zsync`,
-  which stops resolving once 1.14.1 is no longer the latest release, and the published
-  `.zsync` target points at the `.zsync` instead of the AppImage. Download the next
-  release manually. The tooling is fixed for the next release: `build-appimage.sh`
-  separates the update information from the `.zsync` target, validates both, and CI
-  embeds `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`.
-  See [LinuxDistribution.md](LinuxDistribution.md) §5.
+  which stops resolving once 1.14.1 is no longer the latest release, and their `.zsync`
+  target points at the `.zsync` instead of the AppImage. Download 1.14.2 manually once;
+  the 1.14.2 images embed `gh-releases-zsync` and point their `.zsync` at the versioned
+  AppImage, so `AppImageUpdate` works from 1.14.2 onward. See
+  [LinuxDistribution.md](LinuxDistribution.md) §5.
 - CI builds five bundles. Windows x64 and Linux x64 run the CLI and frontend smoke
   tests; `.github/workflows/platform-runtime.yml` additionally runs native CLI/frontend
   smoke on macOS arm64, Linux arm64, and Windows arm64. Intel macOS support was dropped
