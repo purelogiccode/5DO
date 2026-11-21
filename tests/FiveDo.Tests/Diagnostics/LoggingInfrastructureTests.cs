@@ -491,7 +491,10 @@ public sealed class LoggingInfrastructureTests
             {
                 while (Count < target)
                 {
-                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    // Windows CI runners can briefly starve the sink worker while the
+                    // rest of the suite is running. Five seconds was too tight and
+                    // produced intermittent "Only 1 of 1" failures.
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                     bool available;
                     try
                     {
