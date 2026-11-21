@@ -2,7 +2,7 @@
 # Reference copy for the AUR `5do-bin` package. The published package lives in its own
 # AUR git repository; see README.md for the submission steps.
 pkgname=5do-bin
-pkgver=1.15.0
+pkgver=1.16.0
 pkgrel=1
 pkgdesc="3DO Interactive Multiplayer emulator"
 arch=('x86_64' 'aarch64')

@@ -26,6 +26,8 @@ namespace FiveDo.Host;
 /// </remarks>
 public sealed class CoreRunner : IDisposable
 {
+    private const int DiscReadErrorLogInterval = 256;
+
     private readonly FiveDoMachine _machine;
     private readonly Action<VdlFrame>? _frameSink;
     private readonly Action<CoreStatus>? _statusSink;
@@ -69,6 +71,8 @@ public sealed class CoreRunner : IDisposable
     private long _lastPbusReadCount = -1;
     private bool _lastFrameWasLag;
     private int _inputPlayer = 1;
+    private int _discReadErrorCount;
+    private int _discReadErrorLastSector = -1;
 
     /// <summary>Initializes a new instance of the <see cref="CoreRunner"/> class.</summary>
     /// <param name="machine">Machine to run. The runner does not own it.</param>
@@ -86,6 +90,7 @@ public sealed class CoreRunner : IDisposable
         _frameSink = frameSink;
         _statusSink = statusSink;
         _rewind = new RewindBuffer(machine, rewindOptions);
+        machine.Cdrom.DiscReadErrorObserver = OnDiscReadError;
     }
 
     /// <summary>Raised on the core thread when the emulation loop faults.</summary>
@@ -821,6 +826,26 @@ public sealed class CoreRunner : IDisposable
         finally
         {
             TimerResolution.End();
+        }
+    }
+
+    /// <summary>
+    /// Logs a host disc read failure without faulting the core. Repeated failures at the
+    /// same sector are rate-limited because a damaged disc can fail on every retry.
+    /// </summary>
+    private void OnDiscReadError(int sector, Exception exception)
+    {
+        int count = Interlocked.Increment(ref _discReadErrorCount);
+        var isNewSector = sector != _discReadErrorLastSector;
+        _discReadErrorLastSector = sector;
+        if (isNewSector || count == 1 || count % DiscReadErrorLogInterval == 0)
+        {
+            Serilog.Log.Warning(
+                exception,
+                "The optical disc could not be read at sector {Sector}; the drive returned a "
+                + "read error to the guest ({ErrorCount} failures).",
+                sector,
+                count);
         }
     }
 

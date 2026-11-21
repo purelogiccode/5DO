@@ -16,16 +16,15 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.15.0 Steam Deck, Arcade CRT, and optical-drive release"
-    5DO is at v1.15.0. The welcome guide detects Steam Deck/SteamOS/gamescope and uses a
-    960x680 BIOS setup layout with **Scan** and **Open Folder**. A new `ArcadeCrt` filter
-    adds thick scanlines, an RGB triad mask, phosphor fringing, warm halation, and a
-    heavy vignette on OpenGL/GLES, Vulkan, Direct3D 11, and the software fallback.
-    Windows now finds optical drives whose 3DO filesystem is not mountable, a JIT soft
-    reset keeps its reset state, and a single joypad no longer switches to the PBUS
-    daisy chain. `--high-res` remains a presentation-only 2x upscale, and retail Gamegun
-    titles keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1**
-    connects the Gamegun, and **Alt+Enter** toggles fullscreen.
+!!! important "v1.16.0 physical CD-DA and disc read-error release"
+    5DO is at v1.16.0. A host optical drive's table of contents now supplies data and
+    audio tracks, and CD-DA plays from a burned mixed-mode CD through the 3DO player or a
+    game. A damaged or failing disc read, such as a CRC error on a scratched CD-R, is
+    reported to the guest instead of stopping the core, and a failed screenshot or
+    save-slot thumbnail write no longer crashes the UI. `--high-res` remains a
+    presentation-only 2x upscale, and retail Gamegun titles keep a joypad on port 1.
+    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
+    **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
     DMG. GPG-signed Linux artifacts use the keyring fingerprint
@@ -86,30 +85,29 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.15.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.16.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-21, v1.15.0 Steam Deck, Arcade CRT, and optical-drive release (GitHub Releases).**
+**2026-11-21, v1.16.0 physical CD-DA and disc read-error release (GitHub Releases).**
 
-- **2,561 tests** are present in the current test assembly.
-- **Steam Deck first-run setup:** the welcome guide detects
-  `SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope and uses a 960x680 layout with 54 px
-  buttons, the BIOS folder, **Scan**, and **Open Folder**.
-  [Installation.md](Installation.md#steam-deck-and-steamos) documents the non-Steam-game
-  flow.
-- **Arcade CRT:** a stronger old-television/arcade-monitor preset with thick scanlines,
-  an RGB triad mask, phosphor fringing, warm halation, more curvature, and a heavier
-  vignette, on OpenGL/GLES, Vulkan, Direct3D 11, and the software fallback.
-- **Physical optical drives:** Windows probes the optical device instead of the mounted
-  volume and falls back to `\\.\CdRomN`, so a 3DO disc whose custom filesystem cannot be
-  mounted still boots. Issue #8 validated burned CD-R games and closed SYS-21.
-- **JIT soft reset and single-pad input:** a CLIO CSTAT soft reset no longer has its
-  reset PC/CPSR overwritten by a compiled block, and disabled `None` ports no longer
-  force the Opera PBUS daisy chain.
-- **Welcome dialog placement:** centered on the screen and sized for the discovered-BIOS
-  panel.
+- **2,576 tests** are present in the current test assembly.
+- **Physical CD-DA:** a host drive's table of contents is exposed through
+  `ITrackedDiscSource`, and raw 2352-byte Red Book frames use
+  `IOCTL_CDROM_RAW_READ` (Windows) or `CDROMREADAUDIO` (Linux). CD-DA end addressing
+  follows the disc track table, so audio tracks after the data volume play.
+- **Disc read errors no longer stop emulation:** a failed host read (for example a CRC
+  error on a scratched CD-R) is zero-filled, reported to the guest as MEI receive-ECC,
+  and logged; the transfer continues with the next sector. The boot-time volume-header
+  probe and CD-DA sample reads share the guard.
+- **Screenshot writes are safe:** a failed screenshot or save-slot thumbnail write is
+  reported as an OSD warning instead of faulting the UI thread.
+- **`disc tracks` reports 64-bit sizes:** multi-gigabyte physical discs and images no
+  longer overflow `dataSize`.
+- **Earlier in 1.15.0:** Steam Deck/SteamOS first-run setup, the Arcade CRT filter,
+  Windows physical optical-drive discovery with `\\.\CdRomN`, the JIT soft-reset fix,
+  and single-pad PBUS input.
 - **Earlier in 1.14.x:** Windows bundles are self-contained for audio: `vcruntime140.dll` and
   `msvcp140.dll` (plus the x64-only `vcruntime140_1.dll`) ship beside `OpenAL32.dll`,
   so a clean Windows image no longer needs the Visual C++ redistributable.
@@ -195,7 +193,7 @@
   Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
   game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
   smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.15.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.15.0)
+- v1.16.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.16.0)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See

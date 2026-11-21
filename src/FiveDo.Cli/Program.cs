@@ -3519,7 +3519,7 @@ internal static class Program
                     tracks.Add(new CliDiscTrackResult(
                         track.Number,
                         track.IsAudio ? "audio" : "data",
-                        track.SectorSize * track.SectorCount,
+                        (long)track.SectorSize * track.SectorCount,
                         track.SectorCount,
                         track.StartLba,
                         track.PayloadOffset));
@@ -3530,7 +3530,7 @@ internal static class Program
                 tracks.Add(new CliDiscTrackResult(
                     1,
                     "data",
-                    source.SectorSize * source.SectorCount,
+                    (long)source.SectorSize * source.SectorCount,
                     source.SectorCount,
                     0,
                     0));

@@ -43,7 +43,8 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
   Machine-readable JSON remains English. See [`Localization.md`](Localization.md).
 - A disc argument may be a host optical-drive root (`D:`, `D:\`, `\\.\D:`, or
   `/dev/sr0`) instead of an image file. Data discs boot through the cooked block
-  interface; physical CD-DA tracks are not exposed yet. See
+  interface, and the drive's table of contents exposes data and CD-DA tracks; raw audio
+  frames use the host's CDDA request. See
   [`Configuration.md`](Configuration.md) §6.
 - `--json` is accepted by commands that have structured output. It is ignored by
   `trace` and `disasm`, which are text-only.

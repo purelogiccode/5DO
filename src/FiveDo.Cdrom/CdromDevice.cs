@@ -103,6 +103,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     private int _audioSampleOffset;
     private double _audioVolume = DefaultAudioVolume;
     private bool _audioMuted;
+    private int _discReadErrorCount;
 
     /// <summary>Gets or sets the data-sector timing model.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is unknown.</exception>
@@ -402,6 +403,30 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     public long LastReadFrame { get; private set; } = -1;
 
     /// <summary>
+    /// Gets the number of sector reads that failed at the host and were replaced with
+    /// zero-filled data.
+    /// </summary>
+    /// <remarks>
+    /// A damaged or ejected disc must not fault emulation. The drive reports the failure
+    /// through its error status and keeps the transfer running so the guest can retry or
+    /// skip the sector, exactly as it would with a disc that has an unreadable spot.
+    /// </remarks>
+    public int DiscReadErrorCount => _discReadErrorCount;
+
+    /// <summary>Gets the most recent sector whose host read failed, or -1.</summary>
+    public int LastDiscReadErrorSector { get; private set; } = -1;
+
+    /// <summary>
+    /// Gets or sets an optional observer invoked when a host sector read fails.
+    /// </summary>
+    /// <remarks>
+    /// The callback runs on the core thread and must not block. Frontends use it to log
+    /// or surface a warning; the drive has already converted the failure into an XBUS
+    /// error, so the exception must not be rethrown.
+    /// </remarks>
+    public Action<int, Exception>? DiscReadErrorObserver { get; set; }
+
+    /// <summary>
     /// Reads the next 44.1 kHz stereo CD-DA sample while PLAY_AUDIO is active.
     /// </summary>
     /// <param name="sample">The decoded signed 16-bit stereo sample.</param>
@@ -443,7 +468,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
                 }
                 catch (Exception exception)
                 {
-                    TraceWriter?.WriteLine($"cd audio read failed lba={_audioSampleLba}: {exception.Message}");
+                    ReportSectorReadError(_audioSampleLba, exception, updateDriveStatus: false);
                     _audioPlaying = false;
                     return false;
                 }
@@ -1568,7 +1593,10 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             _poll |= PollStatus;
         }
 
-        _meiStatus = MeiError.NoError;
+        if ((_xbusStatus & CdstError) == 0)
+        {
+            _meiStatus = MeiError.NoError;
+        }
     }
 
     private void ModeSetCommand()
@@ -1655,7 +1683,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     {
         int start = MsfToLba(_command[1], _command[2], _command[3]);
         bool noEnd = _command[4] == 0xFF && _command[5] == 0xFF && _command[6] == 0xFF;
-        int end = noEnd ? TotalSectorCount : MsfToLba(_command[4], _command[5], _command[6]);
+        int end = noEnd ? AudioSectorLimit : MsfToLba(_command[4], _command[5], _command[6]);
         PlayAudio(start, end, 0x0E);
     }
 
@@ -1677,7 +1705,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             return;
         }
 
-        int end = tracked.TotalSectorCount;
+        int end = AudioSectorLimit;
         if (endTrack > 0 && endTrack < tracked.Tracks[^1].Number)
         {
             DiscTrack? next = FindTrackByNumber(tracked, endTrack + 1);
@@ -1722,7 +1750,7 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         _audioStartLba = Math.Max(0, start);
-        _audioEndLba = Math.Min(end, TotalSectorCount);
+        _audioEndLba = Math.Min(end, AudioSectorLimit);
         _audioStartCycle = _cycles;
         _audioSampleLba = _audioStartLba;
         _audioSampleOffset = 0;
@@ -1735,6 +1763,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
     }
 
     private int TotalSectorCount => _totalSectorCount;
+
+    /// <summary>
+    /// Gets the last sector a CD-DA transfer may reach. Unlike the volume-header data
+    /// limit used by data reads, this follows the disc's physical track table, so audio
+    /// tracks that follow the data volume remain playable.
+    /// </summary>
+    private int AudioSectorLimit => _disc is ITrackedDiscSource tracked
+        ? Math.Max(_totalSectorCount, tracked.TotalSectorCount)
+        : _totalSectorCount;
 
     private int ResolveSectorCount()
     {
@@ -1753,7 +1790,18 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         }
 
         var header = new byte[RequestSize];
-        _disc.ReadSector(0, header);
+        try
+        {
+            _disc.ReadSector(0, header);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // A disc whose volume header cannot be read still has a physical size; let
+            // the guest boot attempt decide what to do instead of failing insertion.
+            ReportSectorReadError(0, exception, updateDriveStatus: false);
+            return physical;
+        }
+
         int declared = (header[0x50] << 24)
             | (header[0x51] << 16)
             | (header[0x52] << 8)
@@ -2025,7 +2073,15 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
         TraceWriter?.WriteLine($"cd read sector {sector} size {_readSectorSize}");
         if (_disc is not ITrackedDiscSource tracked)
         {
-            _disc.ReadSector(sector, _data);
+            try
+            {
+                _disc.ReadSector(sector, _data);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                ReportSectorReadError(sector, exception);
+            }
+
             return;
         }
 
@@ -2035,7 +2091,16 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             return;
         }
 
-        int available = tracked.ReadTrackSector(sector, _trackSector);
+        int available;
+        try
+        {
+            available = tracked.ReadTrackSector(sector, _trackSector);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            ReportSectorReadError(sector, exception);
+            return;
+        }
         if (_readSectorSize <= RequestSize && !track.IsAudio)
         {
             int offset = track.PayloadOffset;
@@ -2065,6 +2130,39 @@ public sealed class CdromDevice : IXbusDevice, IStateSection
             && TryBuildSubQ(tracked, sector, out byte[] q))
         {
             FillSubcode(_data.AsSpan(_readSectorSize, SubcodeSize), q);
+        }
+    }
+
+    /// <summary>
+    /// Converts a host read failure into a drive error without faulting the core.
+    /// </summary>
+    /// <param name="sector">Sector whose read failed.</param>
+    /// <param name="exception">Host failure.</param>
+    /// <param name="updateDriveStatus">
+    /// Whether to flag the XBUS error and MEI read-error status. Initialization probes
+    /// pass <see langword="false"/> so a boot-time probe cannot leave the drive in a
+    /// permanent error state.
+    /// </param>
+    private void ReportSectorReadError(int sector, Exception exception, bool updateDriveStatus = true)
+    {
+        _discReadErrorCount++;
+        LastDiscReadErrorSector = sector;
+        TraceWriter?.WriteLine($"cd read failed sector {sector}: {exception.Message}");
+        if (updateDriveStatus)
+        {
+            _meiStatus = MeiError.ReceiveEcc;
+            _xbusStatus |= CdstError;
+            _xbusStatus &= unchecked((byte)~CdstReady);
+        }
+
+        try
+        {
+            DiscReadErrorObserver?.Invoke(sector, exception);
+        }
+        catch (Exception observerException) when (observerException is not OutOfMemoryException)
+        {
+            // A diagnostic observer must never fault emulation.
+            TraceWriter?.WriteLine($"cd read error observer failed: {observerException.Message}");
         }
     }
 

@@ -5,7 +5,7 @@ namespace FiveDo.Cli;
 internal sealed record CliDiscTrackResult(
     int Number,
     string Type,
-    int DataSize,
+    long DataSize,
     int Frames,
     int Start,
     int PayloadOffset);

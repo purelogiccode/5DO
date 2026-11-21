@@ -1,7 +1,33 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.15.0, the Steam Deck
-first-run, Arcade CRT, and physical optical-drive release.
+All notable changes are recorded here. The project is at v1.16.0, the physical CD-DA and
+disc read-error release.
+
+## [1.16.0] - 2026-11-21
+
+### Added
+
+- **Physical CD-DA.** A host optical drive's table of contents is exposed through
+  `ITrackedDiscSource`, so the 3DO CD player and games can list and play Red Book audio
+  tracks from a burned mixed-mode CD. Audio frames use `IOCTL_CDROM_RAW_READ` in CDDA
+  mode on Windows and `CDROMREADAUDIO` on Linux. `disc tracks` and `disc verify` cover
+  the audio tracks too, and a TOC that reports a short lead-out is extended to the
+  drive's addressable data length.
+
+### Fixed
+
+- **A host disc read error no longer stops emulation.** Issue #8's CRC report
+  (`DiscImageException` at sector 103777) propagated out of the CD-ROM device and faulted
+  the core thread with "Emulation fault" and "Core thread stopped". A failed sector is
+  now zero-filled, recorded as MEI receive-ECC for the guest's READ_ERROR command, and
+  logged (rate-limited per sector), and the transfer continues with the next sector. The
+  boot-time volume-header probe is guarded the same way.
+- **A failed screenshot write no longer crashes the UI thread.** A `FileNotFoundException`
+  from the Pictures path, such as a redirected or unavailable cloud folder, is caught
+  and reported as an OSD warning. Native screenshots and save-slot thumbnails share the
+  guard.
+- **`disc tracks` no longer overflows `dataSize` for large discs.** The byte count is a
+  64-bit value, so physical discs and multi-gigabyte images report correctly.
 
 ## [1.15.0] - 2026-11-21
 

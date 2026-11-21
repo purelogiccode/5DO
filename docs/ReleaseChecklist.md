@@ -1,15 +1,17 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.15.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.16.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.15.0 adds Steam Deck/SteamOS first-run setup and
-the Arcade CRT filter, and fixes physical optical-drive discovery, a JIT soft-reset state
-overwrite, and single-pad PBUS input. v1.14.2 was the packaging and diagnostics bug-fix
-release for the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog
-HTTP fallback, and expected-condition reporting. v1.14.1 was the deep-review bug-fix
-release for CHD Mode 2 native sectors, stale crop dimensions, atomic persistence,
-malformed-data recovery, and shutdown/device-loss handling.
+v1.2.x. macOS is published as a DMG. v1.16.0 adds physical CD-DA playback from a host
+optical drive and reports failed disc reads to the guest instead of faulting the core,
+with guarded screenshot and save-slot thumbnail writes. v1.15.0 added Steam Deck/SteamOS
+first-run setup and the Arcade CRT filter, and fixed physical optical-drive discovery, a
+JIT soft-reset state overwrite, and single-pad PBUS input. v1.14.2 was the packaging and
+diagnostics bug-fix release for the Windows app-local MSVC runtime, AppImage update
+metadata, cover-catalog HTTP fallback, and expected-condition reporting. v1.14.1 was the
+deep-review bug-fix release for CHD Mode 2 native sectors, stale crop dimensions, atomic
+persistence, malformed-data recovery, and shutdown/device-loss handling.
 **Release definition:** v1.0 is a **documented-compatibility release**, not a
 full-compatibility one. v1.1.0 was a maintenance update; v1.2.0 added features,
 accuracy telemetry, and broader disc support; v1.2.1 added arm64 bundles; v1.2.2 added
@@ -41,6 +43,39 @@ and known issues, and move everything else to the post-1.0 backlog.
 This checklist is the release gate. A checked box must have evidence (a command, CI
 run, screenshot, or recorded hash), not just an intention. Update `docs/Status.md`,
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
+
+---
+
+## 1.16.0 physical CD-DA and disc read-error gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, changelog, and release notes to `1.16.0`.
+- [x] `PhysicalDiscSource` implements `ITrackedDiscSource`; the Windows TOC parse and
+      cooked reads were validated on a mounted virtual optical drive, and
+      `PhysicalDiscTocTests` covers TOC parsing, track coverage, and MSF conversion.
+- [x] Raw CDDA reads use `IOCTL_CDROM_RAW_READ` on Windows and `CDROMREADAUDIO` on
+      Linux; a drive that rejects the request reports a read error instead of faulting.
+- [x] CD-DA end addressing follows the physical track table, so a mixed-mode disc whose
+      volume header declares only the data volume still plays its audio tracks
+      (`PlayAudioTrackUsesThePhysicalDiscEndBeyondTheVolumeHeader`).
+- [x] A failed host sector read is zero-filled, reported as MEI receive-ECC, and logged
+      while the transfer continues; `CdromReadErrorTests` covers the failed sector,
+      continued transfer, and boot-probe fallback.
+- [x] Screenshot and save-slot thumbnail write failures are caught and reported as an
+      OSD warning instead of faulting the UI thread.
+- [x] Full suite green (**2,576 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and
+      `mkdocs build --strict`.
+- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+      and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
+      win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.16.0`.
+- [ ] The published x64 AppImage runs through FUSE and
+      `--appimage-extract-and-run`, passes the frontend smoke, resolves the 1.16.0
+      `.zsync`, and its detached `.asc` verifies with the release key.
+- [ ] Downloaded the five bundles to `src/FiveDo.Frontend.Avalonia/bin/Release`; all
+      SHA-256 values match `SHA256SUMS.txt`.
+- [ ] A real mixed-mode audio CD is exercised on a physical drive, or the limitation is
+      recorded in [KnownIssues.md](KnownIssues.md) after the release test.
 
 ---
 

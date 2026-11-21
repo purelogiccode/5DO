@@ -348,7 +348,11 @@ public sealed class SaveStateSlotManager
             FrameAssembler.Assemble(frame, buffer, buffer.Width, buffer.Height);
             PngDumper.Write(buffer, GetThumbnailPath(slot));
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or InvalidOperationException
+            or ArgumentException
+            or NotSupportedException)
         {
             // A thumbnail is optional; never fail a state save because the preview could not be written.
             Serilog.Log.Debug(exception, "Save-slot thumbnail could not be written for slot {Slot}.", slot);

@@ -13,11 +13,15 @@ namespace FiveDo.Storage;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The drive is read through the host's cooked block interface, so every read returns the
-/// 2048-byte user-data sector that <see cref="IDiscSource"/> requires. Data discs boot
-/// exactly like the same disc in an image file. Audio tracks are not exposed through
-/// <see cref="ITrackedDiscSource"/>, so CD-DA playback remains unavailable for a physical
-/// drive until a raw-audio reader is added.
+/// Data tracks are read through the host's cooked block interface, so every read returns
+/// the 2048-byte user-data sector that <see cref="IDiscSource"/> requires. Data discs boot
+/// exactly like the same disc in an image file.
+/// </para>
+/// <para>
+/// The drive's table of contents is exposed through <see cref="ITrackedDiscSource"/>.
+/// Audio tracks carry raw 2352-byte Red Book frames, read with
+/// <c>IOCTL_CDROM_RAW_READ</c> in CDDA mode on Windows and <c>CDROMREADAUDIO</c> on Linux,
+/// so a physical mixed-mode disc can play CD-DA through the 3DO CD player or a game.
 /// </para>
 /// <para>
 /// Windows drives are written as <c>D:</c>, <c>D:\</c>, <c>\\.\D:</c>, or
@@ -29,7 +33,7 @@ namespace FiveDo.Storage;
 /// writes to the disc.
 /// </para>
 /// </remarks>
-public sealed class PhysicalDiscSource : IDiscSource
+public sealed class PhysicalDiscSource : ITrackedDiscSource
 {
     /// <summary>Gets the size of one 3DO user-data sector.</summary>
     public const int SectorBytes = 2048;
@@ -38,18 +42,39 @@ public sealed class PhysicalDiscSource : IDiscSource
     private const uint DriveTypeCdRom = 5;
     private const uint IoctlStorageCheckVerify2 = 0x002D0800;
     private const uint IoctlCdromGetDriveGeometry = 0x0002404C;
+    private const uint IoctlCdromReadToc = 0x00024000;
+    private const uint IoctlCdromRawRead = 0x0002403E;
+    private const int TrackModeCdda = 2;
+    private const int TocBufferBytes = 4 + (100 * 8);
     private const int ErrorNotReady = 21;
     private const int GeometryBufferBytes = 24;
 
+    private const nuint LinuxCdromReadTocHeader = 0x5305;
+    private const nuint LinuxCdromReadTocEntry = 0x5306;
+    private const nuint LinuxCdromReadAudio = 0x530E;
+    private const byte LinuxCdromLba = 0x01;
+    private const byte LinuxLeadOutTrack = 0xAA;
+    private const byte LinuxControlDataTrack = 0x40;
+
     private readonly FileStream _stream;
     private readonly Lock _gate = new();
+    private readonly byte[] _audioSector = new byte[PhysicalDiscToc.AudioSectorBytes];
+    private readonly IReadOnlyList<DiscTrack> _tracks;
     private bool _disposed;
 
-    private PhysicalDiscSource(string devicePath, FileStream stream, long length)
+    private PhysicalDiscSource(
+        string devicePath,
+        FileStream stream,
+        int cookedSectorCount,
+        IReadOnlyList<DiscTrack> tracks)
     {
         DevicePath = devicePath;
         _stream = stream;
-        SectorCount = checked((int)(length / SectorBytes));
+        CookedSectorCount = cookedSectorCount;
+        _tracks = tracks.Count > 0
+            ? PhysicalDiscToc.EnsureCoverage(tracks, cookedSectorCount)
+            : [new DiscTrack(1, DiscTrackKind.Data, 0, cookedSectorCount, SectorBytes)];
+        SectorCount = Math.Max(cookedSectorCount, _tracks[^1].EndLba);
     }
 
     /// <summary>Gets the normalized host device path.</summary>
@@ -64,6 +89,19 @@ public sealed class PhysicalDiscSource : IDiscSource
 
     /// <inheritdoc />
     public int SectorSize => SectorBytes;
+
+    /// <summary>Gets the number of 2048-byte sectors addressable through the cooked interface.</summary>
+    /// <remarks>
+    /// A mixed-mode disc's cooked view covers its data area only; the remaining sectors
+    /// are Red Book audio and are reachable through <see cref="ReadTrackSector"/>.
+    /// </remarks>
+    public int CookedSectorCount { get; }
+
+    /// <inheritdoc />
+    public IReadOnlyList<DiscTrack> Tracks => _tracks;
+
+    /// <inheritdoc />
+    public int TotalSectorCount => SectorCount;
 
     /// <summary>
     /// Determines whether a path names an optical drive root rather than an image file.
@@ -178,12 +216,20 @@ public sealed class PhysicalDiscSource : IDiscSource
                 SectorBytes,
                 FileOptions.None);
             long length = ResolveLength(stream);
-            if (length < SectorBytes)
+            if (length < 0 || length > (long)int.MaxValue * SectorBytes)
+            {
+                throw new DiscImageException($"The optical drive '{path}' reports an implausible media size.");
+            }
+
+            int cookedSectorCount = (int)(length / SectorBytes);
+            IReadOnlyList<DiscTrack> tracks = TryReadTracks(stream, cookedSectorCount);
+            int trackSectorCount = tracks.Count > 0 ? tracks[^1].EndLba : 0;
+            if (Math.Max(cookedSectorCount, trackSectorCount) < 1)
             {
                 throw new DiscImageException($"The optical drive '{path}' contains no readable media.");
             }
 
-            return new PhysicalDiscSource(devicePath, stream, length);
+            return new PhysicalDiscSource(devicePath, stream, cookedSectorCount, tracks);
         }
         catch (DiscImageException)
         {
@@ -214,6 +260,21 @@ public sealed class PhysicalDiscSource : IDiscSource
             throw new DiscImageException($"Sector {lba} is outside the optical disc ({SectorCount} sectors).");
         }
 
+        if (FindTrack(lba) is { IsAudio: true })
+        {
+            // Red Book audio has no 2048-byte user data. A guest that reads an audio
+            // LBA as data receives silence instead of a fault; CD-DA playback uses
+            // ReadTrackSector with the native 2352-byte frame.
+            destination[..SectorBytes].Clear();
+            return;
+        }
+
+        if (CookedSectorCount > 0 && lba >= CookedSectorCount)
+        {
+            throw new DiscImageException(
+                $"Sector {lba} is outside the drive's {CookedSectorCount}-sector data area.");
+        }
+
         lock (_gate)
         {
             try
@@ -242,6 +303,48 @@ public sealed class PhysicalDiscSource : IDiscSource
     }
 
     /// <inheritdoc />
+    public int ReadTrackSector(int lba, Span<byte> destination)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentOutOfRangeException.ThrowIfNegative(lba);
+        DiscTrack? track = FindTrack(lba);
+        if (track is null)
+        {
+            throw new DiscImageException($"Sector {lba} is outside the optical disc ({SectorCount} sectors).");
+        }
+
+        if (destination.Length < track.SectorSize)
+        {
+            throw new ArgumentException(
+                $"The destination must hold {track.SectorSize} bytes for track {track.Number}.",
+                nameof(destination));
+        }
+
+        if (!track.IsAudio)
+        {
+            ReadSector(lba, destination[..SectorBytes]);
+            return SectorBytes;
+        }
+
+        ReadAudioSector(lba, destination[..PhysicalDiscToc.AudioSectorBytes]);
+        return PhysicalDiscToc.AudioSectorBytes;
+    }
+
+    /// <inheritdoc />
+    public DiscTrack? FindTrack(int lba)
+    {
+        foreach (DiscTrack track in _tracks)
+        {
+            if (track.Contains(lba))
+            {
+                return track;
+            }
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
     public void Dispose()
     {
         if (_disposed)
@@ -251,6 +354,159 @@ public sealed class PhysicalDiscSource : IDiscSource
 
         _disposed = true;
         _stream.Dispose();
+    }
+
+    /// <summary>
+    /// Reads one native 2352-byte Red Book frame with the platform's raw-audio request.
+    /// </summary>
+    /// <param name="lba">Audio-sector logical block address.</param>
+    /// <param name="destination">Destination span of at least 2352 bytes.</param>
+    private void ReadAudioSector(int lba, Span<byte> destination)
+    {
+        lock (_gate)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                ReadWindowsAudioSector(lba);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                ReadLinuxAudioSector(lba);
+            }
+            else
+            {
+                throw new DiscImageException(
+                    "CD-DA playback from a physical drive is not supported on this platform.");
+            }
+
+            _audioSector.AsSpan(0, PhysicalDiscToc.AudioSectorBytes).CopyTo(destination);
+        }
+    }
+
+    private void ReadWindowsAudioSector(int lba)
+    {
+        var info = new RawReadInfo
+        {
+            // IOCTL_CDROM_RAW_READ offsets are expressed in 2048-byte units even when
+            // the requested track mode returns 2352-byte CDDA frames.
+            DiskOffset = (long)lba * SectorBytes,
+            SectorCount = 1,
+            TrackMode = TrackModeCdda,
+        };
+        IntPtr handle = _stream.SafeFileHandle.DangerousGetHandle();
+        if (!DeviceIoControl(
+                handle,
+                IoctlCdromRawRead,
+                ref info,
+                Marshal.SizeOf<RawReadInfo>(),
+                _audioSector,
+                PhysicalDiscToc.AudioSectorBytes,
+                out int returned,
+                IntPtr.Zero)
+            || returned < PhysicalDiscToc.AudioSectorBytes)
+        {
+            int error = Marshal.GetLastPInvokeError();
+            var inner = new System.ComponentModel.Win32Exception(error);
+            throw new DiscImageException(
+                $"The optical drive could not read audio sector {lba}: {inner.Message}",
+                inner);
+        }
+    }
+
+    private void ReadLinuxAudioSector(int lba)
+    {
+        IntPtr fd = _stream.SafeFileHandle.DangerousGetHandle();
+        var request = new LinuxReadAudioRequest
+        {
+            Lba = lba,
+            AddressFormat = LinuxCdromLba,
+            FrameCount = 1,
+            Buffer = IntPtr.Zero,
+        };
+        GCHandle pin = GCHandle.Alloc(_audioSector, GCHandleType.Pinned);
+        try
+        {
+            request.Buffer = pin.AddrOfPinnedObject();
+            if (LinuxIoctlReadAudio(fd, LinuxCdromReadAudio, ref request) != 0)
+            {
+                int error = Marshal.GetLastPInvokeError();
+                throw new DiscImageException(
+                    $"The optical drive could not read audio sector {lba} (CDROMREADAUDIO errno {error}).");
+            }
+        }
+        finally
+        {
+            pin.Free();
+        }
+    }
+
+    private static IReadOnlyList<DiscTrack> TryReadTracks(FileStream stream, int fallbackLeadOutLba)
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                var buffer = new byte[TocBufferBytes];
+                IntPtr handle = stream.SafeFileHandle.DangerousGetHandle();
+                if (!DeviceIoControlBuffer(handle, IoctlCdromReadToc, buffer, out int returned)
+                    || returned <= 0)
+                {
+                    return [];
+                }
+
+                // The CDROM_TOC Length field is not trustworthy on every driver (Windows'
+                // ISO mounter reports 4608 for a 20-byte response), so parse exactly the
+                // bytes the device wrote.
+                return PhysicalDiscToc.ParseWindowsToc(
+                    buffer.AsSpan(0, Math.Min(returned, buffer.Length)),
+                    fallbackLeadOutLba);
+            }
+
+            if (OperatingSystem.IsLinux())
+            {
+                return ReadLinuxTracks(stream.SafeFileHandle.DangerousGetHandle());
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or NotSupportedException
+            or ArgumentException)
+        {
+            Serilog.Log.Debug(exception, "The optical drive's table of contents could not be read.");
+        }
+
+        return [];
+    }
+
+    private static IReadOnlyList<DiscTrack> ReadLinuxTracks(IntPtr fd)
+    {
+        var header = default(LinuxTocHeader);
+        if (LinuxIoctlTocHeader(fd, LinuxCdromReadTocHeader, ref header) != 0
+            || header.FirstTrack == 0
+            || header.LastTrack < header.FirstTrack)
+        {
+            return [];
+        }
+
+        var entries = new List<DiscTocEntry>(header.LastTrack - header.FirstTrack + 1);
+        for (int number = header.FirstTrack; number <= header.LastTrack; number++)
+        {
+            var entry = new LinuxTocEntry { Track = (byte)number, Format = LinuxCdromLba };
+            if (LinuxIoctlTocEntry(fd, LinuxCdromReadTocEntry, ref entry) != 0)
+            {
+                continue;
+            }
+
+            // The Linux control nibble is the high half of the ADR/control byte;
+            // CDROM_DATA_TRACK (0x04) therefore appears as 0x40.
+            entries.Add(new DiscTocEntry(number, (entry.AdrControl & LinuxControlDataTrack) == 0, entry.Lba));
+        }
+
+        var leadOut = new LinuxTocEntry { Track = LinuxLeadOutTrack, Format = LinuxCdromLba };
+        int leadOutLba = LinuxIoctlTocEntry(fd, LinuxCdromReadTocEntry, ref leadOut) == 0
+            ? leadOut.Lba
+            : -1;
+        return PhysicalDiscToc.BuildTracks(entries, leadOutLba);
     }
 
     private static long ResolveLength(FileStream stream)
@@ -384,7 +640,7 @@ public sealed class PhysicalDiscSource : IDiscSource
             // Some filter drivers do not implement CHECK_VERIFY2. The CD-ROM geometry
             // request is the older, widely supported media-presence probe.
             var geometry = new byte[GeometryBufferBytes];
-            return DeviceIoControlBuffer(handle, IoctlCdromGetDriveGeometry, geometry);
+            return DeviceIoControlBuffer(handle, IoctlCdromGetDriveGeometry, geometry, out _);
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -470,7 +726,8 @@ public sealed class PhysicalDiscSource : IDiscSource
     private static bool DeviceIoControlBuffer(
         IntPtr handle,
         uint controlCode,
-        byte[] output)
+        byte[] output,
+        out int returned)
     {
         return DeviceIoControl(
             handle,
@@ -479,7 +736,7 @@ public sealed class PhysicalDiscSource : IDiscSource
             0,
             output,
             output.Length,
-            out _,
+            out returned,
             IntPtr.Zero);
     }
 
@@ -584,4 +841,77 @@ public sealed class PhysicalDiscSource : IDiscSource
 
     [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
     private static extern int Ioctl(IntPtr fileDescriptor, ulong request, out ulong value);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RawReadInfo
+    {
+        internal long DiskOffset;
+        internal uint SectorCount;
+        internal int TrackMode;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LinuxTocHeader
+    {
+        internal byte FirstTrack;
+        internal byte LastTrack;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
+    private struct LinuxTocEntry
+    {
+        [FieldOffset(0)]
+        internal byte Track;
+
+        [FieldOffset(1)]
+        internal byte AdrControl;
+
+        [FieldOffset(2)]
+        internal byte Format;
+
+        [FieldOffset(4)]
+        internal int Lba;
+
+        [FieldOffset(8)]
+        internal byte DataMode;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LinuxReadAudioRequest
+    {
+        internal int Lba;
+        internal byte AddressFormat;
+        internal int FrameCount;
+        internal IntPtr Buffer;
+    }
+
+    [DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeviceIoControl(
+        IntPtr device,
+        uint controlCode,
+        ref RawReadInfo input,
+        int inputSize,
+        [Out] byte[] output,
+        int outputSize,
+        out int bytesReturned,
+        IntPtr overlapped);
+
+    [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
+    private static extern int LinuxIoctlTocHeader(
+        IntPtr fileDescriptor,
+        nuint request,
+        ref LinuxTocHeader header);
+
+    [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
+    private static extern int LinuxIoctlTocEntry(
+        IntPtr fileDescriptor,
+        nuint request,
+        ref LinuxTocEntry entry);
+
+    [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
+    private static extern int LinuxIoctlReadAudio(
+        IntPtr fileDescriptor,
+        nuint controlCode,
+        ref LinuxReadAudioRequest audioRequest);
 }

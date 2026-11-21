@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.16.0" date="2026-11-21">
+      <description>
+        <p>
+          Physical CD-DA playback from a host optical drive, CD-DA end addressing
+          follow the disc track table, damaged or failing disc reads are reported to
+          the guest instead of stopping emulation, and a failed screenshot or save-slot
+          thumbnail write no longer crashes the UI.
+        </p>
+      </description>
+    </release>
     <release version="1.15.0" date="2026-11-21">
       <description>
         <p>

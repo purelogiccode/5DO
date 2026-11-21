@@ -1,7 +1,7 @@
 # 5DO — Missing Features
 
 **Snapshot:** 2026-11-21
-**Release:** v1.15.0
+**Release:** v1.16.0
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
@@ -106,7 +106,7 @@ is hosted. Evidence: [Installers.md](Installers.md),
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **SYS-21** | Done | M | **Physical CD-ROM drive support**: boot from a host optical drive. `PhysicalDiscSource`, **File > Boot Optical Drive...**, and the CLI drive-root path read a burned CD-R through the cooked block interface. Windows discovery probes the optical device with `IOCTL_STORAGE_CHECK_VERIFY2` and falls back to `\\.\CdRomN`, because a 3DO disc's custom filesystem is not mountable and may have no drive letter. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. Issue #8 validated burned CD-R boot on a Pioneer BD-RW; physical CD-DA remains out of scope. |
+| **SYS-21** | Done | M | **Physical CD-ROM drive support**: boot from a host optical drive. `PhysicalDiscSource`, **File > Boot Optical Drive...**, and the CLI drive-root path read a burned CD-R through the cooked block interface. Windows discovery probes the optical device with `IOCTL_STORAGE_CHECK_VERIFY2` and falls back to `\\.\CdRomN`, because a 3DO disc's custom filesystem is not mountable and may have no drive letter. The drive TOC is exposed through `ITrackedDiscSource`, and raw CDDA frames use `IOCTL_CDROM_RAW_READ` (Windows) or `CDROMREADAUDIO` (Linux). Host read failures are reported as MEI receive-ECC and do not stop the core. | The disc abstraction already supports multiple image formats; a host CD source is additive. | A physical 3DO disc boots and reaches beyond-title; the device/format path is documented. Issue #8 validated burned CD-R boot on a Pioneer BD-RW. Physical CD-DA is implemented; a real mixed-mode audio track is the remaining hardware check. |
 | **SYS-23** | Awaiting hardware | M | **Windows DirectInput/generic HID gamepad backend**: `DirectInputGamepadSource`/`WindowsGamepadSource` enumerate devices, filter duplicate XInput pads, calibrate trigger rest positions, and keep XInput as fallback; axis/POV/trigger tests pass. Only a physical DirectInput-only pad check is missing. | `IRawGamepadSource`, `PlatformRawGamepadSource`, and `GamepadMapper` already abstract and test the mapping; a Windows source is additive. | A DirectInput-only pad is detected and mapped on Windows; axis/POV/trigger tests pass; XInput remains the default fallback; the backend and device selection are documented in [Configuration.md](Configuration.md). |
 
 ---

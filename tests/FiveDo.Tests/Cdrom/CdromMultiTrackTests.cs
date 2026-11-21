@@ -90,6 +90,22 @@ public sealed class CdromMultiTrackTests
     }
 
     [Fact]
+    public void PlayAudioTrackUsesThePhysicalDiscEndBeyondTheVolumeHeader()
+    {
+        // The volume header declares only the data volume (4 blocks), but the disc has two
+        // audio tracks after it. CD-DA must still start at LBA 4 instead of being clamped
+        // to the data limit.
+        var cd = new CdromDevice { ArmClock = 750 };
+        cd.InsertDisc(new TrackedMemoryDisc(dataSectors: 4, audioSectors: 2, declaredBlocks: 4));
+
+        Send(cd, 0x0F, 0x02, 0x00, 0x02);
+
+        Assert.True(cd.IsAudioPlaying);
+        Assert.Equal(4, cd.AudioPositionLba);
+        Assert.True(cd.TryGetAudioSample(out _));
+    }
+
+    [Fact]
     public void EjectAndInjectCycleTheVirtualTray()
     {
         var cd = new CdromDevice();
@@ -277,7 +293,7 @@ public sealed class CdromMultiTrackTests
         private readonly byte[][] _data;
         private readonly byte[][] _audio;
 
-        internal TrackedMemoryDisc(int dataSectors, int audioSectors)
+        internal TrackedMemoryDisc(int dataSectors, int audioSectors, int declaredBlocks = 0)
         {
             _data = new byte[dataSectors][];
             for (var lba = 0; lba < dataSectors; lba++)
@@ -289,6 +305,14 @@ public sealed class CdromMultiTrackTests
                 }
 
                 _data[lba] = sector;
+            }
+
+            if (declaredBlocks > 0)
+            {
+                _data[0][0x50] = (byte)(declaredBlocks >> 24);
+                _data[0][0x51] = (byte)(declaredBlocks >> 16);
+                _data[0][0x52] = (byte)(declaredBlocks >> 8);
+                _data[0][0x53] = (byte)declaredBlocks;
             }
 
             _audio = new byte[audioSectors][];

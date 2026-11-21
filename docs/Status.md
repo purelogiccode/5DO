@@ -1,5 +1,22 @@
 # Project Status and Next Steps
 
+**2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships
+CD-DA playback from a host optical drive, guest-reported disc read errors instead of a
+faulted core, and guarded screenshot/thumbnail writes. `PhysicalDiscSource` implements
+`ITrackedDiscSource`: the drive TOC (`IOCTL_CDROM_READ_TOC` on Windows,
+`CDROMREADTOCHDR`/`CDROMREADTOCENTRY` on Linux) supplies data and audio tracks, raw
+2352-byte Red Book frames use `IOCTL_CDROM_RAW_READ` in CDDA mode or
+`CDROMREADAUDIO`, and CD-DA end addressing follows the physical track table rather than
+the volume-header data limit. A failed host read (the issue #8 CRC report at sector
+103777) is zero-filled, reported to the guest as MEI receive-ECC, and logged while the
+transfer continues; the boot-time volume-header probe and CD-DA sample reads share the
+guard. The suite is **2,576/2,576**; build, `dotnet format`, and `jb inspectcode` are
+clean. A real mixed-mode audio CD remains the hardware check because the development
+host has no optical drive; the Windows TOC and cooked paths were validated on a mounted
+virtual optical drive. Evidence is recorded in
+[ReleaseNotes-1.16.0.md](ReleaseNotes-1.16.0.md), [Compatibility.md](Compatibility.md)
+§10.7, and [KnownIssues.md](KnownIssues.md).
+
 **2026-11-21, v1.15.0 release:** the Steam Deck first-run, Arcade CRT, and physical
 optical-drive release ships the Deck/gamescope welcome layout with **Scan** and
 **Open Folder**, the stronger `ArcadeCrt` filter on OpenGL/GLES, Vulkan, Direct3D 11,

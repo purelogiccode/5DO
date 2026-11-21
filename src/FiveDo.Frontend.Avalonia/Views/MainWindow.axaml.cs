@@ -2602,6 +2602,7 @@ public partial class MainWindow : Window, IDisposable
             ShowOsd("Boot a disc before taking a screenshot.", OsdSeverity.Warning);
             return;
         }
+
         var directory = _settings.ResolveScreenshotDirectory();
         var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
         var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
@@ -2609,16 +2610,17 @@ public partial class MainWindow : Window, IDisposable
         var nativePath = Path.Combine(directory, $"{name}-{stamp}-f{_machine.FramesExecuted:D6}-native.png");
         if (_direct3DPresenter && Direct3DVideo.TryCapture(out byte[]? direct3DPixels, out int direct3DWidth, out int direct3DHeight))
         {
-            PngDumper.WriteBgra(direct3DPixels, direct3DWidth, direct3DHeight, path);
-            WriteScreenshotMetadata(path);
+            if (!TryWriteScreenshot(path, () => PngDumper.WriteBgra(direct3DPixels, direct3DWidth, direct3DHeight, path)))
+            {
+                return;
+            }
+
             if (_settings.SaveNativeScreenshot)
             {
                 SaveNativeScreenshot(nativePath);
             }
 
-            StatusText.Text = $"Screenshot: {path}";
-            ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
-            _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
+            ReportScreenshot(path);
             return;
         }
 
@@ -2632,23 +2634,72 @@ public partial class MainWindow : Window, IDisposable
             void OnCaptured(object? sender, CaptureCompletedEventArgs e)
             {
                 Video.CaptureCompleted -= OnCaptured;
-                PngDumper.WriteBgra(e.Pixels, e.Width, e.Height, path);
-                WriteScreenshotMetadata(path);
+                if (!TryWriteScreenshot(path, () => PngDumper.WriteBgra(e.Pixels, e.Width, e.Height, path)))
+                {
+                    return;
+                }
+
                 if (_settings.SaveNativeScreenshot)
                 {
                     SaveNativeScreenshot(nativePath);
                 }
 
-                StatusText.Text = $"Screenshot: {path}";
-                ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
-                _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
+                ReportScreenshot(path);
             }
         }
 
-        SaveNativeScreenshot(path);
+        if (SaveNativeScreenshot(path))
+        {
+            ReportScreenshot(path, fromCpuFrame: true);
+        }
+    }
+
+    /// <summary>
+    /// Writes a screenshot and its metadata, converting filesystem failures into an OSD
+    /// warning instead of an unhandled UI-thread exception.
+    /// </summary>
+    private bool TryWriteScreenshot(string path, Action write)
+    {
+        try
+        {
+            write();
+            WriteScreenshotMetadata(path);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            ReportScreenshotFailure(path, exception);
+            return false;
+        }
+    }
+
+    private void ReportScreenshot(string path, bool fromCpuFrame = false)
+    {
         StatusText.Text = $"Screenshot: {path}";
         ShowOsd($"Screenshot: {Path.GetFileName(path)}", OsdSeverity.Success);
-        _logger.ForCategory(LogCategory.Host).Information("Screenshot written from the CPU frame: {Path}.", path);
+        if (fromCpuFrame)
+        {
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Screenshot written from the CPU frame: {Path}.",
+                path);
+        }
+        else
+        {
+            _logger.ForCategory(LogCategory.Host).Information("Screenshot written: {Path}.", path);
+        }
+    }
+
+    private void ReportScreenshotFailure(string path, Exception exception)
+    {
+        StatusText.Text = $"Screenshot failed: {exception.Message}";
+        ShowOsd("Screenshot could not be saved.", OsdSeverity.Warning);
+        _logger.ForCategory(LogCategory.Host).Error(
+            exception,
+            "Screenshot could not be written to {Path}.",
+            path);
     }
 
     private void OnRecordInput(object? sender, RoutedEventArgs e)
@@ -3041,33 +3092,52 @@ public partial class MainWindow : Window, IDisposable
         };
     }
 
-    private void SaveNativeScreenshot(string path)
+    private bool SaveNativeScreenshot(string path)
     {
         if (_machine is null)
         {
-            return;
+            return false;
         }
 
+        Exception? failure = null;
         _runner!.Invoke(() =>
         {
-            VdlFrame source = _machine.Frame;
-            if (TryResolvePresentationCrop(
-                    source,
-                    out var left,
-                    out var top,
-                    out var width,
-                    out var height))
+            try
             {
-                var cropped = new VdlFrame();
-                cropped.CopyCroppedFrom(source, left, top, width, height);
-                source = cropped;
-            }
+                VdlFrame source = _machine.Frame;
+                if (TryResolvePresentationCrop(
+                        source,
+                        out var left,
+                        out var top,
+                        out var width,
+                        out var height))
+                {
+                    var cropped = new VdlFrame();
+                    cropped.CopyCroppedFrom(source, left, top, width, height);
+                    source = cropped;
+                }
 
-            var frame = new FrameBuffer(source.SourceWidth, source.SourceHeight);
-            FrameAssembler.Assemble(source, frame, frame.Width, frame.Height);
-            PngDumper.Write(frame, path);
-            WriteScreenshotMetadata(path);
+                var frame = new FrameBuffer(source.SourceWidth, source.SourceHeight);
+                FrameAssembler.Assemble(source, frame, frame.Width, frame.Height);
+                PngDumper.Write(frame, path);
+                WriteScreenshotMetadata(path);
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException
+                or ArgumentException
+                or NotSupportedException)
+            {
+                failure = exception;
+            }
         });
+
+        if (failure is null)
+        {
+            return true;
+        }
+
+        ReportScreenshotFailure(path, failure);
+        return false;
     }
 
     private void WriteScreenshotMetadata(string path)

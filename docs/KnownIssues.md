@@ -1,8 +1,10 @@
 # Known Issues
 
-**Snapshot:** 2026-11-21, v1.15.0. The 1.15.0 release adds Steam Deck/SteamOS first-run
-setup and the Arcade CRT filter, and fixes Windows physical optical-drive discovery, a
-JIT soft-reset state overwrite, and single-pad PBUS packet selection. The 1.14.2 release
+**Snapshot:** 2026-11-21, v1.16.0. The 1.16.0 release adds physical CD-DA playback from a
+host optical drive and turns failed disc reads into guest-reported errors instead of a
+faulted core; screenshot and thumbnail writes are guarded too. It retains the 1.15.0
+Steam Deck/SteamOS first-run setup, Arcade CRT filter, Windows physical optical-drive
+discovery, JIT soft-reset, and single-pad PBUS fixes. The 1.14.2 release
 fixed the Windows app-local MSVC runtime, AppImage update metadata, cover-catalog HTTP
 fallback, and expected-condition bug reports. The 1.14.1 deep-review release fixed CHD
 Mode 2 sectors, crop dimensions, persistence, and shutdown races. The list below remains
@@ -104,8 +106,22 @@ checksums are attached, and legal/attribution sign-off is recorded.
 ## Physical optical drives (2026-11-21)
 
 - **File > Boot Optical Drive...** and drive-root CLI arguments read the host's cooked
-  block interface. Data-only 3DO discs are supported; physical CD-DA tracks are not.
-  Audio-only discs still need a BIN/CUE or CHD image.
+  block interface. Data-only 3DO discs are supported. The drive's table of contents is
+  now exposed through `ITrackedDiscSource`, so data and CD-DA tracks are listed and
+  CD-DA plays through the 3DO player or a game. Audio frames are read with
+  `IOCTL_CDROM_RAW_READ` (CDDA) on Windows and `CDROMREADAUDIO` on Linux.
+- Physical CD-DA is implemented but **not yet validated on real mixed-mode media** on
+  this development host, which has no optical drive. The Windows TOC parse and cooked
+  read paths were checked against a mounted virtual optical drive; raw CDDA reads and a
+  real audio track still need a hardware pass. A drive that rejects the raw-audio
+  request reports a sector read error and stops CD-DA playback rather than faulting the
+  core. Audio-only discs remain covered by the image-path evidence.
+- **A damaged or failing disc no longer stops emulation.** A host sector read that
+  throws (for example a CRC error on a scratched CD-R) is zero-filled, recorded as MEI
+  receive-ECC for the guest's READ_ERROR command, and logged by the host. The transfer
+  continues with the next sector. The same guard covers the boot-time volume-header
+  probe and CD-DA sample reads; screenshot and save-slot thumbnail writes have their own
+  guarded path.
 - Windows discovery no longer requires `DriveInfo.IsReady`. A 3DO disc's custom
   filesystem is not mountable by Windows, so the drive may have no ready volume or no
   drive letter even though the media is present. `GetOpticalDriveNames` opens the
@@ -120,7 +136,17 @@ checksums are attached, and legal/attribution sign-off is recorded.
   `doctor` reported `\\.\CdRom0` and `info \\.\CdRom0` read the expected 22 sectors.
   The issue #8 reporter then booted burned CD-R games on a Pioneer BD-RW and reached
   their FMV intro sequences, closing the SYS-21 hardware `Done when` line. macOS
-  physical drives are not validated, and physical CD-DA tracks remain unsupported.
+  physical drives are not validated.
+- **The opt-in Opera DIPIR path can still block a physical boot.** The reporter's
+  2026-11-21 re-test boots CD-R games with the default path (DIPIR off) and reports that
+  the accuracy/DIPIR option prevents the boot; the Opera soft-reset path is reported to
+  boot when used on its own. The DIPIR path remains opt-in and needs a CSTAT/DIPIR boot
+  transcript from a physical disc before it can be recommended.
+- **Way of the Warrior from a burned CD-R still crashes during an FMV** on the reporter's
+  machine while 4DO plays the same disc. The exact error text and 5DO log are still
+  needed; a host read failure at that point is now reported to the guest (MEI
+  receive-ECC) instead of stopping the core, so the crash mechanism may already be
+  covered by the read-error guard.
 - A single active joypad with disabled ports 7-8 left at `None` used to emit the Opera
   daisy-chain PBUS packet; that configuration now uses the legacy 16-byte packet, so
   keyboard and gamepad input work. If input is still missing, check **Settings >

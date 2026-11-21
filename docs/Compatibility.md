@@ -2,11 +2,12 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-21):** v1.15.0 adds Steam Deck/SteamOS first-run setup and
-the stronger `ArcadeCrt` filter, and fixes Windows physical optical-drive discovery,
-a JIT soft-reset state overwrite, and single-pad PBUS packet selection. It also records
-the burned CD-R boot that closes SYS-21 and does not change the default 320x240
-compatibility path, the documented title matrix, or the 1.14.0 feature baseline.
+**Current release (2026-11-21):** v1.16.0 adds physical CD-DA playback from a host
+optical drive and turns failed disc reads into guest-reported errors instead of a faulted
+core; screenshot and thumbnail writes are guarded as well. It retains the 1.15.0 Steam
+Deck/SteamOS first-run setup, `ArcadeCrt` filter, Windows optical-drive discovery, JIT
+soft-reset, and single-pad PBUS fixes, and does not change the default 320x240
+compatibility path or the documented title matrix.
 
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
@@ -132,7 +133,7 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
 | **DiscJuggler CDI** | **Current (2026-11-15)** | `CDISharp` parses the trailing descriptor, session/track table, and 2048/2336/2352-byte layouts, including 16-byte PQ and 96-byte P-W subchannel strides (2368/2448). The 150-sector lead-in is skipped when present. |
 | **Nero NRG** | **Current (2026-11-15)** | `NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, and per-track sector sizes 2048, 2324, 2336, 2352, 2353, 2368, 2448, and 2449. The extra error byte and subchannel tails are ignored when extracting user data. |
-| Multi-track / CD-DA | Partial (2026-11-10) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and M3U multi-disc swap are implemented; audio-only BIOS playback and known-title disc audio evidence remain |
+| Multi-track / CD-DA | Partial (2026-11-21) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, M3U multi-disc swap, and physical-drive TOC/raw CDDA (v1.16.0) are implemented; audio-only BIOS playback and known-title disc audio evidence remain |
 | ZIP/7z archives | Later | Prefer extracting first |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG track table.
@@ -327,7 +328,7 @@ path.
 | Audio-driven frame pacing | Yes (audio clock with a 60 Hz fallback) | |
 | Audio analysis | `audio analyze <wav> --json` | Spectrum/loudness comparison with Opera remains a manual check |
 | AOT live audio | Validated for the win-x64 NativeAOT CLI and frontend with the bundled runtime; frontend null/real soaks report 0 drops/0 underruns | Linux/macOS AOT audio is not claimed |
-| CD-DA | Partial | Raw 2352-byte audio sectors, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and Settings/CLI controls; audio-only BIOS playback remains blocked by the guest player |
+| CD-DA | Partial | Raw 2352-byte audio sectors from images and host drives, PLAY_AUDIO position, 44.1 kHz DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, and Settings/CLI controls; audio-only BIOS playback remains blocked by the guest player |
 | Multi-disc | Partial | M3U/M3U8 playlist, F3/UI/CLI swap, guest inject, and per-disc hash; guest ODE prompts and a known multi-disc title remain |
 
 ---
@@ -931,13 +932,16 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 | Drive discovery | `\\.\CdRomN` device probe with `IOCTL_STORAGE_CHECK_VERIFY2`; lettered drives keep their letter |
 | Virtual letterless drive | `doctor` reported `\\.\CdRom0`; `info \\.\CdRom0` read all 22 sectors |
 | Burned CD-R boot | Reporter confirmed the games boot and reach their FMV intro sequences |
-| Physical CD-DA | Not supported; use a BIN/CUE or CHD image for audio tracks |
+| Physical CD-DA | v1.16.0: the drive TOC is exposed through `ITrackedDiscSource`, and raw 2352-byte frames use `IOCTL_CDROM_RAW_READ` (CDDA) or Linux `CDROMREADAUDIO` |
+| Host read errors | A failed sector is zero-filled, reported as MEI receive-ECC, and does not stop the core |
 | Follow-up: JIT soft reset | Reset PC/CPSR/R14_svc survive the compiled-block boundary (`ArmJitSoftResetTests`) |
 | Follow-up: input | One active joypad with disabled `None` ports uses the legacy 16-byte PBUS packet (`InputManagerTests`) |
-| Full suite | **2,561/2,561** in Debug, build 0 warnings/0 errors, format and InspectCode clean |
+| Full suite | **2,576/2,576** in Debug, build 0 warnings/0 errors |
 
-The reporter's CD-R boot closes the SYS-21 `Done when` line. The remaining follow-up is
-a post-fix input re-test on that machine; physical CD-DA playback remains out of scope.
+The reporter's CD-R boot closes the SYS-21 `Done when` line. Physical CD-DA is
+implemented from the drive TOC and raw-audio requests; the Windows TOC and cooked read
+paths were validated on a mounted virtual optical drive, but a real mixed-mode audio CD
+has not yet been exercised on this development host (it has no optical drive).
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

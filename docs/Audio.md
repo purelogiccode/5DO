@@ -439,6 +439,13 @@ The FZ-10 BIOS CD player can now read the A&M Music Sampler's TOC and shows trac
 silent. The 4DO reference documents the same BIOS limitation, so audio-only playback
 is tracked as SYS-01 in the blocked section of the plan.
 
+A host optical drive exposes the same track table through `ITrackedDiscSource`.
+`PhysicalDiscSource` reads raw 2352-byte CDDA frames with `IOCTL_CDROM_RAW_READ` on
+Windows or `CDROMREADAUDIO` on Linux, and CD-DA playback uses the physical track end
+rather than the 3DO volume-header data limit, so audio tracks after the data volume are
+playable. A drive that rejects the raw-audio request reports a sector read error and
+stops playback without faulting the core.
+
 Run the opt-in audio test with a null backend on a headless machine:
 
 ```powershell

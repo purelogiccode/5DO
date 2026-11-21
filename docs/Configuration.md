@@ -723,9 +723,13 @@ written after the run when supplied.
 drives that currently contain media. A drive root can also be passed directly:
 `5do run D:` or `5do info D:`. `PhysicalDiscSource` reads the host's cooked block
 interface, so data discs present the same 2048-byte user-data sectors as an image file.
-The drive is opened read-only with shared access and is never written. Audio tracks are
-not exposed through `ITrackedDiscSource` yet, so CD-DA playback from a physical drive is
-not available; use a BIN/CUE or CHD image for CD audio.
+The drive is opened read-only with shared access and is never written. The drive's table
+of contents is exposed through `ITrackedDiscSource`, so audio tracks are listed and
+CD-DA plays through the 3DO player or a game. Red Book frames are read with
+`IOCTL_CDROM_RAW_READ` (CDDA) on Windows and `CDROMREADAUDIO` on Linux; `disc verify`
+reads every audio track the same way. A drive that rejects raw-audio reads logs a read
+error and stops CD-DA playback instead of faulting emulation. Use a BIN/CUE or CHD image
+when a drive does not support raw CDDA.
 
 Windows media detection is performed through the optical device, not through
 `DriveInfo.IsReady`: a 3DO disc uses a custom filesystem that Windows cannot mount, so the
