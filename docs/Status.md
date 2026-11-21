@@ -35,10 +35,12 @@ A 26-case BIOS matrix covered US FZ-1/FZ-10/GoldStar/Sanyo, JP FZ-10J plus the K
 BIOS2, PAL FZ-10E Anvil, patched FZ-10 + `3do_arcade_saot` for the Arcade titles, and
 the audio-only discs; every case booted at 3,000 frames. The FZ-10 player lists the
 audio-only TOC but its transport remains STOP (SYS-01, matching 4DO). Non-JSON
-`disc verify` now prints opening and progress lines, and the verifier uses the native
-track total so mixed-mode audio does not report a short disc. Full suite
-**2,577/2,577**, build/format/InspectCode clean. Evidence:
-[TestCorpus.md](TestCorpus.md) §1.1ci and [Compatibility.md](Compatibility.md) §10.8.
+`disc verify` now prints opening and progress lines, the verifier uses the native track
+total so mixed-mode audio does not report a short disc, and the new
+`disc audio <disc> --track N --out trackN.wav` command extracts a CD-DA track to WAV
+from an image or a physical drive. Full suite **2,578/2,578**, build/format/InspectCode
+clean. Evidence: [TestCorpus.md](TestCorpus.md) §1.1ci and
+[Compatibility.md](Compatibility.md) §10.8.
 
 **2026-11-21, v1.15.0 release:** the Steam Deck first-run, Arcade CRT, and physical
 optical-drive release ships the Deck/gamescope welcome layout with **Scan** and

@@ -92,7 +92,7 @@
 
 **2026-11-21, v1.16.0 physical CD-DA and disc read-error release (GitHub Releases).**
 
-- **2,577 tests** are present in the current test assembly.
+- **2,578 tests** are present in the current test assembly.
 - **Optical collection sweep:** all **1,366** local CHDs opened and every track's first,
   middle, and last native sector read; **496 unique-title representatives**, including
   all three audio-only discs, were fully sector-verified with **0 read errors**. A

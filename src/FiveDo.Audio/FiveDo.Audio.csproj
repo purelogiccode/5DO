@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="FiveDo.Cli" />
     <InternalsVisibleTo Include="FiveDo.Tests" />
   </ItemGroup>
 

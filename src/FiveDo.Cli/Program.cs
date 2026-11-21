@@ -3606,9 +3606,91 @@ internal static class Program
             return 0;
         }
 
+        if (string.Equals(args[1], "audio", StringComparison.OrdinalIgnoreCase))
+        {
+            ParsedOptions options = Parse(args, startIndex: 2);
+            var audioPath = options.Positional
+                ?? throw new ArgumentException("disc audio needs a disc path.", nameof(args));
+            int trackNumber = options.GetInt("--track", 1);
+            var wavPath = options.Get("--out")
+                ?? throw new ArgumentException("disc audio needs --out <path.wav>.", nameof(args));
+            using IDiscSource source = DiscImageFactory.Open(audioPath);
+            if (source is not ITrackedDiscSource tracked)
+            {
+                throw new ArgumentException("The disc has no native track table.", nameof(args));
+            }
+
+            DiscTrack? track = null;
+            foreach (DiscTrack candidate in tracked.Tracks)
+            {
+                if (candidate.Number == trackNumber)
+                {
+                    track = candidate;
+                    break;
+                }
+            }
+
+            if (track is null)
+            {
+                throw new ArgumentException($"Track {trackNumber} was not found.", nameof(args));
+            }
+
+            if (!track.IsAudio)
+            {
+                throw new ArgumentException($"Track {trackNumber} is a data track, not CD-DA.", nameof(args));
+            }
+
+            if (!options.Json)
+            {
+                Console.Error.WriteLine(
+                    $"Extracting track {track.Number}: {track.SectorCount} sectors "
+                    + $"({track.SectorCount / 75d:0.0}s) to {wavPath}...");
+            }
+
+            var audioBuffer = new byte[track.SectorSize];
+            long bytes = 0;
+            using (var writer = new Pcm16WavWriter(wavPath, EmulatorConstants.SoundClock))
+            {
+                for (var index = 0; index < track.SectorCount; index++)
+                {
+                    int read = tracked.ReadTrackSector(track.StartLba + index, audioBuffer);
+                    if (read <= 0)
+                    {
+                        throw new DiscImageException(
+                            $"Track {track.Number} sector {index} returned no audio data.");
+                    }
+
+                    writer.Write(MemoryMarshal.Cast<byte, short>(audioBuffer.AsSpan(0, read)));
+                    bytes += read;
+                }
+            }
+
+            var result = new CliDiscAudioResult(
+                true,
+                audioPath,
+                track.Number,
+                track.SectorCount,
+                bytes,
+                wavPath);
+            if (options.Json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    result,
+                    CliJsonContext.Default.CliDiscAudioResult));
+            }
+            else
+            {
+                Console.WriteLine(
+                    $"wrote track {track.Number}: {track.SectorCount} sectors, "
+                    + $"{bytes} bytes, {track.SectorCount / 75d:0.0}s to {wavPath}");
+            }
+
+            return 0;
+        }
+
         if (!string.Equals(args[1], "dump", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("disc needs the 'convert', 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
+            throw new ArgumentException("disc needs the 'audio', 'convert', 'dump', 'tracks', 'verify', or 'playlist' subcommand.", nameof(args));
         }
 
         ParsedOptions dumpOptions = Parse(args, startIndex: 2);
@@ -6551,6 +6633,8 @@ internal static class Program
         Console.WriteLine("                                       Convert a data-only image and verify the game ID.");
         Console.WriteLine("  disc tracks <disc> [--json]          List every ISO/BIN/CUE/CHD/CDI/NRG track.");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
+        Console.WriteLine("  disc audio <disc> --track N --out path.wav [--json]");
+        Console.WriteLine("                                       Extract a CD-DA track to a 44.1 kHz stereo WAV.");
         Console.WriteLine("  disc dump <disc> --out path [--sector N] [--count N]");
         Console.WriteLine("                                       Write raw 2048-byte sectors for diagnostics.");
         Console.WriteLine("  library verify [--folder dir] [--dat path] [--cache path] [--json]");

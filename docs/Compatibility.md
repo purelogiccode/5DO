@@ -969,8 +969,10 @@ discs, was fully sector-verified:
 
 Non-JSON `disc verify` now prints opening/progress lines to stderr; `--json` stays a
 single document. The verifier uses the native track total for mixed-mode discs, so audio
-tracks after the data volume do not make a healthy disc look short. Full suite
-**2,577/2,577**, build/format/InspectCode clean.
+tracks after the data volume do not make a healthy disc look short. The new
+`disc audio <disc> --track N --out trackN.wav` command extracts a CD-DA track to a
+44.1 kHz WAV from an image or a physical drive; a synthetic data+audio CUE is covered by
+`CliProcessTests`. Full suite **2,578/2,578**, build/format/InspectCode clean.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

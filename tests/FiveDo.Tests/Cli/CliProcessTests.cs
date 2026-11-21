@@ -1164,6 +1164,58 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void DiscAudio_ExtractsACddaTrackToWav()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-cdda-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var dataPath = Path.Combine(directory, "data.bin");
+            var audioPath = Path.Combine(directory, "audio.bin");
+            var cuePath = Path.Combine(directory, "disc.cue");
+            var wavPath = Path.Combine(directory, "track2.wav");
+            File.WriteAllBytes(dataPath, new byte[2 * 2048]);
+            var audio = new byte[2 * 2352];
+            for (var i = 0; i < audio.Length; i += 4)
+            {
+                audio[i] = 0x11;
+                audio[i + 1] = 0x22;
+                audio[i + 2] = 0x33;
+                audio[i + 3] = 0x44;
+            }
+
+            File.WriteAllBytes(audioPath, audio);
+            File.WriteAllText(
+                cuePath,
+                "FILE \"data.bin\" BINARY\n"
+                + "  TRACK 01 MODE1/2048\n"
+                + "    INDEX 01 00:00:00\n"
+                + "FILE \"audio.bin\" BINARY\n"
+                + "  TRACK 02 AUDIO\n"
+                + "    INDEX 01 00:00:00\n");
+
+            CliResult result = Invoke(
+                "disc", "audio", cuePath,
+                "--track", "2",
+                "--out", wavPath,
+                "--json");
+
+            Assert.Equal(0, result.Code);
+            Assert.Equal(string.Empty, result.Error);
+            Assert.Contains("\"track\": 2", result.Output, StringComparison.Ordinal);
+            byte[] wav = File.ReadAllBytes(wavPath);
+            Assert.True(wav.Length > 44);
+            Assert.Equal("RIFF"u8.ToArray(), wav[..4]);
+            Assert.Equal("WAVE"u8.ToArray(), wav[8..12]);
+            Assert.Equal(audio.AsSpan(0, 64).ToArray(), wav.AsSpan(44, 64).ToArray());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void DiscTracks_ReportsARawBinImage()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.bin");

@@ -72,6 +72,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `gamedb export --out <file>` | Export the embedded database. |
 | `gamedb merge <file> --out <file>` | Merge a fragment into the embedded database for review. |
 | `disc convert <disc> --out <path> [--format iso\|bin\|cue\|chd]` | Convert a data-only image and verify the game ID. |
+| `disc audio <disc> --track N --out path.wav` | Extract a CD-DA track to WAV (images or a physical drive). |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
 | `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
@@ -585,6 +586,19 @@ a different output name.
 Writes `count` raw 2048-byte user-data sectors starting at `--sector` (default 0) to
 `--out`. `--sector` and `--count` accept decimal or `0x`. Works for ISO/BIN/CUE/CHD/CDI/NRG.
 No JSON.
+
+### `disc audio`
+
+```powershell
+5do disc audio game.cue --track 2 --out track2.wav
+5do disc audio E: --track 2 --out physical-track2.wav --json
+```
+
+Extracts one Red Book audio track to a 44.1 kHz, 16-bit stereo WAV through
+`ITrackedDiscSource.ReadTrackSector`. It works for CUE/CHD audio tracks and for a host
+optical drive, so it verifies CD-DA reads without relying on the FZ-10 BIOS player (whose
+transport remains inert; see SYS-01). `--track` defaults to 1 and must name an audio
+track. JSON fields: `ok`, `path`, `track`, `frames`, `bytes`, and `output`.
 
 ### `disc tracks`
 

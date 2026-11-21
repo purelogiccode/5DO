@@ -5,6 +5,13 @@ disc read-error release.
 
 ## [Unreleased]
 
+### Added
+
+- **`disc audio` extracts CD-DA tracks to WAV.** `5do disc audio <disc> --track N
+  --out trackN.wav` writes a 44.1 kHz, 16-bit stereo WAV through
+  `ITrackedDiscSource.ReadTrackSector`, so a CUE/CHD audio track or a physical optical
+  drive can be checked without depending on the FZ-10 BIOS player transport (SYS-01).
+
 ### Fixed
 
 - **`disc verify` shows progress and handles mixed-mode audio correctly.** A non-JSON

@@ -4781,5 +4781,11 @@ remains a single clean document. The verifier also uses `ITrackedDiscSource.Tota
 for `ok`, so a mixed-mode disc with audio after the data volume is not reported short.
 `DiscVerifierTests` covers the progress callback and the data-volume/mixed-mode case.
 
-**Verification.** Full suite **2,577/2,577**, build 0 warnings/0 errors,
+**`disc audio` CD-DA extraction.** The new command writes one audio track to a 44.1 kHz,
+16-bit stereo WAV through `ReadTrackSector`. A synthetic CUE with a data track followed by
+an audio track verified the command end to end (`CliProcessTests`), and the same command
+works with a physical drive (`disc audio E: --track N --out ...`). This gives a direct
+way to confirm raw CD-DA on hardware without relying on the inert FZ-10 player transport.
+
+**Verification.** Full suite **2,578/2,578**, build 0 warnings/0 errors,
 `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.
