@@ -38,9 +38,11 @@ audio-only TOC but its transport remains STOP (SYS-01, matching 4DO). Non-JSON
 `disc verify` now prints opening and progress lines, the verifier uses the native track
 total so mixed-mode audio does not report a short disc, and the new
 `disc audio <disc> --track N --out trackN.wav` command extracts a CD-DA track to WAV
-from an image or a physical drive. Full suite **2,578/2,578**, build/format/InspectCode
-clean. Evidence: [TestCorpus.md](TestCorpus.md) §1.1ci and
-[Compatibility.md](Compatibility.md) §10.8.
+from an image or a physical drive. The issue #8 reporter's Way of the Warrior CD-R
+verified at 157,996/157,996 sectors, hash `0x84b2bef01d157a9f`, matching the CHD; that
+burn has only a data track, so CD-DA needs an audio CD or mixed-mode disc. Full suite
+**2,579/2,579**, build/format/InspectCode clean. Evidence:
+[TestCorpus.md](TestCorpus.md) §1.1ci and [Compatibility.md](Compatibility.md) §10.8.
 
 **2026-11-21, v1.15.0 release:** the Steam Deck first-run, Arcade CRT, and physical
 optical-drive release ships the Deck/gamescope welcome layout with **Scan** and

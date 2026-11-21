@@ -597,8 +597,10 @@ No JSON.
 Extracts one Red Book audio track to a 44.1 kHz, 16-bit stereo WAV through
 `ITrackedDiscSource.ReadTrackSector`. It works for CUE/CHD audio tracks and for a host
 optical drive, so it verifies CD-DA reads without relying on the FZ-10 BIOS player (whose
-transport remains inert; see SYS-01). `--track` defaults to 1 and must name an audio
-track. JSON fields: `ok`, `path`, `track`, `frames`, `bytes`, and `output`.
+transport remains inert; see SYS-01). Without `--track`, the first audio track is used;
+with `--track N`, that track must be audio. A data-only 3DO disc has no CD-DA tracks, so
+use an audio CD or mixed-mode disc for this test. JSON fields: `ok`, `path`, `track`,
+`frames`, `bytes`, and `output`.
 
 ### `disc tracks`
 

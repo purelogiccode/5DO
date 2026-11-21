@@ -11,6 +11,8 @@ disc read-error release.
   --out trackN.wav` writes a 44.1 kHz, 16-bit stereo WAV through
   `ITrackedDiscSource.ReadTrackSector`, so a CUE/CHD audio track or a physical optical
   drive can be checked without depending on the FZ-10 BIOS player transport (SYS-01).
+  Without `--track`, the first audio track is selected; a data-only disc explains that
+  it has no CD-DA tracks.
 
 ### Fixed
 

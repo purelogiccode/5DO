@@ -133,7 +133,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   collection contains no mixed-mode data+audio images, so physical CD-DA still needs the
   reporter's burned mixed-mode/hardware pass. A 26-case BIOS matrix (FZ-1, FZ-10,
   GoldStar, Sanyo, FZ-10J+Kanji, FZ-10E Anvil, patched FZ-10 + `3do_arcade_saot`) booted
-  every test at 3,000 frames.
+  every test at 3,000 frames. The reporter's Way of the Warrior CD-R verified
+  **157,996/157,996 sectors** with hash `0x84b2bef01d157a9f`, matching the CHD; that
+  burn contains only a data track, so `disc audio --track 1` correctly reports that it
+  is not CD-DA. Use an audio CD or mixed-mode disc for the CD-DA hardware test; omitting
+  `--track` selects the first audio track automatically.
 - **Non-JSON `disc verify` now shows progress.** It prints the opening path, total
   sectors, and periodic track/sector/MiB lines to stderr; `--json` stays a single clean
   document. A physical disc can still take minutes because the command reads every data

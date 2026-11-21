@@ -4760,6 +4760,14 @@ IDs, including all three audio-only discs, was read end-to-end with `DiscVerifie
 verified separately (102,265 + 55,745 + 96,962 sectors). The verification uses the
 native track path, so audio frames are checked, not just 2048-byte data sectors.
 
+**Physical drive confirmation (issue #8).** The reporter's Way of the Warrior CD-R
+reported one data track at 157,996 frames. `disc verify E:` read
+**157,996/157,996 sectors**, 0 errors, hash `0x84b2bef01d157a9f`, matching the CHD's
+full-verification hash exactly. The burn contains no CD-DA track: `disc audio E:
+--track 1` correctly rejected track 1 as data. CD-DA requires an audio CD or a
+mixed-mode disc; `disc audio` now auto-selects the first audio track when `--track` is
+omitted, and explains when a data-only disc has no CD-DA.
+
 **BIOS matrix.** 26 boot cases at 3,000 frames all returned `ok: true` with no errors:
 
 - US NTSC: WOTW USA and Gridders USA with `panafz1`, `panafz10`, `goldstar`, and
@@ -4787,5 +4795,5 @@ an audio track verified the command end to end (`CliProcessTests`), and the same
 works with a physical drive (`disc audio E: --track N --out ...`). This gives a direct
 way to confirm raw CD-DA on hardware without relying on the inert FZ-10 player transport.
 
-**Verification.** Full suite **2,578/2,578**, build 0 warnings/0 errors,
+**Verification.** Full suite **2,579/2,579**, build 0 warnings/0 errors,
 `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.

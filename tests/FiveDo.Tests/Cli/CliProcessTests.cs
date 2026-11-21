@@ -1216,6 +1216,35 @@ public sealed class CliProcessTests
     }
 
     [Fact]
+    public void DiscAudio_ExplainsADataOnlyDiscHasNoCddaTracks()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fivedo-cli-cdda-data-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var dataPath = Path.Combine(directory, "data.bin");
+            var cuePath = Path.Combine(directory, "disc.cue");
+            var wavPath = Path.Combine(directory, "track.wav");
+            File.WriteAllBytes(dataPath, new byte[2 * 2048]);
+            File.WriteAllText(
+                cuePath,
+                "FILE \"data.bin\" BINARY\n"
+                + "  TRACK 01 MODE1/2048\n"
+                + "    INDEX 01 00:00:00\n");
+
+            CliResult result = Invoke("disc", "audio", cuePath, "--out", wavPath);
+
+            Assert.Equal(1, result.Code);
+            Assert.Contains("no CD-DA tracks", result.Error, StringComparison.Ordinal);
+            Assert.False(File.Exists(wavPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void DiscTracks_ReportsARawBinImage()
     {
         var path = Path.Combine(Path.GetTempPath(), $"fivedo-cli-{Guid.NewGuid():N}.bin");

@@ -972,7 +972,14 @@ single document. The verifier uses the native track total for mixed-mode discs, 
 tracks after the data volume do not make a healthy disc look short. The new
 `disc audio <disc> --track N --out trackN.wav` command extracts a CD-DA track to a
 44.1 kHz WAV from an image or a physical drive; a synthetic data+audio CUE is covered by
-`CliProcessTests`. Full suite **2,578/2,578**, build/format/InspectCode clean.
+`CliProcessTests`. Full suite **2,579/2,579**, build/format/InspectCode clean.
+
+The issue #8 reporter's Way of the Warrior CD-R produced one data track at 157,996
+frames and `disc verify E:` read **157,996/157,996 sectors**, 0 errors, hash
+`0x84b2bef01d157a9f`, matching the CHD full-verification hash exactly. That confirms the
+physical drive input path. The burn has no CD-DA track (`disc audio --track 1` correctly
+reports data), so the physical CD-DA test needs an audio CD or mixed-mode disc; the
+`A&M Music Sampler` image track produced a non-silent 112.33 s WAV.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

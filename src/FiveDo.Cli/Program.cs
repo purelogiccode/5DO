@@ -3611,7 +3611,10 @@ internal static class Program
             ParsedOptions options = Parse(args, startIndex: 2);
             var audioPath = options.Positional
                 ?? throw new ArgumentException("disc audio needs a disc path.", nameof(args));
-            int trackNumber = options.GetInt("--track", 1);
+            string? trackOption = options.Get("--track");
+            int? requestedTrack = string.IsNullOrWhiteSpace(trackOption)
+                ? null
+                : options.GetInt("--track", 1);
             var wavPath = options.Get("--out")
                 ?? throw new ArgumentException("disc audio needs --out <path.wav>.", nameof(args));
             using IDiscSource source = DiscImageFactory.Open(audioPath);
@@ -3620,24 +3623,33 @@ internal static class Program
                 throw new ArgumentException("The disc has no native track table.", nameof(args));
             }
 
-            DiscTrack? track = null;
-            foreach (DiscTrack candidate in tracked.Tracks)
+            DiscTrack? track = requestedTrack is { } number
+                ? tracked.Tracks.FirstOrDefault(candidate => candidate.Number == number)
+                : tracked.Tracks.FirstOrDefault(candidate => candidate.IsAudio);
+            if (track is null && requestedTrack is { } missing)
             {
-                if (candidate.Number == trackNumber)
-                {
-                    track = candidate;
-                    break;
-                }
+                throw new ArgumentException($"Track {missing} was not found.", nameof(args));
             }
 
             if (track is null)
             {
-                throw new ArgumentException($"Track {trackNumber} was not found.", nameof(args));
+                throw new ArgumentException(
+                    "The disc has no CD-DA tracks. This is a data-only disc; "
+                    + "use `disc tracks` to list its tracks, or insert an audio CD or mixed-mode disc.",
+                    nameof(args));
             }
 
             if (!track.IsAudio)
             {
-                throw new ArgumentException($"Track {trackNumber} is a data track, not CD-DA.", nameof(args));
+                string audioTracks = string.Join(
+                    ", ",
+                    tracked.Tracks.Where(candidate => candidate.IsAudio).Select(candidate => candidate.Number));
+                throw new ArgumentException(
+                    $"Track {track.Number} is a data track, not CD-DA."
+                    + (audioTracks.Length == 0
+                        ? " This disc has no audio tracks."
+                        : $" Audio tracks: {audioTracks}."),
+                    nameof(args));
             }
 
             if (!options.Json)
