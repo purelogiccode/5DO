@@ -133,7 +133,7 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
 | **DiscJuggler CDI** | **Current (2026-11-15)** | `CDISharp` parses the trailing descriptor, session/track table, and 2048/2336/2352-byte layouts, including 16-byte PQ and 96-byte P-W subchannel strides (2368/2448). The 150-sector lead-in is skipped when present. |
 | **Nero NRG** | **Current (2026-11-15)** | `NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, and per-track sector sizes 2048, 2324, 2336, 2352, 2353, 2368, 2448, and 2449. The extra error byte and subchannel tails are ignored when extracting user data. |
-| Multi-track / CD-DA | Partial (2026-11-21) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, M3U multi-disc swap, and physical-drive TOC/raw CDDA (v1.16.0) are implemented; audio-only BIOS playback and known-title disc audio evidence remain |
+| Multi-track / CD-DA | Partial (2026-11-22) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, M3U multi-disc swap, and physical-drive TOC/raw CDDA (v1.16.0) are implemented; the raw CDDA path is verified on real hardware (v1.16.1), and only the FZ-10 audio-only BIOS transport remains (SYS-01) |
 | ZIP/7z archives | Later | Prefer extracting first |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG track table.
@@ -932,7 +932,7 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 | Drive discovery | `\\.\CdRomN` device probe with `IOCTL_STORAGE_CHECK_VERIFY2`; lettered drives keep their letter |
 | Virtual letterless drive | `doctor` reported `\\.\CdRom0`; `info \\.\CdRom0` read all 22 sectors |
 | Burned CD-R boot | Reporter confirmed the games boot and reach their FMV intro sequences |
-| Physical CD-DA | v1.16.0: the drive TOC is exposed through `ITrackedDiscSource`, and raw 2352-byte frames use `IOCTL_CDROM_RAW_READ` (CDDA) or Linux `CDROMREADAUDIO`. The reporter's Red Book audio CD reaches the FZ-10 CD player with track 1 listed; the transport remains inert (SYS-01) |
+| Physical CD-DA | v1.16.0: the drive TOC is exposed through `ITrackedDiscSource`, and raw 2352-byte frames use `IOCTL_CDROM_RAW_READ` (CDDA) or Linux `CDROMREADAUDIO`. v1.16.1: `disc tracks E:` lists all six tracks of the reporter's Red Book audio CD and `disc audio E:` extracts track 1 (164.28 s, peak 31659, RMS 7248.66, 0 clipped); the FZ-10 player transport remains inert (SYS-01) |
 | Host read errors | v1.16.0 confirmed on the reporter's machine: the sector-103777 CRC is a Warning, emulation continues, and the FMV resumes after the drive's recovery pause |
 | Follow-up: JIT soft reset | Reset PC/CPSR/R14_svc survive the compiled-block boundary (`ArmJitSoftResetTests`) |
 | Follow-up: input | One active joypad with disabled `None` ports uses the legacy 16-byte PBUS packet (`InputManagerTests`) |
@@ -940,9 +940,9 @@ Windows does not expose a mounted volume and may not assign a drive letter; the 
 
 The reporter's CD-R boot closes the SYS-21 `Done when` line. Physical CD-DA is
 implemented from the drive TOC and raw-audio requests; the Windows TOC and cooked read
-paths were validated on a mounted virtual optical drive, but a real mixed-mode audio CD
-has not yet been exercised on this development host (it has no optical drive). The
-v1.16.0 release workflow repeated the Windows x64 (CLI + desktop smoke) and Linux x64
+paths were validated on a mounted virtual optical drive during 1.15.0, and the reporter's
+real Red Book audio CD exercised the raw CDDA path on hardware during 1.16.1 (see §10.8).
+The v1.16.0 release workflow repeated the Windows x64 (CLI + desktop smoke) and Linux x64
 (CLI + desktop smoke, `.deb`/`.rpm` install) checks; all passed.
 
 ### 10.8 3DO collection optical sweep (2026-11-21, Windows x64)
@@ -978,8 +978,33 @@ The issue #8 reporter's Way of the Warrior CD-R produced one data track at 157,9
 frames and `disc verify E:` read **157,996/157,996 sectors**, 0 errors, hash
 `0x84b2bef01d157a9f`, matching the CHD full-verification hash exactly. That confirms the
 physical drive input path. The burn has no CD-DA track (`disc audio --track 1` correctly
-reports data), so the physical CD-DA test needs an audio CD or mixed-mode disc; the
+reports data); the physical CD-DA test used a Red Book audio CD instead (§10.9), and the
 `A&M Music Sampler` image track produced a non-silent 112.33 s WAV.
+
+### 10.9 Physical Red Book CD-DA (2026-11-22, Windows x64)
+
+The issue #8 reporter inserted a Red Book audio CD into the same `E:` drive and ran the
+1.16.1 CLI:
+
+| Check | Result |
+|---|---|
+| `disc tracks E:` | 6 tracks, all `type=audio format=raw`; no data track |
+| Track 1 geometry | 12,321 frames, 28,978,992 bytes, start 0 |
+| `disc audio E: --out track1.wav` | wrote 12,321 sectors (164.3 s) |
+| `audio analyze track1.wav --json` | 44.1 kHz, stereo, 16-bit, 164.28 s, **peak 31659**, **RMS 7248.66**, 0 clipped frames |
+
+The non-silent peak/RMS confirms the Windows `IOCTL_CDROM_RAW_READ` CDDA path works on a
+real drive and that the WAV is real music, not zero-filled sectors. The direct
+`disc audio` path is the definitive hardware CD-DA test because the FZ-10 BIOS player
+still shows STOP (SYS-01).
+
+**No known 3DO game uses CD-DA tracks.** All **672** cue sheets in the Redump Panasonic
+3DO set (<http://redump.org/cues/3do/>, downloaded 2026-11-22) contain only
+`TRACK 01 MODE1/2352`; zero contain a `TRACK nn AUDIO` entry. The
+local collection agrees: 1,363 single-data images and 3 audio-only images, with no
+mixed-mode game. Retail 3DO titles stream music as data-track audio (ADPCM/Cinepak), so
+there is no game disc to use for an in-game CD-DA test; a normal music CD is the correct
+test disc, and the reporter's result above is that test.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

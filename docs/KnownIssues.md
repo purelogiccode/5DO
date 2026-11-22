@@ -114,11 +114,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - Physical CD-DA is implemented and the reporter's **Red Book audio CD** reaches the
   FZ-10 BIOS CD player with track 1 listed. The transport still shows **STOP** and does
   not start playback; this is the known audio-only BIOS-player residual (SYS-01), not a
-  hang — the emulator keeps running at 59.9 fps. On this development host, which has no
-  optical drive, the Windows TOC parse and cooked read paths were checked against a
-  mounted virtual optical drive; a raw CDDA read of a real audio track still needs a
-  hardware pass. A drive that rejects the raw-audio request reports a sector read error
-  and stops CD-DA playback rather than faulting the core.
+  hang — the emulator keeps running at 59.9 fps. On 1.16.1 the reporter's real drive
+  passed the direct test: `disc tracks E:` listed six audio tracks and `disc audio E:`
+  extracted track 1 as a 164.28 s WAV with peak 31659 and RMS 7248.66 (0 clipped), so the
+  Windows `IOCTL_CDROM_RAW_READ` CDDA path works on hardware. A drive that rejects the
+  raw-audio request reports a sector read error and stops CD-DA playback rather than
+  faulting the core.
 - **A damaged or failing disc no longer stops emulation.** A host sector read that
   throws (for example a CRC error on a scratched CD-R) is zero-filled, recorded as MEI
   receive-ECC for the guest's READ_ERROR command, and logged by the host. The transfer
@@ -131,14 +132,15 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
-  collection contains no mixed-mode data+audio images, so physical CD-DA still needs the
-  reporter's burned mixed-mode/hardware pass. A 26-case BIOS matrix (FZ-1, FZ-10,
-  GoldStar, Sanyo, FZ-10J+Kanji, FZ-10E Anvil, patched FZ-10 + `3do_arcade_saot`) booted
-  every test at 3,000 frames. The reporter's Way of the Warrior CD-R verified
-  **157,996/157,996 sectors** with hash `0x84b2bef01d157a9f`, matching the CHD; that
-  burn contains only a data track, so `disc audio --track 1` correctly reports that it
-  is not CD-DA. Use an audio CD or mixed-mode disc for the CD-DA hardware test; omitting
-  `--track` selects the first audio track automatically.
+  collection contains no mixed-mode data+audio images; the hardware CD-DA pass used the
+  reporter's Red Book audio CD instead (six audio tracks, track 1 non-silent). A 26-case
+  BIOS matrix (FZ-1, FZ-10, GoldStar, Sanyo, FZ-10J+Kanji, FZ-10E Anvil, patched FZ-10 +
+  `3do_arcade_saot`) booted every test at 3,000 frames. The reporter's Way of the Warrior
+  CD-R verified **157,996/157,996 sectors** with hash `0x84b2bef01d157a9f`, matching the
+  CHD; that burn contains only a data track, so `disc audio --track 1` correctly reports
+  that it is not CD-DA. All **672** Redump 3DO cue sheets are single-track MODE1, so no
+  known retail 3DO game has a CD-DA track; a music CD is the correct CD-DA test disc, and
+  omitting `--track` selects its first audio track automatically.
 - **Non-JSON `disc verify` now shows progress.** It prints the opening path, total
   sectors, and periodic track/sector/MiB lines to stderr; `--json` stays a single clean
   document. A physical disc can still take minutes because the command reads every data
@@ -232,11 +234,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   completed 7,200 frames with the Disc 2 hash. Audio-only CD-DA discs now reach the
   FZ-10 BIOS CD player and list track 1: the 2352-byte digital-audio block plus the
   96-byte subcode block is accepted after the 2026-11-10 wire-size fix. The transport
-  controls remain inert and the WAV capture is silent; this is the documented SYS-01
-  audio-only BIOS-player residual, not a beyond-title blocker. The exact reproduction
-  is *A&M Music Sampler* (`[CD-Audio].chd`): `disc tracks` reports **14 audio tracks,
-  no data track**, the player shows track 1 at `0:00`, and the WAV capture is silent.
-  No matrix game needs the behavior.
+  controls remain inert and the in-player WAV capture is silent; this is the documented
+  SYS-01 audio-only BIOS-player residual, not a beyond-title blocker. The exact
+  reproduction is *A&M Music Sampler* (`[CD-Audio].chd`): `disc tracks` reports **14
+  audio tracks, no data track**, and the player shows track 1 at `0:00`. The direct
+  `disc audio` command bypasses the BIOS transport and extracts real audio from the same
+  disc, so SYS-01 is confined to the player UI. No matrix game needs the behavior.
 - The weekly regression gate is `.github/workflows/compat-baseline.yml` on a Windows
   self-hosted runner with the collection mounted, backed by
   `docs/data/beyond-title-baseline.json` and `tools/run-beyond-title-gate.ps1`.

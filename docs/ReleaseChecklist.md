@@ -64,6 +64,11 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Issue #8 physical CD-R: `disc verify E:` read 157,996/157,996 sectors, hash
       `0x84b2bef01d157a9f`, matching the CHD. The burn is data-only; `disc audio` correctly
       reports no CD-DA tracks.
+- [x] Issue #8 physical Red Book CD: `disc tracks E:` listed six audio tracks and
+      `disc audio E:` extracted track 1 (12,321 sectors, 164.28 s), with `audio analyze`
+      reporting peak 31659 and RMS 7248.66 (0 clipped). This is the hardware CD-DA pass.
+      All 672 Redump 3DO cue sheets are single-track MODE1, so no retail 3DO game has a
+      CD-DA track; a music CD is the correct test disc.
 - [x] Full suite green (**2,579 tests**), `dotnet build` 0 warnings/0 errors,
       `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
 - [x] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
@@ -115,9 +120,10 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `selftest --json` reports `ok: true` for all 15 checks, and the desktop smoke
       writes `FRONTEND SMOKE OK 1.16.0`. The Linux x64 CLI/frontend smoke and the
       `.deb`/`.rpm` installs passed in the release workflow.
-- [ ] A real mixed-mode audio CD is exercised on a physical drive, or the limitation is
-      recorded in [KnownIssues.md](KnownIssues.md) after the release test. It remains
-      recorded as the hardware acceptance step.
+- [x] A physical CD-DA drive test is recorded: the 1.16.1 Red Book audio CD pass (six
+      audio tracks; track 1 164.28 s, peak 31659, RMS 7248.66, 0 clipped). The collection
+      has no mixed-mode game image, and all 672 Redump 3DO cue sheets are single-track
+      `MODE1/2352`, so a music CD is the correct hardware test.
 
 ---
 

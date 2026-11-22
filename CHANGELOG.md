@@ -24,6 +24,14 @@ verification and CD-DA diagnostics patch release.
   opened and track-probed; 496 unique-title representatives, including all three
   audio-only discs, were fully sector-verified with 0 errors.
 
+### Verified
+
+- **Physical CD-DA on a real drive.** The issue #8 reporter's Red Book audio CD lists
+  six audio tracks; `disc audio E:` extracted track 1 as a 164.28 s WAV with peak 31659
+  and RMS 7248.66 (0 clipped), confirming the Windows raw-CDDA path. All 672 Redump 3DO
+  cue sheets are single-track `MODE1/2352`, so no known retail 3DO game has a CD-DA
+  track; a music CD is the correct hardware test.
+
 ## [1.16.0] - 2026-11-21
 
 ### Added

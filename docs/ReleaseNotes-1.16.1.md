@@ -65,9 +65,15 @@ the burn contains no Red Book audio, even if the game has data-streamed music.
   FZ-10E Anvil, and patched FZ-10 + `3do_arcade_saot`.
 - The issue #8 reporter's Way of the Warrior CD-R read **157,996/157,996 sectors**, hash
   `0x84b2bef01d157a9f`, matching the CHD. That burn has only a data track; the test
-  correctly reports no CD-DA. The Red Book audio CD remains the hardware CD-DA test.
+  correctly reports no CD-DA.
+- The same reporter's **Red Book audio CD** is the hardware CD-DA pass: `disc tracks E:`
+  listed six audio tracks and `disc audio E:` extracted track 1 as a 164.28 s WAV with
+  peak 31659 and RMS 7248.66 (0 clipped).
 - The A&M Music Sampler image track produced a non-silent 85.97 s WAV (peak 29920,
   RMS 4248) with automatic first-audio selection.
+- All **672** Redump 3DO cue sheets are single-track `MODE1/2352`; no known retail 3DO
+  game has a CD-DA track. Retail 3DO music is data-streamed, so a music CD is the correct
+  CD-DA test disc.
 
 ## Verification
 
@@ -87,10 +93,10 @@ the burn contains no Red Book audio, even if the game has data-streamed music.
 ## Known issues
 
 - The FZ-10 audio-only BIOS player still lists the TOC but leaves the transport at
-  **STOP** (SYS-01, matching 4DO). Use `disc audio` to verify the drive's CD-DA path.
-- A data-only 3DO burn has no CD-DA tracks; use an audio CD or a mixed-mode burn.
+  **STOP** (SYS-01, matching 4DO). Use `disc audio` to verify the drive's CD-DA path;
+  that path is verified on real hardware.
+- A data-only 3DO burn has no CD-DA tracks; use an audio CD. All 672 Redump 3DO cue
+  sheets are single-track `MODE1/2352`, so no known retail 3DO game has a CD-DA track.
 - `--opera-soft-reset` remains opt-in/experimental. The default path boots the tested
   CD-Rs; `--opera-dipir` still blocks the reporter's boot and needs a CSTAT/DIPIR
   transcript.
-- Physical CD-DA playback in a game still needs a real mixed-mode audio disc; the
-  image path and raw drive reads are verified.

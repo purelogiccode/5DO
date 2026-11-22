@@ -883,8 +883,10 @@ remains unsigned.
 - **v1.16.1 (2026-11-21):** optical verification and CD-DA diagnostics patch - adds
   `disc audio` for extracting Red Book tracks to WAV from an image or a host drive,
   makes `disc verify` print progress and honor mixed-mode track totals, and records the
-  1,366-CHD/496-title optical sweep, 26-case BIOS matrix, and issue #8 physical CD-R
-  hash match. Suite 2,579/2,579; release run
+  1,366-CHD/496-title optical sweep, 26-case BIOS matrix, issue #8 physical CD-R hash
+  match, and the Red Book audio-CD hardware pass (six tracks; track 1 peak 31659, RMS
+  7248.66). All 672 Redump 3DO cue sheets are single-track `MODE1/2352`, so no retail
+  3DO game has a CD-DA track. Suite 2,579/2,579; release run
   <https://github.com/purelogiccode/5DO/actions/runs/44962202917>.
 - **v1.16.0 (2026-11-21):** physical CD-DA and disc read-error release -
   `PhysicalDiscSource` exposes the host drive TOC through `ITrackedDiscSource`, raw
@@ -893,8 +895,9 @@ remains unsigned.
   error at sector 103777) is zero-filled, reported as MEI receive-ECC, and logged while
   the transfer continues; screenshot and save-slot thumbnail writes are guarded.
   Suite 2,576/2,576; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/44917920441>. A real mixed-mode
-  audio CD remains the hardware check.
+  <https://github.com/purelogiccode/5DO/actions/runs/44917920441>. The hardware CD-DA
+  check was completed under 1.16.1 with the reporter's Red Book audio CD (six audio
+  tracks; track 1 peak 31659, RMS 7248.66).
 - **v1.15.0 (2026-11-21):** Steam Deck, Arcade CRT, and optical-drive release - the
   welcome guide detects Deck/SteamOS/gamescope and uses a 960x680 layout with the BIOS
   folder, Scan, and Open Folder; `ArcadeCrt` adds thick scanlines, an RGB triad mask,

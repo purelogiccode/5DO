@@ -9,8 +9,13 @@ disc. The release also records the full optical sweep: 1,366 CHDs / 496 unique g
 opened and track-probed, 496 unique-title representatives fully sector-verified with 0
 errors, and a 26-case BIOS matrix. The issue #8 reporter's Way of the Warrior CD-R read
 157,996/157,996 sectors with hash `0x84b2bef01d157a9f`, matching the CHD; that burn is
-data-only and has no CD-DA tracks. The FZ-10 audio-only player transport remains SYS-01.
-The suite is **2,579/2,579**; build, `dotnet format`, and `jb inspectcode` are clean.
+data-only and has no CD-DA tracks. On 2026-11-22 the reporter's Red Book audio CD passed
+the hardware CD-DA test: `disc tracks E:` listed six audio tracks and `disc audio E:`
+extracted track 1 as a 164.28 s WAV with peak 31659 and RMS 7248.66 (0 clipped), so the
+Windows raw-CDDA path works on a real drive. All **672** Redump 3DO cue sheets are
+single-track MODE1, so no known retail 3DO game has a CD-DA track; a music CD is the
+correct CD-DA test, and the FZ-10 audio-only player transport remains SYS-01 only. The
+suite is **2,579/2,579**; build, `dotnet format`, and `jb inspectcode` are clean.
 Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release run
 <https://github.com/purelogiccode/5DO/actions/runs/44962202917> passed all five bundle
 jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
@@ -19,7 +24,7 @@ downloaded bundles match `SHA256SUMS.txt`; the win-x64 bundle reports 1.16.1, `s
 track. The x64 AppImage runs through FUSE, reports 1.16.1, passes the smoke, verifies
 with its detached `.asc`, and its embedded `.upd_info`/`.zsync` target the versioned
 1.16.1 image. Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
-[Compatibility.md](Compatibility.md) §10.8, and [KnownIssues.md](KnownIssues.md).
+[Compatibility.md](Compatibility.md) §10.8-10.9, and [KnownIssues.md](KnownIssues.md).
 
 **2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships
 CD-DA playback from a host optical drive, guest-reported disc read errors instead of a
@@ -41,10 +46,10 @@ Linux x64 CLI/frontend smoke and the `.deb`/`.rpm` installs passed in CI. The is
 reporter's 1.16.0 test confirms the sector-103777 CRC is now a Warning and emulation
 continues; the Way of the Warrior FMV pauses for the drive's recovery and then resumes.
 A Red Book audio CD reaches the FZ-10 CD player with track 1 listed, but the transport
-remains inert (SYS-01), and the opt-in DIPIR path still has to be off for a disc boot. A
-real mixed-mode audio CD remains the hardware check because the development host has no
-optical drive; the Windows TOC and cooked paths were validated on a mounted virtual
-optical drive. Evidence is recorded in
+remains inert (SYS-01), and the opt-in DIPIR path still has to be off for a disc boot. The
+hardware CD-DA check was completed on 2026-11-22 under 1.16.1 with the reporter's Red
+Book audio CD (see above); the Windows TOC and cooked paths had been validated on a
+mounted virtual optical drive. Evidence is recorded in
 [ReleaseNotes-1.16.0.md](ReleaseNotes-1.16.0.md), [Compatibility.md](Compatibility.md)
 §10.7, and [KnownIssues.md](KnownIssues.md).
 
@@ -61,8 +66,9 @@ total so mixed-mode audio does not report a short disc, and the new
 `disc audio <disc> --track N --out trackN.wav` command extracts a CD-DA track to WAV
 from an image or a physical drive. The issue #8 reporter's Way of the Warrior CD-R
 verified at 157,996/157,996 sectors, hash `0x84b2bef01d157a9f`, matching the CHD; that
-burn has only a data track, so CD-DA needs an audio CD or mixed-mode disc. Full suite
-**2,579/2,579**, build/format/InspectCode clean. Evidence:
+burn has only a data track, so CD-DA needs an audio CD. That audio-CD pass was completed
+on 2026-11-22 under 1.16.1. Full suite **2,579/2,579**, build/format/InspectCode clean.
+Evidence:
 [TestCorpus.md](TestCorpus.md) §1.1ci and [Compatibility.md](Compatibility.md) §10.8.
 
 **2026-11-21, v1.15.0 release:** the Steam Deck first-run, Arcade CRT, and physical

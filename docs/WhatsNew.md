@@ -56,8 +56,11 @@ player's inert transport (SYS-01).
 - 26-case BIOS matrix at 3,000 frames: FZ-1, FZ-10, GoldStar, Sanyo, FZ-10J+Kanji,
   FZ-10E Anvil, and patched FZ-10 + `3do_arcade_saot`.
 - Issue #8 reporter's Way of the Warrior CD-R: 157,996/157,996 sectors, hash
-  `0x84b2bef01d157a9f`, matching the CHD. The burn has no CD-DA track; the Red Book
-  audio CD is still the hardware CD-DA test.
+  `0x84b2bef01d157a9f`, matching the CHD. The burn has no CD-DA track.
+- Issue #8 reporter's Red Book audio CD: six audio tracks; track 1 extracted to a
+  164.28 s WAV, peak 31659, RMS 7248.66, 0 clipped. This is the hardware CD-DA pass.
+- All 672 Redump 3DO cue sheets are single-track `MODE1/2352`; no known retail 3DO game
+  has a CD-DA track, so a music CD is the correct CD-DA test disc.
 - A&M Music Sampler image track: non-silent 85.97 s WAV, peak 29920, RMS 4248.
 
 ## Verification
@@ -75,9 +78,8 @@ player's inert transport (SYS-01).
 ## Known issues
 
 - The FZ-10 audio-only BIOS player transport remains at STOP (SYS-01, matching 4DO).
-  Use `disc audio` to verify the drive's CD-DA path.
-- A data-only 3DO burn has no CD-DA tracks; use an audio CD or mixed-mode burn.
+  Use `disc audio` to verify the drive's CD-DA path; it is verified on real hardware.
+- A data-only 3DO burn has no CD-DA tracks; use an audio CD. No known retail 3DO game
+  has a Red Book track.
 - `--opera-soft-reset` remains opt-in/experimental; `--opera-dipir` still blocks the
   reporter's boot and needs a CSTAT/DIPIR transcript.
-- Physical in-game CD-DA still needs a real mixed-mode audio disc; the image and raw
-  drive read paths are verified.
