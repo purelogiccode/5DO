@@ -562,5 +562,18 @@ The desktop shell keeps one rolling autosave in its own directory:
 refusal, a corrupt autosave, rolling overwrite, and delete. `AppSettingsStoreTests`
 covers the settings round-trip and interval clamping.
 
+Desktop acceptance (2026-11-22, Windows x64, Theme Park ISO, FZ-1 BIOS):
+
+- Clean exit wrote `autosave/slot-00.tdos` at frame 792.
+- Relaunch restored frame 792 and started emulation; the next clean exit wrote frame
+  1532, so the save continued from the restored state.
+- With both options disabled, the file was unchanged and no restore/write appeared in
+  the log.
+- A modified disc (`48b76311` vs `33e5afe4`) and a different BIOS (`51f2f43a` vs
+  `f47264dd`) were both refused with the documented messages and the machine stayed
+  untouched.
+- A 60-second interval wrote frame 3655 while emulation was running; the clean exit then
+  wrote frame 4312.
+
 The settings schema version is **11**; older files load with autosave and auto-resume
 enabled and a 5-minute interval.

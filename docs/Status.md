@@ -50,6 +50,10 @@ Autosave** and **Delete Autosave** expose the file on demand, and RetroAchieveme
 hardcore suppresses writes and restores. Settings schema 11 adds the three fields.
 `AutoSaveManagerTests` covers the relaunch round-trip, disc/BIOS refusal, corrupt state,
 rolling overwrite, and delete; the suite is **2,586/2,586** and InspectCode is clean.
+The Windows desktop pass on 2026-11-22 wrote frame 792 on clean exit, restored it on
+relaunch and continued to frame 1532, left the file unchanged with both options off,
+refused a modified disc and a different BIOS, and wrote frame 3655 at the 60-second
+interval.
 
 **2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships
 CD-DA playback from a host optical drive, guest-reported disc read errors instead of a

@@ -893,7 +893,9 @@ remains unsigned.
   interval; startup restores it only when the disc game ID and effective BIOS MD5 match,
   and manual slots are never touched. `AutoSaveEnabled`/`AutoResumeEnabled` are separate,
   hardcore mode suppresses both, and **Emulation > Resume/Delete Autosave** expose the
-  file on demand. Suite 2,586/2,586.
+  file on demand. Windows desktop acceptance: clean exit frame 792, relaunch restored
+  792 and continued to 1532, disabled mode left the file unchanged, disc/BIOS mismatches
+  were refused, and a 60-second interval wrote frame 3655. Suite 2,586/2,586.
 - **v1.16.1 (2026-11-21):** optical verification and CD-DA diagnostics patch - adds
   `disc audio` for extracting Red Book tracks to WAV from an image or a host drive,
   makes `disc verify` print progress and honor mixed-mode track totals, and records the
