@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.16.1.
+> history through v1.17.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -878,8 +878,17 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.16.1)
+## 14. Release history (v1.9.1 - v1.17.0)
 
+- **v1.17.0 (2026-11-22):** autosave and archive-container release - UX-37 adds a
+  rolling `states/autosave/` copy written on pause, clean exit, and a 1-60 minute
+  interval, restored at startup only when the disc game ID and effective BIOS MD5
+  match; SYS-27 opens one ISO/BIN or CUE+BIN set directly from ZIP/7z through
+  SharpCompress. Windows desktop acceptance: 792 on clean exit, restored 792, continued
+  to 1532, disabled mode left the file unchanged, disc/BIOS mismatches refused, and the
+  60-second interval wrote 3655. Theme Park extracted, zipped ISO, and 7z CUE+BIN all
+  produced frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256. Suite
+  2,595/2,595. Release run <https://github.com/purelogiccode/5DO/actions/runs/PENDING>.
 - **SYS-27 (2026-11-21, post-1.16.1):** ZIP/7z disc containers - `ArchiveDiscImage`
   opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry through
   SharpCompress, with in-memory decompression, relative CUE paths, and clear refusal of

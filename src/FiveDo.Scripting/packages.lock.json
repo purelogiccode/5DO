@@ -26,14 +26,14 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.tas": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )",
-          "FiveDo.Input": "[1.14.1, )"
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Input": "[1.17.0, )"
         }
       }
     }

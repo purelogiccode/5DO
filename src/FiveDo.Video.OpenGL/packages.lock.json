@@ -54,7 +54,7 @@
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       }
     }

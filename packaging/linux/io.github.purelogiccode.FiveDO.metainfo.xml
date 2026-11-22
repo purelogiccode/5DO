@@ -77,6 +77,15 @@
   </languages>
 
   <releases>
+    <release version="1.17.0" date="2026-11-22">
+      <description>
+        <p>
+          Rolling autosave with startup resume and validated disc/BIOS matching,
+          plus direct ZIP/7z ISO, BIN, and CUE+BIN containers across the desktop
+          library and CLI.
+        </p>
+      </description>
+    </release>
     <release version="1.16.1" date="2026-11-21">
       <description>
         <p>

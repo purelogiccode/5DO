@@ -1,11 +1,13 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.16.1 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.17.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.16.1 adds `disc audio` CD-DA extraction and
-`disc verify` progress/mixed-mode totals, and records the optical collection/BIOS sweep.
-v1.16.0 added physical CD-DA playback from a host optical drive and reports failed disc
+v1.2.x. macOS is published as a DMG. v1.17.0 adds rolling autosave with validated
+startup resume and direct ZIP/7z ISO/BIN/CUE+BIN containers. v1.16.1 added `disc audio`
+CD-DA extraction and `disc verify` progress/mixed-mode totals, and recorded the optical
+collection/BIOS sweep. v1.16.0 added physical CD-DA playback from a host optical drive
+and reports failed disc
 reads to the guest instead of faulting the core, with guarded screenshot and save-slot
 thumbnail writes. v1.15.0 added Steam Deck/SteamOS
 first-run setup and the Arcade CRT filter, and fixed physical optical-drive discovery, a
@@ -47,6 +49,33 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.17.0 autosave and archive-container gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, AUR `PKGBUILD`, changelog, and release
+      notes to `1.17.0`; restore to refresh the project-version entries in every
+      `packages.lock.json`.
+- [x] UX-37 desktop acceptance on Windows x64 (Theme Park, FZ-1 BIOS): clean exit wrote
+      frame 792; relaunch restored 792 and continued to 1532; disabled mode left the file
+      unchanged; a modified disc (`48b76311` vs `33e5afe4`) and a different BIOS
+      (`51f2f43a` vs `f47264dd`) were refused; a 60-second interval wrote frame 3655.
+- [x] SYS-27 archive parity: Theme Park extracted, zipped ISO, and 7z CUE+BIN all
+      produced frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256.
+- [x] Suite green (**2,595 tests**), `dotnet build` 0 warnings/0 errors,
+      `dotnet format --verify-no-changes`, `jb inspectcode`, and `mkdocs build --strict`.
+- [x] Local win-x64 release-candidate bundle reports 1.17.0, passes `selftest` 15/15,
+      writes `FRONTEND SMOKE OK 1.17.0`, opens a ZIP/7z disc, and contains the
+      SharpCompress notice with no PDB/XML files. Bundle SHA-256
+      `d056dacd9a02860fe2cff3494570038392aadcdc744afa1c07ddf08d7d8599f1`;
+      extracted/ZIP/7z Theme Park runs all matched `0x110E7DC5` at PC `0x0000596C`.
+      A synthetic 7z CUE+BIN verified 4/4 sectors with hash `0x1b0986aeb7092e20`.
+- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+      and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
+      win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.17.0`.
+- [ ] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
+      passes the frontend smoke, resolves the 1.17.0 `.zsync`, and its detached `.asc`
+      verifies with the release key.
 
 ## 1.16.1 optical verification and CD-DA diagnostics gate
 

@@ -1,5 +1,26 @@
 # Project Status and Next Steps
 
+**2026-11-22, v1.17.0 release:** the autosave and archive-container release ships two
+new features. **UX-37** keeps a rolling autosave under `states/autosave/`, written on
+pause, clean exit, and a configurable 1-60 minute interval, and restores it at startup
+only when the disc game ID and effective BIOS MD5 match; manual slots are never touched,
+and hardcore mode suppresses both. **SYS-27** opens one ISO/BIN or CUE+BIN set directly
+from a ZIP or 7z archive through SharpCompress, with relative CUE paths and clear
+refusal of CHD/CDI/NRG, encrypted, multi-volume, and unsupported CUE layouts. The
+Windows desktop acceptance wrote frame 792 on clean exit, restored 792 on relaunch and
+continued to 1532, left the file unchanged with both options off, refused a modified
+disc and a different BIOS, and wrote frame 3655 at the 60-second interval. Theme Park
+from the extracted ISO, a ZIP of that ISO, and a 7z CUE+BIN set produced the same
+600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256. The suite is
+**2,595/2,595**; build, `dotnet format`, `jb inspectcode`, and `mkdocs build --strict`
+are clean. The local win-x64 release candidate (`5do-1.17.0-win-x64.zip`, SHA-256
+`d056dacd9a02860fe2cff3494570038392aadcdc744afa1c07ddf08d7d8599f1`) reports 1.17.0,
+passes `selftest` 15/15, writes `FRONTEND SMOKE OK 1.17.0`, opens ZIP/7z images, and
+includes the SharpCompress notice with no PDB/XML files. Evidence:
+[ReleaseNotes-1.17.0.md](ReleaseNotes-1.17.0.md),
+[SaveStates.md](SaveStates.md) §10, [Compatibility.md](Compatibility.md) §2, and
+[KnownIssues.md](KnownIssues.md).
+
 **2026-11-21, v1.16.1 release:** the optical verification and CD-DA diagnostics patch
 release adds `disc audio <disc> --track N --out trackN.wav` for extracting Red Book
 tracks from a CUE/CHD image or a host optical drive, with automatic first-audio selection

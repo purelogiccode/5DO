@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.16.1, the optical
-verification and CD-DA diagnostics patch release.
+All notable changes are recorded here. The project is at v1.17.0, the autosave and
+archive-container release.
 
-## [Unreleased]
+## [1.17.0] - 2026-11-22
 
 ### Added
 

@@ -1,24 +1,23 @@
-# What's new in 5DO 1.16.1
+# What's new in 5DO 1.17.0
 
-**Released:** 2026-11-21
+**Released:** 2026-11-22
 
-5DO 1.16.1 is an optical verification and CD-DA diagnostics patch release. It adds
-`disc audio` for direct Red Book extraction, makes `disc verify` show progress and honor
-mixed-mode track totals, and records the optical collection/BIOS sweep. Save states and
-disc formats are unchanged from 1.16.0.
+5DO 1.17.0 adds a rolling autosave with validated startup resume and direct ZIP/7z
+containers for ISO, BIN, and CUE+BIN images. It retains the 1.16.1 CD-DA diagnostics and
+the 1.16.0 physical CD-DA/read-error work.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.16.1-win-x64.zip` |
-| Windows on ARM | `5do-1.16.1-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.16.1-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.16.1_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.16.1-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.16.1-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.16.1-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable | `5do-1.16.1-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.17.0-win-x64.zip` |
+| Windows on ARM | `5do-1.17.0-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.17.0-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.17.0_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.17.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.17.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.17.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable | `5do-1.17.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
 Extract the archive before running it: the apphosts load `libSkiaSharp`,
 `libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder.
@@ -27,59 +26,69 @@ The `.asc` files are signatures, the `.zsync` files feed `AppImageUpdate`, and
 `SHA256SUMS.txt` lists hashes; you only need them to verify a download.
 `5do-archive-keyring.gpg` is the key those signatures use.
 
-## Direct CD-DA test
+## Rolling autosave and startup resume
 
-```powershell
-5do disc tracks E:
-5do disc audio E: --track 1 --out track1.wav
-5do audio analyze track1.wav --json
-```
+The desktop keeps one autosave under `<save directory>/autosave/`, separate from the
+numbered manual slots:
 
-`disc audio` writes a 44.1 kHz, 16-bit stereo WAV through the same
-`ITrackedDiscSource.ReadTrackSector` path the emulator uses. It works for CUE/CHD audio
-tracks and a host optical drive. Without `--track`, the first audio track is selected; a
-data-only disc explains that it has no CD-DA tracks. This bypasses the FZ-10 BIOS
-player's inert transport (SYS-01).
+- It is written on **pause**, **clean exit**, and a configurable interval (1-60 minutes,
+  default 5). Manual slots are never overwritten.
+- On startup the last disc reopens and the autosave is restored only when its disc game
+  ID and effective BIOS MD5 match. A renamed, re-burned, or different disc is refused
+  with an actionable message instead of loading the wrong save.
+- **Settings > Emulation > Autosave** controls writing, the interval, and startup
+  resume. **Emulation > Resume Autosave / Delete Autosave** expose the file on demand.
+- RetroAchievements hardcore mode suppresses both autosave writes and restores.
 
-## `disc verify`
+Windows desktop acceptance: clean exit wrote frame 792, relaunch restored frame 792 and
+continued to 1532, disabled mode left the file unchanged, a modified disc and a different
+BIOS were refused, and a 60-second interval wrote frame 3655.
 
-- Non-JSON runs print the opening path, total sector count, and periodic
-  track/sector/percentage/MiB progress to stderr; `--json` stays one clean document.
-- The verifier compares against `ITrackedDiscSource.TotalSectorCount`, so mixed-mode
-  audio after a data volume is not falsely reported short.
+## ZIP/7z disc containers
 
-## Evidence
+A `.zip` or `.7z` path can be opened anywhere a disc path is accepted:
 
-- 1,366 CHDs / 496 unique game IDs opened and track-probed; 496 unique-title
-  representatives, including all three audio-only discs, fully sector-verified with 0
-  errors.
-- 26-case BIOS matrix at 3,000 frames: FZ-1, FZ-10, GoldStar, Sanyo, FZ-10J+Kanji,
-  FZ-10E Anvil, and patched FZ-10 + `3do_arcade_saot`.
-- Issue #8 reporter's Way of the Warrior CD-R: 157,996/157,996 sectors, hash
-  `0x84b2bef01d157a9f`, matching the CHD. The burn has no CD-DA track.
-- Issue #8 reporter's Red Book audio CD: six audio tracks; track 1 extracted to a
-  164.28 s WAV, peak 31659, RMS 7248.66, 0 clipped. This is the hardware CD-DA pass.
-- All 672 Redump 3DO cue sheets are single-track `MODE1/2352`; no known retail 3DO game
-  has a CD-DA track, so a music CD is the correct CD-DA test disc.
-- A&M Music Sampler image track: non-silent 85.97 s WAV, peak 29920, RMS 4248.
+- One ISO/BIN or one CUE+BIN set per archive. CUE `FILE` entries resolve relative to the
+  CUE, including subfolders.
+- Entries are decompressed in memory (1.5 GB per-entry limit) rather than to a temporary
+  directory. Larger images should be extracted.
+- CHD, CDI, and NRG must be extracted; those containers have their own compression and
+  random-access layouts.
+- Encrypted and multi-volume archives are refused with guidance and are never partially
+  read. PREGAP, POSTGAP, INDEX 00, and WAVE CUEs are rejected with extraction guidance.
+- The game library, drag/drop, recent discs, playlist editor, file pickers, and every CLI
+  disc command accept the archive path.
+
+Theme Park parity: the extracted ISO, a ZIP of that ISO, and a 7z CUE+BIN set produced
+the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256.
+
+## Still included from 1.16.1 and 1.16.0
+
+- `disc audio` extracts Red Book tracks to WAV from an image or a host optical drive.
+- `disc verify` prints progress and uses the native track total for mixed-mode discs.
+- Physical CD-DA works through the drive TOC and raw CDDA reads; the reporter's Red Book
+  CD produced a non-silent 164.28 s track.
+- Damaged or failing disc reads are reported to the guest instead of stopping emulation.
+- The FZ-10 audio-only BIOS player transport remains **STOP** (SYS-01, matching 4DO); use
+  `disc audio` for the direct CD-DA test.
 
 ## Verification
 
-- 2,579/2,579 tests, build 0 warnings/0 errors, `dotnet format`, and `jb inspectcode`
-  clean.
-- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.16.1>; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/44962202917>. The five downloaded
+- 2,595/2,595 tests, build 0 warnings/0 errors, `dotnet format`, `jb inspectcode`, and
+  `mkdocs build --strict` clean.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/PENDING>. The five downloaded
   bundles match `SHA256SUMS.txt`.
-- Windows x64 bundle reports 1.16.1, `selftest` 15/15,
-  `FRONTEND SMOKE OK 1.16.1`, and a non-silent A&M track 2 WAV.
-- Linux AppImage: FUSE 1.16.1, frontend smoke, detached `.asc`, and versioned
-  `.zsync`/`.upd_info`.
+- Windows x64 bundle reports 1.17.0, `selftest` 15/15, and
+  `FRONTEND SMOKE OK 1.17.0`; a ZIP/7z disc opens and verifies.
+- Linux x64 AppImage/tarball smoke, detached `.asc`, and versioned `.zsync`/`.upd_info`.
 
 ## Known issues
 
-- The FZ-10 audio-only BIOS player transport remains at STOP (SYS-01, matching 4DO).
-  Use `disc audio` to verify the drive's CD-DA path; it is verified on real hardware.
-- A data-only 3DO burn has no CD-DA tracks; use an audio CD. No known retail 3DO game
-  has a Red Book track.
+- A ZIP/7z holds one image or CUE+BIN set. Entries are decompressed in memory with a
+  1.5 GB per-entry limit, and CHD/CDI/NRG, encrypted, and multi-volume archives must be
+  extracted or decrypted first.
+- The FZ-10 audio-only BIOS player transport remains at STOP (SYS-01). Use `disc audio`
+  to verify the drive's CD-DA path.
 - `--opera-soft-reset` remains opt-in/experimental; `--opera-dipir` still blocks the
   reporter's boot and needs a CSTAT/DIPIR transcript.

@@ -62,15 +62,15 @@
       "fivedo.achievements": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Storage": "[1.16.1, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Storage": "[1.17.0, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.audio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )",
+          "FiveDo.Core": "[1.17.0, )",
           "Serilog": "[4.4.0, )",
           "Silk.NET.OpenAL": "[2.23.0, )",
           "Silk.NET.OpenAL.Soft.Native": "[1.23.1, )"
@@ -79,20 +79,20 @@
       "fivedo.cdrom": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.cheats": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Input": "[1.16.1, )",
-          "FiveDo.Machine": "[1.16.1, )"
+          "FiveDo.Input": "[1.17.0, )",
+          "FiveDo.Machine": "[1.17.0, )"
         }
       },
       "fivedo.clio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.core": {
@@ -101,14 +101,14 @@
       "fivedo.cpu": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.diagnostics": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Cpu": "[1.16.1, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Cpu": "[1.17.0, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Console": "[6.1.1, )",
           "Serilog.Sinks.File": "[7.0.0, )"
@@ -117,28 +117,28 @@
       "fivedo.dsp": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.host": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Achievements": "[1.16.1, )",
-          "FiveDo.Audio": "[1.16.1, )",
-          "FiveDo.Cheats": "[1.16.1, )",
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Diagnostics": "[1.16.1, )",
-          "FiveDo.Input": "[1.16.1, )",
-          "FiveDo.Machine": "[1.16.1, )",
-          "FiveDo.Storage": "[1.16.1, )",
-          "FiveDo.Video": "[1.16.1, )",
+          "FiveDo.Achievements": "[1.17.0, )",
+          "FiveDo.Audio": "[1.17.0, )",
+          "FiveDo.Cheats": "[1.17.0, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Diagnostics": "[1.17.0, )",
+          "FiveDo.Input": "[1.17.0, )",
+          "FiveDo.Machine": "[1.17.0, )",
+          "FiveDo.Storage": "[1.17.0, )",
+          "FiveDo.Video": "[1.17.0, )",
           "Serilog": "[4.4.0, )"
         }
       },
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.localization": {
@@ -147,53 +147,53 @@
       "fivedo.machine": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Cdrom": "[1.16.1, )",
-          "FiveDo.Clio": "[1.16.1, )",
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Cpu": "[1.16.1, )",
-          "FiveDo.Diagnostics": "[1.16.1, )",
-          "FiveDo.Dsp": "[1.16.1, )",
-          "FiveDo.Madam": "[1.16.1, )",
-          "FiveDo.Memory": "[1.16.1, )",
-          "FiveDo.Sport": "[1.16.1, )",
-          "FiveDo.Video": "[1.16.1, )",
-          "FiveDo.Xbus": "[1.16.1, )"
+          "FiveDo.Cdrom": "[1.17.0, )",
+          "FiveDo.Clio": "[1.17.0, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Cpu": "[1.17.0, )",
+          "FiveDo.Diagnostics": "[1.17.0, )",
+          "FiveDo.Dsp": "[1.17.0, )",
+          "FiveDo.Madam": "[1.17.0, )",
+          "FiveDo.Memory": "[1.17.0, )",
+          "FiveDo.Sport": "[1.17.0, )",
+          "FiveDo.Video": "[1.17.0, )",
+          "FiveDo.Xbus": "[1.17.0, )"
         }
       },
       "fivedo.madam": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.memory": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.scripting": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Input": "[1.16.1, )",
-          "FiveDo.Tas": "[1.16.1, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Input": "[1.17.0, )",
+          "FiveDo.Tas": "[1.17.0, )",
           "MoonSharp": "[2.0.0, )"
         }
       },
       "fivedo.sport": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
-          "CDISharp": "[1.16.1, )",
+          "CDISharp": "[1.17.0, )",
           "CHDSharp": "[1.7.1, )",
-          "FiveDo.Core": "[1.16.1, )",
-          "NRGSharp": "[1.16.1, )",
+          "FiveDo.Core": "[1.17.0, )",
+          "NRGSharp": "[1.17.0, )",
           "Serilog": "[4.4.0, )",
           "SharpCompress": "[1.0.0, )"
         }
@@ -201,20 +201,20 @@
       "fivedo.tas": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )",
-          "FiveDo.Input": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )",
+          "FiveDo.Input": "[1.17.0, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "fivedo.xbus": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.16.1, )"
+          "FiveDo.Core": "[1.17.0, )"
         }
       },
       "nrgsharp": {

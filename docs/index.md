@@ -16,15 +16,14 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.16.1 optical verification and CD-DA diagnostics release"
-    5DO is at v1.16.1. `disc audio` extracts Red Book tracks to WAV from a CUE/CHD image
-    or a host optical drive, so CD-DA can be checked directly without the FZ-10 BIOS
-    player. `disc verify` prints progress and honors mixed-mode track totals. The
-    release records a 1,366-image/496-title optical sweep, a 26-case BIOS matrix, and the
-    issue #8 physical CD-R hash match. `--high-res` remains a presentation-only 2x
-    upscale, and retail Gamegun titles keep a joypad on port 1. **P** pauses, **Space**
-    toggles fast-forward, **F1** connects the Gamegun, and **Alt+Enter** toggles
-    fullscreen.
+!!! important "v1.17.0 autosave and archive-container release"
+    5DO is at v1.17.0. The desktop keeps a rolling autosave under `states/autosave/`,
+    written on pause, clean exit, and a configurable interval, and restores it at startup
+    only when the disc game ID and effective BIOS MD5 match. ISO, BIN, and CUE+BIN images
+    can also be opened directly from ZIP and 7z archives. `--high-res` remains a
+    presentation-only 2x upscale, and retail Gamegun titles keep a joypad on port 1.
+    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
+    **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
     DMG. GPG-signed Linux artifacts use the keyring fingerprint
@@ -85,127 +84,43 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.16.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.17.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-21, v1.16.1 optical verification and CD-DA diagnostics release (GitHub Releases).**
+**2026-11-22, v1.17.0 autosave and archive-container release (GitHub Releases).**
 
-- **2,579 tests** are present in the current test assembly.
-- **Direct CD-DA extraction:** `disc audio <disc> --track N --out trackN.wav` writes a
-  44.1 kHz stereo WAV from a CUE/CHD audio track or a host optical drive. Without
-  `--track`, it selects the first audio track; a data-only disc explains that it has no
-  CD-DA. This bypasses the FZ-10 player's inert transport (SYS-01).
-- **Optical collection sweep:** all **1,366** local CHDs opened and every track's first,
-  middle, and last native sector read; **496 unique-title representatives**, including
-  all three audio-only discs, were fully sector-verified with **0 read errors**. A
-  26-case BIOS matrix (FZ-1/FZ-10/GoldStar/Sanyo, FZ-10J+Kanji, FZ-10E Anvil,
-  patched FZ-10 + `3do_arcade_saot`) booted every test. Non-JSON `disc verify` now
-  prints progress, and the issue #8 physical CD-R read 157,996/157,996 sectors with hash
-  `0x84b2bef01d157a9f`, matching the CHD.
-- **Physical CD-DA:** a host drive's table of contents is exposed through
-  `ITrackedDiscSource`, and raw 2352-byte Red Book frames use
-  `IOCTL_CDROM_RAW_READ` (Windows) or `CDROMREADAUDIO` (Linux). CD-DA end addressing
-  follows the disc track table, so audio tracks after the data volume play.
-- **Disc read errors no longer stop emulation:** a failed host read (for example a CRC
-  error on a scratched CD-R) is zero-filled, reported to the guest as MEI receive-ECC,
-  and logged; the transfer continues with the next sector. The boot-time volume-header
-  probe and CD-DA sample reads share the guard.
-- **Screenshot writes are safe:** a failed screenshot or save-slot thumbnail write is
-  reported as an OSD warning instead of faulting the UI thread.
-- **`disc tracks` reports 64-bit sizes:** multi-gigabyte physical discs and images no
-  longer overflow `dataSize`.
-- **Earlier in 1.15.0:** Steam Deck/SteamOS first-run setup, the Arcade CRT filter,
-  Windows physical optical-drive discovery with `\\.\CdRomN`, the JIT soft-reset fix,
-  and single-pad PBUS input.
-- **Earlier in 1.14.x:** Windows bundles are self-contained for audio: `vcruntime140.dll` and
-  `msvcp140.dll` (plus the x64-only `vcruntime140_1.dll`) ship beside `OpenAL32.dll`,
-  so a clean Windows image no longer needs the Visual C++ redistributable.
-- **AppImage updates resolve the next release:** the embed uses
-  `gh-releases-zsync`, the `.zsync` target points at the versioned AppImage, and the
-  build validates both. The 1.14.1 AppImages predate the fix, so update those manually.
-- **Diagnostics are quieter:** cover-catalog HTTP failures fall back to the cached
-  catalog, and expected state/experimental/deployment warnings no longer file bug
-  reports.
-- **CHD Mode 2 sectors and crop dimensions are fixed:** native 2336-byte and 2324-byte
-  track sectors start at frame offset zero for raw-sector consumers and DAT hashing, and
-  clearing auto-crop or a manual crop returns pointer mapping and CPU presentation to the
-  live frame size.
-- **Persistence and shutdown are hardened:** state, cache, BIOS, NVRAM, screenshot, and
-  movie writes use unique temporary files with cleanup; malformed settings and caches
-  recover instead of crashing; and audio, RetroAchievements, Vulkan, Direct3D, and core
-  workers are not disposed while they may still be running.
-- **High-resolution presentation is safe for every title:** `--high-res` keeps the guest
-  at native 320x240 and doubles the finished frame in `Vdlp`; a 300-frame Road Rash run
-  matches a 2x nearest upscale of the native frame with 0 differing pixels. The OpenGL
-  per-line parameter texture now uses `RG32UI`, eliminating the 480-line rainbow rows.
-- **Gamegun defaults are complete:** retail American Laser Games titles keep a joypad on
-  port 1 and the gun on port 2, Demolition Man starts with the pad and connects the gun
-  on demand with F1, and database input defaults now reach the desktop shell.
-- **Movie verification matches the recording:** the header records the emulated frame
-  span, disc and BIOS are resolved automatically, and a 600-frame disc movie verifies
-  with exit 0; a partial extraction now explains the missing native files instead of
-  crashing inside Skia.
-- **macOS arm64 presents through a native Metal surface** (`CAMetalLayer`,
-  `VK_EXT_metal_surface`) with 0 renderer bytes/frame at 1080p FIFO, live resize and
-  fullscreen, 320x240 capture parity, and 4K offscreen output. Retina 2x remains
-  unvalidated because the validation host only advertises 1:1 display modes.
-- **Presentation options:** audio channel swap, 4DO/Bumps/Metal void patterns, the void
-  color on the GPU presenters, and an emulation-health badge.
-- **Linux artifacts are signed:** keyring, per-artifact `.asc`, and a signed checksum
-  manifest; CI builds and installs both `.deb`/`.rpm` sets and both Flatpak bundles.
-- Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI,
-  Nero NRG, and ISO/BIN/CUE+BIN inside ZIP/7z. The CDI and NRG readers accept cooked
-  2048-byte, 2336-byte Mode 2, raw
-  2352-byte, and the 2353/2368/2448/2449-byte raw variants, and expose the same track
-  table and game ID as the equivalent ISO/CHD.
-- RetroAchievements: managed rcheevos evaluation, 3DO disc identification, measured
-  progress, a durable offline unlock queue, hardcore rules, rich presence,
-  hardcore-only leaderboard submission, OSD notifications, and a progress window.
-  Achievement hit counts and leaderboard attempts now persist in save states through a
-  dedicated, definition-validated `.tdos` section.
-- The desktop apphost is **`FiveDo.exe`** on Windows and **`FiveDo`** on Linux/macOS;
-  the CLI remains `FiveDo.Cli`. ReadyToRun release bundles and deferred startup work
-  cut time to the first window on the validation host from about 1.09 s in Debug to
-  about 0.62 s. A localized **Loading game...** overlay covers the first-frame wait,
-  and the first Escape in a running fullscreen game exits fullscreen and pauses in one
-  step.
-- Localization (English, German, Brazilian Portuguese, French, Spanish, Italian,
-  Japanese, Korean, and Simplified Chinese), external metadata and manual media, physical
-  optical-drive boot, Windows DirectInput/HID gamepads, the controller preview,
-  auto-crop, display-sleep inhibition, Lua input scripting, the input timeline,
-  best-effort 4DO `.4dosav` import/export, and the two-step Escape pause/quit
-  shortcut are available.
-- The 50-title differential panel matches **50/50 frame hashes** at frames
-  60/120/300 with **0 errors**. The frame-boundary phase is resolved: the harness
-  samples Opera's ARM/CD state in the checkpoint's own field, and 5DO ends a field
-  on the 263/312-line scanline boundary like the reference. The same-frame
-  retired-instruction delta is **11-20** at frame 60 and **23-2,223** at frame 120.
-  The first behavioral divergence at f=300 is now the remaining CD command cadence;
-  the command-50 boot handoff fell from **+207,707 cycles / +86,511 instructions**
-  to **-818 / -376**. See [`DifferentialHarness.md`](DifferentialHarness.md).
-- HQx 2x/3x/4x now run as GPU rule-table passes in OpenGL/GLES, Direct3D 11, and
-  Vulkan. At 4K on the RTX 4070 present is **0.14-0.34 ms** and the GPU pass is
-  **0.09-0.17 ms**, down from 6.82/10.93 ms CPU-bound.
-- The compatibility-completion corpus reports **1,371 images and 414 unique titles**.
-  **375 of 378** game-test-set titles are playable under the binary beyond-title rule,
-  with **0 `Behind` and 0 `Regression`** rows and a strict superset of the 252-title
-  peer union.
-- The earlier full-collection loadability sweep covered **594 disc images**: **576
-  rendered**, **13 black/blank**, and **5 not loadable** on the first pass. After
-  triage: **593 loadable/rendered**, **1 known no-video case** (`Crash 'n Burn` Japan),
-  and **0 not-loadable rows**.
-- MMPX 2x and Catmull-Rom bicubic filtering are available in OpenGL/GLES, Direct3D 11,
-  Vulkan, and the CPU fallback. Aspect presets now include 5:4, 16:9, 16:10, and 21:9.
+- **2,595 tests** are present in the current test assembly.
+- **Rolling autosave with startup resume (UX-37):** one autosave under
+  `<save directory>/autosave/` is written on pause, clean exit, and a configurable
+  1-60 minute interval (default 5) without touching manual slots. The last disc reopens
+  at startup and restores the autosave only when its disc game ID and effective BIOS MD5
+  match; mismatches are refused with an actionable message. **Emulation > Resume
+  Autosave / Delete Autosave** expose the file on demand, and separate settings control
+  writing and loading. Hardcore mode suppresses both.
+- **ZIP/7z disc containers (SYS-27):** one ISO/BIN or one CUE+BIN set can be opened
+  directly from a ZIP or 7z archive, with relative CUE paths and in-memory decompression
+  through SharpCompress. CHD/CDI/NRG, encrypted, multi-volume, and unsupported CUE
+  layouts are refused with extraction/decryption guidance. The library, drag/drop,
+  recent discs, playlist editor, file pickers, and CLI accept the archive path.
+- **Desktop autosave acceptance:** clean exit wrote frame 792, relaunch restored 792 and
+  continued to 1532, disabled mode left the file unchanged, a modified disc and a
+  different BIOS were refused, and a 60-second interval wrote frame 3655.
+- **Archive parity:** Theme Park from the extracted ISO, a ZIP of that ISO, and a 7z
+  CUE+BIN set produced the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and
+  identical PNG SHA-256.
+- **Earlier in 1.16.1:** `disc audio` CD-DA extraction, `disc verify` progress and
+  mixed-mode totals, and the 1,366-image/496-title optical sweep. **1.16.0** added
+  physical CD-DA and guest-reported disc read errors; **1.15.0** added Steam Deck/SteamOS
+  first-run setup, the Arcade CRT filter, and physical optical-drive discovery.
 - **Windows x64, Linux x64, and macOS arm64 are validated GPU targets.** Linux passes
-  hardware OpenGL 4.2, Vulkan 1.2 through X11 in the probe and desktop shell, a 600 s
-  real-device audio soak with 0 drops/underruns, evdev gamepads, display sleep, and the
-  full acceptance pass on bare-metal hardware (2026-11-17). macOS arm64 passes the
-  Vulkan/MoltenVK presenter, all eight filters, the full suite, and a 60 fps packaged
-  game (2026-11-17). Linux arm64 and Windows arm64 pass the native CLI/frontend runtime
-  smoke (2026-11-10). Intel macOS is unsupported as of 1.12.0.
-- v1.16.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.16.1)
+  hardware OpenGL 4.2, Vulkan 1.2 through X11, a 600 s real-device audio soak with 0
+  drops/underruns, evdev gamepads, display sleep, and the full acceptance pass on
+  bare-metal hardware. macOS arm64 passes the Vulkan/MoltenVK presenter, all eight
+  filters, the full suite, and a 60 fps packaged game. Linux arm64 and Windows arm64 pass
+  the native CLI/frontend runtime smoke. Intel macOS is unsupported as of 1.12.0.
+- v1.17.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.17.0)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See
@@ -213,7 +128,6 @@
 
 See [Status](Status.md) and [Known issues](KnownIssues.md) for the current position and
 the remaining work.
-
 ## Documentation map
 
 ### Using 5DO

@@ -1,7 +1,7 @@
 # 5DO — Missing Features
 
-**Snapshot:** 2026-11-21
-**Release:** v1.16.1
+**Snapshot:** 2026-11-22
+**Release:** v1.17.0
 **Status:** the compatibility program is complete. This file tracks **missing work only**;
 completed items, their evidence, and the full stable-ID history are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II.
