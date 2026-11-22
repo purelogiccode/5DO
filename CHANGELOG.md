@@ -3,6 +3,20 @@
 All notable changes are recorded here. The project is at v1.16.1, the optical
 verification and CD-DA diagnostics patch release.
 
+## [Unreleased]
+
+### Added
+
+- **Rolling autosave and startup resume (UX-37).** The desktop keeps one autosave under
+  `<save directory>/autosave/`, written on pause, clean exit, and a configurable interval
+  (1-60 minutes, default 5). Numbered manual slots are never touched. On startup the last
+  disc reopens and the autosave is restored only when its disc game ID and effective BIOS
+  MD5 match; a mismatch is refused with an actionable message. **Emulation > Resume
+  Autosave** and **Delete Autosave** expose the same file on demand, and
+  `AutoSaveEnabled`/`AutoResumeEnabled` control writing and loading separately.
+  RetroAchievements hardcore mode suppresses both. Settings schema version 11 adds
+  `AutoSaveEnabled`, `AutoSaveIntervalSeconds`, and `AutoResumeEnabled`.
+
 ## [1.16.1] - 2026-11-21
 
 ### Added

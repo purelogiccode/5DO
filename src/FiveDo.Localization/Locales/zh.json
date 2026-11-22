@@ -623,6 +623,13 @@
     "ui.retroachievements_points": "点数",
     "ui.retroachievements_progress": "进度",
     "ui.retroachievements_status": "状态",
+    "ui.autosave": "自动保存",
+    "ui.autosave_interval": "自动保存间隔",
+    "ui.delete_autosave": "删除自动保存",
+    "ui.minutes": "分钟",
+    "ui.resume_autosave": "恢复自动保存",
+    "ui.resume_the_newest_autosave_at_startup": "启动时恢复最新的自动保存",
+    "ui.write_a_rolling_autosave": "写入滚动自动保存",
     "ui.loading_game": "\u6b63\u5728\u52a0\u8f7d\u6e38\u620f...",
     "ui.please_wait": "\u8bf7\u7a0d\u5019...",
     "ui.tip.loading_game": "\u6b63\u5728\u52a0\u8f7d\u6e38\u620f\u3001BIOS \u548c\u6e32\u67d3\u5668\u3002\u7b2c\u4e00\u5e27\u663e\u793a\u540e\u6b64\u6d88\u606f\u5c06\u6d88\u5931\u3002"

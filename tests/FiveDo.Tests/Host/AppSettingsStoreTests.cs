@@ -1041,6 +1041,40 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void AutoSaveSettings_RoundtripAndClampTheInterval()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            AutoSaveEnabled = false,
+            AutoResumeEnabled = false,
+            AutoSaveIntervalSeconds = 60,
+        };
+
+        Assert.True(AppSettingsStore.Save(settings, path));
+        AppSettings loaded = AppSettingsStore.Load(path);
+        Assert.False(loaded.AutoSaveEnabled);
+        Assert.False(loaded.AutoResumeEnabled);
+        Assert.Equal(AppSettings.MinAutoSaveIntervalSeconds, loaded.AutoSaveIntervalSeconds);
+
+        File.WriteAllText(path, """{"SettingsVersion":11,"AutoSaveIntervalSeconds":5}""");
+        Assert.Equal(
+            AppSettings.MinAutoSaveIntervalSeconds,
+            AppSettingsStore.Load(path).AutoSaveIntervalSeconds);
+
+        File.WriteAllText(path, """{"SettingsVersion":11,"AutoSaveIntervalSeconds":99999}""");
+        Assert.Equal(
+            AppSettings.MaxAutoSaveIntervalSeconds,
+            AppSettingsStore.Load(path).AutoSaveIntervalSeconds);
+
+        File.WriteAllText(path, """{"SettingsVersion":11,"AutoSaveIntervalSeconds":0}""");
+        Assert.Equal(
+            AppSettings.DefaultAutoSaveIntervalSeconds,
+            AppSettingsStore.Load(path).AutoSaveIntervalSeconds);
+    }
+
+    [Fact]
     public void InspectAndMigrate_ReportAndRewriteTheSchemaVersion()
     {
         using var temp = new TemporaryDirectory();

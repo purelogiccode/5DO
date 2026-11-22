@@ -623,6 +623,13 @@
     "ui.retroachievements_points": "Punkte",
     "ui.retroachievements_progress": "Fortschritt",
     "ui.retroachievements_status": "Status",
+    "ui.autosave": "Auto-Speichern",
+    "ui.autosave_interval": "Auto-Speicher-Intervall",
+    "ui.delete_autosave": "Auto-Speicherung löschen",
+    "ui.minutes": "Minuten",
+    "ui.resume_autosave": "Auto-Speicherung fortsetzen",
+    "ui.resume_the_newest_autosave_at_startup": "Die neueste Auto-Speicherung beim Start fortsetzen",
+    "ui.write_a_rolling_autosave": "Eine rollierende Auto-Speicherung schreiben",
     "ui.loading_game": "Spiel wird geladen...",
     "ui.please_wait": "Bitte warten...",
     "ui.tip.loading_game": "Spiel, BIOS und Renderer werden geladen. Diese Meldung verschwindet, sobald das erste Bild angezeigt wird."

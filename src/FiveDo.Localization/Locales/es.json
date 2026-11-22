@@ -623,6 +623,13 @@
     "ui.retroachievements_points": "Puntos",
     "ui.retroachievements_progress": "Progreso",
     "ui.retroachievements_status": "Estado",
+    "ui.autosave": "Guardado automático",
+    "ui.autosave_interval": "Intervalo de guardado automático",
+    "ui.delete_autosave": "Eliminar guardado automático",
+    "ui.minutes": "minutos",
+    "ui.resume_autosave": "Reanudar guardado automático",
+    "ui.resume_the_newest_autosave_at_startup": "Reanudar el guardado automático más reciente al iniciar",
+    "ui.write_a_rolling_autosave": "Escribir un guardado automático rotativo",
     "ui.loading_game": "Cargando juego...",
     "ui.please_wait": "Espera un momento...",
     "ui.tip.loading_game": "Cargando el juego, la BIOS y el renderizador. Este mensaje desaparece cuando se muestra el primer fotograma."

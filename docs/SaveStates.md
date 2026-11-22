@@ -280,6 +280,8 @@ The desktop shell uses `SaveStateSlotManager` with a directory and slot count:
 - The default directory is `<LocalApplicationData>/5DO/states`.
 - The default slot count is 10; the shell clamps it to 1..100.
 - `SaveSlot` selects the current slot and is clamped to the count.
+- The rolling autosave lives beside the numbered files under `autosave/` and never
+  overwrites a manual slot (see section 10).
 
 ### Metadata sidecar
 
@@ -522,3 +524,43 @@ both CLI commands. The format is best-effort: a state from a modified FreeDOCore
 future 4DO structure revision is rejected with a clear size error rather than silently
 misread. 4DO input devices are host-side, so controller attachments do not transfer in
 either direction.
+
+---
+
+## 10. Rolling autosave and startup resume (UX-37)
+
+The desktop shell keeps one rolling autosave in its own directory:
+
+```text
+<save directory>/
+  autosave/
+    slot-00.tdos
+    slot-00.json
+    slot-00.png
+```
+
+- The autosave is written on **pause**, on **clean exit**, and at the configured
+  **interval** while emulation is running. It never overwrites a numbered manual slot.
+- `AutoSaveEnabled` (default on) controls writing. `AutoResumeEnabled` (default on)
+  controls whether the autosave is restored when the last disc reopens at startup.
+- `AutoSaveIntervalSeconds` defaults to **300** (5 minutes) and is clamped to
+  **60-3600** (1-60 minutes). The Settings dialog edits it in minutes.
+- A restore is refused when the state header records a different disc game ID or a
+  different effective BIOS MD5. The status line and OSD explain which value differs;
+  the machine is not touched. This prevents a renamed or re-burned disc from silently
+  loading the wrong save.
+- RetroAchievements hardcore mode suppresses both autosave writes and autosave loads,
+  matching the manual save-state restriction.
+- **Emulation > Resume Autosave** loads the autosave on demand (the startup prompt path
+  when auto-resume is disabled). **Emulation > Delete Autosave** removes only the
+  `autosave/` files.
+- The interval timer runs from the shell's one-second tick, so it does not add a timer
+  to the emulation thread. Writes use the same atomic state writer and metadata sidecar
+  as manual slots.
+
+`AutoSaveManagerTests` covers a save/relaunch round-trip, disc-hash refusal, BIOS-hash
+refusal, a corrupt autosave, rolling overwrite, and delete. `AppSettingsStoreTests`
+covers the settings round-trip and interval clamping.
+
+The settings schema version is **11**; older files load with autosave and auto-resume
+enabled and a 5-minute interval.

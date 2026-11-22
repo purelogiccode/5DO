@@ -33,10 +33,10 @@ public sealed class AppSettings
     /// frame delay, adaptive sync, and audio sync). Version 7 adds the online cover
     /// catalog options. Version 8 adds the UI locale. Version 9 adds the audio channel
     /// swap. Version 10 runs the one-shot legacy input-device override migration and
-    /// records the new default hotkeys. Older files load with the documented defaults
-    /// for new properties.
+    /// records the new default hotkeys. Version 11 adds the rolling autosave and startup
+    /// resume options. Older files load with the documented defaults for new properties.
     /// </remarks>
-    public const int CurrentVersion = 10;
+    public const int CurrentVersion = 11;
 
     /// <summary>
     /// Gets or sets the settings schema version. Zero or missing means a pre-versioned file
@@ -169,6 +169,47 @@ public sealed class AppSettings
 
     /// <summary>Gets or sets the number of save slots exposed by the shell.</summary>
     public int SaveSlotCount { get; set; } = 10;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the desktop writes a rolling autosave on
+    /// pause, on clean exit, and at <see cref="AutoSaveIntervalSeconds"/>.
+    /// </summary>
+    /// <remarks>
+    /// The autosave uses its own directory and never overwrites a numbered manual slot.
+    /// Writing is suppressed in RetroAchievements hardcore mode.
+    /// </remarks>
+    public bool AutoSaveEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets the autosave interval in seconds (60-3600).</summary>
+    public int AutoSaveIntervalSeconds { get; set; } = DefaultAutoSaveIntervalSeconds;
+
+    /// <summary>Gets or sets a value indicating whether the desktop restores the newest
+    /// valid autosave when it reopens the last disc at startup.</summary>
+    /// <remarks>
+    /// The restore is refused when the autosave records a different disc or BIOS hash.
+    /// Disabling this option leaves the autosave available through
+    /// <c>Emulation &gt; Resume Autosave</c>.
+    /// </remarks>
+    public bool AutoResumeEnabled { get; set; } = true;
+
+    /// <summary>Gets the default autosave interval in seconds.</summary>
+    public const int DefaultAutoSaveIntervalSeconds = 300;
+
+    /// <summary>Gets the smallest configurable autosave interval in seconds.</summary>
+    public const int MinAutoSaveIntervalSeconds = 60;
+
+    /// <summary>Gets the largest configurable autosave interval in seconds.</summary>
+    public const int MaxAutoSaveIntervalSeconds = 3600;
+
+    /// <summary>Gets the autosave interval clamped to the supported range.</summary>
+    /// <returns>The interval in seconds.</returns>
+    public int ResolveAutoSaveIntervalSeconds()
+    {
+        return Math.Clamp(
+            AutoSaveIntervalSeconds,
+            MinAutoSaveIntervalSeconds,
+            MaxAutoSaveIntervalSeconds);
+    }
 
     /// <summary>Gets folders scanned by the game library.</summary>
     public IList<string> LibraryFolders { get; set; } = new List<string>();

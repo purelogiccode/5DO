@@ -623,6 +623,13 @@
     "ui.retroachievements_points": "Points",
     "ui.retroachievements_progress": "Progression",
     "ui.retroachievements_status": "État",
+    "ui.autosave": "Sauvegarde automatique",
+    "ui.autosave_interval": "Intervalle de sauvegarde automatique",
+    "ui.delete_autosave": "Supprimer la sauvegarde automatique",
+    "ui.minutes": "minutes",
+    "ui.resume_autosave": "Reprendre la sauvegarde automatique",
+    "ui.resume_the_newest_autosave_at_startup": "Reprendre la sauvegarde automatique la plus récente au démarrage",
+    "ui.write_a_rolling_autosave": "Écrire une sauvegarde automatique glissante",
     "ui.loading_game": "Chargement du jeu...",
     "ui.please_wait": "Veuillez patienter...",
     "ui.tip.loading_game": "Chargement du jeu, du BIOS et du moteur de rendu. Ce message dispara\u00eet d\u00e8s que la premi\u00e8re image est affich\u00e9e."

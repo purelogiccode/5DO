@@ -623,6 +623,13 @@
     "ui.retroachievements_points": "Punti",
     "ui.retroachievements_progress": "Progresso",
     "ui.retroachievements_status": "Stato",
+    "ui.autosave": "Salvataggio automatico",
+    "ui.autosave_interval": "Intervallo di salvataggio automatico",
+    "ui.delete_autosave": "Elimina salvataggio automatico",
+    "ui.minutes": "minuti",
+    "ui.resume_autosave": "Riprendi salvataggio automatico",
+    "ui.resume_the_newest_autosave_at_startup": "Riprendi il salvataggio automatico più recente all'avvio",
+    "ui.write_a_rolling_autosave": "Scrivi un salvataggio automatico a rotazione",
     "ui.loading_game": "Caricamento del gioco...",
     "ui.please_wait": "Attendere...",
     "ui.tip.loading_game": "Caricamento del gioco, del BIOS e del renderer. Questo messaggio scompare quando viene visualizzato il primo fotogramma."

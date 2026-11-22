@@ -26,6 +26,17 @@ with its detached `.asc`, and its embedded `.upd_info`/`.zsync` target the versi
 1.16.1 image. Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
 [Compatibility.md](Compatibility.md) §10.8-10.9, and [KnownIssues.md](KnownIssues.md).
 
+**2026-11-21, UX-37 rolling autosave and auto-resume (post-1.16.1):** the desktop now
+keeps one autosave under `<save directory>/autosave/`, written on pause, clean exit, and
+a configurable 1-60 minute interval (default 5), without touching manual slots. On
+startup the last disc reopens and the autosave restores only when its disc game ID and
+effective BIOS MD5 match; a mismatch is refused with an actionable message.
+`AutoSaveEnabled` and `AutoResumeEnabled` are separate settings, **Emulation > Resume
+Autosave** and **Delete Autosave** expose the file on demand, and RetroAchievements
+hardcore suppresses writes and restores. Settings schema 11 adds the three fields.
+`AutoSaveManagerTests` covers the relaunch round-trip, disc/BIOS refusal, corrupt state,
+rolling overwrite, and delete; the suite is **2,586/2,586** and InspectCode is clean.
+
 **2026-11-21, v1.16.0 release:** the physical CD-DA and disc read-error release ships
 CD-DA playback from a host optical drive, guest-reported disc read errors instead of a
 faulted core, and guarded screenshot/thumbnail writes. `PhysicalDiscSource` implements

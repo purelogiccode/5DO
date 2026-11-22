@@ -207,6 +207,10 @@ public static class AppSettingsStore
                 settings.CdAudioVolume = 0.8f;
             }
 
+            settings.AutoSaveIntervalSeconds = settings.AutoSaveIntervalSeconds <= 0
+                ? AppSettings.DefaultAutoSaveIntervalSeconds
+                : settings.ResolveAutoSaveIntervalSeconds();
+
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.GameProfiles ??= new Dictionary<string, GameProfile>(StringComparer.Ordinal);

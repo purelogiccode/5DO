@@ -102,6 +102,9 @@ every serialized property in `AppSettings`.
 | `CheatsDirectory` | string | `""` | Per-game cheat JSON directory; empty means `<LocalApplicationData>/5DO/cheats`. |
 | `SaveSlot` | int | `0` | Selected zero-based slot. Clamped to the slot count on load. |
 | `SaveSlotCount` | int | `10` | Number of slots. Clamped to 1..100 on load. |
+| `AutoSaveEnabled` | bool | `true` | Write the rolling autosave on pause, clean exit, and the configured interval. It never overwrites a manual slot and is suppressed in RetroAchievements hardcore mode. |
+| `AutoSaveIntervalSeconds` | int | `300` | Interval autosave period in seconds, clamped to 60..3600 (1-60 minutes). Zero or missing uses 300. |
+| `AutoResumeEnabled` | bool | `true` | Restore the autosave when the last disc reopens at startup, only when its disc and BIOS hashes match. Disable to leave it under **Emulation > Resume Autosave**. |
 | `LibraryFolders` | string[] | `[]` | Folders scanned by the game library. |
 | `LibraryCardSize` | double | `176` | Game-card width in device-independent pixels for the grid library (128-384). Invalid values fall back to the default. |
 | `LibraryMetadataPath` | string | `""` | Optional offline metadata JSON; empty means `<LocalApplicationData>/5DO/library-metadata.json`. |
@@ -289,6 +292,9 @@ player-1 defaults. See section 3 for the full input structure.
   "CheatsDirectory": "",
   "SaveSlot": 0,
   "SaveSlotCount": 10,
+  "AutoSaveEnabled": true,
+  "AutoSaveIntervalSeconds": 300,
+  "AutoResumeEnabled": true,
   "LibraryFolders": [
     "C:\\3DO"
   ],
@@ -856,6 +862,19 @@ Save slots:
   metadata only and may be missing.
 - Writes are atomic; a failed load does not change the current slot index.
 - See [`SaveStates.md`](SaveStates.md) for the format.
+
+Autosave:
+
+- Files: `autosave/slot-00.tdos`, `slot-00.json`, `slot-00.png`; one rolling copy
+  beside the numbered slots.
+- Written on pause, clean exit, and the interval (`AutoSaveIntervalSeconds`, 60..3600,
+  default 300).
+- `AutoResumeEnabled` restores it after the last disc reopens, but only when the state's
+  disc game ID and effective BIOS MD5 match the current machine. A mismatch is refused
+  with an actionable message and the machine is untouched.
+- RetroAchievements hardcore mode suppresses autosave writes and restores.
+- Settings schema version 11 adds `AutoSaveEnabled`, `AutoSaveIntervalSeconds`, and
+  `AutoResumeEnabled`; older files load with the defaults shown above.
 
 ---
 

@@ -66,6 +66,10 @@ public partial class MainWindow : Window, IDisposable
     private readonly DispatcherTimer _logTimer;
     private InputManager _input;
     private readonly SaveStateSlotManager _slots;
+    private readonly AutoSaveManager _autoSave;
+    private DateTimeOffset _lastAutoSaveUtc;
+    private long _lastAutoSaveFrame = -1;
+    private bool _gameSessionActive;
     private InputRecorder? _inputRecorder;
     private string? _inputRecordingPath;
     private MovieRecorder? _movieRecorder;
@@ -259,6 +263,8 @@ public partial class MainWindow : Window, IDisposable
         _settings.SaveSlotCount = Math.Clamp(_settings.SaveSlotCount, 1, 100);
         _slots = new SaveStateSlotManager(_settings.SaveDirectory, _settings.SaveSlotCount);
         _slots.Select(Math.Clamp(_settings.SaveSlot, 0, _slots.SlotCount - 1));
+        _autoSave = new AutoSaveManager(_settings.SaveDirectory);
+        _lastAutoSaveUtc = DateTimeOffset.UtcNow;
         _gamepad = PlatformGamepadBackend.TryCreate(_settings.Input);
         _input = new InputManager(_settings.Input, _gamepad);
         _settings.ApplyInputDevices(_input);
@@ -327,6 +333,8 @@ public partial class MainWindow : Window, IDisposable
                 _playtime.Flush();
                 _lastPlaytimeFlushUtc = DateTime.UtcNow;
             }
+
+            TryWriteIntervalAutoSave();
         };
         _logTimer.Start();
         _movieTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -362,6 +370,7 @@ public partial class MainWindow : Window, IDisposable
         };
         Opened += OnOpened;
         UpdateSlotText();
+        UpdateAutoSaveMenu();
         Serilog.Log.Information("Startup timing: MainWindow constructor completed at {ElapsedMs} ms.", _startupClock.ElapsedMilliseconds);
     }
 
@@ -619,7 +628,23 @@ public partial class MainWindow : Window, IDisposable
                     return;
                 }
 
-                OpenDiscPath(discPath, autoStart: startupDisc is not null);
+                if (!OpenDiscPath(discPath, autoStart: false))
+                {
+                    return;
+                }
+
+                var resumed = _settings.AutoResumeEnabled
+                    && _autoSave.Exists
+                    && TryResumeAutoSave(announce: true);
+                if (resumed || startupDisc is not null)
+                {
+                    StartEmulation(showGameView: true);
+                }
+                else if (!_settings.AutoResumeEnabled && _autoSave.Exists)
+                {
+                    StatusText.Text = "Autosave available: Emulation > Resume Autosave.";
+                    ShowOsd("Autosave available: Emulation > Resume Autosave.");
+                }
             }
         }
         catch (Exception exception) when (exception is IOException
@@ -1409,6 +1434,9 @@ public partial class MainWindow : Window, IDisposable
 
         try
         {
+            // Replacing a disc ends the previous session. The new disc only becomes
+            // autosave-eligible when it starts or restores a state.
+            _gameSessionActive = false;
             if (!preservePlaylist)
             {
                 _playlist = null;
@@ -1672,6 +1700,9 @@ public partial class MainWindow : Window, IDisposable
 
             var settingsSaved = AppSettingsStore.Save(_settings);
             UpdateRecentMenu();
+            _lastAutoSaveFrame = -1;
+            _lastAutoSaveUtc = DateTimeOffset.UtcNow;
+            UpdateAutoSaveMenu();
             UpdateEmulationHeader();
             var biosText = string.IsNullOrWhiteSpace(_biosMd5)
                 ? "no BIOS"
@@ -1802,6 +1833,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        _gameSessionActive = true;
         if (!_running)
         {
             if (showGameView && !_runner.IsRunning)
@@ -1810,6 +1842,7 @@ public partial class MainWindow : Window, IDisposable
             }
 
             _running = true;
+            _lastAutoSaveUtc = DateTimeOffset.UtcNow;
             _lastAudioUnderruns = _audio?.UnderrunBuffers ?? 0;
             _lastAudioDropped = _audio?.SamplesDropped ?? 0;
             if (_runner.IsRunning)
@@ -1865,6 +1898,7 @@ public partial class MainWindow : Window, IDisposable
             _playtime.Stop();
             RefreshLibraryDecorations();
             FlushNvram();
+            WriteAutoSave("pause");
             _logger.ForCategory(LogCategory.Host).Information("Emulation paused.");
         }
 
@@ -1905,6 +1939,8 @@ public partial class MainWindow : Window, IDisposable
                 "Emulation stop timed out; the machine was not reset.");
             return;
         }
+
+        _gameSessionActive = false;
 
         _playtime.Stop();
         RefreshLibraryDecorations();
@@ -2131,6 +2167,221 @@ public partial class MainWindow : Window, IDisposable
             ShowOsd($"State loaded: slot {slot + 1}", OsdSeverity.Success);
             _logger.ForCategory(LogCategory.State).Information("State loaded from slot {Slot}.", slot + 1);
         }
+    }
+
+    private void OnResumeAutoSave(object? sender, RoutedEventArgs e)
+    {
+        if (TryResumeAutoSave(announce: true) && !_running)
+        {
+            StartEmulation(showGameView: true);
+        }
+    }
+
+    private void OnDeleteAutoSave(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var removed = _autoSave.Delete();
+            _lastAutoSaveFrame = -1;
+            StatusText.Text = removed ? "Autosave deleted." : "There is no autosave to delete.";
+            ShowOsd(StatusText.Text, removed ? OsdSeverity.Success : OsdSeverity.Warning);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            StatusText.Text = $"The autosave could not be deleted: {exception.Message}";
+            ShowOsd(StatusText.Text, OsdSeverity.Warning);
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                exception,
+                "The autosave could not be deleted.");
+        }
+
+        UpdateAutoSaveMenu();
+    }
+
+    /// <summary>
+    /// Loads the rolling autosave when its disc and BIOS hashes match the current machine.
+    /// </summary>
+    /// <param name="announce">Whether to report success or refusal in the status line and OSD.</param>
+    /// <returns><see langword="true"/> when a state was loaded.</returns>
+    private bool TryResumeAutoSave(bool announce)
+    {
+        if (_machine is null || _runner is null)
+        {
+            if (announce)
+            {
+                StatusText.Text = "Open a disc before resuming an autosave.";
+            }
+
+            return false;
+        }
+
+        if (IsRetroAchievementsHardcore)
+        {
+            if (announce)
+            {
+                StatusText.Text = "Autosave restore is disabled in RetroAchievements hardcore mode.";
+                ShowOsd(StatusText.Text, OsdSeverity.Warning);
+            }
+
+            return false;
+        }
+
+        if (!_autoSave.Exists)
+        {
+            if (announce)
+            {
+                StatusText.Text = "No autosave is available.";
+            }
+
+            return false;
+        }
+
+        var result = new AutoSaveLoadResult(false, "The autosave could not be restored.");
+        try
+        {
+            _runner.Invoke(() =>
+            {
+                result = _autoSave.TryLoad(_machine, _gameId, _biosMd5, out byte[]? progress);
+                if (result.Loaded)
+                {
+                    _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
+                    if (progress is null || _achievements?.ImportProgress(progress) != true)
+                    {
+                        _achievements?.ResetRuntime();
+                    }
+                }
+            });
+        }
+        catch (InvalidOperationException exception)
+        {
+            if (announce)
+            {
+                StatusText.Text = $"The autosave could not be restored: {exception.Message}";
+                ShowOsd(StatusText.Text, OsdSeverity.Warning);
+            }
+
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                exception,
+                "The autosave could not be restored because the core is stopping.");
+            return false;
+        }
+
+        if (!result.Loaded)
+        {
+            if (announce)
+            {
+                StatusText.Text = result.Message;
+                ShowOsd(StatusText.Text, OsdSeverity.Warning);
+            }
+
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                "Autosave restore refused: {Reason}",
+                result.Message);
+            return false;
+        }
+
+        _lastAutoSaveFrame = _machine.FramesExecuted;
+        _lastAutoSaveUtc = DateTimeOffset.UtcNow;
+        RefreshOverscanSettings();
+        _autoCrop.Reset();
+        UpdateAutoSaveMenu();
+        if (announce)
+        {
+            StatusText.Text = result.Message;
+            ShowOsd(
+                result.Message,
+                _machine.StateWarnings.Count == 0 ? OsdSeverity.Success : OsdSeverity.Warning);
+        }
+
+        _logger.ForCategory(LogCategory.State).Information(
+            "Autosave restored at frame {Frame} for {Game}.",
+            _machine.FramesExecuted,
+            _gameName);
+        return true;
+    }
+
+    private void TryWriteIntervalAutoSave()
+    {
+        if (!_settings.AutoSaveEnabled
+            || !_running
+            || _machine is null
+            || _disc is null
+            || IsRetroAchievementsHardcore
+            || _movieRecorder is not null
+            || _moviePlaybackSource is not null)
+        {
+            return;
+        }
+
+        if (DateTimeOffset.UtcNow - _lastAutoSaveUtc
+            < TimeSpan.FromSeconds(_settings.ResolveAutoSaveIntervalSeconds()))
+        {
+            return;
+        }
+
+        WriteAutoSave("interval");
+    }
+
+    /// <summary>
+    /// Writes the rolling autosave when the feature is enabled and a disc is loaded.
+    /// </summary>
+    /// <param name="reason">Short reason used in the log: pause, exit, or interval.</param>
+    private void WriteAutoSave(string reason)
+    {
+        if (!_settings.AutoSaveEnabled
+            || !_gameSessionActive
+            || _machine is null
+            || _disc is null
+            || _runner is null
+            || IsRetroAchievementsHardcore
+            || _movieRecorder is not null
+            || _moviePlaybackSource is not null)
+        {
+            return;
+        }
+
+        if (_machine.FramesExecuted == _lastAutoSaveFrame && _autoSave.Exists)
+        {
+            return;
+        }
+
+        try
+        {
+            byte[]? progress = _achievements?.ExportProgress();
+            _runner.Invoke(() => _autoSave.Save(_machine, _gameId, _gameName, progress));
+            _lastAutoSaveFrame = _machine.FramesExecuted;
+            _lastAutoSaveUtc = DateTimeOffset.UtcNow;
+            UpdateAutoSaveMenu();
+            _logger.ForCategory(LogCategory.State).Information(
+                "Autosave written on {Reason} at frame {Frame} for {Game}.",
+                reason,
+                _lastAutoSaveFrame,
+                _gameName);
+        }
+        catch (Exception exception) when (exception is InvalidStateException
+            or IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or InvalidOperationException)
+        {
+            // The autosave is a convenience copy. A failed write must never block a pause or exit.
+            _lastAutoSaveUtc = DateTimeOffset.UtcNow;
+            _logger.ForCategory(LogCategory.State).WithoutBugReport().Warning(
+                exception,
+                "Autosave failed on {Reason}.",
+                reason);
+        }
+    }
+
+    private void UpdateAutoSaveMenu()
+    {
+        var available = _autoSave.Exists;
+        ResumeAutoSaveMenuItem.IsEnabled = available
+            && _machine is not null
+            && !IsRetroAchievementsHardcore;
+        DeleteAutoSaveMenuItem.IsEnabled = available;
     }
 
     private void OnPreviousSlot(object? sender, RoutedEventArgs e)
@@ -4778,6 +5029,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         ApplyRetroAchievementsSettings(_settings.CreateRetroAchievementsSettings(), save: false);
+        UpdateAutoSaveMenu();
 
         if (!Localizer.TryUse(_settings.Language))
         {
@@ -5389,6 +5641,7 @@ public partial class MainWindow : Window, IDisposable
 
         _settings.ApplyRetroAchievementsSettings(settings);
         _achievements?.ApplySettings(settings);
+        UpdateAutoSaveMenu();
 
         if (save && !AppSettingsStore.Save(_settings))
         {
@@ -7302,6 +7555,7 @@ public partial class MainWindow : Window, IDisposable
         _coverCts?.Dispose();
         _coverCts = null;
         _coverService.Dispose();
+        WriteAutoSave("exit");
         _runner?.Dispose();
         _runner = null;
         _achievements?.Dispose();

@@ -292,7 +292,7 @@
 
             <TabItem Header="Emulation" ToolTip.Tip="Per-game fixes, ARM, CLIO, CEL, and CD timing, CD speed, CPU clock, random seed, Opera DIPIR/soft reset, NVRAM storage, high-resolution mode, rewind/fast-forward, and overrides.">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                <Grid ColumnDefinitions="170,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
                     <CheckBox x:Name="AutoFixesCheck" Grid.Row="0" Grid.Column="1"
                               Content="Apply the 4DO per-game fixes automatically"
                               ToolTip.Tip="Apply the compatibility fix mask from the built-in game database when a disc opens." />
@@ -478,6 +478,21 @@
                         <Button x:Name="PointerResetButton" Content="Reset" Click="OnPointerResetClick"
                                 ToolTip.Tip="Restore scale 1.0 and zero offsets." />
                     </StackPanel>
+                    <TextBlock Grid.Row="39" Grid.Column="0" Text="Autosave" VerticalAlignment="Center" Margin="0,12,0,0"
+                               ToolTip.Tip="A rolling autosave written on pause, clean exit, and the configured interval. Numbered manual slots are never overwritten." />
+                    <CheckBox x:Name="AutoSaveCheck" Grid.Row="39" Grid.Column="1" Margin="0,12,0,0"
+                              Content="Write a rolling autosave"
+                              ToolTip.Tip="The autosave lives in the autosave subfolder of the save-state directory. Writing is disabled in RetroAchievements hardcore mode." />
+                    <TextBlock Grid.Row="40" Grid.Column="0" Text="Autosave interval" VerticalAlignment="Center" Margin="0,8,0,0"
+                               ToolTip.Tip="Minutes between interval autosaves (1-60). Pause and clean exit always write one." />
+                    <StackPanel Grid.Row="40" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                        <TextBox x:Name="AutoSaveIntervalBox" Width="64"
+                                 ToolTip.Tip="Autosave interval in minutes (1-60)." />
+                        <TextBlock Text="minutes" VerticalAlignment="Center" Opacity="0.7" />
+                    </StackPanel>
+                    <CheckBox x:Name="AutoResumeCheck" Grid.Row="41" Grid.Column="1" Margin="0,8,0,0"
+                              Content="Resume the newest autosave at startup"
+                              ToolTip.Tip="After reopening the last disc, load the autosave only when its disc and BIOS hashes match. Disable to leave it available under Emulation > Resume Autosave." />
                 </Grid>
                 </ScrollViewer>
             </TabItem>

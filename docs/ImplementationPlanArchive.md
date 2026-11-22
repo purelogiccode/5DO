@@ -880,6 +880,12 @@ remains unsigned.
 
 ## 14. Release history (v1.9.1 - v1.16.1)
 
+- **UX-37 (2026-11-21, post-1.16.1):** rolling autosave and auto-resume - a dedicated
+  `states/autosave/` copy is written on pause, clean exit, and a configurable 1-60 minute
+  interval; startup restores it only when the disc game ID and effective BIOS MD5 match,
+  and manual slots are never touched. `AutoSaveEnabled`/`AutoResumeEnabled` are separate,
+  hardcore mode suppresses both, and **Emulation > Resume/Delete Autosave** expose the
+  file on demand. Suite 2,586/2,586.
 - **v1.16.1 (2026-11-21):** optical verification and CD-DA diagnostics patch - adds
   `disc audio` for extracting Red Book tracks to WAV from an image or a host drive,
   makes `disc verify` print progress and honor mixed-mode track totals, and records the

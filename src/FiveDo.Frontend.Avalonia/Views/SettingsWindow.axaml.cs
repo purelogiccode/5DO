@@ -410,6 +410,10 @@ public partial class SettingsWindow : Window
         OperaSoftResetCheck.IsChecked = settings.OperaSoftReset;
         SwiHleCheck.IsChecked = settings.SwiHle;
         PauseOnFocusLossCheck.IsChecked = settings.PauseOnFocusLoss;
+        AutoSaveCheck.IsChecked = settings.AutoSaveEnabled;
+        AutoSaveIntervalBox.Text = Math.Round(settings.ResolveAutoSaveIntervalSeconds() / 60.0)
+            .ToString(CultureInfo.InvariantCulture);
+        AutoResumeCheck.IsChecked = settings.AutoResumeEnabled;
         RewindCheck.IsChecked = settings.RewindEnabled;
         RewindSecondsBox.Text = settings.RewindSeconds.ToString(CultureInfo.InvariantCulture);
         FastForwardBox.Text = settings.FastForwardMultiplier.ToString(CultureInfo.InvariantCulture);
@@ -1333,6 +1337,30 @@ public partial class SettingsWindow : Window
 
         settings.RewindEnabled = RewindCheck.IsChecked == true;
         settings.PauseOnFocusLoss = PauseOnFocusLossCheck.IsChecked == true;
+        settings.AutoSaveEnabled = AutoSaveCheck.IsChecked == true;
+        settings.AutoResumeEnabled = AutoResumeCheck.IsChecked == true;
+        var autoSaveMinutesText = AutoSaveIntervalBox.Text?.Trim();
+        if (string.IsNullOrEmpty(autoSaveMinutesText))
+        {
+            settings.AutoSaveIntervalSeconds = AppSettings.DefaultAutoSaveIntervalSeconds;
+        }
+        else if (!int.TryParse(
+                     autoSaveMinutesText,
+                     NumberStyles.Integer,
+                     CultureInfo.InvariantCulture,
+                     out var autoSaveMinutes)
+                 || autoSaveMinutes < AppSettings.MinAutoSaveIntervalSeconds / 60
+                 || autoSaveMinutes > AppSettings.MaxAutoSaveIntervalSeconds / 60)
+        {
+            throw new FormatException(
+                $"The autosave interval must be between {AppSettings.MinAutoSaveIntervalSeconds / 60} "
+                + $"and {AppSettings.MaxAutoSaveIntervalSeconds / 60} minutes.");
+        }
+        else
+        {
+            settings.AutoSaveIntervalSeconds = autoSaveMinutes * 60;
+        }
+
         var rewindSecondsText = RewindSecondsBox.Text?.Trim();
         if (string.IsNullOrEmpty(rewindSecondsText))
         {

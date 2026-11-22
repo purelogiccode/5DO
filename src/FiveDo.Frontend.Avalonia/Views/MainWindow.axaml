@@ -92,6 +92,12 @@
                           ToolTip.Tip="Select the next save slot." />
                 <MenuItem Header="Save Slots..." Click="OnSaveSlotsAsync"
                           ToolTip.Tip="Open the save-slot manager with previews." />
+                <MenuItem x:Name="ResumeAutoSaveMenuItem" Header="Resume Autosave"
+                          Click="OnResumeAutoSave" IsEnabled="False"
+                          ToolTip.Tip="Restore the rolling autosave for the current disc when its disc and BIOS match." />
+                <MenuItem x:Name="DeleteAutoSaveMenuItem" Header="Delete Autosave"
+                          Click="OnDeleteAutoSave" IsEnabled="False"
+                          ToolTip.Tip="Remove the rolling autosave without touching numbered slots." />
                 <MenuItem Header="Cheats..." Click="OnCheatsAsync"
                           ToolTip.Tip="Enable, add, or edit per-game RAM cheats." />
                 <Separator />

@@ -549,6 +549,17 @@ atomic. Large sections are Brotli-compressed, so a state is typically 0.6-2.0 MB
 (the uncompressed payload is ~10 MB for the stock layout). Version-1 states still load;
 see [`SaveStates.md`](SaveStates.md) for the format and limits.
 
+**Autosave and resume.** The shell also keeps one rolling autosave under
+`states/autosave/`. It is written when emulation pauses, when the app exits cleanly, and
+every five minutes while a game is running. Numbered manual slots are never touched.
+**Settings > Emulation > Autosave** enables or disables writing, sets the interval
+(1-60 minutes), and controls **Resume the newest autosave at startup**. On launch, the
+last disc is reopened and the autosave is restored only when its disc game ID and
+effective BIOS MD5 match; a renamed, re-burned, or different disc is refused with an
+actionable message instead of loading the wrong save. **Emulation > Resume Autosave**
+loads it on demand, and **Emulation > Delete Autosave** removes only the autosave files.
+RetroAchievements hardcore mode suppresses both autosave writes and restores.
+
 **Screenshot** writes a PNG named `<game>-<timestamp>-f<frames>.png` plus a
 `<png>.json` sidecar with the renderer, filter, region, crop, border, field handling,
 and timing profile used for the capture. **File > Screenshot Gallery...** lists
