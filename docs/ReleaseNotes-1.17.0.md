@@ -106,14 +106,16 @@ SHA-256.
 - CI covers Windows, Linux, and macOS, the NativeAOT apphosts, trimmed publishes, Linux
   packages, and all five bundles.
 - Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/PENDING> passed the five bundle
+  <https://github.com/purelogiccode/5DO/actions/runs/44982714233> passed the five bundle
   jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
   downloaded bundles match `SHA256SUMS.txt`.
 - Windows x64 bundle: 1.17.0, `selftest` 15/15, `FRONTEND SMOKE OK 1.17.0`, and a ZIP/7z
   disc opens and verifies.
 - Linux x64 AppImage: FUSE reports 1.17.0, writes `FRONTEND SMOKE OK 1.17.0`, the
-  detached `.asc` verifies, and the embedded `.upd_info`/`.zsync` target the versioned
-  image.
+  detached `.asc` verifies, the embedded `.upd_info`/`.zsync` target the versioned
+  image, and `--appimage-extract-and-run` also reports 1.17.0.
+- Linux x64 tarball: CLI reports 1.17.0, `selftest` passes, and a 7z CUE+BIN image lists
+  two tracks and verifies 4/4 sectors with hash `0x1b0986aeb7092e20`.
 
 ## Known issues
 

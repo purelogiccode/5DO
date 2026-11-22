@@ -45,7 +45,7 @@ files, XML documentation files, or any FreeDO/4DO/Opera reference binary.
       are carried forward. `packaging/package-bundle.ps1` copies `LICENSE` into each
       bundle.
 - [x] `THIRD-PARTY-NOTICES.md` covers FreeDO, 4DO, Opera/libopera, xBR-lv2, HQx,
-      CHDSharp, Avalonia, CommunityToolkit.Mvvm,
+      CHDSharp, SharpCompress, Avalonia, CommunityToolkit.Mvvm,
       Microsoft.Extensions.*, System.CommandLine, Silk.NET/OpenAL/Vulkan,
       XenoAtom.ShaderCompiler.Build, xUnit, BenchmarkDotNet, the .NET 11 runtime,
       the bundled OpenAL Soft 1.23.1 runtime, and the Windows app-local Microsoft
@@ -136,7 +136,7 @@ attribution portion.
 |---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, HQx, and NuGet notices shipped; .NET 11 is embedded | 2026-11-20 |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, SharpCompress, HQx, and NuGet notices shipped; .NET 11 is embedded | 2026-11-22 |
 | Bundle layout | Self-contained single-file CLI + desktop app; no separate runtime folder; Windows MSVC runtime app-local | 2026-11-20 |
 
 The 2026-11-20 rows update the bundle facts for REL-11; the distribution and licence

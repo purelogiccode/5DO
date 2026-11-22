@@ -888,7 +888,7 @@ remains unsigned.
   to 1532, disabled mode left the file unchanged, disc/BIOS mismatches refused, and the
   60-second interval wrote 3655. Theme Park extracted, zipped ISO, and 7z CUE+BIN all
   produced frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256. Suite
-  2,595/2,595. Release run <https://github.com/purelogiccode/5DO/actions/runs/PENDING>.
+  2,595/2,595. Release run <https://github.com/purelogiccode/5DO/actions/runs/44982714233>.
 - **SYS-27 (2026-11-21, post-1.16.1):** ZIP/7z disc containers - `ArchiveDiscImage`
   opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry through
   SharpCompress, with in-memory decompression, relative CUE paths, and clear refusal of

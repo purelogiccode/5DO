@@ -77,11 +77,13 @@ the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256
 - 2,595/2,595 tests, build 0 warnings/0 errors, `dotnet format`, `jb inspectcode`, and
   `mkdocs build --strict` clean.
 - Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/PENDING>. The five downloaded
+  <https://github.com/purelogiccode/5DO/actions/runs/44982714233>. The five downloaded
   bundles match `SHA256SUMS.txt`.
 - Windows x64 bundle reports 1.17.0, `selftest` 15/15, and
   `FRONTEND SMOKE OK 1.17.0`; a ZIP/7z disc opens and verifies.
-- Linux x64 AppImage/tarball smoke, detached `.asc`, and versioned `.zsync`/`.upd_info`.
+- Linux x64 AppImage smoke through FUSE and `--appimage-extract-and-run`, detached
+  `.asc`, versioned `.zsync`/`.upd_info`, and the tarball CLI `selftest` plus 7z
+  CUE+BIN verification.
 
 ## Known issues
 

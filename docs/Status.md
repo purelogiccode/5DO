@@ -16,7 +16,16 @@ from the extracted ISO, a ZIP of that ISO, and a 7z CUE+BIN set produced the sam
 are clean. The local win-x64 release candidate (`5do-1.17.0-win-x64.zip`, SHA-256
 `d056dacd9a02860fe2cff3494570038392aadcdc744afa1c07ddf08d7d8599f1`) reports 1.17.0,
 passes `selftest` 15/15, writes `FRONTEND SMOKE OK 1.17.0`, opens ZIP/7z images, and
-includes the SharpCompress notice with no PDB/XML files. Evidence:
+includes the SharpCompress notice with no PDB/XML files. Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/44982714233> passed all five bundle
+jobs, both AppImage/Flatpak package jobs, signing, and the publish job. The five
+downloaded bundles match `SHA256SUMS.txt`; the published win-x64 bundle reports 1.17.0,
+`selftest` 15/15, `FRONTEND SMOKE OK 1.17.0`, and verifies a 7z CUE+BIN image. The x64
+AppImage passes FUSE and `--appimage-extract-and-run`, reports 1.17.0, writes
+`FRONTEND SMOKE OK 1.17.0`, verifies with its detached `.asc`, and its embedded
+`.upd_info`/`.zsync` target the versioned 1.17.0 image. The Linux x64 tarball CLI reports
+1.17.0, passes `selftest`, and verifies the 7z CUE+BIN image. Evidence:
 [ReleaseNotes-1.17.0.md](ReleaseNotes-1.17.0.md),
 [SaveStates.md](SaveStates.md) §10, [Compatibility.md](Compatibility.md) §2, and
 [KnownIssues.md](KnownIssues.md).

@@ -70,12 +70,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       `d056dacd9a02860fe2cff3494570038392aadcdc744afa1c07ddf08d7d8599f1`;
       extracted/ZIP/7z Theme Park runs all matched `0x110E7DC5` at PC `0x0000596C`.
       A synthetic 7z CUE+BIN verified 4/4 sectors with hash `0x1b0986aeb7092e20`.
-- [ ] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
+- [x] Tagged release publishes the five bundles, both AppImages/`.zsync`, both Flatpaks,
       and the signed Linux assets; the five bundles match `SHA256SUMS.txt`, and the
       win-x64 CLI `selftest` and frontend smoke report `FRONTEND SMOKE OK 1.17.0`.
-- [ ] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
+      Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release
+      run <https://github.com/purelogiccode/5DO/actions/runs/44982714233>. The published
+      win-x64 bundle reports 1.17.0, `selftest` 15/15, writes
+      `FRONTEND SMOKE OK 1.17.0`, and verifies a 7z CUE+BIN image.
+- [x] The published x64 AppImage runs through FUSE and `--appimage-extract-and-run`,
       passes the frontend smoke, resolves the 1.17.0 `.zsync`, and its detached `.asc`
-      verifies with the release key.
+      verifies with the release key. The Linux x64 tarball CLI reports 1.17.0, passes
+      `selftest`, and verifies the 7z CUE+BIN image.
 
 ## 1.16.1 optical verification and CD-DA diagnostics gate
 
