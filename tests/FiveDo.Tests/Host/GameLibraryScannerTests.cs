@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using FiveDo.Host;
 
@@ -34,6 +35,40 @@ public sealed class GameLibraryScannerTests
         Assert.Contains(entries, entry => entry.Path.EndsWith("broken.iso", StringComparison.OrdinalIgnoreCase) && entry.Error.Length > 0);
         Assert.Contains(entries, entry => entry.Path.EndsWith("nested.bin", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(entries, entry => entry.Path.EndsWith("notes.txt", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Scan_FindsZipAndSevenZipContainers()
+    {
+        using var directory = new TempDirectory();
+        var zipPath = Path.Combine(directory.Path, "game.zip");
+        using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+        {
+            ZipArchiveEntry entry = archive.CreateEntry("game.iso");
+            using Stream stream = entry.Open();
+            stream.Write(BuildIso(3));
+        }
+
+        var sevenZipPath = Path.Combine(directory.Path, "game.7z");
+        File.Copy(
+            Path.Combine(AppContext.BaseDirectory, "TestData", "archive-cue.7z"),
+            sevenZipPath);
+
+        IReadOnlyList<GameLibraryEntry> entries = GameLibraryScanner.Scan([directory.Path]);
+
+        Assert.Equal(2, entries.Count);
+        GameLibraryEntry zip = Assert.Single(
+            entries,
+            entry => entry.Path.EndsWith("game.zip", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("ZIP", zip.Format);
+        Assert.Equal(3, zip.SectorCount);
+        Assert.Empty(zip.Error);
+        GameLibraryEntry sevenZip = Assert.Single(
+            entries,
+            entry => entry.Path.EndsWith("game.7z", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("7Z", sevenZip.Format);
+        Assert.Equal(4, sevenZip.SectorCount);
+        Assert.Empty(sevenZip.Error);
     }
 
     [Fact]
@@ -334,13 +369,18 @@ public sealed class GameLibraryScannerTests
 
     private static void WriteIso(string path, int sectors)
     {
+        File.WriteAllBytes(path, BuildIso(sectors));
+    }
+
+    private static byte[] BuildIso(int sectors)
+    {
         var data = new byte[2048 * sectors];
         for (var i = 0; i < data.Length; i++)
         {
             data[i] = (byte)(0xA5 ^ (i & 0xFF));
         }
 
-        File.WriteAllBytes(path, data);
+        return data;
     }
 
     private sealed class TempDirectory : IDisposable

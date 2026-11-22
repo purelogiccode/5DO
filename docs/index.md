@@ -155,8 +155,9 @@
   color on the GPU presenters, and an emulation-health badge.
 - **Linux artifacts are signed:** keyring, per-artifact `.asc`, and a signed checksum
   manifest; CI builds and installs both `.deb`/`.rpm` sets and both Flatpak bundles.
-- Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI, and
-  Nero NRG. The CDI and NRG readers accept cooked 2048-byte, 2336-byte Mode 2, raw
+- Disc containers: ISO, BIN, CUE+BIN, CHD (including parent/child), DiscJuggler CDI,
+  Nero NRG, and ISO/BIN/CUE+BIN inside ZIP/7z. The CDI and NRG readers accept cooked
+  2048-byte, 2336-byte Mode 2, raw
   2352-byte, and the 2353/2368/2448/2449-byte raw variants, and expose the same track
   table and game ID as the equivalent ISO/CHD.
 - RetroAchievements: managed rcheevos evaluation, 3DO disc identification, measured

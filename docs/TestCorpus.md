@@ -68,7 +68,7 @@ The full local collection is inventoried in section 1.1bh: **1,371 images collap
 5DO/4DO/Phoenix comparison. Use `artifacts/corpus/unique-testset.txt` for compatibility
 runs; the five-title list above remains the differential corpus.
 
-ISO/BIN/CUE/CHD/CDI/NRG parity testing uses locally generated fixtures in the unit
+ISO/BIN/CUE/CHD/CDI/NRG and ZIP/7z parity testing uses locally generated fixtures in the unit
 suite; a legally obtained retail image in each container can extend the manual corpus.
 Do not convert and commit a retail disc.
 

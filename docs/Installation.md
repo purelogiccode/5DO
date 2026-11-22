@@ -8,7 +8,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 | Requirement | Details |
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
-| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, or Nero NRG. |
+| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, Nero NRG, or ISO/BIN/CUE+BIN inside ZIP/7z. |
 | .NET | The published bundles are **self-contained**: the .NET 11 runtime is embedded, so no separate runtime install is required. The .NET 11 SDK is only needed for source builds. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
@@ -75,7 +75,7 @@ dotnet run --project src/FiveDo.Cli -- --help
 2. Choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`. If 5DO already
    finds a BIOS in one of the [default folders](#bios-management), the guide offers a
    one-click **Use this BIOS** button instead.
-3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, or NRG image.
+3. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP, or 7z image.
 4. Press **Play**.
 5. Configure controllers in **Input** and video/audio in **Settings** if needed.
 

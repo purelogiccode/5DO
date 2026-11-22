@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\FiveDo.Core\FiveDo.Core.csproj" />
     <ProjectReference Include="..\..\src\CDISharp\CDISharp.csproj" />
     <ProjectReference Include="..\..\src\NRGSharp\NRGSharp.csproj" />

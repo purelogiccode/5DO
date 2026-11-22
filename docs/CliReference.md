@@ -74,12 +74,12 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `disc convert <disc> --out <path> [--format iso\|bin\|cue\|chd]` | Convert a data-only image and verify the game ID. |
 | `disc audio <disc> --track N --out path.wav` | Extract a CD-DA track to WAV (images or a physical drive). |
 | `disc dump <disc>` | Write raw 2048-byte sectors. |
-| `disc tracks <disc>` | List the CUE/CHD track table (data and audio), or one data track for ISO/BIN. |
+| `disc tracks <disc>` | List the CUE/CHD/ZIP/7z track table (data and audio), or one data track for ISO/BIN. |
 | `disc playlist <m3u>` | List multi-disc playlist entries and the selected disc. |
 | `disc verify <disc> [--json] [--max-errors N] [--dat <path>]` | Read every native sector, report the first LBA errors, verified count, bytes, and content hash; with `--dat`, match the native track hashes against a Redump/No-Intro DAT. Exits 1 on a read error or DAT mismatch. |
 | `library verify [--folder <dir>] [--dat <path>] [--cache <path>] [--json]` | Verify every disc in a library folder (or the configured library folders) and update the desktop known-dump cache. Exits 1 on a read error. |
-| `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, CHD, CDI, or NRG). |
-| `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, CHD, CDI, or NRG). |
+| `fs list <disc>` | List the 3DO file tree (ISO, BIN, CUE, CHD, CDI, NRG, ZIP, or 7z). |
+| `fs extract <disc>` | Extract files from a 3DO disc image (ISO, BIN, CUE, CHD, CDI, NRG, ZIP, or 7z). |
 | `bios info <path>` | BIOS size, MD5, region, Kanji, Anvil, and RSA-patch detection. |
 | `bios list\|scan <folder>` | Scan and validate a BIOS folder. |
 | `bios discover [--folder <dir>] [--recursive] [--json]` | Search the default BIOS folders (`FIVEDO_BIOS_DIR`, `<data>/bios`, `bios` next to the executable, `~/BIOS`, `<Documents>/BIOS`) and report the best primary image. |
@@ -577,6 +577,16 @@ unique temporary BIN, so a same-stem source (for example `game.bin` -> `game.chd
 never overwritten. A CUE output that would overwrite the source BIN is rejected; choose
 a different output name.
 
+### ZIP/7z containers
+
+A `.zip` or `.7z` path is accepted anywhere a disc path is accepted. The archive must
+contain one `.iso`, one `.bin`, or one `.cue` with its BIN files; CUE `FILE` entries are
+resolved relative to the CUE entry, including subfolders. Entries are decompressed in
+memory (1.5 GB per-entry limit), so very large images should be extracted. CHD, CDI, and
+NRG entries are rejected with extraction guidance; encrypted and multi-volume archives
+fail with an actionable message. `disc tracks` labels the outer container (`zip`/`7z`)
+while reporting the inner CUE track table.
+
 ### `disc dump`
 
 ```powershell
@@ -584,8 +594,8 @@ a different output name.
 ```
 
 Writes `count` raw 2048-byte user-data sectors starting at `--sector` (default 0) to
-`--out`. `--sector` and `--count` accept decimal or `0x`. Works for ISO/BIN/CUE/CHD/CDI/NRG.
-No JSON.
+`--out`. `--sector` and `--count` accept decimal or `0x`. Works for ISO/BIN/CUE/CHD/CDI/NRG
+and ZIP/7z archives. No JSON.
 
 ### `disc audio`
 
@@ -608,7 +618,7 @@ use an audio CD or mixed-mode disc for this test. JSON fields: `ok`, `path`, `tr
 5do disc tracks game.chd
 ```
 
-Lists every track for CUE, CHD, CDI, and NRG images:
+Lists every track for CUE, CHD, CDI, NRG, and archive-contained CUE+BIN images:
 `track <n>: type=<data|audio> format=<cue|chd|cdi|nrg> dataSize=<n> frames=<n> start=<lba>`.
 `start` is the track's first logical block address (LBA 0 = MSF 00:02:00). Audio tracks
 report `dataSize=2352`. CDI and NRG tracks report their native layout: 2048 for cooked
@@ -628,7 +638,7 @@ total payload size in the text line for ISO/BIN.
 ```
 
 Reads every data and audio track sector through the native-sector path, so
-CHD/CUE/BIN/CDI/NRG corruption surfaces without booting. The report includes the declared and verified
+CHD/CUE/BIN/CDI/NRG and ZIP/7z corruption surfaces without booting. The report includes the declared and verified
 sector counts, tracks, native bytes read, an FNV-1a content hash, and up to
 `--max-errors` failures with LBA numbers. The command exits 1 when any sector cannot be
 read or the verified count is short. Without `--json`, it prints the opening path and
@@ -743,7 +753,7 @@ is written to `--out` so it can be reviewed before replacing the embedded XML. S
 ```
 
 `fs` mounts the 3DO Opera file system directly through `FiveDo.Storage.OperaFileSystem`
-for ISO, BIN, CUE+BIN, CHD, CDI, and NRG images. The same parser handles every container, so the
+for ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP, and 7z images. The same parser handles every container, so the
 tree and extracted bytes are identical regardless of format. Directory blocks are
 chained through the on-disc `nextBlock` field, and files with `burst`/`gap` layouts are
 read with the gaps skipped.
@@ -1202,7 +1212,7 @@ dotnet run --project src/FiveDo.Cli -- disasm artifacts/ram.bin `
 - `--realtime` is pacing only; without it, live OpenAL audio is a short burst.
 - `--capture-dir` does nothing unless `--capture-every` is greater than zero.
 - `--frame-out` and captures use the CPU assembler, not the selected GPU filter.
-- `fs` reads the 3DO Opera file system from ISO, BIN, CUE+BIN, CHD, CDI, and NRG images. A
+- `fs` reads the 3DO Opera file system from ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP, and 7z images. A
   malformed volume/directory record fails with a clear parse error; `disc dump`
   remains available for raw sector inspection.
 - `trace` and `disasm` have no JSON output.

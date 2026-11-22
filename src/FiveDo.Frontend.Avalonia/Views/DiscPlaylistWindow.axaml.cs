@@ -55,7 +55,7 @@ public partial class DiscPlaylistWindow : Window
             [
                 new FilePickerFileType("3DO discs and playlists")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.m3u", "*.m3u8"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.zip", "*.7z", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);

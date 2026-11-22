@@ -134,7 +134,7 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | **DiscJuggler CDI** | **Current (2026-11-15)** | `CDISharp` parses the trailing descriptor, session/track table, and 2048/2336/2352-byte layouts, including 16-byte PQ and 96-byte P-W subchannel strides (2368/2448). The 150-sector lead-in is skipped when present. |
 | **Nero NRG** | **Current (2026-11-15)** | `NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, and per-track sector sizes 2048, 2324, 2336, 2352, 2353, 2368, 2448, and 2449. The extra error byte and subchannel tails are ignored when extracting user data. |
 | Multi-track / CD-DA | Partial (2026-11-22) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, M3U multi-disc swap, and physical-drive TOC/raw CDDA (v1.16.0) are implemented; the raw CDDA path is verified on real hardware (v1.16.1), and only the FZ-10 audio-only BIOS transport remains (SYS-01) |
-| ZIP/7z archives | Later | Prefer extracting first |
+| **ZIP/7z (ISO, BIN, CUE+BIN)** | **Current (2026-11-21)** | `ArchiveDiscImage` opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry; entries are decompressed in memory (1.5 GB per-entry limit) through SharpCompress. CHD/CDI/NRG must be extracted; encrypted or multi-volume archives are rejected with guidance. |
 
 Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG track table.
 
@@ -152,6 +152,27 @@ CHD specifics:
 - DVD/HDD/raw CHDs with other unit sizes are rejected. Audio-only CHDs open with a
   TOC-derived ID and a track table but no 3DO data track; 3DO software is CD-ROM based.
 - Read-ahead is enabled by default (4 hunks) for sequential streaming.
+
+ZIP/7z specifics (2026-11-21):
+
+- `ArchiveDiscImage` reads ZIP and 7z entries through SharpCompress, caches each
+  uncompressed entry in memory, and presents it as an `IDiscSource`/`ITrackedDiscSource`.
+  The per-entry limit is 1.5 GB; larger images must be extracted.
+- The archive may contain one `.iso`, one `.bin`, or one `.cue` with its BIN files. A CUE
+  resolves `FILE` entries relative to the CUE entry, including subfolders. Multiple CUEs
+  or multiple images without a CUE are rejected as ambiguous.
+- CHD, CDI, and NRG entries are rejected with extraction guidance because those
+  containers already have their own compression/random-access layout.
+- Encrypted entries/archives and multi-volume archives fail with an actionable message;
+  they are never partially read.
+- The desktop library, drag/drop, recent discs, file picker, playlist editor, and CLI
+  (`run`, `info`, `disc ...`, `fs ...`) accept the archive path directly.
+- Parity evidence: Theme Park (`33e5afe454a7c4da20b419a09e2045e2`) produced the same
+  600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256 when run from
+  the extracted ISO, a ZIP containing that ISO, and a 7z CUE+BIN set.
+- `ArchiveDiscImageTests` covers ZIP ISO reads, 7z CUE+BIN data/audio tracks, nested CUE
+  paths, multiple-image and CHD rejection, PREGAP rejection, encrypted archives, and
+  unrelated entries. `GameLibraryScannerTests` covers library discovery.
 
 Game ID is the MD5 of the first two 2048-byte sectors (4096 bytes), matching 4DO. This ID keys save states, screenshots, and optional per-game settings. It must never change, or existing save data will be orphaned.
 

@@ -16,6 +16,13 @@ verification and CD-DA diagnostics patch release.
   `AutoSaveEnabled`/`AutoResumeEnabled` control writing and loading separately.
   RetroAchievements hardcore mode suppresses both. Settings schema version 11 adds
   `AutoSaveEnabled`, `AutoSaveIntervalSeconds`, and `AutoResumeEnabled`.
+- **ZIP/7z disc containers (SYS-27).** `ArchiveDiscImage` opens a ZIP or 7z archive that
+  contains one ISO/BIN or one CUE+BIN set, with relative CUE file paths and in-memory
+  decompression through SharpCompress (1.5 GB per-entry limit). CHD/CDI/NRG, encrypted,
+  and multi-volume archives are refused with extraction/decryption guidance. The
+  library, drag/drop, recent discs, playlist editor, file pickers, and CLI accept the
+  archive path directly. Theme Park from the extracted ISO, a zipped ISO, and a 7z
+  CUE+BIN set matched the 600-frame hash `0x110E7DC5` and PC `0x0000596C` byte-for-byte.
 
 ## [1.16.1] - 2026-11-21
 

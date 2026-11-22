@@ -880,6 +880,14 @@ remains unsigned.
 
 ## 14. Release history (v1.9.1 - v1.16.1)
 
+- **SYS-27 (2026-11-21, post-1.16.1):** ZIP/7z disc containers - `ArchiveDiscImage`
+  opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry through
+  SharpCompress, with in-memory decompression, relative CUE paths, and clear refusal of
+  CHD/CDI/NRG, encrypted, and multi-volume archives. Wired through `DiscImageFactory`,
+  the library, drag/drop, recent discs, the playlist editor, file pickers, and every CLI
+  disc command. Theme Park extracted, zipped ISO, and 7z CUE+BIN all produced the
+  600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256. Suite
+  2,595/2,595.
 - **UX-37 (2026-11-21, post-1.16.1):** rolling autosave and auto-resume - a dedicated
   `states/autosave/` copy is written on pause, clean exit, and a configurable 1-60 minute
   interval; startup restores it only when the disc game ID and effective BIOS MD5 match,

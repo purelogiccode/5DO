@@ -24,7 +24,7 @@ src/
   FiveDo.Video.Vulkan/       optional Vulkan presenter, Win32 swapchain surface, SPIR-V shaders
   FiveDo.Xbus/               XBUS controller and device slots
   FiveDo.Cdrom/              MEI CD-ROM device
-  FiveDo.Storage/            ISO/BIN/CUE/CHD/CDI/NRG, BIOS/NVRAM, game database, prefetch
+  FiveDo.Storage/            ISO/BIN/CUE/CHD/CDI/NRG and ZIP/7z, BIOS/NVRAM, game database, prefetch
   CDISharp/                  DiscJuggler CDI container reader
   NRGSharp/                  Nero NRG container reader
   FiveDo.Audio/              ring, WAV, OpenAL, limiter, tap, analysis
@@ -113,7 +113,7 @@ FiveDo.Cdrom --------------> Core
 | `FiveDo.Video.Vulkan` | Optional offscreen Vulkan 1.0 presenter, build-time SPIR-V palette/scale/HQx/MMPX/xBR/FSR shaders, accurate/nearest/sharp-bilinear/bicubic/CRT/xBR/FSR/HQx/MMPX, readback | `VulkanOffscreenRenderer`, generated `VulkanShaders` | Core, Video, Silk.NET.Vulkan |
 | `FiveDo.Xbus` | XBUS controller, device slots, poll/status/data FIFOs | `Xbus` | Core |
 | `FiveDo.Cdrom` | MEI CD-ROM command state machine, TOC/MSF/LBA, sector streaming | `CdromDevice` | Core |
-| `FiveDo.Storage` | ISO/BIN/CUE/CHD/CDI/NRG readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `CdiDiscImage`, `NrgDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase`, `GameDatabaseScanner`, `GameDatabaseNameParser` | Core, CHDSharp, CDISharp, NRGSharp |
+| `FiveDo.Storage` | ISO/BIN/CUE/CHD/CDI/NRG and ZIP/7z readers, prefetch, BIOS/NVRAM, volume header, game ID/database | `IsoImage`, `BinImage`, `CueSheet`, `ChdDiscImage`, `CdiDiscImage`, `NrgDiscImage`, `ArchiveDiscImage`, `PrefetchingDiscSource`, `DiscImageFactory`, `BiosImage`, `NvramImage`, `VolumeHeader`, `GameId`, `GameDatabase`, `GameDatabaseScanner`, `GameDatabaseNameParser` | Core, CHDSharp, CDISharp, NRGSharp, SharpCompress |
 | `FiveDo.Audio` | Ring buffer, WAV capture, OpenAL output, soft limiter, tap, analysis | `AudioRingBuffer`, `AudioPipeline`, `WavAudioSink`, `OpenAlAudioOutput`, `AudioSoftLimiter`, `AudioTap`, `AudioAnalyzer`, `AudioStatistics` | Core, Silk.NET.OpenAL |
 | `FiveDo.Input` | Controller state, PBUS encoding, profiles, scripts, keyboard/gamepad mapping, input recording | `ControllerState`, `PbusEncoder`, `InputProfile`, `KeyboardInputMapper`, `InputManager`, `GamepadMapper`, `InputScript`, `InputRecorder` | Core |
 | `FiveDo.Diagnostics` | Logging, bug reports, launch statistics, donation verification, PNG/frame dumps, CPU tracing, timing, benchmark gates | `BugReportSink`, `ApplicationStatsClient`, `DonationVerificationClient`, `PngDumper`, `FrameDumper`, `CpuTracer`, `FrameTiming`, `BenchmarkGate`, `BenchmarkComparison` | Core |
@@ -472,7 +472,7 @@ last millisecond; a >100 ms stall resyncs rather than chasing the past.
 | Video presenter | `IFrameSink`, `IVideoRenderer` | OpenGL/GLES, CPU `WriteableBitmap`, null/hash sink |
 | Audio output | `IAudioSink` | null, WAV, OpenAL |
 | Input backend | `IPbusSource`, `IGamepadBackend` | keyboard, scripted, XInput, evdev, IOKit HID |
-| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, CDI, NRG, prefetch wrapper |
+| Disc format | `IDiscSource` | ISO, BIN, CUE, CHD, CDI, NRG, ZIP/7z, prefetch wrapper |
 | Save state | `IStateReader`/`IStateWriter`, `IStateSection` | native `.tdos` sections |
 | CPU backend | `ICpuBackend` | ARM60 interpreter; optional IL JIT (not implemented) |
 | XBUS device | `IXbusDevice` | CD-ROM; future peripherals |

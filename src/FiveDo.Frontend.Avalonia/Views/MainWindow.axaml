@@ -33,7 +33,7 @@
                 <MenuItem Header="Reset NVRAM" Click="OnResetNvram"
                           ToolTip.Tip="Clear the current game's NVRAM back to a fresh volume." />
                 <MenuItem Header="Boot Disc..." Click="OnOpenDiscAsync"
-                          ToolTip.Tip="Choose an ISO, BIN, CUE, or CHD disc image and boot it." />
+                          ToolTip.Tip="Choose an ISO, BIN, CUE, CHD, ZIP, or 7z disc image and boot it." />
                 <MenuItem Header="Boot Optical Drive..." Click="OnOpenOpticalDriveAsync"
                           ToolTip.Tip="Boot a 3DO disc from an attached CD/DVD drive." />
                 <MenuItem Header="Disc Browser..." Click="OnDiscBrowserAsync"
@@ -487,11 +487,11 @@
                            ToolTip.Tip="The library is empty." />
                 <TextBlock x:Name="EmptyLibraryText" Classes="muted" TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Text="Add a folder that contains ISO, BIN, CUE, or CHD images."
+                           Text="Add a folder that contains ISO, BIN, CUE, CHD, ZIP, or 7z images."
                            ToolTip.Tip="Add a folder so the library can discover disc images." />
                 <Button Classes="accent" Content="Add Game Folder" Click="OnAddFolderAsync"
                         HorizontalAlignment="Center"
-                        ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, or CHD images." />
+                        ToolTip.Tip="Add a folder that contains ISO, BIN, CUE, CHD, ZIP, or 7z images." />
             </StackPanel>
 
             <!-- Optional donation strip. It stays inside the library view so gameplay is never covered. -->

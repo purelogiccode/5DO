@@ -6643,7 +6643,7 @@ internal static class Program
         Console.WriteLine("  gamedb merge <path> --out path       Merge a fragment into the embedded database.");
         Console.WriteLine("  disc convert <disc> --out path [--format iso|bin|cue|chd]");
         Console.WriteLine("                                       Convert a data-only image and verify the game ID.");
-        Console.WriteLine("  disc tracks <disc> [--json]          List every ISO/BIN/CUE/CHD/CDI/NRG track.");
+        Console.WriteLine("  disc tracks <disc> [--json]          List every ISO/BIN/CUE/CHD/CDI/NRG/ZIP/7z track.");
         Console.WriteLine("  disc playlist <m3u> [--json]        List multi-disc playlist entries.");
         Console.WriteLine("  disc audio <disc> --track N --out path.wav [--json]");
         Console.WriteLine("                                       Extract a CD-DA track to a 44.1 kHz stereo WAV.");

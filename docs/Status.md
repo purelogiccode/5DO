@@ -26,6 +26,20 @@ with its detached `.asc`, and its embedded `.upd_info`/`.zsync` target the versi
 1.16.1 image. Release evidence is in [ReleaseNotes-1.16.1.md](ReleaseNotes-1.16.1.md),
 [Compatibility.md](Compatibility.md) §10.8-10.9, and [KnownIssues.md](KnownIssues.md).
 
+**2026-11-21, SYS-27 ZIP/7z containers (post-1.16.1):** `ArchiveDiscImage` opens a ZIP
+or 7z archive that contains one ISO/BIN or one CUE+BIN set, decompressing entries in
+memory through SharpCompress (1.5 GB per-entry limit). CUE `FILE` paths resolve relative
+to the CUE entry, including subfolders. CHD/CDI/NRG entries, encrypted archives, and
+multi-volume archives are refused with extraction/decryption guidance. The archive path
+works through `DiscImageFactory`, the game library, drag/drop, recent discs, the playlist
+editor, file pickers, and the CLI (`run`, `info`, `disc ...`, `fs ...`). Theme Park
+(`33e5afe454a7c4da20b419a09e2045e2`) from the extracted ISO, a ZIP of that ISO, and a 7z
+CUE+BIN set produced the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical
+PNG SHA-256. `ArchiveDiscImageTests` covers ZIP ISO reads, 7z CUE+BIN data/audio tracks,
+nested CUE paths, multiple-image/CHD/PREGAP rejection, encrypted archives, and unrelated
+entries; `GameLibraryScannerTests` covers archive discovery. The suite is
+**2,595/2,595** and InspectCode is clean.
+
 **2026-11-21, UX-37 rolling autosave and auto-resume (post-1.16.1):** the desktop now
 keeps one autosave under `<save directory>/autosave/`, written on pause, clean exit, and
 a configurable 1-60 minute interval (default 5), without touching manual slots. On

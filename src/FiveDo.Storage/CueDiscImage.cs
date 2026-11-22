@@ -28,12 +28,20 @@ public sealed class CueDiscImage : ITrackedDiscSource
     private const int Mode2SubheaderSize = 8;
 
     private readonly List<CueTrack> _tracks;
-    private readonly Dictionary<string, FileStream> _files = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Stream> _files = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Func<string, Stream> _openFile;
     private readonly byte[] _rawSector = new byte[RawSectorSize];
     private bool _disposed;
 
     private CueDiscImage(CdToc toc)
+        : this(toc, File.OpenRead)
     {
+    }
+
+    private CueDiscImage(CdToc toc, Func<string, Stream> openFile)
+    {
+        ArgumentNullException.ThrowIfNull(openFile);
+        _openFile = openFile;
         _tracks = BuildTracks(toc);
         if (_tracks.Count == 0)
         {
@@ -75,6 +83,30 @@ public sealed class CueDiscImage : ITrackedDiscSource
         catch (Exception exception) when (exception is InvalidDataException or IOException)
         {
             throw new DiscImageException($"CUE sheet '{cuePath}' is invalid: {exception.Message}", exception);
+        }
+    }
+
+    /// <summary>Opens a parsed CUE sheet whose referenced files come from a virtual source.</summary>
+    /// <param name="toc">Parsed track table.</param>
+    /// <param name="openFile">Opens a track file by its normalized name.</param>
+    /// <param name="sourceName">Display name used in error messages.</param>
+    /// <returns>An open multi-track disc image.</returns>
+    internal static CueDiscImage OpenVirtual(
+        CdToc toc,
+        Func<string, Stream> openFile,
+        string sourceName)
+    {
+        ArgumentNullException.ThrowIfNull(toc);
+        ArgumentNullException.ThrowIfNull(openFile);
+        try
+        {
+            return new CueDiscImage(toc, openFile);
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException)
+        {
+            throw new DiscImageException(
+                $"CUE sheet '{sourceName}' is invalid: {exception.Message}",
+                exception);
         }
     }
 
@@ -120,7 +152,7 @@ public sealed class CueDiscImage : ITrackedDiscSource
                 nameof(destination));
         }
 
-        FileStream stream = GetStream(track.Info.FileName);
+        Stream stream = GetStream(track.Info.FileName);
         long offset = track.Info.FileOffset
             + ((long)(lba - track.Track.StartLba) * (sectorBytes + track.Info.SubSize));
         if (offset < 0 || offset + sectorBytes > stream.Length)
@@ -143,7 +175,7 @@ public sealed class CueDiscImage : ITrackedDiscSource
         }
 
         _disposed = true;
-        foreach (FileStream stream in _files.Values)
+        foreach (Stream stream in _files.Values)
         {
             stream.Dispose();
         }
@@ -206,19 +238,19 @@ public sealed class CueDiscImage : ITrackedDiscSource
         throw new DiscImageException($"Sector {lba} is outside the CUE image ({TotalSectorCount} sectors).");
     }
 
-    private FileStream GetStream(string? path)
+    private Stream GetStream(string? path)
     {
         if (string.IsNullOrEmpty(path))
         {
             throw new DiscImageException("CUE track has no source file.");
         }
 
-        if (_files.TryGetValue(path, out FileStream? stream))
+        if (_files.TryGetValue(path, out Stream? stream))
         {
             return stream;
         }
 
-        stream = File.OpenRead(path);
+        stream = _openFile(path);
         _files[path] = stream;
         return stream;
     }

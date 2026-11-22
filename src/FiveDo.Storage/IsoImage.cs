@@ -9,7 +9,7 @@ namespace FiveDo.Storage;
 /// </summary>
 public sealed class IsoImage : IDiscSource
 {
-    private readonly FileStream _stream;
+    private readonly Stream _stream;
     private readonly byte[] _sector = new byte[SectorBytes];
 
     /// <summary>Gets the size of one user-data sector.</summary>
@@ -19,13 +19,27 @@ public sealed class IsoImage : IDiscSource
     /// <param name="path">Path to the ISO file.</param>
     /// <exception cref="DiscImageException">Thrown when the file size is not a whole number of sectors.</exception>
     public IsoImage(string path)
+        : this(OpenFile(path), path)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        _stream = File.OpenRead(path);
+    }
+
+    /// <summary>Initializes a new instance over an open stream.</summary>
+    /// <param name="stream">Seekable ISO stream. The image owns and disposes it.</param>
+    /// <param name="sourceName">Display name used in error messages.</param>
+    /// <exception cref="DiscImageException">Thrown when the stream length is not a whole number of sectors.</exception>
+    public IsoImage(Stream stream, string sourceName = "ISO stream")
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (!stream.CanSeek)
+        {
+            throw new ArgumentException("The ISO stream must be seekable.", nameof(stream));
+        }
+
+        _stream = stream;
         if (_stream.Length % SectorBytes != 0)
         {
             _stream.Dispose();
-            throw new DiscImageException($"ISO file '{path}' is not a whole number of 2048-byte sectors.");
+            throw new DiscImageException($"ISO image '{sourceName}' is not a whole number of 2048-byte sectors.");
         }
 
         SectorCount = (int)(_stream.Length / SectorBytes);
@@ -56,5 +70,11 @@ public sealed class IsoImage : IDiscSource
     public void Dispose()
     {
         _stream.Dispose();
+    }
+
+    private static FileStream OpenFile(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        return File.OpenRead(path);
     }
 }

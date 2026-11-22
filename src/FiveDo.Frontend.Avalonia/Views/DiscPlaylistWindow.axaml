@@ -32,7 +32,7 @@
             <StackPanel Grid.Column="1" Spacing="8">
                 <Button x:Name="AddButton" Content="Add discs..."
                         HorizontalAlignment="Stretch" Click="OnAddClick"
-                        ToolTip.Tip="Add ISO, BIN, CUE, CHD, M3U, or M3U8 entries." />
+                        ToolTip.Tip="Add ISO, BIN, CUE, CHD, ZIP, 7z, M3U, or M3U8 entries." />
                 <Button x:Name="MoveUpButton" Content="Move up"
                         HorizontalAlignment="Stretch" Click="OnMoveUpClick"
                         ToolTip.Tip="Move the selected disc one position earlier." />

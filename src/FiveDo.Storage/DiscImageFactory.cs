@@ -57,6 +57,7 @@ public static class DiscImageFactory
             ".bin" => OpenBin(path),
             ".cdi" => CdiDiscImage.Open(path),
             ".nrg" => NrgDiscImage.Open(path),
+            ".zip" or ".7z" => ArchiveDiscImage.Open(path),
             _ => OpenByHeader(path, chdParentPath, chdReadAheadHunks),
         };
 
@@ -177,6 +178,17 @@ public static class DiscImageFactory
         if (signature.SequenceEqual("MComprHD"u8))
         {
             return ChdDiscImage.Open(path, chdParentPath, chdReadAheadHunks);
+        }
+
+        if (signature[..4].SequenceEqual("PK\u0003\u0004"u8)
+            || (signature[0] == 0x37
+                && signature[1] == 0x7A
+                && signature[2] == 0xBC
+                && signature[3] == 0xAF
+                && signature[4] == 0x27
+                && signature[5] == 0x1C))
+        {
+            return ArchiveDiscImage.Open(path);
         }
 
         if (NrgImage.HasSignature(path))

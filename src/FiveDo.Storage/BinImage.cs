@@ -19,7 +19,7 @@ public sealed class BinImage : ITrackedDiscSource
     /// <summary>Raw sector size.</summary>
     public const int RawSectorBytes = 2352;
 
-    private readonly FileStream _stream;
+    private readonly Stream _stream;
     private readonly long _startOffset;
     private readonly int _payloadOffset;
     private readonly byte[] _sector = new byte[RawSectorBytes];
@@ -30,8 +30,29 @@ public sealed class BinImage : ITrackedDiscSource
     /// <param name="sectorCount">Number of sectors to expose.</param>
     /// <param name="payloadOffset">Byte offset of user data within each raw sector (16 or 24).</param>
     public BinImage(string path, long startOffset = 0, int? sectorCount = null, int payloadOffset = 16)
+        : this(OpenFile(path), path, startOffset, sectorCount, payloadOffset)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+    }
+
+    /// <summary>Initializes a new instance over an open stream.</summary>
+    /// <param name="stream">Seekable raw BIN stream. The image owns and disposes it.</param>
+    /// <param name="sourceName">Display name used in error messages.</param>
+    /// <param name="startOffset">Byte offset of the first track's sector 0.</param>
+    /// <param name="sectorCount">Number of sectors to expose.</param>
+    /// <param name="payloadOffset">Byte offset of user data within each raw sector (16 or 24).</param>
+    public BinImage(
+        Stream stream,
+        string sourceName = "BIN stream",
+        long startOffset = 0,
+        int? sectorCount = null,
+        int payloadOffset = 16)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (!stream.CanSeek)
+        {
+            throw new ArgumentException("The BIN stream must be seekable.", nameof(stream));
+        }
+
         ArgumentOutOfRangeException.ThrowIfNegative(startOffset);
 
         if (payloadOffset is not (16 or 24))
@@ -39,7 +60,7 @@ public sealed class BinImage : ITrackedDiscSource
             throw new ArgumentOutOfRangeException(nameof(payloadOffset), payloadOffset, "Payload offset must be 16 or 24.");
         }
 
-        _stream = File.OpenRead(path);
+        _stream = stream;
         _startOffset = startOffset;
         _payloadOffset = payloadOffset;
 
@@ -47,7 +68,8 @@ public sealed class BinImage : ITrackedDiscSource
         if (remaining < 0 || remaining % RawSectorBytes != 0)
         {
             _stream.Dispose();
-            throw new DiscImageException($"BIN file '{path}' does not contain whole 2352-byte sectors from offset {startOffset}.");
+            throw new DiscImageException(
+                $"BIN image '{sourceName}' does not contain whole 2352-byte sectors from offset {startOffset}.");
         }
 
         var available = (int)(remaining / RawSectorBytes);
@@ -106,5 +128,11 @@ public sealed class BinImage : ITrackedDiscSource
 
         _stream.Position = _startOffset + ((long)lba * RawSectorBytes);
         _stream.ReadExactly(_sector);
+    }
+
+    private static FileStream OpenFile(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        return File.OpenRead(path);
     }
 }

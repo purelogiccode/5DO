@@ -44,7 +44,7 @@
       "fivedo.audio": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )",
+          "FiveDo.Core": "[1.16.1, )",
           "Serilog": "[4.4.0, )",
           "Silk.NET.OpenAL": "[2.23.0, )",
           "Silk.NET.OpenAL.Soft.Native": "[1.23.1, )"
@@ -56,23 +56,24 @@
       "fivedo.input": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )"
+          "FiveDo.Core": "[1.16.1, )"
         }
       },
       "fivedo.storage": {
         "type": "Project",
         "dependencies": {
-          "CDISharp": "[1.14.1, )",
+          "CDISharp": "[1.16.1, )",
           "CHDSharp": "[1.7.1, )",
-          "FiveDo.Core": "[1.14.1, )",
-          "NRGSharp": "[1.14.1, )",
-          "Serilog": "[4.4.0, )"
+          "FiveDo.Core": "[1.16.1, )",
+          "NRGSharp": "[1.16.1, )",
+          "Serilog": "[4.4.0, )",
+          "SharpCompress": "[1.0.0, )"
         }
       },
       "fivedo.video": {
         "type": "Project",
         "dependencies": {
-          "FiveDo.Core": "[1.14.1, )"
+          "FiveDo.Core": "[1.16.1, )"
         }
       },
       "nrgsharp": {
@@ -92,6 +93,12 @@
         "requested": "[4.4.0, )",
         "resolved": "4.4.0",
         "contentHash": "ZC6Le3rr4TVJJjS4KsQAesxeF1EhW9qcZmmG7eP5Y2G3+gTGkJEUXkq4+tZNPtyp05I0wWOxnIjwtxFweJsObw=="
+      },
+      "SharpCompress": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "bdBq9V2epw7KBX3TeA+lxnKU8dD61tsqVuyuo5cAXj4d+9+fcIQObTr0705oTWnPDRhjRx3TpgOFbYYAMObpaw=="
       },
       "Silk.NET.OpenAL": {
         "type": "CentralTransitive",
