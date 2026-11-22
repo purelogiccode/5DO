@@ -104,6 +104,21 @@ checksums are attached, and legal/attribution sign-off is recorded.
   (achievement 579967). Leaderboard submission was not exercised because the tested 3DO
   sets had no leaderboards.
 
+## ZIP/7z disc containers (2026-11-21)
+
+- A ZIP or 7z may contain **one** ISO/BIN image or **one** CUE+BIN set. Multiple images
+  without a CUE are ambiguous and are refused rather than guessed.
+- Entries are decompressed **in memory** (1.5 GB per-entry limit) rather than to a
+  temporary directory. A larger image should be extracted first.
+- CHD, CDI, and NRG entries are not opened inside an archive; extract them with their
+  native layout. ISO, BIN, and CUE+BIN are the supported archive payloads.
+- Encrypted and multi-volume archives are refused with an actionable message and are
+  never partially read. A CUE that uses PREGAP, POSTGAP, INDEX 00, or WAVE is also
+  refused with extraction guidance; the archive parser covers explicit INDEX 01 BINARY
+  tracks.
+- Theme Park parity: extracted ISO, a ZIP of that ISO, and a 7z CUE+BIN set produced the
+  same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256.
+
 ## Physical optical drives (2026-11-21)
 
 - **File > Boot Optical Drive...** and drive-root CLI arguments read the host's cooked
