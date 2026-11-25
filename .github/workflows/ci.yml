@@ -220,10 +220,6 @@ jobs:
     name: Linux packages
     needs: bundle
     uses: ./.github/workflows/linux-packages.yml
-    # Sign on every push when the release key is configured, so the signed path is
-    # exercised continuously instead of first failing on a tag. Without the secret
-    # the workflow logs a warning and builds unsigned.
-    secrets: inherit
     with:
       ref: ${{ github.ref }}
 

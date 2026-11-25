@@ -3,8 +3,8 @@
 5DO ships the portable five-bundle matrix as its primary release artifact; the macOS
 bundle itself is a drag-to-Applications DMG. **UX-16** adds installer/package
 scaffolding on top of those bundles. Signing is conditional: Windows Authenticode needs
-a certificate, macOS notarization needs a Developer ID and keychain profile, and Linux
-artifacts get detached GPG signatures when `LINUX_GPG_PRIVATE_KEY` is configured. The
+a certificate, macOS notarization needs a Developer ID and keychain profile. Linux
+release artifacts are not GPG-signed; they are validated with `SHA256SUMS` only. The
 Linux packages are published as release assets and install directly from the
 downloaded file (`sudo apt install ./5do_<version>_amd64.deb`,
 `sudo dnf install ./5do-<version>-1.x86_64.rpm`, or
@@ -15,7 +15,7 @@ packages remain usable.
 | Platform | Artifact | Script | Status |
 |---|---|---|---|
 | Windows | `5do-<version>-win-x64-setup.exe`, `win-arm64` | `packaging/windows/build-installer.ps1` | x64 built and install/launch/association-tested; arm64 built (unsigned) |
-| Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm`, `5do-<arch>.AppImage`, `5do-<arch>.flatpak` (x64 and arm64) | `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh`, `build-flatpak.sh` | Built; metadata, MIME, and AppStream validated; AppImage/Flatpak smoke-tested in CI; GPG-signed release assets when the release key is configured (unsigned otherwise) |
+| Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm`, `5do-<arch>.AppImage`, `5do-<arch>.flatpak` (x64 and arm64) | `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh`, `build-flatpak.sh` | Built; metadata, MIME, and AppStream validated; AppImage/Flatpak smoke-tested in CI; release assets validated with SHA256SUMS only |
 | macOS | `5do-<version>-osx-<arch>.dmg`, `.pkg`, `.app` | `packaging/macos/build-macos-package.sh` | Built natively in CI; DMG is the published macOS bundle |
 
 The authoritative build instructions and script arguments are in
@@ -46,19 +46,21 @@ the same path the shell passes from a file association.
   script signs `5DO.app` with the hardened runtime and the JIT entitlements required by
   the self-contained .NET apphost. Pass `--notary-profile` (or
   `MACOS_NOTARY_PROFILE`) to submit and staple the DMG and PKG with `notarytool`.
-- **Linux:** there is no OS-level signature check for an ELF binary or a `.deb`, so the
-  release key signs the trust chain instead: a detached `.asc` for every artifact and
-  `SHA256SUMS-linux.txt.asc`. The public key is published as
-  `5do-archive-keyring.gpg`. The packages are release assets, not a hosted repository;
-  users install them with `sudo apt install ./5do_<version>_amd64.deb` or
-  `sudo dnf install ./5do-<version>-1.x86_64.rpm`. Without the
-  `LINUX_GPG_PRIVATE_KEY` secret the packages are built unsigned. The full runbook,
-  verification commands, and the optional mirror tooling are in
+- **Linux:** release downloads are validated with `SHA256SUMS.txt` /
+  `SHA256SUMS-linux.txt`; there are no detached `.asc` signatures and no keyring. The
+  packages are release assets, not a hosted repository; users install them with
+  `sudo apt install ./5do_<version>_amd64.deb` or
+  `sudo dnf install ./5do-<version>-1.x86_64.rpm`. The full runbook, verification
+  commands, and the optional mirror tooling are in
   [LinuxDistribution.md](LinuxDistribution.md).
 
 No certificate, Apple account, or private key is committed to this repository.
 
 ## Linux packaging validation (2026-11-17, unsigned)
+
+> Historical: this run predates the removal of Linux release signing. The current
+> release path publishes `SHA256SUMS` only; the signing notes below are retained as
+> evidence for the older workflow.
 
 CI run <https://github.com/purelogiccode/5DO/actions/runs/44193278546> built, validated,
 installed, and packaged the Linux set from the 1.12.0 bundles:
@@ -82,9 +84,10 @@ installed, and packaged the Linux set from the 1.12.0 bundles:
   .NET bundle. The spec now sets `%global __os_install_post %{nil}`, and the RPM
   install test guards the regression; the corrected package installs 273 MB (x86_64) /
   301 MB (aarch64).
-- **Signing:** `LINUX_GPG_PRIVATE_KEY` was not configured for this run, so the packages
-  are unsigned and the `.asc`/keyring files are absent. The workflow logs a warning;
-  signing activates when the secret exists.
+- **Signing (historical):** `LINUX_GPG_PRIVATE_KEY` was not configured for this run, so
+  the packages are unsigned and the `.asc`/keyring files are absent. The workflow at the
+  time would sign when the secret existed; release signing has since been removed in
+  favor of `SHA256SUMS` only.
 - **Checksums:** `SHA256SUMS-linux.txt` lists all four packages and the AppImage; the
   per-file `.sha256` outputs verify. The publish job's install test is the release
   gate for the unsigned path.

@@ -1,5 +1,9 @@
 # Project Status and Next Steps
 
+**Unreleased:** Linux release signing was removed. The release pipeline publishes
+`SHA256SUMS.txt` and `SHA256SUMS-linux.txt` only; detached `.asc` signatures and the
+GPG keyring are no longer produced, and validation is `sha256sum -c` on the manifests.
+
 **2026-11-22, v1.17.0 release:** the autosave and archive-container release ships two
 new features. **UX-37** keeps a rolling autosave under `states/autosave/`, written on
 pause, clean exit, and a configurable 1-60 minute interval, and restores it at startup

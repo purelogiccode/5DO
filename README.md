@@ -39,8 +39,8 @@
 > supported. The macOS arm64 bundle includes the Vulkan loader and MoltenVK, so no
 > Homebrew install is required. The build works with only the .NET 11 SDK: the shader
 > compiler rolls forward instead of requiring the .NET 8 runtime.
-> GPG-signed Linux artifacts use keyring fingerprint
-> `E69FF266D1FB01D3411578775C4C1E8EAFD44075`.
+> Linux release downloads are validated with `SHA256SUMS.txt`/`SHA256SUMS-linux.txt`
+> only; no GPG signatures or keyring are published.
 > No BIOS ROMs, game images, or extracted game assets are included. You must supply
 > legally obtained files.
 
@@ -79,8 +79,8 @@ test harness designed for reproducible compatibility evidence.
   needs, so no separate runtime install is required. Optional NativeAOT CLI builds remain available
   for developers. Windows installers and macOS `.dmg`/`.pkg` scaffolding register
   `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file associations; Linux also builds `.deb`, `.rpm`,
-  and AppImage artifacts with an AppStream listing and detached GPG signatures when the
-  release key is configured. The Linux packages install straight from the release page;
+  and AppImage artifacts with an AppStream listing. Linux release assets are validated
+  with SHA256SUMS only. The Linux packages install straight from the release page;
   no repository is hosted. Signing/notarization on Windows/macOS stays conditional on
   certificates; see the
   [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).

@@ -141,9 +141,10 @@ suitable for the intermediate tarball and architecture check.
 ## Installers and file associations (UX-16)
 
 The portable bundles remain the primary release artifact. The packaging directory now
-also contains unsigned installer/package scaffolding for each desktop platform. Signing
-and notarization are opt-in and only run when the certificate or Apple account is
-available.
+also contains unsigned installer/package scaffolding for each desktop platform. Windows
+Authenticode and macOS notarization are opt-in and only run when the certificate or
+Apple account is available; Linux release packages are unsigned and validated with
+`SHA256SUMS` only.
 
 ### Windows (Inno Setup)
 
@@ -207,28 +208,19 @@ The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), `appimagetool`,
 self-hosted Flatpak repository. Open the installed `5do` entry or a
 `.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch the frontend with the disc path.
 
-#### Linux signing
+#### Linux release integrity
 
-Linux has no OS-level signature for an ELF binary or a `.deb`. Trust is anchored in the
-5DO GPG key that signs `SHA256SUMS-linux.txt` and a detached `.asc` for every release
-asset.
-
-```sh
-# Detached signatures for every release asset plus the public keyring.
-bash packaging/linux/sign-artifacts.sh \
-  --key-id "$LINUX_GPG_KEY_ID" \
-  --keyring-out artifacts/signing/5do-archive-keyring.gpg \
-  artifacts/installers
-```
+Linux release downloads are validated with `SHA256SUMS-linux.txt` (packages) and
+`SHA256SUMS.txt` (all release assets) only. The release pipeline does not create detached
+GPG signatures or publish a keyring.
 
 The artifacts are published as GitHub release assets; users install the downloaded
 package directly (`sudo apt install ./5do_<version>_amd64.deb`), so no repository is
 hosted.
 
-`.github/workflows/linux-packages.yml` runs the builds and the signing after
-`build-bundle.yml` and is called by `release.yml`. It also installs the generated
-`.deb`, runs the CLI self-test and `5do doctor`, and removes the package again. Signing
-is skipped with a warning when the `LINUX_GPG_PRIVATE_KEY` secret is absent.
+`.github/workflows/linux-packages.yml` runs the builds and writes the checksum manifest
+after `build-bundle.yml` and is called by `release.yml`. It also installs the generated
+`.deb`, runs the CLI self-test and `5do doctor`, and removes the package again.
 
 #### Optional package repositories
 
@@ -238,8 +230,8 @@ of the 5DO release pipeline. The scripts take `--repo-dir`, `--base-url`, and
 `--key-id`; keep every release in the pool so pinned versions stay installable.
 
 `--gpgcheck 0` in the RPM example is for a mirror whose packages are not header-signed;
-run `build-rpm.sh --sign-key` (or configure `rpmsign` in CI with a passphrase-less key)
-to sign the package headers, then publish with `--gpgcheck 1`.
+the released RPMs are unsigned, and mirror operators who sign their own copies can
+publish with `--gpgcheck 1`.
 
 [docs/LinuxDistribution.md](../docs/LinuxDistribution.md) covers verification,
 mirroring, and the announcement channels.
@@ -289,14 +281,13 @@ native runners and builds the macOS arm64 DMG on a macOS runner. The runners ins
 `.github/workflows/linux-packages.yml` turns the two Linux bundles into `.deb`, `.rpm`,
 AppImage, and Flatpak artifacts for both architectures, validates their metadata,
 installs the `.deb` to verify the desktop integration and each `.flatpak` to run the CLI
-inside the sandbox, signs them when the GPG secret is configured, and publishes them as
-GitHub release assets. There is no hosted package repository.
-`.github/workflows/release.yml` publishes the bundles, the Linux packages, the
-signatures, and the checksum manifests to the GitHub release.
+inside the sandbox, writes `SHA256SUMS-linux.txt`, and publishes them as GitHub release
+assets. There is no hosted package repository and no GPG signing.
+`.github/workflows/release.yml` publishes the bundles, the Linux packages, and the
+checksum manifests to the GitHub release.
 
 The Windows/Linux archives and the macOS DMG are the portable bundles; the installer
 scripts above are additive. Unsigned installers can be produced locally and in CI.
 Authenticode signing, Developer ID signing, and notarization remain conditional on valid
-certificates and an Apple developer account; Linux GPG signing remains conditional on
-`LINUX_GPG_PRIVATE_KEY`. Without those credentials the portable bundles and unsigned
-packages are the release artifacts.
+certificates and an Apple developer account; Linux release artifacts are validated with
+SHA256SUMS only.

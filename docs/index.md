@@ -26,8 +26,9 @@
     **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
-    DMG. GPG-signed Linux artifacts use the keyring fingerprint
-    `E69FF266D1FB01D3411578775C4C1E8EAFD44075`. The macOS arm64 bundle includes MoltenVK
+    DMG. Linux release downloads are validated with `SHA256SUMS.txt` /
+    `SHA256SUMS-linux.txt` only; no GPG signatures or keyring are published. The macOS
+    arm64 bundle includes MoltenVK
     and the Vulkan loader; the CPU presenter is the fallback. Linux arm64 and Windows
     arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game
     images, or extracted game assets are distributed here; supply legally obtained files.

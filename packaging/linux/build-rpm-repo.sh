@@ -3,8 +3,8 @@
 # Build (or update) a signed RPM repository from 5DO .rpm packages.
 #
 # dnf verifies repodata/repomd.xml when repo_gpgcheck=1, so the repository signature
-# is what makes `dnf install 5do` trustworthy. Package header signatures added by
-# build-rpm.sh --sign-key are checked when gpgcheck=1.
+# is what makes `dnf install 5do` trustworthy. Package headers remain unsigned
+# (release RPMs are not header-signed); mirror operators can sign their own copies.
 #
 # Usage:
 #   bash packaging/linux/build-rpm-repo.sh \

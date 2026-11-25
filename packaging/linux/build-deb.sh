@@ -11,9 +11,9 @@
 #   bash packaging/linux/build-deb.sh --bundle artifacts/bundle/linux-x64 \
 #       --rid linux-x64 --version 1.12.0 --output artifacts/installers
 #
-# Signing: a .deb has no per-package signature that APT verifies. Trust comes from
-# the repository metadata (build-apt-repo.sh signs Release/InRelease) and from the
-# detached signature that sign-artifacts.sh adds to the release asset.
+# Integrity: a .deb has no per-package signature that APT verifies. Release
+# downloads are validated with SHA256SUMS only; no detached signatures are published.
+# Operators who mirror the packages can still sign their own repository metadata.
 #
 set -euo pipefail
 

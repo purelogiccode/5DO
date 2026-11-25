@@ -615,10 +615,11 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   `--appimage-extract-and-run`, reports `1.13.1`, and passes the Xvfb frontend smoke.
   The arm64 `.deb`, `.rpm`, and Flatpak were also installed or inspected on that host.
   See [Compatibility.md](Compatibility.md) §10.5.
-- **Linux artifacts are signed but not served from a repository.** Each release carries
-  the keyring, a signed checksum manifest, and per-artifact `.asc` files; there is no
-  hosted `apt`/`dnf` server and no Flathub listing. Rotation of the single release key
-  is documented in [LinuxDistribution.md](LinuxDistribution.md) §4.
+- **Linux artifacts are not signed and are not served from a repository.** Each release
+  carries `SHA256SUMS.txt` and `SHA256SUMS-linux.txt`; there is no keyring, no detached
+  signature, no hosted `apt`/`dnf` server, and no Flathub listing. Validate downloads with
+  `sha256sum -c`. Optional mirror signing is documented in
+  [LinuxDistribution.md](LinuxDistribution.md) §4.
 - **Release bundles are self-contained and not trimmed.** The CLI and desktop app
   publish as single-file apphosts (`PublishSingleFile=true`,
   `PublishTrimmed=false`) with the .NET 11 runtime embedded; no separate runtime install

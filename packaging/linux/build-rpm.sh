@@ -10,9 +10,6 @@
 #   bash packaging/linux/build-rpm.sh --bundle artifacts/bundle/linux-x64 \
 #       --rid linux-x64 --version 1.12.0 --output artifacts/installers
 #
-# Optional:
-#   --sign-key <gpg-key-id>   Add a GPG header signature with rpmsign --addsign.
-#
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,10 +19,9 @@ bundle=""
 rid="linux-x64"
 version=""
 output_dir=""
-sign_key=""
 
 usage() {
-    sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -34,7 +30,6 @@ while [[ $# -gt 0 ]]; do
         --rid) rid="${2:-}"; shift 2 ;;
         --version) version="${2:-}"; shift 2 ;;
         --output) output_dir="${2:-}"; shift 2 ;;
-        --sign-key) sign_key="${2:-}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -201,15 +196,6 @@ fi
 
 archive="$output_dir/5do-${version}-1.linux.${rpm_arch}.rpm"
 cp "$rpm_file" "$archive"
-
-if [[ -n "$sign_key" ]]; then
-    if ! command -v rpmsign >/dev/null 2>&1; then
-        echo "rpmsign is required for --sign-key (install rpm-sign)." >&2
-        exit 1
-    fi
-    rpmsign --addsign --define "_gpg_name $sign_key" "$archive"
-    rpm --checksig "$archive"
-fi
 
 sha256sum "$archive" >"$archive.sha256"
 printf 'Built %s\n' "$archive"

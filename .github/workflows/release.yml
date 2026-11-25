@@ -36,7 +36,6 @@ jobs:
     with:
       ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
       version: ''
-    secrets: inherit
 
   publish:
     name: Publish GitHub release
@@ -106,28 +105,29 @@ jobs:
             gh release create "$tag" --verify-tag --title "5DO $version" --notes-file "$notes"
           fi
 
-          # Remove the old per-component archives and unversioned bundle names so
-          # the release has one versioned bundle per system.
+          # Remove the old per-component archives, unversioned bundle names, and
+          # retired GPG signature/keyring assets so a release page carries only the
+          # current bundles, packages, and SHA256SUMS manifests.
           for name in $(gh release view "$tag" --json assets --jq '.assets[].name'); do
             case "$name" in
-              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-win-arm64.zip|5do-linux-x64.tar.gz|5do-linux-arm64.tar.gz|5do-osx-x64.tar.gz|5do-osx-arm64.tar.gz|5do-osx-x64.pkg|5do-osx-arm64.pkg)
+              5do-cli-*|5do-frontend-*|5do-win-x64.zip|5do-win-arm64.zip|5do-linux-x64.tar.gz|5do-linux-arm64.tar.gz|5do-osx-x64.tar.gz|5do-osx-arm64.tar.gz|5do-osx-x64.pkg|5do-osx-arm64.pkg|*.asc|5do-archive-keyring.gpg|5do-archive-keyring.gpg.asc|5do-archive-keyring.gpg.fingerprint)
                 echo "Removing obsolete asset $name"
                 gh release delete-asset "$tag" "$name" -y
                 ;;
             esac
           done
 
-          # Publish every asset the build produced. Optional artifacts (the AppImage,
-          # the Flatpak bundle, and the GPG signatures) are included only when they
-          # exist, so an unsigned or image-less run still publishes the bundles.
+          # Publish every asset the build produced. Optional artifacts (the AppImage
+          # and the Flatpak bundle) are included only when they exist. Integrity is
+          # validated with SHA256SUMS only; no signatures or keyring are uploaded.
           assets=()
           while IFS= read -r asset; do
             assets+=("$asset")
           done < <(find dist -maxdepth 1 -type f \
             \( -name '5do-*.zip' -o -name '5do-*.tar.gz' -o -name '5do-*.dmg' \
                -o -name '5do_*.deb' -o -name '5do-*.rpm' -o -name '5do-*.AppImage' \
-               -o -name '5do-*.AppImage.zsync' -o -name '5do-*.flatpak' -o -name '*.asc' \
-               -o -name '5do-archive-keyring.gpg' -o -name 'SHA256SUMS*.txt' \) \
+               -o -name '5do-*.AppImage.zsync' -o -name '5do-*.flatpak' \
+               -o -name 'SHA256SUMS*.txt' \) \
             | sort)
 
           if [ ${#assets[@]} -eq 0 ]; then

@@ -5,6 +5,14 @@ archive-container release.
 
 ## [Unreleased]
 
+### Changed
+
+- **Linux releases no longer publish GPG signatures or a keyring.** The release
+  pipeline writes `SHA256SUMS-linux.txt` and `SHA256SUMS.txt` only; detached `.asc`
+  files, `5do-archive-keyring.gpg`, the signing secrets, and the AppImage/RPM signing
+  options were removed. Release validation is now `sha256sum -c` on the manifests.
+  Optional mirror tooling can still sign an operator-owned repository separately.
+
 ### Fixed
 
 - **A malformed ZIP no longer aborts the game-library refresh (#70180).**

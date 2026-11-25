@@ -74,10 +74,10 @@ open (§4).
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
 | **REL-08** | Open | M | **Third-party channel listings**: publish the AUR `5do-bin` package (PKGBUILD ships in `packaging/linux/aur/`), an AppImageHub entry, and an itch.io project page. The packager-facing files (desktop entry, MIME XML, metainfo, both icons) already ship in the Linux bundle and are verified by `build-bundle.yml`. | These channels accept a repackaged upstream release and need no licence change; the catalog entries are small, reversible files. | `yay -S 5do-bin` installs and launches on Arch, the AppImageHub entry appears in the catalog, and the itch.io page serves the current AppImage. |
-| **REL-09** | Partial | L | **Flatpak distribution**: the published `5do-1.13.1-linux-aarch64.flatpak` installed with its 26.08 runtime on Linux arm64 hardware on 2026-11-19 and ran the CLI `selftest`, the frontend smoke, and Theme Park at 59.9 fps. Remaining: verify gamepad, audio, and display-sleep inhibit inside the sandbox, then add a self-hosted signed repository and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
+| **REL-09** | Partial | L | **Flatpak distribution**: the published `5do-1.13.1-linux-aarch64.flatpak` installed with its 26.08 runtime on Linux arm64 hardware on 2026-11-19 and ran the CLI `selftest`, the frontend smoke, and Theme Park at 59.9 fps. Remaining: verify gamepad, audio, and display-sleep inhibit inside the sandbox, then add a self-hosted repository (operator-owned key) and a Flathub submission once the licence position is settled. `build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml` exist, and CI installs and runs the bundle. | Flatpak is the channel GNOME Software, KDE Discover, and the Steam Deck Discover store read; the runtime supplies GL/audio and the manifest only repackages the self-contained apphosts. | `flatpak install --user ./5do-<arch>.flatpak` then `flatpak run io.github.purelogiccode.FiveDO` launches 5DO with gamepad, audio, and display-sleep inhibit working, and CI runs `5do-cli selftest` inside the sandbox; Flathub review has an explicit licence decision recorded in [ReleaseLegalReview.md](ReleaseLegalReview.md). |
 | **REL-10** | Partial | S | **Steam Deck and EmuDeck integration**: the Deck-sized first-run BIOS offer and non-Steam-game setup are complete (2026-11-21). The welcome guide detects `SteamDeck`/`SteamOS`/`SteamGamepadUI`/gamescope, uses a 960x680 layout with large buttons, shows the BIOS folder, and offers **Scan** and **Open Folder**; [Installation.md](Installation.md) documents Desktop Mode, the BIOS folder, adding the AppImage/Flatpak to Steam, `--fullscreen`, and a trackpad controller layout. Remaining: the upstream EmuDeck/RetroDeck 3DO entry, which needs their repository. | evdev gamepads and display-sleep inhibit are validated on Linux hardware; the rest is presentation and documentation. | A Deck user installs from the AppImage or EmuDeck, boots a game with a controller, and reaches gameplay without a keyboard; the setup steps are in [Installation.md](Installation.md). |
 
-The unsigned Windows installer, the Linux `.deb`/`.rpm` (now signed), the desktop entry,
+The unsigned Windows installer, the Linux `.deb`/`.rpm` (checksum-verified), the desktop entry,
 MIME associations, and the macOS `.app`/`.dmg`/`.pkg` scaffolding are complete and built
 on native CI runners; only Windows code signing and macOS notarization are still blocked
 (§4). The packages ship as GitHub release assets and install with
@@ -196,13 +196,14 @@ pwsh -NoProfile -File packaging/package-bundle.ps1
 ```
 
 ```bash
-# Linux packages, signatures, AppImage, and Flatpak (Linux or WSL)
+# Linux packages and checksums, AppImage, and Flatpak (Linux or WSL)
 bash packaging/linux/build-deb.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-rpm.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-appimage.sh --bundle artifacts/bundle/linux-x64 --name 5do-x86_64.AppImage
 bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64
-bash packaging/linux/sign-artifacts.sh --key-id "$LINUX_GPG_KEY_ID" \
-  --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
+( cd artifacts/installers && find . -maxdepth 1 -type f \
+    \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.flatpak' \) \
+    -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS-linux.txt )
 ```
 
 The macOS runbook is [BuildAndTest.md](BuildAndTest.md) §7.2. Compatibility and quality

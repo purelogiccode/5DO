@@ -12,7 +12,6 @@
 #       --output artifacts/installers
 #
 # Optional:
-#   --sign-key <gpg-key-id>   Embed an AppImage signature (appimagetool --sign).
 #   --zsync-url <url>         AppImage download URL recorded in the .zsync file.
 #   --update-information <s>  Embedded update information (default zsync|<url>).
 #   --name <file>             Output file name (default 5do-<version>-linux-<arch>.AppImage).
@@ -26,14 +25,13 @@ bundle=""
 version=""
 output_dir=""
 arch="x86_64"
-sign_key=""
 zsync_url=""
 update_information=""
 name=""
 appimagetool="${APPIMAGETOOL:-}"
 
 usage() {
-    sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -42,7 +40,6 @@ while [[ $# -gt 0 ]]; do
         --version) version="${2:-}"; shift 2 ;;
         --output) output_dir="${2:-}"; shift 2 ;;
         --arch) arch="${2:-}"; shift 2 ;;
-        --sign-key) sign_key="${2:-}"; shift 2 ;;
         --zsync-url) zsync_url="${2:-}"; shift 2 ;;
         --update-information) update_information="${2:-}"; shift 2 ;;
         --name) name="${2:-}"; shift 2 ;;
@@ -149,14 +146,6 @@ for document in README.md LICENSE THIRD-PARTY-NOTICES.md; do
     fi
 done
 
-# appimagetool shells out to gpg2 for --sign; provide a shim when only gpg exists.
-if [[ -n "$sign_key" ]] && ! command -v gpg2 >/dev/null 2>&1 && command -v gpg >/dev/null 2>&1; then
-    mkdir -p "$work/bin"
-    ln -s "$(command -v gpg)" "$work/bin/gpg2"
-    PATH="$work/bin:$PATH"
-    export PATH
-fi
-
 arguments=(--comp zstd)
 if "$appimagetool" --help 2>&1 | grep -q -- '--no-appstream'; then
     arguments+=(--no-appstream)
@@ -165,9 +154,6 @@ if [[ -n "$update_information" ]]; then
     arguments+=(--updateinformation "$update_information")
 elif [[ -n "$zsync_url" ]]; then
     arguments+=(--updateinformation "zsync|$zsync_url")
-fi
-if [[ -n "$sign_key" ]]; then
-    arguments+=(--sign --sign-key "$sign_key")
 fi
 
 output="$output_dir/5do-${version}-linux-${arch}.AppImage"

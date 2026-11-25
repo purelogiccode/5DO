@@ -350,16 +350,12 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ## Next release: Linux distribution gate
 
-The Linux packaging and signing scripts are in `packaging/linux/` and run from
+The Linux packaging scripts are in `packaging/linux/` and run from
 `.github/workflows/linux-packages.yml`. This gate turns them into release evidence; the
 runbook and verification commands are in
-[LinuxDistribution.md](LinuxDistribution.md). The unsigned build/install path was
-validated by CI run
-<https://github.com/purelogiccode/5DO/actions/runs/44193278546> (2026-11-17); the boxes
-below still apply to the signed release.
+[LinuxDistribution.md](LinuxDistribution.md). Release assets are validated with
+`SHA256SUMS` only; no GPG signatures or keyring are published.
 
-- [ ] `LINUX_GPG_PRIVATE_KEY` and `LINUX_GPG_KEY_ID` are configured; only the signing
-      subkey is stored, and its fingerprint matches `LinuxDistribution.md` §4.
 - [ ] `linux-packages.yml` builds `.deb`, `.rpm`, AppImage, and Flatpak for x64 and
       arm64 from the release bundles.
 - [ ] The Linux bundle contains the packager files under `packaging/` and the
@@ -375,23 +371,23 @@ below still apply to the signed release.
 - [ ] `sudo apt install ./5do_<version>_amd64.deb` succeeds on a stock Debian/Ubuntu
       host (the dependency list resolves), `5do --version` runs, and `sudo apt remove 5do`
       removes the symlinks.
-- [ ] `gpg --verify` passes for `SHA256SUMS-linux.txt.asc` and every artifact `.asc`;
-      `sha256sum -c SHA256SUMS-linux.txt` passes from a clean download.
-- [ ] `rpm --checksig` passes for any header-signed package, and
-      `sudo dnf install ./5do-<version>-1.x86_64.rpm` succeeds on Fedora.
+- [ ] `sha256sum -c SHA256SUMS-linux.txt` passes from a clean download, and
+      `sha256sum -c SHA256SUMS.txt` passes for the five bundles and the Linux packages.
+- [ ] `sudo dnf install ./5do-<version>-1.x86_64.rpm` succeeds on Fedora; the release
+      RPMs are not header-signed.
 - [ ] `flatpak install --user ./5do-<arch>.flatpak` succeeds and
       `flatpak run --command=5do-cli io.github.purelogiccode.FiveDO selftest --json`
       passes inside the sandbox on a matching host.
 - [ ] The release page lists the `.deb`/`.rpm` files, both AppImages (+ `.zsync`), both
-      Flatpak bundles, the keyring, and both checksum manifests; no repository is hosted
-      or required.
+      Flatpak bundles, and both checksum manifests, with no signature or keyring assets;
+      no repository is hosted or required.
 - [ ] Each AppImage's `--appimage-updateinfo` reports
       `gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-<arch>.AppImage.zsync`, the
       `.zsync` `URL:` points at the versioned AppImage, and `AppImageUpdate` finds the
       next release through the published `.zsync`.
-- [ ] The key fingerprint, run links, and install commands are recorded in
+- [ ] The run links and install commands are recorded in
       [Installers.md](Installers.md), [TestCorpus.md](TestCorpus.md), and the release
-      notes; any unsigned run is labeled "unsigned".
+      notes.
 
 ---
 

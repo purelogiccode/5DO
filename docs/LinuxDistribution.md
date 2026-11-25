@@ -1,13 +1,15 @@
-# Linux distribution, signing, and publishing
+# Linux distribution and publishing
 
-This page covers how the Linux artifacts are built, signed, published, and announced,
-and what else can move Linux adoption. It is the working reference for
+This page covers how the Linux artifacts are built, published, and announced, and what
+else can move Linux adoption. It is the working reference for
 [Installers.md](Installers.md) and the Linux rows in
 [ImplementationPlan.md](ImplementationPlan.md) §3.3.
 
 **Snapshot:** 2026-11-22, v1.17.0. Linux x64 is a validated target (hardware
 OpenGL/Vulkan, real-device audio, evdev gamepads, display-sleep inhibit, full
-acceptance pass); Linux arm64 passes native runtime smoke.
+acceptance pass); Linux arm64 passes native runtime smoke. Release downloads are
+validated with `SHA256SUMS` only; the project does not publish GPG signatures or a
+keyring.
 
 ---
 
@@ -17,16 +19,14 @@ acceptance pass); Linux arm64 passes native runtime smoke.
 |---|---|---|
 | `5do-<version>-linux-x64.tar.gz` | `build-bundle.yml` | Portable x64 bundle (primary artifact) |
 | `5do-<version>-linux-arm64.tar.gz` | `build-bundle.yml` | Portable arm64 bundle |
-| `5do-<version>-linux-<arch>.tar.gz.asc` | `linux-packages.yml` | Detached signature for each portable bundle |
 | `5do_<version>_amd64.deb` | `packaging/linux/build-deb.sh` | Debian/Ubuntu/Mint install, desktop entry, MIME, AppStream |
 | `5do_<version>_arm64.deb` | `packaging/linux/build-deb.sh` | arm64 variant |
 | `5do-<version>-1.linux.x86_64.rpm` | `packaging/linux/build-rpm.sh` | Fedora/RHEL/openSUSE install |
 | `5do-<version>-1.linux.aarch64.rpm` | `packaging/linux/build-rpm.sh` | arm64 variant |
 | `5do-<version>-linux-x86_64.AppImage`, `5do-<version>-linux-aarch64.AppImage` (+ `.zsync`) | `packaging/linux/build-appimage.sh` | No-install single file, zsync updates |
 | `5do-<version>-linux-x86_64.flatpak`, `5do-<version>-linux-aarch64.flatpak` | `packaging/linux/build-flatpak.sh` | Sandboxed install for software centers and Steam Deck |
-| `SHA256SUMS-linux.txt` (+ `.asc`) | `linux-packages.yml` | Signed checksum manifest for the `.deb`/`.rpm`/AppImage/Flatpak artifacts |
-| `5do-archive-keyring.gpg` (+ `.asc`) | `sign-artifacts.sh` | Public release key |
-| `SHA256SUMS.txt` | `release.yml` | Unsigned checksum manifest for the bundles and packages |
+| `SHA256SUMS-linux.txt` | `linux-packages.yml` | Checksum manifest for the `.deb`/`.rpm`/AppImage/Flatpak artifacts |
+| `SHA256SUMS.txt` | `release.yml` | Checksum manifest for all release assets, including the bundles |
 
 The `.deb`/`.rpm` packages are **self-contained**: the .NET 11 runtime is embedded in
 the apphosts, so the packages never depend on `dotnet-runtime-*`. They depend on the
@@ -44,64 +44,42 @@ still lets the file picker reach BIOS and disc images in the real home directory
 
 ---
 
-## 2. What "signing" means on Linux
+## 2. Release integrity: SHA256SUMS only
 
-There is no Linux equivalent of Windows Authenticode or Apple notarization for a
-general-purpose application:
+5DO does not create GPG signatures or publish a keyring for Linux (or any other)
+release asset. Validation is based on the checksum manifests:
 
-- The kernel does not verify a signature before executing an ELF binary.
-- A `.deb` has no per-package cryptographic signature that APT checks; APT trusts the
-  **repository index**.
-- `dpkg-sig` was removed from Debian; `debsig-verify` exists but is not used by the
-  archive.
-- RPM packages *can* carry a header signature, and dnf checks it only when
-  `gpgcheck=1`.
-- AppImages can embed a GPG signature, but nothing enforces it.
+| Manifest | Covers |
+|---|---|
+| `SHA256SUMS-linux.txt` | The `.deb`, `.rpm`, AppImage, and Flatpak files |
+| `SHA256SUMS.txt` | Every release asset, including the five portable bundles and the Linux packages |
 
-So "signing the Linux build" means building a **trust chain around the download**:
+This avoids shipping a per-asset `.asc` signature for every file. `sha256sum -c`
+detects a truncated or corrupted download and confirms that the asset matches the
+manifest published with the release. The manifest itself is fetched from the same
+GitHub release over TLS, so it is a download-integrity check, not an independent
+authorship proof.
 
-| Link | What is signed | What verifies it |
-|---|---|---|
-| Release key | The 5DO public key, published as `5do-archive-keyring.gpg` | Fingerprint pinned in this documentation and the release notes |
-| Release assets | `SHA256SUMS-linux.txt.asc` and a detached `.asc` per artifact | `gpg --verify` + `sha256sum -c` |
-| RPM package (optional) | RPM header signature | `rpm --checksig` |
-| AppImage (optional) | Embedded signature | `./5do-<version>-linux-x86_64.AppImage --appimage-signature` |
-| Repository metadata (optional) | `InRelease`/`Release.gpg` and `repomd.xml.asc`, only if you mirror the packages into your own repository | `apt update` / `dnf` with the keyring |
-
-Signing does **not** sandbox the app, scan it for malware, or provide auto-updates. It
-only proves that the bytes came from the 5DO release key.
+There is no OS-level signature check for an ELF binary or a `.deb`, and the release
+RPMs are not header-signed. That is intentional: the project publishes checksums only.
 
 ---
 
 ## 3. Verifying a download
 
 ```sh
-# 1. Inspect the key before trusting it. The fingerprint must match the value
-#    published in this document (see §4) and in the release notes.
-curl -fsSLO https://github.com/purelogiccode/5DO/releases/latest/download/5do-archive-keyring.gpg.asc
-gpg --show-keys --with-fingerprint 5do-archive-keyring.gpg.asc
+# From the directory that holds the downloaded assets:
+curl -fsSLO https://github.com/purelogiccode/5DO/releases/latest/download/SHA256SUMS.txt
+curl -fsSLO https://github.com/purelogiccode/5DO/releases/latest/download/SHA256SUMS-linux.txt
 
-# 2. Verify the Linux checksum manifest, then the artifacts.
-gpg --verify SHA256SUMS-linux.txt.asc SHA256SUMS-linux.txt
+sha256sum -c SHA256SUMS.txt
 sha256sum -c SHA256SUMS-linux.txt
-
-# 3. Verify an individual artifact signature (equivalent to step 2).
-gpg --verify 5do_<version>_amd64.deb.asc 5do_<version>_amd64.deb
-
-# 4. The portable bundles and the Flatpak bundles carry their own detached signature;
-#    SHA256SUMS-linux.txt covers the .deb/.rpm/AppImage/Flatpak artifacts.
-gpg --verify 5do-<version>-linux-x64.tar.gz.asc 5do-<version>-linux-x64.tar.gz
-gpg --verify 5do-<version>-linux-x86_64.flatpak.asc 5do-<version>-linux-x86_64.flatpak
 ```
 
-```sh
-# RPM package header signature, when the package was built with --sign-key.
-rpm --checksig 5do-<version>-1.linux.x86_64.rpm
-
-# AppImage embedded signature.
-chmod +x 5do-<version>-linux-x86_64.AppImage
-./5do-<version>-linux-x86_64.AppImage --appimage-signature
-```
+`SHA256SUMS.txt` covers all five bundles plus the Linux packages; use
+`SHA256SUMS-linux.txt` when you only downloaded the Linux artifacts. A missing line
+for a file you did not download is reported as "No such file or directory"; download
+the matching release assets or check only the files you have.
 
 5DO publishes the packages as **GitHub release assets**. There is no project-hosted
 `apt`/`dnf` repository, so install the downloaded file directly; the distribution
@@ -129,59 +107,21 @@ flatpak run io.github.purelogiccode.FiveDO
 repository entry. Removing the package is the normal `apt remove 5do` /
 `dnf remove 5do`.
 
-If you operate a fleet and want a repository, §5.1 shows how to mirror the signed
-packages; that is an optional deployment detail, not a 5DO service.
-
-Never use `[trusted=yes]` or `repo_gpgcheck=0` on a repository you did not sign
-yourself; both disable the only integrity check APT/dnf perform.
+If you operate a fleet and want a repository, §5.1 shows how to mirror the packages
+with your own signing key; that is an optional deployment detail, not a 5DO service.
 
 ---
 
-## 4. Key setup runbook (one time)
+## 4. Optional mirror signing (operators only)
 
-The release key is a single **sign-only ed25519 key**. Its only copy is the
-`LINUX_GPG_PRIVATE_KEY` repository secret: there is no offline primary key to extend or
-revoke with, which suits a one-maintainer project but means rotation replaces the key
-instead of adding a subkey.
+5DO has no release signing key. If you operate a fleet and mirror the `.deb`/`.rpm`
+files into your own repository, sign that repository with your own key and publish your
+own keyring; §5.1 shows the scripts and client setup. This is a deployment detail, not
+part of the 5DO release pipeline, and CI does not create or validate release
+signatures.
 
-| Item | Value |
-|---|---|
-| User ID | `Pure Logic Code (5DO releases) <admin@purelogiccode.com>` |
-| Key ID | `5C4C1E8EAFD44075` |
-| Fingerprint | `E69FF266D1FB01D3411578775C4C1E8EAFD44075` |
-| Algorithm | ed25519, sign and certify, no passphrase (CI signs unattended) |
-| Created | 2026-11-18 |
-| Expires | 2029-11-18 |
-
-Reproduce the setup on any machine with GnuPG 2.2+ and an authenticated `gh`:
-
-```sh
-export GNUPGHOME="$(mktemp -d)"
-gpg --batch --pinentry-mode loopback --passphrase '' \
-  --quick-generate-key "Pure Logic Code (5DO releases) <admin@purelogiccode.com>" ed25519 sign 3y
-fpr="$(gpg --batch --with-colons --fingerprint | awk -F: '/^fpr:/ { print $10; exit }')"
-gpg --batch --armor --output 5do-release.asc --export-secret-keys "$fpr"
-gh secret set LINUX_GPG_PRIVATE_KEY < 5do-release.asc
-gh secret set LINUX_GPG_KEY_ID --body "$fpr"
-shred -u 5do-release.asc
-rm -rf "$GNUPGHOME"
-```
-
-`linux-packages.yml` signs on every CI push and on releases; without the secret it logs
-a warning and publishes unsigned packages.
-
-Rules:
-
-- Never commit a private key, and never print it. The secret is the only copy.
-- The keyring users install is exported by `sign-artifacts.sh` as
-  `5do-archive-keyring.gpg` (+ `.asc`) and published with each release.
-- Rotate before 2029-11-18: generate a new key, publish the new fingerprint in the
-  release notes, and keep the old keyring downloadable so earlier signatures still
-  verify.
-- If the secret leaks, revoke with the stored key (`gpg --gen-revoke` needs it, so do
-  that before deleting the secret), publish the revocation, then rotate. Do not
-  silently replace `5do-archive-keyring.gpg`.
-- Record the fingerprint here and in `ReleaseNotes-<version>.md`.
+Never use `[trusted=yes]` or `repo_gpgcheck=0` on a repository you did not sign
+yourself; both disable the only integrity check APT/dnf perform.
 
 ---
 
@@ -195,8 +135,8 @@ The Linux artifacts are **GitHub release assets**, next to the portable bundles:
 | `5do-<version>-1.linux.x86_64.rpm`, `5do-<version>-1.linux.aarch64.rpm` | `sudo dnf install ./5do-<version>-1.linux.x86_64.rpm` |
 | `5do-<version>-linux-x86_64.AppImage` (and `.zsync`), `5do-<version>-linux-aarch64.AppImage` (and `.zsync`) | `chmod +x` and run |
 | `5do-<version>-linux-x86_64.flatpak`, `5do-<version>-linux-aarch64.flatpak` | `flatpak install --user ./5do-<version>-linux-<arch>.flatpak` |
-| `SHA256SUMS-linux.txt` (+ `.asc`) | `gpg --verify` + `sha256sum -c` |
-| `5do-archive-keyring.gpg` (+ `.asc`) | Trust anchor for every signature |
+| `SHA256SUMS-linux.txt` | `sha256sum -c` |
+| `SHA256SUMS.txt` | `sha256sum -c` for the full release |
 
 There is **no project-hosted APT/RPM repository and no second repository to maintain**.
 `apt` and `dnf` install a local file directly (a path containing `/` is treated as a
@@ -225,7 +165,7 @@ pipeline publishes the key elsewhere.
 # Build or update both trees. The scripts are additive: the package pool keeps every
 # release, so pinned versions stay installable, and the indexes are regenerated from the
 # whole pool on each run.
-export LINUX_GPG_KEY_ID=<fingerprint of the release signing key>   # §4
+export LINUX_GPG_KEY_ID=<fingerprint of your mirror signing key>
 
 bash packaging/linux/build-apt-repo.sh \
   --repo-dir /srv/5do/apt --suite stable \
@@ -264,15 +204,15 @@ sudo dnf install 5do
 ```
 
 `repo_gpgcheck=1` is what makes dnf verify `repodata/repomd.xml`. The generated repo file
-sets `gpgcheck=0` because the release packages are not header-signed; passing
-`--sign-key` to `build-rpm.sh` adds that layer if you build your own packages.
+sets `gpgcheck=0` because the release packages are not header-signed; mirror operators
+who sign their own copies can publish with `gpgcheck=1`.
 
 Both trees grow by roughly 120-160 MB per release for both architectures. Prune
 deliberately and rebuild the indexes afterwards.
 
-**Validated 2026-11-17** with the 1.12.0 packages and a throwaway ed25519 key, because the
-project release key does not exist yet (§4). APT and dnf verified the metadata with only
-the keyring the script published, and every client rejected a tampered index:
+**Validated 2026-11-17** with the 1.12.0 packages and a throwaway ed25519 key in a
+standalone mirror test. APT and dnf verified the metadata with only the keyring the
+script published, and every client rejected a tampered index:
 
 | Client | OS / tool | Result |
 |---|---|---|
@@ -282,8 +222,8 @@ the keyring the script published, and every client rejected a tampered index:
 | Fedora | 45, dnf5 5.4.6 | keyring imported from the mirror URL, signed `repomd.xml` accepted, `dnf install 5do` (with distro deps) → `5do-cli selftest` ok, `dnf remove` cleaned up |
 | Tamper check | all three | a modified `Packages`/`Packages.gz` fails APT with a hash mismatch; a modified `repomd.xml` fails dnf with `Bad PGP signature` and the repository is not used |
 
-Evidence: [TestCorpus.md](TestCorpus.md) §1.1cn. CI runs the same scripts with a
-throwaway key in `linux-packages.yml` and asserts the signed metadata and keyring.
+Evidence: [TestCorpus.md](TestCorpus.md) §1.1cn. The mirror scripts are operator
+tooling; the release pipeline does not run or validate them.
 
 ### 5.2 Software-center appearance (2026-11-18)
 
@@ -318,7 +258,7 @@ Evidence: [TestCorpus.md](TestCorpus.md) §1.1cp.
 ## 6. Releasing and validating
 
 ```sh
-# Local: build, sign, and install-test the Linux set.
+# Local: build and install-test the Linux set.
 bash packaging/linux/build-deb.sh  --bundle artifacts/bundle/linux-x64 --rid linux-x64
 bash packaging/linux/build-rpm.sh  --bundle artifacts/bundle/linux-x64 --rid linux-x64
 APPIMAGETOOL=/path/to/appimagetool/AppRun bash packaging/linux/build-appimage.sh \
@@ -328,13 +268,9 @@ APPIMAGETOOL=/path/to/appimagetool/AppRun bash packaging/linux/build-appimage.sh
   --update-information "gh-releases-zsync|purelogiccode|5DO|latest|5do-*-linux-x86_64.AppImage.zsync"
 bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid linux-x64 \
   --output artifacts/installers --runtime-version 26.08
-bash packaging/linux/sign-artifacts.sh --key-id "$KEY" \
-  --keyring-out artifacts/signing/5do-archive-keyring.gpg artifacts/installers
-bash packaging/linux/build-apt-repo.sh --repo-dir artifacts/mirror/apt \
-  --base-url https://mirror.example.org/5do/apt --key-id "$KEY" artifacts/installers
-bash packaging/linux/build-rpm-repo.sh --repo-dir artifacts/mirror/rpm \
-  --base-url https://mirror.example.org/5do/rpm --key-id "$KEY" --gpgcheck 0 \
-  artifacts/installers
+( cd artifacts/installers && find . -maxdepth 1 -type f \
+    \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.flatpak' \) \
+    -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS-linux.txt )
 sudo apt install ./artifacts/installers/5do_1.17.0_amd64.deb
 ```
 
@@ -343,14 +279,14 @@ CI (`linux-packages.yml`, called by `release.yml`) already:
 - builds AppImage and Flatpak bundles for both architectures;
 - validates `5do.desktop`, the MIME XML, the AppStream metainfo, and the package
   contents (`dpkg-deb`, `rpm -qlp`);
-- imports the signing subkey and signs every artifact and the checksum manifest;
+- writes `SHA256SUMS-linux.txt` for the `.deb`/`.rpm`/AppImage/Flatpak artifacts;
 - installs the `.deb` with `apt-get install`, checks the generated symlinks, desktop
   entry, MIME, metainfo, and icon, runs `5do --version`, `5do-cli selftest --json`, and
   `5do-cli doctor`, then removes the package and verifies the removal;
 - installs each `.flatpak` and runs `5do-cli --version` and `5do-cli selftest --json`
   inside the sandbox;
-- publishes `5do-linux-installers` (packages, signatures, checksums, keyring), which
-  `release.yml` attaches to the GitHub release.
+- publishes `5do-linux-installers` (packages and checksums), which `release.yml`
+  attaches to the GitHub release.
 
 Local acceptance on a real Linux host:
 
@@ -362,7 +298,7 @@ sudo apt install ./5do_<version>_amd64.deb
 
 # Fedora
 sudo dnf install ./5do-<version>-1.linux.x86_64.rpm
-rpm --checksig ./5do-1.17.0-1.linux.x86_64.rpm
+sha256sum -c SHA256SUMS-linux.txt
 
 # AppImage without FUSE (containers, minimal installs)
 ./5do-<version>-linux-x86_64.AppImage --appimage-extract-and-run --version
@@ -385,14 +321,14 @@ exist before any outreach.
 
 | # | Channel | Audience | Effort | Gate / action |
 |---|---|---|---|---|
-| 1 | GitHub Releases | Existing users | Done | Publishes bundles, signed packages, AppImage, keyring, and checksums |
-| 2 | Signed `.deb`/`.rpm` downloads | Distro users | Done | `apt install ./5do_<version>_amd64.deb` / `dnf install ./5do-<version>-1.x86_64.rpm` |
+| 1 | GitHub Releases | Existing users | Done | Publishes bundles, packages, AppImage, and checksums |
+| 2 | `.deb`/`.rpm` downloads | Distro users | Done | `apt install ./5do_<version>_amd64.deb` / `dnf install ./5do-<version>-1.x86_64.rpm` |
 | 3 | AppImage download | No-install users | Done in CI | `5do-<version>-linux-x86_64.AppImage` / `5do-<version>-linux-aarch64.AppImage` + `.zsync` |
 | 4 | [AppImageHub](https://appimage.github.io/) | AppImage browsers | S | Pull request adding a data entry to the AppImage catalog |
 | 5 | [AUR](https://aur.archlinux.org/) (`5do-bin`) | Arch/Manjaro/Endeavour, Steam Deck | S | PKGBUILD (§8.1) |
 | 6 | [itch.io](https://itch.io/) | Retro/indie players | S | Free project page; upload AppImage, Flatpak, tarball |
 | 7 | [Flathub](https://flathub.org/) | GNOME/KDE software centers, Steam Deck | L | Licence review first (§9); then a Flatpak manifest and a Flathub app submission |
-| 8 | Self-hosted Flatpak | KDE/GNOME users | Done in CI | Single-file `5do-<version>-linux-<arch>.flatpak`; add `flatpak build-update-repo` with the 5DO key if a hosted repository is wanted |
+| 8 | Self-hosted Flatpak | KDE/GNOME users | Done in CI | Single-file `5do-<version>-linux-<arch>.flatpak`; add `flatpak build-update-repo` with your own key if a hosted repository is wanted |
 | 9 | Snap Store | Ubuntu users | M | `snapcraft.yaml` with `strict` confinement, store review |
 | 10 | EmuDeck / RetroDeck / EmulationStation | Steam Deck and HTPC users | M | Upstream pull request adding 5DO as a 3DO option |
 | 11 | GamingOnLinux, Boiling Steam, Phoronix | Linux gaming readers | S | News submission; Phoronix for Vulkan/Wayland milestones, not routine releases |
@@ -407,13 +343,14 @@ exist before any outreach.
 The first paragraph should be the one sentence a reader repeats to a friend:
 
 > 5DO 1.12.0 is a 3DO emulator for Windows, Linux, and Apple Silicon macOS. Linux
-> ships as a signed Debian package, an RPM, and a portable AppImage you can install
+> ships as a Debian package, an RPM, and a portable AppImage you can install
 > straight from the release page. It needs no runtime install, supports OpenGL and
 > Vulkan, and runs the 378-title compatibility set.
 
 Then, in order: what changed, how to install (one command per distro), how to verify
-the signature, where to report a problem, and one screenshot or short clip. Keep the
-BIOS requirement explicit — it is the single most common support question.
+the download with `SHA256SUMS`, where to report a problem, and one screenshot or short
+clip. Keep the BIOS requirement explicit — it is the single most common support
+question.
 
 ### Cadence
 
@@ -603,7 +540,7 @@ Two paths clean this up:
    binary, so the restriction still applies.
 
 Until one of those happens, treat official distro archives as out of scope and put the
-effort into signed release downloads, AppImage, AUR, and Steam Deck channels. Record
+effort into checksum-verified release downloads, AppImage, AUR, and Steam Deck channels. Record
 the decision in [ReleaseLegalReview.md](ReleaseLegalReview.md).
 
 > This section is engineering guidance, not legal advice. Get a lawyer's read before
@@ -624,7 +561,7 @@ committed until it has an ID.
 | P0 | **Wayland guidance and fallback check** | X11/XWayland works today; Wayland-only sessions fall back to the slower offscreen path. Detect `WAYLAND_DISPLAY` without `DISPLAY`, warn once, and document the XWayland workaround. **Implemented:** `5do-cli doctor` reports the case and the shell logs it once and shows a status-line hint | S |
 | P1 | **AppImage auto-update** | Embed zsync info and surface a newer release. **Implemented:** the AppImage embeds zsync update information and the existing startup/`update` check offers the release page; remaining work is an in-app download if wanted | M |
 | P1 | **Steam Deck preset** | A Deck-friendly on-screen hint for the BIOS step and documented non-Steam-game setup. **Implemented:** the first-run guide detects Deck/gamescope sessions, uses a 960x680 layout with large buttons, shows the BIOS folder, and can re-scan; [Installation.md](Installation.md) documents the non-Steam flow. The upstream EmuDeck/RetroDeck entry remains as `REL-10`. | S |
-| P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub. **Implemented:** `build-flatpak.sh` produces `5do-<version>-linux-<arch>.flatpak` bundles for x64 and arm64, covered by the GPG signatures; a hosted repository is optional | M |
+| P1 | **Self-hosted Flatpak** | Discover-store visibility without waiting for Flathub. **Implemented:** `build-flatpak.sh` produces `5do-<version>-linux-<arch>.flatpak` bundles for x64 and arm64; a hosted repository is optional | M |
 | P1 | **EmuDeck/RetroDeck entry** | Where Deck users actually look for emulators | S |
 | P1 | **Flatpak on Flathub** | Largest Linux app store; needs the licence decision and a network-free build | L |
 | P1 | **Snap** | Ubuntu's default store; confinement work | M |
@@ -639,7 +576,7 @@ bundle already has no runtime dependency).
 
 ---
 
-## 11. Evidence checklist for a signed Linux release
+## 11. Evidence checklist for a Linux release
 
 - [ ] `linux-packages.yml` built `.deb`/`.rpm` and AppImage/Flatpak bundles for x64 and
       arm64.
@@ -652,24 +589,17 @@ bundle already has no runtime dependency).
       `bios discover` finds the test BIOS.
 - [ ] `desktop-file-validate` and `appstreamcli validate --no-net` pass (also in CI).
 - [ ] `dpkg-deb -f` shows no `dotnet-runtime` dependency and the expected X11/font deps.
-- [ ] `apt-get update` is not required: `sudo apt install ./5do_<version>_amd64.deb`
-      succeeds on the target host with the published dependency list, and the optional
-      mirror scripts still produce signed `InRelease`/`Release.gpg` when a mirror is
-      wanted.
-- [ ] `build-apt-repo.sh` and `build-rpm-repo.sh` publish `5do-archive-keyring.gpg` with
-      the trees, `gpg --verify` passes on `InRelease` and `repomd.xml.asc` with only that
-      keyring, and `apt`/`dnf` install `5do` from a served tree (see §5.1).
-- [ ] `gpg --verify` passes for `SHA256SUMS-linux.txt.asc` and every artifact `.asc`
-      (including the two portable bundle tarballs); `sha256sum -c SHA256SUMS-linux.txt`
-      passes from a clean download.
+- [ ] `sha256sum -c SHA256SUMS-linux.txt` passes from a clean download of the Linux
+      artifacts.
+- [ ] `sha256sum -c SHA256SUMS.txt` passes for the five portable bundles and the Linux
+      packages.
+- [ ] The release page contains no `.asc`, keyring, or other signature assets.
 - [ ] `sudo apt install ./5do_<version>_amd64.deb` succeeds on a stock Debian/Ubuntu
       host (dependency list resolves) and `5do --version` runs; the reverse `apt remove`
       cleans up `/usr/bin/5do`.
 - [ ] `sudo dnf install ./5do-<version>-1.x86_64.rpm` succeeds on Fedora.
-- [ ] `rpm --checksig` passes when packages were header-signed.
-- [ ] `sha256sum -c SHA256SUMS.txt` passes for the five bundles.
-- [ ] The key fingerprint is recorded in §4 and in the release notes.
 - [ ] `Installers.md`, `TestCorpus.md`, and `ReleaseChecklist.md` record the run.
-- [ ] The release page lists every package, both AppImages, both Flatpak bundles, the
-      keyring, and both checksum manifests; no repository or extra infrastructure is
-      required.
+- [ ] The release page lists every package, both AppImages, both Flatpak bundles, and
+      both checksum manifests; no repository or extra infrastructure is required.
+- [ ] Optional: a mirror operator's own signed `InRelease`/`repomd.xml.asc` verifies with
+      the operator's keyring (see §5.1); this is not part of the 5DO release.
