@@ -146,11 +146,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   now a **Warning** and emulation continues. On a post-1.16.0 build a fresh burn of the
   same disc no longer faults at that sector, and `disc verify` reports the identical hash
   `0x84b2bef01d157a9f` with 0 errors, so the two burns are byte-identical and the old
-  failure was intermittent read reliability, not corrupt data. A sub-second pause can
-  still be observed at the same spot; physical discs are read synchronously on the
-  emulation thread with no read-ahead, so a drive seek, spin-up, or firmware retry stalls
-  the core for that one read. That is host read latency, not a read error and not an
-  emulator fault; a CHD/image does not show it.
+  failure was intermittent read reliability, not corrupt data. One re-test showed a
+  sub-second pause at the same spot, but a repeat 1.17.0 run logged no warnings or read
+  errors and the FMV completed without a stall. Physical discs are read synchronously on
+  the emulation thread with no read-ahead, so a slow drive read can stall the core for
+  that one read. That is host read latency, not a read error and not an emulator fault;
+  a CHD/image does not show it.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
@@ -190,11 +191,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   transcript from a physical disc before it can be recommended.
 - **Way of the Warrior from a burned CD-R no longer crashes on the FMV.** The 1.16.0 run
   turned the sector-103777 CRC into a warning while the drive recovered; a re-burn of the
-  same disc tested on 1.17.1 no longer faults at all. A brief, sub-second pause can still
-  occur: physical discs are read synchronously on the emulation thread with no read-ahead,
-  so the drive's own seek/retry latency stalls the core for that read. This is host read
-  latency, not a data error; a CHD/image or `disc verify` does not exhibit it. 4DO may
-  hide the retry differently.
+  same disc tested on 1.17.0 no longer faults at all, and the final log for that run has
+  no warnings, no read errors, and no sector retries, with the FMV playing through. One
+  earlier re-test showed a brief sub-second pause, so an occasional slow drive read can
+  still stall that one read on the emulation thread. That is host read latency, not a
+  data error; a CHD/image or `disc verify` does not exhibit it. 4DO may hide the retry
+  differently.
 - A single active joypad with disabled ports 7-8 left at `None` used to emit the Opera
   daisy-chain PBUS packet; that configuration now uses the legacy 16-byte packet, so
   keyboard and gamepad input work. If input is still missing, check **Settings >

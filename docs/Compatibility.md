@@ -1066,15 +1066,14 @@ checksum manifests verify, and no signature or keyring assets are present.
 
 ### 10.11 Physical CD-R re-burn, Way of the Warrior (2026-11-25, Windows x64)
 
-The issue #8 reporter burned a second copy of **Way of the Warrior** and retested on a
-post-1.16.0 Windows x64 build (the read-error handler has been in place since 1.16.0; the
-1.17.1 download was not yet available when the test was run):
+The issue #8 reporter burned a second copy of **Way of the Warrior** and retested on the
+published 1.17.0 Windows x64 build (the read-error handler has been in place since 1.16.0):
 
 | Observation | Result |
 |---|---|
 | Boot from the burned CD-R | Boots; FMV intro sequence plays |
 | Sector-103777 fault | **Does not recur**; no "Emulation fault" / core stop |
-| FMV behavior | Brief pause under one second, then playback continues normally |
+| FMV behavior | First re-test: brief pause under one second. Repeat run on 1.17.0: no pause, no warning, FMV completed |
 | Gameplay after the FMV | Reaches the first match with no further errors |
 | `disc verify E: --max-errors 8` | 157,996/157,996 sectors, 0 errors, hash `0x84b2bef01d157a9f` |
 
@@ -1084,11 +1083,12 @@ sector 103777, not corrupt disc data. The first burn reproduced a recoverable CR
 sector and, on 1.15.0/1.16.0, either stopped the core or forced a warning-level retry; the
 second copy does not fault.
 
-The remaining sub-second pause is host read latency: `PhysicalDiscSource` reads a drive
-synchronously on the emulation thread and deliberately skips the sector prefetcher so a
-media error is reported at the sector that caused it, so a drive seek, spin-up, or
-firmware retry stalls the core for the length of that one read. With identical disc data
-and a clean verify, the pause cannot be a data error. No image or CHD shows it.
+The final log from the 1.17.0 run contains **no warnings, no read errors, and no
+sector retries**, and the FMV played through to the pause. That confirms the remaining
+sub-second pause is intermittent host read latency (a slow drive read on a marginal
+spot), not an emulator fault; `PhysicalDiscSource` reads a drive synchronously on the
+emulation thread and deliberately skips the sector prefetcher so media errors surface at
+the offending sector. No image or CHD shows it, and it did not reproduce on the final run.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
