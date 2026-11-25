@@ -1062,6 +1062,26 @@ The run used the 1.17.0 version string because it validated the post-1.17.0 mast
 before the 1.17.1 version bump; the release workflow rebuilds the same sources as
 1.17.1.
 
+### 10.11 Physical CD-R re-burn, Way of the Warrior (2026-11-25, Windows x64)
+
+The issue #8 reporter burned a second copy of **Way of the Warrior** and retested on the
+published 1.17.1 Windows x64 bundle:
+
+| Observation | Result |
+|---|---|
+| Boot from the burned CD-R | Boots; FMV intro sequence plays |
+| Sector-103777 fault | **Does not recur**; no "Emulation fault" / core stop |
+| FMV behavior | Brief pause under one second, then playback continues normally |
+| Gameplay after the FMV | Reaches the first match with no further errors |
+
+The first burn produced a recoverable CRC at sector 103777 and, on 1.15.0/1.16.0, either
+stopped the core or forced a warning-level retry. The second burn does not fault, so the
+earlier failure was a marginal burn rather than a systematic disc-read or decoder
+defect. The remaining pause is consistent with host read latency: `PhysicalDiscSource`
+reads a drive synchronously on the emulation thread and deliberately skips the sector
+prefetcher so media errors surface immediately, so a drive seek, spin-up, or firmware
+retry stalls the core for the length of that read. No image or CHD shows the pause.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

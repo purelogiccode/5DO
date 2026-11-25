@@ -143,9 +143,12 @@ checksums are attached, and legal/attribution sign-off is recorded.
   continues with the next sector. The same guard covers the boot-time volume-header
   probe and CD-DA sample reads; screenshot and save-slot thumbnail writes have their own
   guarded path. The issue #8 reporter confirmed this on 1.16.0: the sector-103777 CRC is
-  now a **Warning** and emulation continues. The disc's drive still spends a moment on
-  its own error recovery when that sector is reached, so the Way of the Warrior FMV can
-  pause briefly before continuing; a CHD/image or a clean burn avoids the pause.
+  now a **Warning** and emulation continues. On 1.17.1 a fresh burn of the same disc no
+  longer faults at that sector at all, which confirms the old burn was marginal. A
+  sub-second pause can still be observed at the same spot on the new burn; physical
+  discs are read synchronously on the emulation thread with no read-ahead, so a drive
+  seek, spin-up, or firmware retry stalls the core for that one read. That is host read
+  latency, not a read error and not an emulator fault; a CHD/image does not show it.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
@@ -183,11 +186,13 @@ checksums are attached, and legal/attribution sign-off is recorded.
   the accuracy/DIPIR option prevents the boot; the Opera soft-reset path is reported to
   boot when used on its own. The DIPIR path remains opt-in and needs a CSTAT/DIPIR boot
   transcript from a physical disc before it can be recommended.
-- **Way of the Warrior from a burned CD-R no longer crashes on the FMV; it pauses for a
-  moment while the drive recovers the bad sector and then continues.** The reporter
-  confirmed this on 1.16.0. The pause comes from the disc's CRC at sector 103777 and the
-  drive's own retry, not from an emulator fault; a CHD/image or a clean burn avoids it.
-  4DO may hide the retry differently, but the sector is physically marginal.
+- **Way of the Warrior from a burned CD-R no longer crashes on the FMV.** The 1.16.0 run
+  turned the sector-103777 CRC into a warning while the drive recovered; a re-burn of the
+  same disc tested on 1.17.1 no longer faults at all. A brief, sub-second pause can still
+  occur: physical discs are read synchronously on the emulation thread with no read-ahead,
+  so the drive's own seek/retry latency stalls the core for that read. This is host read
+  latency, not a data error; a CHD/image or `disc verify` does not exhibit it. 4DO may
+  hide the retry differently.
 - A single active joypad with disabled ports 7-8 left at `None` used to emit the Opera
   daisy-chain PBUS packet; that configuration now uses the legacy 16-byte packet, so
   keyboard and gamepad input work. If input is still missing, check **Settings >
