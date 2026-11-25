@@ -1064,8 +1064,9 @@ before the 1.17.1 version bump; the release workflow rebuilds the same sources a
 
 ### 10.11 Physical CD-R re-burn, Way of the Warrior (2026-11-25, Windows x64)
 
-The issue #8 reporter burned a second copy of **Way of the Warrior** and retested on the
-published 1.17.1 Windows x64 bundle:
+The issue #8 reporter burned a second copy of **Way of the Warrior** and retested on a
+post-1.16.0 Windows x64 build (the read-error handler has been in place since 1.16.0; the
+1.17.1 download was not yet available when the test was run):
 
 | Observation | Result |
 |---|---|
@@ -1073,14 +1074,19 @@ published 1.17.1 Windows x64 bundle:
 | Sector-103777 fault | **Does not recur**; no "Emulation fault" / core stop |
 | FMV behavior | Brief pause under one second, then playback continues normally |
 | Gameplay after the FMV | Reaches the first match with no further errors |
+| `disc verify E: --max-errors 8` | 157,996/157,996 sectors, 0 errors, hash `0x84b2bef01d157a9f` |
 
-The first burn produced a recoverable CRC at sector 103777 and, on 1.15.0/1.16.0, either
-stopped the core or forced a warning-level retry. The second burn does not fault, so the
-earlier failure was a marginal burn rather than a systematic disc-read or decoder
-defect. The remaining pause is consistent with host read latency: `PhysicalDiscSource`
-reads a drive synchronously on the emulation thread and deliberately skips the sector
-prefetcher so media errors surface immediately, so a drive seek, spin-up, or firmware
-retry stalls the core for the length of that read. No image or CHD shows the pause.
+The re-burned disc produces **the same hash as the first burn**, so the two copies are
+byte-identical. The earlier core stop was therefore intermittent read reliability at
+sector 103777, not corrupt disc data. The first burn reproduced a recoverable CRC at that
+sector and, on 1.15.0/1.16.0, either stopped the core or forced a warning-level retry; the
+second copy does not fault.
+
+The remaining sub-second pause is host read latency: `PhysicalDiscSource` reads a drive
+synchronously on the emulation thread and deliberately skips the sector prefetcher so a
+media error is reported at the sector that caused it, so a drive seek, spin-up, or
+firmware retry stalls the core for the length of that one read. With identical disc data
+and a clean verify, the pause cannot be a data error. No image or CHD shows it.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

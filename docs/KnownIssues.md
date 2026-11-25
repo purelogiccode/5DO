@@ -143,12 +143,14 @@ checksums are attached, and legal/attribution sign-off is recorded.
   continues with the next sector. The same guard covers the boot-time volume-header
   probe and CD-DA sample reads; screenshot and save-slot thumbnail writes have their own
   guarded path. The issue #8 reporter confirmed this on 1.16.0: the sector-103777 CRC is
-  now a **Warning** and emulation continues. On 1.17.1 a fresh burn of the same disc no
-  longer faults at that sector at all, which confirms the old burn was marginal. A
-  sub-second pause can still be observed at the same spot on the new burn; physical
-  discs are read synchronously on the emulation thread with no read-ahead, so a drive
-  seek, spin-up, or firmware retry stalls the core for that one read. That is host read
-  latency, not a read error and not an emulator fault; a CHD/image does not show it.
+  now a **Warning** and emulation continues. On a post-1.16.0 build a fresh burn of the
+  same disc no longer faults at that sector, and `disc verify` reports the identical hash
+  `0x84b2bef01d157a9f` with 0 errors, so the two burns are byte-identical and the old
+  failure was intermittent read reliability, not corrupt data. A sub-second pause can
+  still be observed at the same spot; physical discs are read synchronously on the
+  emulation thread with no read-ahead, so a drive seek, spin-up, or firmware retry stalls
+  the core for that one read. That is host read latency, not a read error and not an
+  emulator fault; a CHD/image does not show it.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
