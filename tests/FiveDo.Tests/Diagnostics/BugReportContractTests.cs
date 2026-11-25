@@ -212,10 +212,13 @@ public sealed class BugReportContractTests
             CancellationToken cancellationToken)
         {
             Started.TrySetResult();
-            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
+            // The shutdown drain may cancel the request while this artificial delay is
+            // in flight. Keep the handler observable so the test can assert the queued
+            // report body instead of racing the cancellation.
+            await Task.Delay(150, CancellationToken.None).ConfigureAwait(false);
             var body = request.Content is null
                 ? string.Empty
-                : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                : await request.Content.ReadAsStringAsync(CancellationToken.None).ConfigureAwait(false);
             Body.TrySetResult(body);
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
