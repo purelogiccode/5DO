@@ -7,6 +7,12 @@ funded by voluntary donations rather than sales. Donations are not a license pur
 and do not grant commercial rights. The upstream FreeDO/4DO terms still control what
 may be distributed.
 
+**2026-11-25:** a license-compliance and relicense review is open as `REL-13`. The
+project owner has authorized changing the project license where that is needed to
+comply with the reference projects; no new license has been selected or committed yet.
+The current release remains under the FreeDO modified GNU LGPL until a new root
+`LICENSE` is published.
+
 ## 1. The FreeDO/4DO source is not under a standard OSI license
 
 The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, `*.h`) contain the following notice:
@@ -31,7 +37,11 @@ contributors in addition to FreeDO and 4DO.
 ## 2. What this means for the project
 
 The project license is the FreeDO modified GNU LGPL recorded in the root
-[`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE). Until the rights holders grant different terms:
+[`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE). Relicensing
+5DO's original code does not by itself remove the upstream restrictions on
+FreeDO/4DO/Opera-derived code; the `REL-13` review must obtain permission, replace the
+restricted portions, or retain the current non-commercial terms. Until that review is
+complete:
 
 - Treat the project as **donationware**: non-commercial, source-available, and funded by voluntary donations rather than sales.
 - Keep **full attribution** to FreeDO and 4DO in the source, README, About box, and release notes.
@@ -43,7 +53,10 @@ The project license is the FreeDO modified GNU LGPL recorded in the root
 
 ## 3. Recommended actions before the first public release
 
-1. **Contact the FreeDO/4DO authors** (or the current maintainers) and ask for clarification of the port and distribution terms. Keep the correspondence.
+1. **Complete the `REL-13` license review.** Contact the FreeDO/4DO/Opera rights holders
+   if permission is needed, or replace any restricted portion. Record the decision and
+   correspondence. Do not describe a new license or a distribution channel as available
+   until the review is signed off and the root `LICENSE` is updated.
 2. Keep the project license aligned with the upstream terms. It cannot be more permissive than the upstream terms allow.
 3. Keep the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE) and [`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) current when dependencies or upstream terms change.
 4. Add an in-app **About / Licenses** page listing FreeDO, 4DO, Avalonia, and other dependencies.
@@ -95,14 +108,17 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - HQx 2x/3x/4x filters by Maxim Stepin and Cameron Zemek (LGPL-2.1+; attribution
   preserved in `HqxFilter.cs` and `THIRD-PARTY-NOTICES.md`)
 - OS XInput / Linux evdev / macOS IOKit HID gamepad APIs (no bundled third-party runtime)
-- OpenAL Soft 1.23.1 (LGPL-2.0-or-later; bundled in the Windows/Linux/macOS x64
-  bundles through `Silk.NET.OpenAL.Soft.Native`, including Windows `OpenAL32.dll`). The
+- OpenAL Soft 1.23.1 (LGPL-2.0-or-later; bundled in the Windows/Linux x64+arm64 and
+  macOS arm64 bundles through `Silk.NET.OpenAL.Soft.Native`, including Windows
+  `OpenAL32.dll`). The
   LGPL notice, complete license text, written source offer, and relinking
   instructions ship in [`OpenALSoft.md`](OpenALSoft.md) and
   [`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt); the
   release review is tracked in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
-- CHDSharp (MIT plus an LGPL-2.1 component; pure C#; verify the package LICENSE before release)
-- 4DO game database (derive with attribution; verify terms)
+- CHDSharp 1.7.2 (MIT plus an LGPL-2.1 component; pure C#; package license reviewed for
+  the 1.17.1 dependency set)
+- 4DO game database (ported with attribution; permission or replacement is unresolved
+  and tracked as part of `REL-13`)
 
 ## 6. Trademarks
 

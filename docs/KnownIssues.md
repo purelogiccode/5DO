@@ -89,7 +89,8 @@ checksums are attached, and legal/attribution sign-off is recorded.
   exclusive subsets. Unofficial achievements are listed but never activated or awarded.
 - **Hardcore credit is pending RetroAchievements client approval.** The server currently
   injects `Warning: Unknown Emulator` and treats hardcore unlocks as casual. Casual mode
-  is fully usable. See [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
+  is fully usable. A compliance request has been submitted; the review is tracked as
+  `REL-14`. See [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md).
 - Achievement unlocks are queued durably when the server is unavailable and retried every
   30 seconds, after login, and when the matching game session starts. Leaderboard scores
   are not queued offline; they require a live connection when the attempt completes and
@@ -148,10 +149,11 @@ checksums are attached, and legal/attribution sign-off is recorded.
   `0x84b2bef01d157a9f` with 0 errors, so the two burns are byte-identical and the old
   failure was intermittent read reliability, not corrupt data. One re-test showed a
   sub-second pause at the same spot, but a repeat 1.17.0 run logged no warnings or read
-  errors and the FMV completed without a stall. Physical discs are read synchronously on
-  the emulation thread with no read-ahead, so a slow drive read can stall the core for
-  that one read. That is host read latency, not a read error and not an emulator fault;
-  a CHD/image does not show it.
+  errors and the FMV completed without a stall. Physical discs are still read
+  synchronously on the emulation thread, so a very slow drive read can stall the core
+  for that one read; that is host read latency, not a read error. `SYS-28` tracks a
+  longer physical-disc verification and will add a bounded read-ahead only if the stall
+  recurs. A CHD/image does not show it.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
@@ -481,7 +483,9 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   the latest frame more often and lowers presentation latency, but motion stays at the
   console rate. The achieved rate is also bounded by the platform compositor (Avalonia 12
   raises its render timer to the monitor frequency on Windows; other platforms may stay
-  at 60). Frame interpolation is not implemented.
+  at 60). Frame interpolation/high-refresh presentation is a research candidate
+  (`VID-22`); it must keep the emulated machine, input sampling, and audio at the native
+  59.94/50 Hz rate.
 - **Run-ahead is CPU-bound and opt-in.** One frame costs a full state capture/restore
   (~5.6 ms on the current desktop) plus one extra emulated frame. Titles that cannot hold
   the audio-derived deadline are auto-disabled after 45 overruns. Rewind history is cleared
@@ -520,9 +524,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - The optional Vulkan backend (`--gl-backend vulkan` / `--vk-probe`) hosts a native
   Win32 child window inside the Avalonia window on Windows, so the desktop path has no
   CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn
-  overlays over the video rectangle are obscured; X11/Wayland/Metal surfaces and
-  non-Windows Vulkan device validation are pending. The offscreen/readback path remains
-  for probes, screenshots, and non-Windows fallback. xBR-lv2, FSR 1.0
+  overlays over the video rectangle are obscured. The X11 and Metal surfaces are
+  validated; native Wayland Vulkan is still unsupported and is tracked as `PLAT-19`.
+  The offscreen/readback path remains for probes, screenshots, and non-Windows fallback.
+  xBR-lv2, FSR 1.0
   (EASU + RCAS), and HQx 2x/3x/4x are GPU passes. See [`Vulkan.md`](Vulkan.md).
 
 ## Tooling and UI
@@ -717,8 +722,9 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   report the configured mode and detector verdict.
 - PAL1/PAL2 video and per-game PAL BIOS selection are implemented; the Europe-only
   matrix titles have dated PAL captures in [PalValidation.md](PalValidation.md).
-  Guest ODE prompts, audio-only BIOS playback, netplay, and additional peripherals
-  remain out of scope for v1. Multi-track TOC, raw CD-DA sectors with volume/mute,
+  Guest ODE prompts, audio-only BIOS playback, and additional peripherals remain out of
+  scope for v1; netplay is a candidate tracked as `NET-01`. Multi-track TOC, raw CD-DA
+  sectors with volume/mute,
   READ_DATA subcode/Q packing, and M3U multi-disc playlists are implemented;
   known-title disc audio evidence remains pending.
 - Portfolio OS SWI HLE (`--swi-hle`) is an opt-in performance mode, not a timing model.

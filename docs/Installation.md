@@ -180,12 +180,15 @@ Named profiles live under `profiles/<name>/` and can be selected with
 
 ### Windows
 
-- Windows x64 is the validated target.
+- Windows x64 is a validated target; Windows arm64 passes native CLI/frontend runtime
+  smoke on the Microsoft Basic Render Driver.
 - XInput controllers are supported (`xinput1_4`, `xinput1_3`, or `xinput9_1_0`).
 - The desktop uses WGL by default and can force ANGLE/GLES with
   `--gl-backend angle`.
 - The optional Inno Setup installer in [`packaging/windows`](https://github.com/purelogiccode/5DO/tree/master/packaging/windows)
-  installs both apphosts and registers `5DO.Disc`/`5DO.Playlist` associations.
+  installs both apphosts and registers `5DO.Disc`/`5DO.Playlist` associations. It is
+  built and install-tested but is **not** currently a published release asset; the ZIP
+  bundle is the Windows download.
 
 ### Linux
 
@@ -195,18 +198,19 @@ Named profiles live under `profiles/<name>/` and can be selected with
   `usermod` command.
 - `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh`, and
   `build-flatpak.sh` produce the `.deb`, `.rpm`, portable AppImage, and single-file
-  Flatpak; CI builds, signs, and publishes them as release assets for x64 and arm64.
+  Flatpak; CI builds and publishes them as release assets for x64 and arm64, validated
+  with `SHA256SUMS` only (GPG signing and keyring publication were removed in 1.17.1).
   The asset names include the platform and version — `5do_<version>_amd64.deb`,
   `5do-<version>-1.linux.x86_64.rpm`, `5do-<version>-linux-x86_64.AppImage`, and
   `5do-<version>-linux-x86_64.flatpak` — so the release table can map each system to one
-  file. Signing, direct installation, verification, and the optional mirror tooling are
-  in [Linux distribution and signing](LinuxDistribution.md).
+  file. Direct installation, verification, and the optional mirror tooling are in
+  [Linux distribution and signing](LinuxDistribution.md).
 - `flatpak install --user ./5do-<version>-linux-<arch>.flatpak` installs the sandboxed
   build. It keeps its data under `~/.var/app/io.github.purelogiccode.FiveDO/`, while the
   file picker can still read BIOS and disc images from your home directory.
-- X11 works directly. On a Wayland session the shell runs under XWayland; a
-  Wayland-only session without `DISPLAY` falls back to the slower offscreen presenter.
-  `5do-cli doctor` reports which case applies.
+- X11 works directly. On a Wayland session the shell uses the OpenGL presenter; native
+  Wayland Vulkan is still unsupported and is tracked as `PLAT-19`. `5do-cli doctor`
+  reports which session case applies.
 - The portable tarball includes a `packaging/` folder with the desktop entry, MIME
   definition, AppStream metainfo, and icons for third-party packagers.
 - The self-contained `linux-x64` and `linux-arm64` bundles are produced by CI.

@@ -14,7 +14,7 @@ packages remain usable.
 
 | Platform | Artifact | Script | Status |
 |---|---|---|---|
-| Windows | `5do-<version>-win-x64-setup.exe`, `win-arm64` | `packaging/windows/build-installer.ps1` | x64 built and install/launch/association-tested; arm64 built (unsigned) |
+| Windows | `5do-<version>-win-x64-setup.exe`, `win-arm64` | `packaging/windows/build-installer.ps1` | x64 built and install/launch/association-tested; arm64 built (unsigned). The installer is **not** currently a published release asset; the Windows release remains the ZIP bundle |
 | Linux | `5do_<version>_amd64.deb`, `5do-<version>-1.x86_64.rpm`, `5do-<arch>.AppImage`, `5do-<arch>.flatpak` (x64 and arm64) | `packaging/linux/build-deb.sh`, `build-rpm.sh`, `build-appimage.sh`, `build-flatpak.sh` | Built; metadata, MIME, and AppStream validated; AppImage/Flatpak smoke-tested in CI; release assets validated with SHA256SUMS only |
 | macOS | `5do-<version>-osx-<arch>.dmg`, `.pkg`, `.app` | `packaging/macos/build-macos-package.sh` | Built natively in CI; DMG is the published macOS bundle |
 

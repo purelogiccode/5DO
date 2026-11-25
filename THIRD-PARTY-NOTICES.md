@@ -158,11 +158,11 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   The filters are opt-in and can be removed from a distribution that cannot
   comply with the LGPL.
 
-## Planned runtime and build dependencies
+## Runtime and build dependencies
 
-| Dependency | Purpose | License (verify before release) |
+| Dependency | Purpose | License / status |
 |---|---|---|
-| .NET 11 / runtime | Platform; **required on the host, not bundled** in release artifacts | MIT |
+| .NET 11 / runtime | Platform; **embedded in the self-contained single-file apphosts** | MIT |
 | Avalonia UI | Desktop frontend | MIT |
 | Avalonia.Desktop / Themes.Fluent / Fonts.Inter | Desktop frontend | MIT |
 | CommunityToolkit.Mvvm | ViewModels | MIT |
@@ -182,16 +182,21 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
-| CHDSharp 1.5.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Verify the package LICENSE before release. |
+| CHDSharp 1.7.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Package license reviewed for the 1.17.1 dependency set. |
 | SharpCompress 1.0.0 | ZIP/7z disc containers (ISO/BIN/CUE+BIN) | MIT; pure C#, no native dependency. |
-| 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers; permission or replacement is required before release. |
+| 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers, so permission or replacement remains unresolved. It is tracked in the active plan as part of `REL-13` and must be resolved before the next license/compliance release. |
 
 ## Project license
 
-5DO is distributed under the FreeDO modified GNU LGPL. The root [`LICENSE`](LICENSE)
-reproduces the FreeDO notice verbatim, includes the GNU LGPL 2.1 text, and records the
-additional project terms. The FreeDO additional terms take precedence where they
-conflict with the LGPL.
+5DO is currently distributed under the FreeDO modified GNU LGPL. The root
+[`LICENSE`](LICENSE) reproduces the FreeDO notice verbatim, includes the GNU LGPL 2.1
+text, and records the additional project terms. The FreeDO additional terms take
+precedence where they conflict with the LGPL.
+
+A license-compliance and relicense review is open as `REL-13`. It must reconcile the
+project-original code with the FreeDO/4DO/Opera terms, the 4DO game-database provenance,
+and any target distribution channel. The current terms remain in force until a new root
+`LICENSE` is committed.
 
 Release builds are **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. Commercial use requires prior written approval

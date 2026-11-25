@@ -1,5 +1,21 @@
 # Project Status and Next Steps
 
+**2026-11-25, post-1.17.1 plan and documentation review:** the active plan now tracks
+**21 open items**, adding `REL-13` license-compliance/relicense review, `REL-12`
+documentation/claims consistency, `REL-14` RetroAchievements hardcore approval (request
+submitted; awaiting external review), `TEST-09` a full-library soak (all 1,371 images at
+10,000 frames; all 414 unique titles at 30,000 frames), `SYS-28` physical-disc stall
+verification, `PLAT-19` native Wayland Vulkan,
+`UX-38` video recording, `SYS-29` MDS/MDF and CCD/IMG/SUB image support, and `VID-22`
+high-refresh presentation/interpolation research that keeps gameplay at the native
+59.94/50 Hz rate. The README, Roadmap, FAQ, Compatibility, KnownIssues,
+ReleaseLegalReview, THIRD-PARTY-NOTICES, Licensing, Installation, Installers,
+BuildAndTest, ReferenceStrategy, UserGuide, Performance, OpenALSoft, and the wiki Legal
+page were corrected to the 1.17.1 state. Build, `dotnet format`,
+`jb inspectcode`, and `mkdocs build --strict` are clean; the full suite is
+**2,602/2,602** on a clean run (one load-sensitive latency test failed once under
+full-suite load and passed on rerun).
+
 **2026-11-25, v1.17.1 bug-fix release:** the release fixes the malformed-ZIP library
 refresh (#70180), routes unobserved `OpenGL FBO` compositor failures to the CPU presenter
 (#70015, #70377), and waits five seconds before reporting a slow emulation stop while

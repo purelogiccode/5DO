@@ -2,8 +2,10 @@
 
 ## License
 
-5DO is distributed under the **FreeDO modified GNU LGPL**. The FreeDO additional terms
-take precedence over the GNU LGPL where they conflict. Read the full
+5DO is currently distributed under the **FreeDO modified GNU LGPL**. The FreeDO
+additional terms take precedence over the GNU LGPL where they conflict. A
+license-compliance and relicense review is open as `REL-13`; the current terms remain
+in force until a new root `LICENSE` is committed. Read the full
 [LICENSE](https://github.com/purelogiccode/5DO/blob/master/LICENSE) and
 [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md).
 
@@ -25,11 +27,12 @@ with or endorsed by Panasonic, The 3DO Company, or any rights holder.
 
 ## Distribution
 
-The v1.6.0 release bundles contain the framework-dependent single-file CLI and desktop
+The current release bundles contain the **self-contained** single-file CLI and desktop
 app, the OpenAL Soft runtime, `README.md`, `whatsnew.md`, `LICENSE`,
-`THIRD-PARTY-NOTICES.md`, and the legal/OpenAL notices. The .NET 11 runtime is a host
-prerequisite and is **not** bundled. The OpenAL Soft binary stays outside the
-single-file apphosts so it remains replaceable.
+`THIRD-PARTY-NOTICES.md`, and the legal/OpenAL notices. The .NET 11 runtime is embedded
+in the apphosts. The OpenAL Soft binary stays outside the single-file apphosts so it
+remains replaceable. Linux packages and the unsigned Windows installer scaffold exist;
+the Windows installer is not a published release asset.
 
 Read [Licensing](https://purelogiccode.github.io/5DO/Licensing.html),
 [OpenAL Soft notice](https://purelogiccode.github.io/5DO/OpenALSoft.html), and

@@ -19,7 +19,11 @@ drop-in replacement for 4DO and does not load 4DO `.state` files.
 The source is publicly available, but the license is the **FreeDO modified GNU LGPL**,
 which is not a standard OSI license and includes additional restrictions. 5DO is
 **donationware**: non-commercial, source-available, and funded by voluntary donations.
-Read [Licensing](Licensing.md) and the
+A license-compliance and relicense review is open as `REL-13`; the current terms remain
+in force until a new root `LICENSE` is committed. Relicensing 5DO's original code does
+not by itself remove restrictions on code derived from FreeDO/4DO/Opera, so the review
+must also resolve those upstream terms and the 4DO game-database provenance. Read
+[Licensing](Licensing.md) and the
 [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE).
 
 ### Why is it called 5DO?
@@ -32,7 +36,9 @@ solution and namespace prefix use **FiveDo**.
 ### Does 5DO include a BIOS or games?
 
 No. You must supply a legally obtained 3DO BIOS and legally obtained disc images. The
-repository never includes BIOS ROMs, game images, or extracted game assets.
+repository never includes BIOS ROMs, game images, or extracted game assets. 5DO uses
+the real BIOS boot path; the Opera-style BIOS-less HLE setup is not used and is out of
+scope for 1.x.
 
 ### Where do I get a BIOS?
 
@@ -46,7 +52,12 @@ pull requests.
 - BIN (2352-byte sectors)
 - CUE+BIN, including multi-track and CD-DA layouts
 - CHD, including parent/child images
+- DiscJuggler CDI and Nero NRG (read-only)
+- ISO, BIN, and CUE+BIN inside ZIP and 7z containers
 - M3U/M3U8 playlists for multi-disc games
+
+MDS/MDF and CloneCD CCD/IMG/SUB support is planned as `SYS-29`; it is not available
+yet.
 
 ### How do I open a game from a launcher?
 
@@ -59,12 +70,13 @@ A positional disc path or `--disc <path>` opens and auto-starts the game. See
 
 ### Is there a download?
 
-Yes - **v1.10.2** is available on
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.10.2). There is one
-bundle per system and architecture (Windows x64/arm64, Linux x64/arm64, macOS
-x64/arm64). Windows/Linux bundles are ZIP/tar.gz; macOS is a DMG. Each bundle contains
-both the desktop app and the CLI. Install the **.NET 11 Runtime** first; the bundles do
-not include it. You can also build from source.
+Yes - **v1.17.1** is available on
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.17.1). There are
+five bundles: Windows x64/arm64 and Linux x64/arm64 ZIP/tar.gz archives, plus a macOS
+arm64 DMG. Each bundle contains both the desktop app and the CLI, and the .NET 11
+runtime is embedded, so no separate runtime install is required. Intel macOS is not
+supported. Linux also has `.deb`, `.rpm`, AppImage, and Flatpak downloads. You can also
+build from source.
 
 ## Compatibility
 
@@ -77,7 +89,8 @@ with documented root causes. Against the peer lists, 5DO has **0 `Behind` and 0
 Phoenix **233**). The separate 594-image loadability sweep covers **593 render**, **1
 known boot failure** (`Crash 'n Burn` Japan), and **0 not-loadable rows**. This is a
 **documented-compatibility** project, not a claim of full 3DO library compatibility;
-full visual review and high-resolution CEL research remain post-1.6.
+longer full-library soak testing is planned as `TEST-09`, and true 2x/GPU CEL work
+remains tracked as `VID-20`/`VID-21`.
 
 See [Compatibility](Compatibility.md), [Game compatibility list](GameCompatibilityList.md),
 and [Known issues](KnownIssues.md).
@@ -110,17 +123,34 @@ references). 4K is **output upscaling**, not internal 4K CEL rendering. The
 OpenGL/Vulkan presenters can output 4K with nearest, sharp-bilinear, bicubic, CRT, xBR,
 FSR, HQx, and MMPX filters.
 
+### Can I play at more than 60 fps?
+
+The 3DO itself runs at 59.94 Hz NTSC (50 Hz PAL), and 5DO keeps that emulation rate so
+gameplay, physics, and audio stay correct. A 120/144 Hz display can currently re-present
+the latest frame more often, which lowers presentation latency but does not create new
+motion frames. True high-refresh presentation with optional frame interpolation is a
+research candidate (`VID-22`): the goal is more than 60 presentation updates per second
+while the emulated machine, input sampling, audio clock, and hashes remain at the native
+rate. It is not implemented yet.
+
 ### Is there netplay or achievements?
 
-No. Netplay, achievements, a full debugger UI, installers, and a guest CPU JIT are
-post-1.0 or explicitly out of scope for v1.
+Achievements are implemented, including per-frame evaluation, hardcore rules, a durable
+offline unlock queue, leaderboards, and rich presence. Hardcore credit is awaiting
+RetroAchievements client approval (`REL-14`). Netplay is not implemented; it is a
+candidate tracked as `NET-01` and starts with a loopback determinism probe. A full
+debugger UI, BIOS-less HLE boot, custom shaders, Discord Rich Presence, and cloud saves
+are out of scope for 1.x. Linux packages and an unsigned Windows installer scaffold
+exist; the Windows installer is not a published release asset.
 
 ## Saves, cheats, and TAS
 
 ### Are save states compatible with 4DO?
 
 No. 5DO uses a native `.tdos` format. Format v3 is current; v1 and v2 states remain
-readable. State compatibility across 5DO builds is documented in
+readable. Best-effort `.4dosav` import/export is available through
+`state import-4do` and `state export-4do`, but native 4DO state compatibility is not
+guaranteed. State compatibility across 5DO builds is documented in
 [Save states](SaveStates.md).
 
 ### Can I rewind or fast-forward?
@@ -145,7 +175,9 @@ See [Configuration](Configuration.md) for the full layout.
 
 Yes. 5DO records deterministic `.5domovie` files with per-frame PBUS packets, an
 optional starting state, replay/verify/branch commands, and a desktop movie editor.
-See [TAS movies](Tas.md).
+See [TAS movies](Tas.md). For video capture, the current release supports screenshots,
+GIF recording, and WAV audio capture; synchronized MP4/MKV recording is planned as
+`UX-38`.
 
 ### Does 5DO support cheats?
 
@@ -156,10 +188,12 @@ and the `cheat` CLI. See [Cheats](Cheats.md).
 
 ### Does 5DO run on Linux and macOS?
 
-Builds are published for Windows, Linux, and macOS on x64 as framework-dependent
-bundles; users install the .NET 11 runtime. **Windows x64 is the validated target.**
-Linux and macOS runtime validation is ongoing; please report issues with a diagnostics
-bundle.
+Yes. Self-contained bundles are published for **Windows x64/arm64**, **Linux
+x64/arm64**, and **macOS arm64**; the .NET 11 runtime is embedded. Windows x64 and
+Linux x64 are the validated desktop targets, and macOS arm64 is validated through
+Vulkan/MoltenVK. Windows arm64 and Linux arm64 pass native CLI/frontend runtime smoke;
+their GPU/audio hardware evidence remains limited by the available hosted runners.
+Please report platform-specific findings with a diagnostics bundle.
 
 ### What are the performance targets?
 

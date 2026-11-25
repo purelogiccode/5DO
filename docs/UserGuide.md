@@ -457,7 +457,9 @@ selects the rate used to present the latest frame. **60 Hz** keeps render-on-dem
 higher values (75/90/120/144/165/240 Hz) re-present the latest frame at that rate, and
 **Match display** follows the compositor. The 3DO outputs 60 fields per second (50 for
 PAL), so a higher rate reduces presentation latency but does not create extra motion;
-emulation speed, audio, and save states are unchanged.
+emulation speed, audio, and save states are unchanged. Optional frame
+interpolation/high-refresh motion is a research candidate (`VID-22`), not implemented
+yet; it must keep the emulated machine at the native 59.94/50 Hz rate.
 
 The status bar carries an **emulation-health badge** between the renderer label and the
 FPS counter. A green **OK** means the frame rate matches the audio-derived target and
@@ -570,7 +572,8 @@ filters by game text and date, and supports open, copy path, export, side-by-sid
 (select exactly two), refresh, and delete (the first Delete click asks for confirmation).
 The selected capture's sidecar summary appears in the status line. **File > Record GIF...** records
 emulated frames to an animated GIF at 30 fps and asks for a destination; click it again
-(or stop emulation) to finish the file. The gallery writes from the OpenGL
+(or stop emulation) to finish the file. Synchronized MP4/MKV video recording is planned
+as `UX-38`; it is not implemented yet. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
 frame with screenshots** in **Settings > Video** to write a second `-native.png`
 image from the CPU frame assembler. The default directory is your Pictures folder;

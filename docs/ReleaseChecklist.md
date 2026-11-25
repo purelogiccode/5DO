@@ -76,6 +76,32 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       win-x64 bundle reports 1.17.1, `selftest` 15/15, the same 600-frame hash/PC, and
       `FRONTEND SMOKE OK 1.17.1`.
 
+## Post-1.17.1 compliance, evidence, and documentation gate
+
+- [ ] `REL-13`: record the license/relicense decision, resolve the 4DO game-database
+      permission or replacement, update `LICENSE`/`THIRD-PARTY-NOTICES.md`/bundle copies,
+      and state the Linux-distribution/Flathub position explicitly.
+- [ ] `REL-12`: recheck `README.md`, `docs/FAQ.md`, `docs/Roadmap.md`,
+      `docs/Compatibility.md`, `docs/KnownIssues.md`, `docs/ReleaseLegalReview.md`,
+      `docs/Licensing.md`, `docs/Installation.md`, `docs/Installers.md`,
+      `docs/BuildAndTest.md`, `docs/UserGuide.md`, `docs/Performance.md`,
+      `docs/OpenALSoft.md`, `wiki/Legal.md`, and `THIRD-PARTY-NOTICES.md` for version,
+      platform, license, installer, signing, and feature claims; run
+      `mkdocs build --strict`.
+- [ ] `REL-14`: record the RetroAchievements hardcore approval and flip
+      `RetroAchievementsCompliance.IsHardcoreApproved()` after the external review.
+- [ ] `TEST-09`: run the full-library soak (all 1,371 images at 10,000 frames; all 414
+      unique titles at 30,000 frames) and commit the baseline/results.
+- [ ] `SYS-28`: repeat the physical-drive boot and `disc verify`; add bounded read-ahead
+      only if the stall recurs.
+- [ ] `PLAT-19`: validate native Wayland Vulkan on a Wayland-only compositor.
+- [ ] `SYS-29`: add and validate MDS/MDF and CCD/IMG/SUB readers.
+- [ ] `UX-38`: validate synchronized video recording on all three desktop platforms.
+- [ ] `VID-22`: probe high-refresh presentation/interpolation without changing the native
+      emulation rate.
+- [ ] `UX-16`: publish signed Windows/macOS artifacts when the certificate and Apple
+      account are available.
+
 ## 1.17.0 autosave and archive-container gate
 
 - [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
@@ -869,9 +895,9 @@ runbook and verification commands are in
 - [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43760004392> deployed
       the Pages site and published the wiki. `WhatsNew.html`,
       `ReleaseNotes-1.10.1.html`, and `wiki/Release-1.10.1` return HTTP 200.
-- [ ] Submit the compliance package to RetroAchievements and complete their review.
-- [ ] After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()` return
-      `true`, remove the pending wording, and run a live hardcore award check.
+- [ ] RetroAchievements hardcore review: request submitted; awaiting external review
+      (`REL-14`). After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()`
+      return `true`, remove the pending wording, and run a live hardcore award check.
 
 ---
 
@@ -918,9 +944,9 @@ runbook and verification commands are in
 - [x] Docs run <https://github.com/purelogiccode/5DO/actions/runs/43736567863> deployed
       the Pages site and published the wiki. `WhatsNew.html`, `ReleaseNotes-1.10.0.html`,
       and `wiki/Release-1.10.0` return HTTP 200.
-- [ ] Submit the compliance package to RetroAchievements and complete their review.
-- [ ] After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()` return
-      `true`, remove the pending wording, and run a live hardcore award check.
+- [ ] RetroAchievements hardcore review: request submitted; awaiting external review
+      (`REL-14`). After approval, make `RetroAchievementsCompliance.IsHardcoreApproved()`
+      return `true`, remove the pending wording, and run a live hardcore award check.
 
 ---
 
@@ -1018,16 +1044,15 @@ been validated.**
 
 | Item | Recommended v1 scope | Notes |
 |---|---|---|
-| Validated desktop platform | **Windows x64** | WGL and ANGLE/GLES validated; CPU fallback works |
-| Secondary desktop builds | **Linux x64** (full suite and CLI/frontend smoke passed; GL preview); macOS x64/arm64 native runtime smoke passed | Linux GPU presentation is unvalidated under llvmpipe; Windows GL remains the validated renderer |
-| Desktop arm64 | **Native runtime smoke passed** on macOS arm64, Linux arm64, and Windows arm64 | GLES 3.1, Tier B timing, and DPI are unvalidated; Raspberry Pi is out of scope |
-| Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced |
-| Disc formats | ISO, BIN, CUE+BIN, CHD | Already implemented and tested |
-| Renderer | OpenGL default, CPU fallback | Filter family is complete |
-| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-x64.dmg`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is a host prerequisite and is not bundled |
-| Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales |
-| Version | **`v1.10.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; v1.0.0 through v1.10.0 are historical |
-| Release timing | **Released 2026-11-15** | v1.10.1 bundles (macOS as DMG) and checksums are attached to the GitHub release |
+| Validated desktop platform | **Windows x64 and Linux x64** | Windows WGL/ANGLE/GLES and Linux hardware OpenGL/Vulkan X11 validated; CPU fallback works |
+| Secondary desktop builds | **macOS arm64** (Vulkan/MoltenVK); **Windows arm64** and **Linux arm64** native runtime smoke | GLES 3.1, Tier B timing, Retina 2x, and DPI are unvalidated; Raspberry Pi is out of scope |
+| Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced; `TEST-09` adds the longer full-library soak |
+| Disc formats | ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP/7z | Already implemented and tested; MDS/MDF and CCD/IMG/SUB are planned as `SYS-29` |
+| Renderer | OpenGL default, optional Vulkan/Direct3D 11, CPU fallback | Filter family is complete; high-refresh presentation is `VID-22` research |
+| Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is embedded. Linux also ships `.deb`/`.rpm`/AppImage/Flatpak; the Windows installer is built but not published |
+| Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales. `REL-13` is reviewing the licence position |
+| Version | **`v1.17.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; earlier releases are historical |
+| Release timing | **Published 2026-11-25** | Five bundles, Linux packages, and `SHA256SUMS` are attached to the GitHub release |
 
 ---
 

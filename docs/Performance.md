@@ -410,7 +410,9 @@ swap-interval path: on Windows WGL it resolves `WGL_EXT_swap_control` and report
 `VsyncActive: true` when requested; the compositor may still pace independently.
 `DisplayRefreshRate` (Settings > Video) can re-present the latest frame above 60 Hz
 (default 60). It lowers presentation latency but does not add motion, because the
-3DO still produces 60 fields per second (50 for PAL).
+3DO still produces 60 fields per second (50 for PAL). High-refresh presentation with
+optional frame interpolation is a research candidate (`VID-22`); it must keep the
+emulated machine, input sampling, and audio at the native rate.
 The renderer/mailbox present path reports **0 managed bytes/frame** after warm-up.
 The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present`
 and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not

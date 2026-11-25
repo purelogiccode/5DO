@@ -27,7 +27,7 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.17.1**, the bug-fix release for the 1.17.1 autosave and archive-container
+> 5DO is at **v1.17.1**, the bug-fix release for the 1.17.0 autosave and archive-container
 > release. It fixes malformed-ZIP library crashes, OpenGL framebuffer fallback, and slow
 > stop reporting; Linux releases now publish `SHA256SUMS` only. The desktop keeps a
 > rolling autosave written on pause, clean exit, and a configurable interval, and
@@ -44,7 +44,8 @@
 > Linux release downloads are validated with `SHA256SUMS.txt`/`SHA256SUMS-linux.txt`
 > only; no GPG signatures or keyring are published.
 > No BIOS ROMs, game images, or extracted game assets are included. You must supply
-> legally obtained files.
+> legally obtained files. The current release remains under the FreeDO modified GNU LGPL
+> while a license-compliance and relicense review is open as `REL-13`.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -251,10 +252,10 @@ app; it now reports the missing files by name instead of crashing inside Skia.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.10.2 is published on GitHub Releases as one bundle per system and architecture (Windows, Linux,
-> macOS; x64 and arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
-> runtime is embedded in each single-file apphost, so no separate runtime install is
-> required. Build from source below if you prefer.
+> v1.17.1 is published on GitHub Releases as five bundles (Windows/Linux x64+arm64 and
+> macOS arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
+> runtime is embedded in each self-contained single-file apphost, so no separate runtime
+> install is required. Build from source below if you prefer.
 > BIOS and game files are never distributed by this repository.
 
 ### Build and test

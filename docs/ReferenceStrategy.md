@@ -31,7 +31,9 @@ This is a reference change, not a rewrite:
 | 2 | `References/4DO-master/FreeDOCore` | Original C# port baseline; existing golden tests; FreeDO-specific quirks |
 | 3 | `References/freedo-master` | Historical/differential comparison only |
 | 4 | `References/CPP_SimpleGui/Cores/OperaCore` | Windows empirical harness for Opera (not product code) |
-| 5 | `References/Docs3/*` | Hardware truth when the software references disagree |
+| 5 | `References/Docs`, `References/Docs2`, `References/Docs3/*` | Hardware/SDK truth when the software references disagree |
+| 6 | `References/Aaru` | Disc-image format reference for MDS/MDF, CCD/IMG/SUB, CDI/NRG edge cases, and sector normalization (`SYS-29`); behavior/reference only, no copied code |
+| 7 | `References/cdirip`, `References/libcdio` | CDI layout, track/sector parsing, and physical-drive behavior reference |
 
 Do not commit anything from `References/`; it is gitignored.
 
@@ -177,11 +179,11 @@ license position; it adds another upstream project to the attribution list.
 The release bundles contain only first-party compiled output, documentation, and
 license/notice files. Nothing from `References/` (FreeDO, 4DO, Opera/libopera,
 SimpleGui/OperaCore, or Docs3) is copied into a bundle. Opera remains a behavioral
-reference; it is not a shipped dependency. The .NET 11 runtime is a host prerequisite
-and is **not** bundled.
+reference; it is not a shipped dependency. The .NET 11 runtime is embedded in the
+self-contained single-file apphosts.
 
 The bundle layout does not change the reference hierarchy or the licensing position:
-the CLI and desktop app are framework-dependent single-file apphosts built from this
+the CLI and desktop app are self-contained single-file apphosts built from this
 repository, and the OpenAL Soft native runtime stays beside them so its LGPL replacement
 rights remain practical.
 

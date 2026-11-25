@@ -12,7 +12,7 @@ work, and the 1.15.0 Steam Deck/SteamOS first-run setup, `ArcadeCrt` filter, Win
 optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes. The default 320x240
 compatibility path and the documented title matrix are unchanged.
 
-**Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
+**Earlier position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
 additional titles were validated on 2026-10-26 (Gex, Need for Speed, Super Street
 Fighter II Turbo, Total Eclipse, Killing Time, Theme Park, and Return Fire): each
@@ -372,15 +372,16 @@ path.
 - Stores BIOS and disc hashes. A BIOS or emulator-version mismatch produces a warning
   but the load continues; a differing expected disc hash adds a warning but still
   loads.
-- 4DO `.4dosav` import/export is **not** a v1 goal and is not implemented. The native
-  format is explicit and versioned; a best-effort importer can be added later if there
-  is demand. See [`SaveStates.md`](SaveStates.md).
+- 4DO `.4dosav` import/export is **best-effort** and implemented through
+  `state import-4do` and `state export-4do`. The native `.tdos` format remains the
+  supported format; native 4DO state compatibility is not guaranteed. See
+  [`SaveStates.md`](SaveStates.md) §9.
 
 ---
 
 ## 9. Known limitations / out of scope for v1
 
-- No netplay.
+- Netplay is a candidate (`NET-01`); no network mode ships yet.
 - Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, multi-track/CD-DA
   sectors, CD-DA volume/mute, READ_DATA subcode/Q packing, and multi-disc playlists
   are implemented; audio-only BIOS playback, guest ODE prompts, and known-title disc
@@ -398,12 +399,16 @@ path.
   implemented on the eight PBUS ports with an active-device cap of 0-8 and a 256-byte
   chain buffer; per-device calibration and scripted gameplay validation remain.
 - No 3DO modem/network emulation.
-- No cycle-exact ARM bus timing yet. The interpreter preserves FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with datasheet references. The difference is under evaluation and must not be changed by default until a differential test proves the impact.
+- The ARM bus model keeps FreeDOCore's `Ncycle = 4`; Opera uses `Ncycle = 2` with
+  datasheet references. `CORE-01` closed that comparison after the panel showed a
+  frame-boundary phase difference rather than a game-visible cycle-model gap. Do not
+  change the default without a new differential test.
 - No guarantee of 4DO save-state compatibility.
 - The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
 - CHD is supported for CD/GD-ROM images and for flat 2048-byte-unit CHDs made from cooked ISOs; DVD/HDD/raw CHDs with other unit sizes are not 3DO discs.
 - CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
 - CDI images are accepted only when the trailing descriptor passes the DiscJuggler signature checks; NRG images require a valid NERO/NER5 footer and a known first metadata chunk. Both readers are format parsers, not burners, and do not write CDI/NRG output.
+- MDS/MDF (Alcohol 120%) and CloneCD CCD/IMG/SUB images are not supported yet; they are planned as `SYS-29` and will be read-only.
 - Audio-only CDI/NRG images open at the library layer but are rejected for 3DO boot, matching the CUE/CHD data-track requirement.
 
 ---

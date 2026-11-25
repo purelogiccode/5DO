@@ -6,102 +6,83 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at the **v1.13.1 native Metal and signed Linux release** (published on GitHub).
-Windows x64 and Linux x64 remain validated, and macOS arm64 now renders through
-Vulkan/MoltenVK. The compatibility plan is complete:
+The project is at **v1.17.1** (published on GitHub). Windows x64 and Linux x64 are the
+validated desktop targets; macOS arm64 renders through Vulkan/MoltenVK; Linux arm64 and
+Windows arm64 pass native CLI/frontend runtime smoke. The compatibility program is
+complete on the current corpus:
 
 - **378 game-test-set titles** are classified beyond the title screen with dated evidence.
 - **375 are playable**; the other three are non-retail/add-on images with documented root
   causes. The comparison has **0 `Behind` and 0 `Regression` rows**.
 - 5DO is a strict superset of the **252-title peer union**, ahead of 4DO's **167** and
   Phoenix's **233** playable titles.
-- The six framework-dependent bundles and `SHA256SUMS.txt` are published; macOS ships as
-  a DMG. Windows x64 and Linux x64 are validated desktops; macOS arm64 GPU presentation
-  is validated through Vulkan/MoltenVK (60 fps, all eight filters, packaged DMG), and
-  macOS x64/arm64 plus Linux arm64 and Windows arm64 pass the native runtime smoke.
-- v1.12.0 adds macOS arm64 GPU presentation, removes the external .NET 8 build
-  requirement, and fixes the macOS OpenGL probe, renderer selection, and GPU/CPU status
-  label. The v1.11.0 base validates Linux x64 end to end (hardware OpenGL 4.2, Vulkan
-  1.2 X11 in the probe and desktop shell, 600 s real-device audio, evdev gamepads,
-  display sleep, full acceptance), adds the opt-in true 2x CEL path for Jurassic Park
-  Interactive and Family Feud, and fixes the Linux gamepad, exit, screenshot, and
-  save-state-note defects. The
-  v1.10.2 base adds DiscJuggler `.cdi` and Nero `.nrg` disc images and the Windows
-  bundle's loader-named OpenAL runtime. The v1.10.1 feature set remains:
-  RetroAchievements save-state hit persistence, the `FiveDo` desktop apphost, and
-  deferred/ReadyToRun startup. The v1.10.0 feature set remains: managed rcheevos
-  evaluation, 3DO disc identification, measured progress, a durable offline unlock
-  queue, hardcore rules, rich presence, hardcore-only leaderboard submission, OSD
-  notifications, and an achievement window.
-  The v1.9.1 feature set remains: nine UI catalogs, reversible locale switching, the
-  two-step Escape pause/quit shortcut, external metadata and media, physical
-  optical-drive boot, Windows DirectInput/HID gamepads, the controller preview, auto-crop,
-  display-sleep inhibition, Lua input scripting, the input timeline, and 4DO state interop.
+- Five self-contained bundles are published (Windows/Linux x64+arm64 and macOS arm64);
+  Linux also has `.deb`, `.rpm`, AppImage, and Flatpak assets. The .NET 11 runtime is
+  embedded, so no separate runtime is required. Intel macOS is unsupported.
+- The current release retains rolling autosave/auto-resume, ZIP/7z ISO/BIN/CUE+BIN
+  containers, physical CD-DA and read-error recovery, the Steam Deck first-run layout,
+  Arcade CRT, RetroAchievements, TAS movies, rewind/run-ahead, cheats, and the library.
 
-## Post-1.13.1
+## Next (post-1.17.1)
 
-**Playability depth (in progress):**
+The full ordered backlog is in [ImplementationPlan.md](ImplementationPlan.md). The
+short version:
 
-- Tier C gameplay-depth pass: the first increment promoted eight titles to `Good`
-  (Olympic Soccer, John Madden Football, Crime Patrol, Mad Dog II, Shootout at Old
-  Tucson, Guardian War, Hell - A Cyberpunk Thriller, and Slayer). The second increment
-  added pointer-device input scripts and promoted four more: **Carrier - Fortress at
-  Sea**, **Family Feud**, **Insect War**, and **N. O. B.**. The P0 pass promoted
-  **BladeForce**, **Off-world Interceptor**, and **PGA Tour 96**, and opened the
-  Jurassic Park Security Systems terminal. The ledger is **91 `Good`, 10 `Playable`**;
-  the remaining game rows are DeathKeep, Jurassic Park, and Kingdom, alongside seven
-  media/reference/add-on discs.
-- Full-race Road Rash evidence and a longer Alone inventory/exploration sequence.
-  Alone now reaches the room and the Actions menu; Road Rash still cycles through
-  wrecks under the autopilot.
-- The opt-in **true 2× CEL** path (`--true-2x`) renders independent 480-line CEL fields;
-  Jurassic Park Interactive's Raptor Maze and Family Feud are the visually validated
-  references, and bitmap/SPORT content stays line-doubled. The option is available for
-  every title now; unvalidated games are experimental. The legacy `--high-res`
-  presentation-only mode remains available. See
-  [`HighResolutionCelResearch.md`](HighResolutionCelResearch.md).
+**Compliance and evidence**
 
-**Accuracy residuals (not release blockers):**
+- `REL-13` license-compliance and relicense review, including the FreeDO/4DO/Opera
+  terms and the 4DO game-database provenance. The current release remains under the
+  FreeDO modified GNU LGPL until a new root `LICENSE` is committed.
+- `REL-12` documentation and legal-claim consistency sweep.
+- `REL-14` RetroAchievements hardcore client approval (request submitted; awaiting
+  external review).
+- `TEST-09` full-library soak: all 1,371 images at 10,000 frames and all 414 unique
+  titles at 30,000 frames, with per-title hashes, audio, exit status, and captures.
+- `SYS-28` physical-disc stall verification; add bounded read-ahead only if a real drive
+  still stalls the core.
+
+**Platform and distribution**
+
+- `PLAT-19` native Wayland Vulkan surface; `PLAT-06` GLES 3.1/DPI/Tier B validation;
+  `PLAT-17` Retina 2x and `PLAT-05` macOS gamepad hardware evidence.
+- `REL-08` AUR/AppImageHub/itch.io listings and `REL-10` EmuDeck/RetroDeck integration;
+  `REL-09` Flatpak sandbox/repository work once the licence position is settled.
+- `UX-16` signed Windows/macOS artifacts when the certificate and Apple account are
+  available.
+
+**Product and rendering**
+
+- `UX-33` GPU letterbox/pillarbox void patterns, one presenter at a time.
+- `UX-38` video recording with synchronized audio.
+- `SYS-25` live CPU-clock probe; `NET-01` netplay loopback probe (commit only if the
+  probe is clean).
+- `SYS-29` MDS/MDF and CloneCD CCD/IMG/SUB image support.
+- `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
+  bounded probe; `VID-22` high-refresh presentation/interpolation research that keeps
+  gameplay at the native 59.94/50 Hz rate.
+
+**Accuracy residuals (not release blockers)**
 
 - Road Rash's long-run frame divergence from the reference core.
 - Jurassic Park Interactive's default FreeDO CEL model runs the Raptor Maze ahead of the
-  reference; at 65,000 the reference is still on the 63,000 corridor frame. The
-  Opera-busy model matches the reference frame hash exactly. Set the per-game CEL timing
-  to **Opera busy** for
-  reference pacing. The game now reaches in-park gameplay; the driving/Spitter minigames
-  are not yet scripted.
-- CD command-cadence residual and audio-only BIOS CD-player transport (the TOC now
-  lists; playback remains a documented BIOS limit).
+  reference; the Opera-busy model matches the reference frame hash. Set the per-game CEL
+  timing to **Opera busy** for reference pacing.
+- CD command-cadence residual and audio-only BIOS CD-player transport (the TOC lists;
+  playback remains a documented BIOS limitation).
 - Crash 'n Burn (Japan) BIOS/dump boot limitation.
 
-**Platform and product:**
+## Out of scope for 1.x
 
-- **Linux GPU validation and Linux-specific features.** A bare-metal Linux Mint 22.3
-  host (Intel HD 4000, Mesa 25.2.8, hardware OpenGL 4.2, Vulkan 1.2 `hasvk`, 1920x1080
-  X11, HDA audio) replaces the llvmpipe-only VM for GPU evidence. Hardware GL
-  presentation and Vulkan X11 (probe and desktop shell child surface) are validated
-  (2026-11-16); Wayland is documented as unsupported and display-sleep inhibition uses
-  the screen-saver D-Bus API, the OpenAL PipeWire exit segfault is fixed, evdev
-  gamepads detect correctly, the 600 s real-device soak is clean, and the full
-  real-machine acceptance pass is complete (2026-11-17). GLES 3.1 and the DPI matrix
-  remain best-effort. `hasvk` is the legacy/integrated validation target.
-- GLES 3.1 and Tier B timing validation. Native CLI/frontend runtime smoke now passes on
-  macOS x64/arm64, Linux arm64, and Windows arm64 (2026-11-10); desktop arm64 is no
-  longer an open platform item.
-- M14 high-resolution CEL research.
-- Signed/notarized installers. Unsigned Windows/Linux/macOS packaging and file
-  associations are in place (2026-11-10); macOS packaging needs a macOS host, and
-  signing remains conditional on certificates.
-- Additional metadata providers and media in the library.
-- More TAS tooling: multi-player Lua authoring and multi-player timeline editing
-  (single-player Lua scripting and the input timeline shipped in UX-29).
-- Best-effort 4DO `.4dosav` import/export (UX-30); native 4DO state compatibility is
-  not a goal.
-- CD subcode is complete (2026-11-10); full PAL library validation was completed on
-  2026-11-10.
+Netplay is a candidate (`NET-01`), not a committed feature. The following are explicitly
+out of scope unless the product scope changes:
 
-Out of scope for v1: netplay, achievements, a full debugger UI, and 4K *internal* CEL
-rendering. 4K output upscaling is supported.
+- a full debugger UI;
+- BIOS-less/embedded boot ROM or Opera-style HLE boot (5DO requires a real BIOS);
+- a custom shader pipeline;
+- Discord Rich Presence;
+- cloud saves;
+- Android, iOS, WebAssembly, a libretro core, or Raspberry Pi;
+- 4K *internal* CEL rendering (4K output upscaling is supported).
 
 ## How to help
 

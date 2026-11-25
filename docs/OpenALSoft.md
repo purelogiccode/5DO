@@ -19,7 +19,7 @@ unmodified 1.23.1 upstream release. The file names are:
 |---|---|---|
 | Windows x64 / arm64 | `soft_oal.dll` (from the NuGet runtime) plus `OpenAL32.dll` (the same binary copied under the name Silk.NET.OpenAL loads) | `OpenAL32.dll` |
 | Linux x64 / arm64 | `libopenal.so` | `libopenal.so` |
-| macOS x64 / arm64 | `libopenal.dylib` | `libopenal.dylib` |
+| macOS arm64 | `libopenal.dylib` | `libopenal.dylib` |
 
 The Windows copies are performed by `Directory.Build.targets`
 (`FiveDoPublishOpenAlSoft`). Linux and macOS use the package's native file names.
