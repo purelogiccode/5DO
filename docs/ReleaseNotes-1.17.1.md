@@ -64,6 +64,13 @@ Meziantou.Analyzer 3.0.342, mkdocs-material 9.8.2, and the current GitHub Action
 
 - 2,602/2,602 tests pass in Release; build, `dotnet format`, `jb inspectcode`, and
   `mkdocs build --strict` are clean.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.1>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/45690464736> passed the five bundle
+  jobs, both Linux package jobs, the publish job, and CI. All 17 release assets were
+  downloaded and both `SHA256SUMS.txt` and `SHA256SUMS-linux.txt` verify with 0
+  mismatches; no `.asc` or keyring assets are present.
+- The published win-x64 bundle reports 1.17.1, `selftest` 15/15, the same 600-frame
+  hash/PC, and `FRONTEND SMOKE OK 1.17.1`.
 - The same release bundles were exercised on Windows x64, Windows arm64, Linux x64,
   Linux arm64, and macOS arm64 with Wolfenstein 3D (USA) and `panafz1.bin`: all produced
   frame hash `0x110E7DC5`, PC `366944`, game ID `3dfcdbbff14ffb59e157e27f18d9df7b`,

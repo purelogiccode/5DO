@@ -1060,7 +1060,9 @@ The five bundle SHA-256 values were recorded locally:
 
 The run used the 1.17.0 version string because it validated the post-1.17.0 master
 before the 1.17.1 version bump; the release workflow rebuilds the same sources as
-1.17.1.
+1.17.1. The published v1.17.1 release (run
+<https://github.com/purelogiccode/5DO/actions/runs/45690464736>) contains 17 assets; both
+checksum manifests verify, and no signature or keyring assets are present.
 
 ### 10.11 Physical CD-R re-burn, Way of the Warrior (2026-11-25, Windows x64)
 

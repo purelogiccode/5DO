@@ -69,8 +69,12 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       and PNG SHA-256; `selftest` 15/15 and the frontend smoke on every target (the
       pre-release bundles carry the 1.17.0 string; release CI verifies 1.17.1).
       Evidence in [Compatibility.md](Compatibility.md) §10.10.
-- [ ] Push `master`, tag `v1.17.1`, and verify the release workflow publishes the five
-      bundles, Linux packages, both checksum manifests, and no signature assets.
+- [x] Push `master`, tag `v1.17.1`, and verify the release workflow publishes the five
+      bundles, Linux packages, both checksum manifests, and no signature assets. Release
+      run <https://github.com/purelogiccode/5DO/actions/runs/45690464736> succeeded; all
+      17 assets downloaded and both manifests verify with 0 mismatches. The published
+      win-x64 bundle reports 1.17.1, `selftest` 15/15, the same 600-frame hash/PC, and
+      `FRONTEND SMOKE OK 1.17.1`.
 
 ## 1.17.0 autosave and archive-container gate
 

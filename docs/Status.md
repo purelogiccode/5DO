@@ -17,7 +17,9 @@ carry the 1.17.0 version string; the release workflow rebuilds the same sources 
 1.17.1). Windows x64
 OpenGL/Direct3D 11 probes pass on the Radeon RX 580; Windows arm64 GL/ANGLE and
 Direct3D 11 probes pass on the Microsoft Basic Render Driver. Published at
-<https://github.com/purelogiccode/5DO/releases/tag/v1.17.1>. Evidence:
+<https://github.com/purelogiccode/5DO/releases/tag/v1.17.1>; release run
+<https://github.com/purelogiccode/5DO/actions/runs/45690464736> published all 17 assets
+with no signature assets, and both checksum manifests verify. Evidence:
 [ReleaseNotes-1.17.1.md](ReleaseNotes-1.17.1.md),
 [Compatibility.md](Compatibility.md) §10.10, and [KnownIssues.md](KnownIssues.md).
 
