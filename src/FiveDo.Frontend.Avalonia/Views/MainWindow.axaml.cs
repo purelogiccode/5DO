@@ -4513,7 +4513,7 @@ public partial class MainWindow : Window, IDisposable
         {
             return;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             StatusText.Text = $"Library scan failed: {exception.Message}";
             _logger.ForCategory(LogCategory.Storage).Error(exception, "Library scan failed.");

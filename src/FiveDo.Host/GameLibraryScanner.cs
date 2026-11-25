@@ -92,8 +92,9 @@ public static class GameLibraryScanner
                     pending.Add(file);
                 }
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
+                // A single unreadable path must not abort the folder listing.
                 Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
             }
         }
@@ -164,8 +165,10 @@ public static class GameLibraryScanner
                     progress?.Report(count);
                 }
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentOutOfRangeException)
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
+                // One malformed container must not fault the parallel scan; the file is
+                // simply left out (or reported by Inspect as an error entry).
                 Serilog.Log.Debug(exception, "Could not inspect library entry {Path}.", file);
             }
         });
@@ -380,12 +383,10 @@ public static class GameLibraryScanner
                 Regions = record?.Regions ?? string.Empty,
             };
         }
-        catch (Exception exception) when (exception is IOException
-            or InvalidDataException
-            or DiscImageException
-            or UnauthorizedAccessException
-            or ArgumentException)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
+            // Archive parsers can surface arbitrary exceptions for a corrupt container.
+            // Keep the entry visible with its error instead of failing the whole scan.
             Serilog.Log.Debug(exception, "Skipped unreadable library entry {Path}.", path);
             return new GameLibraryEntry(
                 path,

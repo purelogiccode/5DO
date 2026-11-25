@@ -58,6 +58,21 @@ public sealed class CoreRunnerTests
     }
 
     [Fact]
+    public void StopAndWait_ReportsThatTheCoreThreadExited()
+    {
+        FiveDoMachine machine = CreateMachine();
+        using var runner = new CoreRunner(machine);
+        runner.Start();
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 3, TimeSpan.FromSeconds(5)));
+
+        Assert.True(runner.StopAndWait());
+
+        var stopped = runner.Frames;
+        Thread.Sleep(100);
+        Assert.Equal(stopped, runner.Frames);
+    }
+
+    [Fact]
     public void Invoke_PausesTheLoopWhileTheActionRuns()
     {
         FiveDoMachine machine = CreateMachine();

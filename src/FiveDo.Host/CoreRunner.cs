@@ -28,6 +28,11 @@ public sealed class CoreRunner : IDisposable
 {
     private const int DiscReadErrorLogInterval = 256;
 
+    // Stop joins on the UI thread. Five seconds still fails fast enough to keep the
+    // shell responsive, but tolerates a blocking disc read or audio-driver callback
+    // that can stall a four-core machine for longer than the old two-second window.
+    private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
+
     private readonly FiveDoMachine _machine;
     private readonly Action<VdlFrame>? _frameSink;
     private readonly Action<CoreStatus>? _statusSink;
@@ -380,11 +385,15 @@ public sealed class CoreRunner : IDisposable
 
         if (thread is not null && thread != Thread.CurrentThread)
         {
-            if (thread.IsAlive && !thread.Join(TimeSpan.FromSeconds(2)))
+            if (thread.IsAlive && !thread.Join(StopTimeout))
             {
                 // Keep _thread and _stop set: Invoke must not run an action inline while
-                // the core thread can still be mutating the machine.
-                Serilog.Log.Warning("The core thread did not stop within the shutdown window.");
+                // the core thread can still be mutating the machine. The frontend logs
+                // the user-visible warning; logging it here too filed duplicate reports.
+                Serilog.Log.Debug(
+                    "The core thread did not stop within {TimeoutSeconds} seconds (state {ThreadState}).",
+                    StopTimeout.TotalSeconds,
+                    thread.ThreadState);
                 return false;
             }
 

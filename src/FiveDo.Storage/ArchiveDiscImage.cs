@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using FiveDo.Core;
 using SharpCompress.Archives;
@@ -51,53 +50,72 @@ public static class ArchiveDiscImage
     private sealed class ArchiveFileSystem : IDisposable
     {
         private const long MaxEntryBytes = 1_500_000_000;
-        private readonly IArchive _archive;
         private readonly Dictionary<string, IArchiveEntry> _entries =
             new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, byte[]> _cache =
             new(StringComparer.OrdinalIgnoreCase);
         private readonly string _archivePath;
+        private IArchive? _archive;
 
         internal ArchiveFileSystem(string archivePath)
         {
             _archivePath = archivePath;
+            IArchive archive;
             try
             {
-                _archive = ArchiveFactory.Open(archivePath);
+                archive = ArchiveFactory.Open(archivePath);
             }
-            catch (Exception exception) when (exception is IOException
-                or InvalidOperationException
-                or NotSupportedException
-                or CryptographicException
-                or SharpCompress.Common.SharpCompressException)
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
                 throw new DiscImageException(
                     $"Archive '{archivePath}' could not be opened: {exception.Message}",
                     exception);
             }
 
-            SharpCompress.Common.ArchiveType type = _archive.Type;
-            if (type is not (SharpCompress.Common.ArchiveType.Zip or SharpCompress.Common.ArchiveType.SevenZip))
+            try
             {
-                _archive.Dispose();
-                throw new DiscImageException(
-                    $"Archive '{archivePath}' is {type}; only ZIP and 7z are supported.");
+                SharpCompress.Common.ArchiveType type = archive.Type;
+                if (type is not (SharpCompress.Common.ArchiveType.Zip or SharpCompress.Common.ArchiveType.SevenZip))
+                {
+                    throw new DiscImageException(
+                        $"Archive '{archivePath}' is {type}; only ZIP and 7z are supported.");
+                }
+
+                // SharpCompress parses the central directory lazily, and a malformed
+                // archive can throw almost anything here (including index and end-of-
+                // stream errors). Treat any such failure as an unreadable disc image
+                // so one bad file cannot abort a library scan or the desktop shell.
+                foreach (IArchiveEntry entry in archive.Entries)
+                {
+                    if (entry.IsDirectory)
+                    {
+                        continue;
+                    }
+
+                    var key = NormalizeEntry(entry.Key);
+                    if (key.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    _entries[key] = entry;
+                }
+
+                _archive = archive;
             }
-
-            foreach (IArchiveEntry entry in _archive.Entries)
+            catch (DiscImageException)
             {
-                if (entry.IsDirectory)
-                {
-                    continue;
-                }
-
-                var key = NormalizeEntry(entry.Key);
-                if (key.Length == 0)
-                {
-                    continue;
-                }
-
-                _entries[key] = entry;
+                archive.Dispose();
+                throw;
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                archive.Dispose();
+                throw new DiscImageException(
+                    $"Archive '{archivePath}' has an unreadable directory: {exception.Message} "
+                    + "The file may be corrupt or use an unsupported ZIP/7z variant; extract it "
+                    + "and open the image directly.",
+                    exception);
             }
         }
 
@@ -234,21 +252,21 @@ public static class ArchiveDiscImage
             }
 
             IArchiveEntry entry = GetEntry(name);
-            if (entry.IsEncrypted)
-            {
-                throw new DiscImageException(
-                    $"Archive entry '{name}' is encrypted; decrypt or extract the archive.");
-            }
-
-            if (entry.Size > MaxEntryBytes)
-            {
-                throw new DiscImageException(
-                    $"Archive entry '{name}' is {entry.Size:N0} bytes; the in-memory limit is "
-                    + $"{MaxEntryBytes:N0}. Extract this image before opening it.");
-            }
-
             try
             {
+                if (entry.IsEncrypted)
+                {
+                    throw new DiscImageException(
+                        $"Archive entry '{name}' is encrypted; decrypt or extract the archive.");
+                }
+
+                if (entry.Size > MaxEntryBytes)
+                {
+                    throw new DiscImageException(
+                        $"Archive entry '{name}' is {entry.Size:N0} bytes; the in-memory limit is "
+                        + $"{MaxEntryBytes:N0}. Extract this image before opening it.");
+                }
+
                 using Stream stream = entry.OpenEntryStream();
                 using var buffer = entry.Size is > 0 and <= int.MaxValue
                     ? new MemoryStream((int)entry.Size)
@@ -258,11 +276,11 @@ public static class ArchiveDiscImage
                 _cache[name] = bytes;
                 return bytes;
             }
-            catch (Exception exception) when (exception is IOException
-                or InvalidOperationException
-                or NotSupportedException
-                or CryptographicException
-                or SharpCompress.Common.SharpCompressException)
+            catch (DiscImageException)
+            {
+                throw;
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
                 throw new DiscImageException(
                     $"Archive entry '{name}' could not be read: {exception.Message}",
@@ -309,7 +327,8 @@ public static class ArchiveDiscImage
 
         public void Dispose()
         {
-            _archive.Dispose();
+            _archive?.Dispose();
+            _archive = null;
             _cache.Clear();
             _entries.Clear();
         }

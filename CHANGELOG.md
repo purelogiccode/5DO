@@ -3,6 +3,25 @@
 All notable changes are recorded here. The project is at v1.17.0, the autosave and
 archive-container release.
 
+## [Unreleased]
+
+### Fixed
+
+- **A malformed ZIP no longer aborts the game-library refresh (#70180).**
+  SharpCompress can throw `IndexOutOfRangeException` while enumerating a corrupt
+  central directory (upstream issue #772). `ArchiveDiscImage` now translates every
+  archive parser failure into a `DiscImageException`, and the scanner keeps the file
+  as an error entry instead of faulting the parallel refresh.
+- **Compositor OpenGL framebuffer failures now fall back to the CPU presenter when
+  they surface as unobserved tasks (#70015, #70377).** Avalonia can raise
+  `Unable to configure OpenGL FBO` from a render task whose exception is never
+  observed. The unobserved-task handler now routes it through the same presenter
+  fallback and no longer files a bug report for a handled driver limitation.
+- **Stopping emulation waits five seconds and files one report, not two
+  (#70299, #70300).** A blocking disc read or audio-driver callback on a slow machine
+  can outlast the previous two-second join window. The core runner now logs the
+  timeout at Debug and lets the desktop shell report the user-visible failure once.
+
 ## [1.17.0] - 2026-11-22
 
 ### Added

@@ -141,6 +141,24 @@ public sealed class ArchiveDiscImageTests
     }
 
     [Fact]
+    public void CorruptArchiveDirectory_ReportsADiscImageError()
+    {
+        var archivePath = Path.Combine(
+            AppContext.BaseDirectory,
+            "TestData",
+            "archive-corrupt-directory.zip");
+
+        // SharpCompress 1.0.0 throws IndexOutOfRangeException while enumerating this
+        // central directory (upstream issue #772). The storage layer must translate it
+        // so the library scanner and shell never see a raw parser failure.
+        DiscImageException exception = Assert.Throws<DiscImageException>(
+            () => DiscImageFactory.Open(archivePath));
+        Assert.Contains("Archive", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("unreadable directory", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.IsType<IndexOutOfRangeException>(exception.InnerException);
+    }
+
+    [Fact]
     public void Archive_IgnoresUnrelatedEntries()
     {
         using var temp = new TempDirectory();

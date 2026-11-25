@@ -136,11 +136,16 @@ public class App : Application
     /// detaches the GL control and switches the game view to the CPU presenter.
     /// </summary>
     /// <param name="exception">Exception raised by the compositor.</param>
+    /// <param name="forceFallback">
+    /// When true, detach the GL surface immediately. Used for failures that surfaced as
+    /// unobserved tasks, where the compositor never observed the exception and cannot be
+    /// expected to retry through its normal path.
+    /// </param>
     /// <returns><see langword="true"/> when the exception was handled.</returns>
-    private bool TryHandleOpenGlSurfaceFailure(Exception exception)
+    private bool TryHandleOpenGlSurfaceFailure(Exception exception, bool forceFallback = false)
     {
-        if (exception is not OpenGlException openGlException
-            || !openGlException.Message.Contains("OpenGL FBO", StringComparison.Ordinal))
+        OpenGlException? openGlException = FindOpenGlSurfaceFailure(exception);
+        if (openGlException is null)
         {
             return false;
         }
@@ -158,7 +163,7 @@ public class App : Application
             "The Avalonia OpenGL surface could not allocate its framebuffer (attempt {Attempt}).",
             _openGlSurfaceFailures);
 
-        if (_openGlSurfaceFailures < 3)
+        if (!forceFallback && _openGlSurfaceFailures < 3)
         {
             // Let the compositor retry: a resize can fail once and recover.
             return true;
@@ -174,6 +179,60 @@ public class App : Application
                 return true;
             default:
                 return false;
+        }
+    }
+
+    /// <summary>
+    /// Detects an Avalonia framebuffer failure that surfaced through an unobserved task
+    /// (the compositor render loop) instead of the dispatcher, and routes it to the same
+    /// presenter fallback used for UI-thread failures.
+    /// </summary>
+    /// <param name="exception">Unobserved exception, possibly an <see cref="AggregateException"/>.</param>
+    /// <returns><see langword="true"/> when the exception was an OpenGL framebuffer failure.</returns>
+    internal static bool TryHandleUnobservedOpenGlSurfaceFailure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        OpenGlException? openGlException = FindOpenGlSurfaceFailure(exception);
+        if (openGlException is null)
+        {
+            return false;
+        }
+
+        // The fallback detaches the GL control, so it must run on the UI thread.
+        if (Application.Current is App app)
+        {
+            Dispatcher.UIThread.Post(() =>
+                app.TryHandleOpenGlSurfaceFailure(openGlException, forceFallback: true));
+        }
+
+        return true;
+    }
+
+    /// <summary>Finds a nested Avalonia OpenGL framebuffer failure.</summary>
+    /// <param name="exception">Exception or aggregate to inspect.</param>
+    /// <returns>The matching exception, or <see langword="null"/>.</returns>
+    internal static OpenGlException? FindOpenGlSurfaceFailure(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        switch (exception)
+        {
+            case OpenGlException openGlException
+                when openGlException.Message.Contains("OpenGL FBO", StringComparison.Ordinal):
+                return openGlException;
+            case AggregateException aggregate:
+                foreach (Exception inner in aggregate.InnerExceptions)
+                {
+                    if (FindOpenGlSurfaceFailure(inner) is { } found)
+                    {
+                        return found;
+                    }
+                }
+
+                return null;
+            default:
+                return exception.InnerException is { } nested
+                    ? FindOpenGlSurfaceFailure(nested)
+                    : null;
         }
     }
 

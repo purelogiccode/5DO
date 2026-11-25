@@ -181,6 +181,18 @@ internal static class Program
         };
         TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
         {
+            // Avalonia's compositor can raise the framebuffer failure from a render task
+            // whose exception is never observed. Route it to the same CPU-presenter
+            // fallback instead of filing a bug report for a handled driver limitation.
+            if (App.TryHandleUnobservedOpenGlSurfaceFailure(eventArgs.Exception))
+            {
+                Serilog.Log.Debug(
+                    eventArgs.Exception,
+                    "The compositor reported an OpenGL framebuffer failure from an unobserved task.");
+                eventArgs.SetObserved();
+                return;
+            }
+
             Serilog.Log.Error(eventArgs.Exception, "Unobserved task exception.");
             eventArgs.SetObserved();
         };

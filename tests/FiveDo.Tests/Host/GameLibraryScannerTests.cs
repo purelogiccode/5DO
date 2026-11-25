@@ -72,6 +72,28 @@ public sealed class GameLibraryScannerTests
     }
 
     [Fact]
+    public void Scan_CorruptArchive_ReportsAnErrorEntryInsteadOfFailingTheScan()
+    {
+        using var directory = new TempDirectory();
+        File.Copy(
+            Path.Combine(AppContext.BaseDirectory, "TestData", "archive-corrupt-directory.zip"),
+            Path.Combine(directory.Path, "broken.zip"));
+        WriteIso(Path.Combine(directory.Path, "game.iso"), sectors: 2);
+
+        IReadOnlyList<GameLibraryEntry> entries = GameLibraryScanner.Scan([directory.Path]);
+
+        Assert.Equal(2, entries.Count);
+        GameLibraryEntry broken = Assert.Single(
+            entries,
+            entry => entry.Path.EndsWith("broken.zip", StringComparison.OrdinalIgnoreCase));
+        Assert.NotEmpty(broken.Error);
+        Assert.Contains(
+            entries,
+            entry => entry.Path.EndsWith("game.iso", StringComparison.OrdinalIgnoreCase)
+                && entry.Error.Length == 0);
+    }
+
+    [Fact]
     public void Inspect_ReturnsNullForUnknownExtension()
     {
         Assert.Null(GameLibraryScanner.Inspect(Path.Combine(Path.GetTempPath(), "not-a-disc.txt")));
