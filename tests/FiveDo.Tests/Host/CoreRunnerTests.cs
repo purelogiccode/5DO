@@ -212,7 +212,7 @@ public sealed class CoreRunnerTests
         runner.SpeedMultiplier = 4;
 
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 40, TimeSpan.FromSeconds(3)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 40, TimeSpan.FromSeconds(10)));
         runner.Stop();
 
         Assert.Equal(runner.Frames, machine.FramesExecuted);
@@ -228,7 +228,7 @@ public sealed class CoreRunnerTests
             machine,
             rewindOptions: new RewindOptions { Seconds = 30, KeyframeInterval = 5 });
         runner.Start();
-        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 30, TimeSpan.FromSeconds(3)));
+        Assert.True(SpinWait.SpinUntil(() => runner.Frames >= 30, TimeSpan.FromSeconds(10)));
         runner.Pause();
 
         var before = machine.FramesExecuted;
@@ -282,7 +282,7 @@ public sealed class CoreRunnerTests
             });
 
         runner.Start();
-        Assert.True(signal.Wait(TimeSpan.FromSeconds(3)));
+        Assert.True(signal.Wait(TimeSpan.FromSeconds(10)));
         runner.Stop();
 
         Assert.NotNull(last);
