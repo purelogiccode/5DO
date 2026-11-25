@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.17.0, the autosave and
-archive-container release.
+All notable changes are recorded here. The project is at v1.17.1, the bug-fix release
+for the autosave and archive-container release.
 
-## [Unreleased]
+## [1.17.1] - 2026-11-25
 
 ### Changed
 
@@ -29,6 +29,11 @@ archive-container release.
   (#70299, #70300).** A blocking disc read or audio-driver callback on a slow machine
   can outlast the previous two-second join window. The core runner now logs the
   timeout at Debug and lets the desktop shell report the user-visible failure once.
+- **Release review hardening.** The presenter fallback now reports an unhandled
+  failure when no desktop app exists, option changes no longer dispose the machine or
+  disc while a timed-out core thread can still use them, the library image count only
+  counts files that were actually listed, and archive disposal releases its state
+  before closing the archive.
 
 ## [1.17.0] - 2026-11-22
 

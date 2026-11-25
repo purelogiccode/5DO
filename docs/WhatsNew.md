@@ -1,89 +1,70 @@
-# What's new in 5DO 1.17.0
+# What's new in 5DO 1.17.1
 
-**Released:** 2026-11-22
+**Released:** 2026-11-25
 
-5DO 1.17.0 adds a rolling autosave with validated startup resume and direct ZIP/7z
-containers for ISO, BIN, and CUE+BIN images. It retains the 1.16.1 CD-DA diagnostics and
-the 1.16.0 physical CD-DA/read-error work.
+5DO 1.17.1 is a bug-fix release for the 1.17.0 autosave and archive-container release.
+It fixes a malformed-ZIP library crash, cleanly falls back from `OpenGL FBO` compositor
+failures, and waits longer before reporting a slow stop. Linux releases now use
+`SHA256SUMS` only.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.17.0-win-x64.zip` |
-| Windows on ARM | `5do-1.17.0-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.17.0-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.17.0_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.17.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.17.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.17.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable | `5do-1.17.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.17.1-win-x64.zip` |
+| Windows on ARM | `5do-1.17.1-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.17.1-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.17.1_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.17.1-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.17.1-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.17.1-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable | `5do-1.17.1-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
 Extract the archive before running it: the apphosts load `libSkiaSharp`,
-`libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder.
+`libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder. The `.zsync`
+files feed `AppImageUpdate`.
 
-The `.asc` files are signatures, the `.zsync` files feed `AppImageUpdate`, and
-`SHA256SUMS.txt` lists hashes; you only need them to verify a download.
-`5do-archive-keyring.gpg` is the key those signatures use.
+`SHA256SUMS.txt` and `SHA256SUMS-linux.txt` are the only validation files. There are no
+`.asc` signatures and no keyring; run `sha256sum -c` after downloading.
 
-## Rolling autosave and startup resume
+## Fixes
 
-The desktop keeps one autosave under `<save directory>/autosave/`, separate from the
-numbered manual slots:
+- **Malformed ZIP files no longer abort the library refresh.** SharpCompress index
+  errors are translated into a readable disc-image error, and the file stays in the
+  library with its error instead of faulting the whole scan.
+- **OpenGL framebuffer failures fall back to the CPU presenter.** The compositor
+  failure can arrive through an unobserved task; it now uses the same presenter
+  fallback as a UI-thread failure and no longer generates a bug report for a handled
+  driver limitation.
+- **Stopping emulation waits five seconds.** A slow disc read or audio callback no
+  longer trips the old two-second timeout, and the timeout is reported once instead of
+  twice.
 
-- It is written on **pause**, **clean exit**, and a configurable interval (1-60 minutes,
-  default 5). Manual slots are never overwritten.
-- On startup the last disc reopens and the autosave is restored only when its disc game
-  ID and effective BIOS MD5 match. A renamed, re-burned, or different disc is refused
-  with an actionable message instead of loading the wrong save.
-- **Settings > Emulation > Autosave** controls writing, the interval, and startup
-  resume. **Emulation > Resume Autosave / Delete Autosave** expose the file on demand.
-- RetroAchievements hardcore mode suppresses both autosave writes and restores.
+## Linux release integrity
 
-Windows desktop acceptance: clean exit wrote frame 792, relaunch restored frame 792 and
-continued to 1532, disabled mode left the file unchanged, a modified disc and a different
-BIOS were refused, and a 60-second interval wrote frame 3655.
+Linux releases no longer publish detached GPG signatures or a keyring. The `.deb`,
+`.rpm`, AppImage, and Flatpak files are covered by `SHA256SUMS-linux.txt`; the five
+bundles and the Linux packages are covered by `SHA256SUMS.txt`.
 
-## ZIP/7z disc containers
+## Still included from 1.17.0
 
-A `.zip` or `.7z` path can be opened anywhere a disc path is accepted:
-
-- One ISO/BIN or one CUE+BIN set per archive. CUE `FILE` entries resolve relative to the
-  CUE, including subfolders.
-- Entries are decompressed in memory (1.5 GB per-entry limit) rather than to a temporary
-  directory. Larger images should be extracted.
-- CHD, CDI, and NRG must be extracted; those containers have their own compression and
-  random-access layouts.
-- Encrypted and multi-volume archives are refused with guidance and are never partially
-  read. PREGAP, POSTGAP, INDEX 00, and WAVE CUEs are rejected with extraction guidance.
-- The game library, drag/drop, recent discs, playlist editor, file pickers, and every CLI
-  disc command accept the archive path.
-
-Theme Park parity: the extracted ISO, a ZIP of that ISO, and a 7z CUE+BIN set produced
-the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and identical PNG SHA-256.
-
-## Still included from 1.16.1 and 1.16.0
-
-- `disc audio` extracts Red Book tracks to WAV from an image or a host optical drive.
-- `disc verify` prints progress and uses the native track total for mixed-mode discs.
-- Physical CD-DA works through the drive TOC and raw CDDA reads; the reporter's Red Book
-  CD produced a non-silent 164.28 s track.
-- Damaged or failing disc reads are reported to the guest instead of stopping emulation.
-- The FZ-10 audio-only BIOS player transport remains **STOP** (SYS-01, matching 4DO); use
-  `disc audio` for the direct CD-DA test.
+- Rolling autosave with startup resume, written on pause, clean exit, and a configurable
+  interval and restored only when the disc game ID and BIOS MD5 match.
+- Direct ZIP/7z ISO, BIN, and CUE+BIN containers, with in-memory decompression and
+  extraction guidance for CHD/CDI/NRG, encrypted, and multi-volume archives.
+- CD-DA extraction via `disc audio`, `disc verify` progress and mixed-mode totals, and
+  guest-visible disc read-error reporting.
 
 ## Verification
 
-- 2,595/2,595 tests, build 0 warnings/0 errors, `dotnet format`, `jb inspectcode`, and
-  `mkdocs build --strict` clean.
-- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.17.0>; release run
-  <https://github.com/purelogiccode/5DO/actions/runs/44982714233>. The five downloaded
-  bundles match `SHA256SUMS.txt`.
-- Windows x64 bundle reports 1.17.0, `selftest` 15/15, and
-  `FRONTEND SMOKE OK 1.17.0`; a ZIP/7z disc opens and verifies.
-- Linux x64 AppImage smoke through FUSE and `--appimage-extract-and-run`, detached
-  `.asc`, versioned `.zsync`/`.upd_info`, and the tarball CLI `selftest` plus 7z
-  CUE+BIN verification.
+- 2,602/2,602 tests pass in Release; build, `dotnet format`, `jb inspectcode`, and
+  `mkdocs build --strict` are clean.
+- Windows x64, Windows arm64, Linux x64, Linux arm64, and macOS arm64 ran the same
+  bundle test: Wolfenstein 3D (USA) with `panafz1.bin`, 600 frames, frame hash
+  `0x110E7DC5`, PC `366944`, and identical PNG SHA-256.
+- `selftest` 15/15 and the frontend smoke passed on every target.
+- Windows x64 OpenGL/Direct3D 11 probes pass; Windows arm64 GL/ANGLE and Direct3D 11
+  probes pass.
 
 ## Known issues
 

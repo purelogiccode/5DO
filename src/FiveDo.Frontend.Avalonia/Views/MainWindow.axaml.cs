@@ -5497,8 +5497,24 @@ public partial class MainWindow : Window, IDisposable
 
         _running = false;
         SetPlayState(running: false);
-        _runner?.Dispose();
-        _runner = null;
+        if (_runner is not null)
+        {
+            // Do not dispose the machine or disc while the old core thread can still
+            // be using them. StopAndWait keeps the UI warning and leaves everything
+            // intact so the operator can retry the setting change.
+            if (!_runner.StopAndWait())
+            {
+                StatusText.Text =
+                    "The core thread did not stop; the machine was not restarted.";
+                _logger.ForCategory(LogCategory.Host).Warning(
+                    "Emulation option change could not stop the core thread; the machine was not restarted.");
+                return;
+            }
+
+            _runner.Dispose();
+            _runner = null;
+        }
+
         _achievements?.Dispose();
         _achievements = null;
         _machine = null;

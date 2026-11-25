@@ -16,22 +16,22 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.17.0 autosave and archive-container release"
-    5DO is at v1.17.0. The desktop keeps a rolling autosave under `states/autosave/`,
-    written on pause, clean exit, and a configurable interval, and restores it at startup
-    only when the disc game ID and effective BIOS MD5 match. ISO, BIN, and CUE+BIN images
-    can also be opened directly from ZIP and 7z archives. `--high-res` remains a
-    presentation-only 2x upscale, and retail Gamegun titles keep a joypad on port 1.
-    **P** pauses, **Space** toggles fast-forward, **F1** connects the Gamegun, and
-    **Alt+Enter** toggles fullscreen.
+!!! important "v1.17.1 bug-fix release"
+    5DO is at v1.17.1. It fixes malformed-ZIP library crashes, OpenGL framebuffer
+    fallback, and slow stop reporting. Linux releases now publish `SHA256SUMS` only;
+    no GPG signatures or keyring are produced. The 1.17.0 desktop keeps a rolling
+    autosave under `states/autosave/`, written on pause, clean exit, and a configurable
+    interval and restored at startup only when the disc game ID and effective BIOS MD5
+    match. ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z
+    archives. `--high-res` remains a presentation-only 2x upscale, and retail Gamegun
+    titles keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward,
+    **F1** connects the Gamegun, and **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
-    DMG. Linux release downloads are validated with `SHA256SUMS.txt` /
-    `SHA256SUMS-linux.txt` only; no GPG signatures or keyring are published. The macOS
-    arm64 bundle includes MoltenVK
-    and the Vulkan loader; the CPU presenter is the fallback. Linux arm64 and Windows
-    arm64 pass the native runtime smoke; Intel macOS is unsupported. No BIOS ROMs, game
-    images, or extracted game assets are distributed here; supply legally obtained files.
+    DMG. The macOS arm64 bundle includes MoltenVK and the Vulkan loader; the CPU
+    presenter is the fallback. Linux arm64 and Windows arm64 pass the native runtime
+    smoke; Intel macOS is unsupported. No BIOS ROMs, game images, or extracted game
+    assets are distributed here; supply legally obtained files.
 
 ## Start here
 
@@ -85,43 +85,41 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.17.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.17.1.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-22, v1.17.0 autosave and archive-container release (GitHub Releases).**
+**2026-11-25, v1.17.1 bug-fix release (GitHub Releases).**
 
-- **2,595 tests** are present in the current test assembly.
-- **Rolling autosave with startup resume (UX-37):** one autosave under
+- **2,602 tests** are present in the current test assembly.
+- **Library and renderer fixes:** a malformed ZIP now appears as an error entry instead
+  of faulting the parallel library refresh; Avalonia `OpenGL FBO` failures that arrive
+  through an unobserved task now switch to the CPU presenter; the core stop window is
+  five seconds and reports one timeout instead of two.
+- **Linux release integrity:** `SHA256SUMS-linux.txt` covers the `.deb`/`.rpm`/AppImage/
+  Flatpak artifacts and `SHA256SUMS.txt` covers all five bundles and the Linux packages.
+  Detached `.asc` signatures and the keyring are no longer published.
+- **Rolling autosave with startup resume (1.17.0, UX-37):** one autosave under
   `<save directory>/autosave/` is written on pause, clean exit, and a configurable
-  1-60 minute interval (default 5) without touching manual slots. The last disc reopens
-  at startup and restores the autosave only when its disc game ID and effective BIOS MD5
-  match; mismatches are refused with an actionable message. **Emulation > Resume
-  Autosave / Delete Autosave** expose the file on demand, and separate settings control
-  writing and loading. Hardcore mode suppresses both.
-- **ZIP/7z disc containers (SYS-27):** one ISO/BIN or one CUE+BIN set can be opened
-  directly from a ZIP or 7z archive, with relative CUE paths and in-memory decompression
-  through SharpCompress. CHD/CDI/NRG, encrypted, multi-volume, and unsupported CUE
-  layouts are refused with extraction/decryption guidance. The library, drag/drop,
-  recent discs, playlist editor, file pickers, and CLI accept the archive path.
-- **Desktop autosave acceptance:** clean exit wrote frame 792, relaunch restored 792 and
-  continued to 1532, disabled mode left the file unchanged, a modified disc and a
-  different BIOS were refused, and a 60-second interval wrote frame 3655.
-- **Archive parity:** Theme Park from the extracted ISO, a ZIP of that ISO, and a 7z
-  CUE+BIN set produced the same 600-frame hash `0x110E7DC5`, PC `0x0000596C`, and
-  identical PNG SHA-256.
-- **Earlier in 1.16.1:** `disc audio` CD-DA extraction, `disc verify` progress and
-  mixed-mode totals, and the 1,366-image/496-title optical sweep. **1.16.0** added
-  physical CD-DA and guest-reported disc read errors; **1.15.0** added Steam Deck/SteamOS
-  first-run setup, the Arcade CRT filter, and physical optical-drive discovery.
+  1-60 minute interval without touching manual slots. The last disc reopens at startup
+  and restores the autosave only when its disc game ID and effective BIOS MD5 match;
+  mismatches are refused with an actionable message.
+- **ZIP/7z disc containers (1.17.0, SYS-27):** one ISO/BIN or one CUE+BIN set can be
+  opened directly from a ZIP or 7z archive, with relative CUE paths and in-memory
+  decompression. CHD/CDI/NRG, encrypted, multi-volume, and unsupported CUE layouts are
+  refused with extraction/decryption guidance.
+- **Cross-platform release check:** Windows x64, Windows arm64, Linux x64, Linux arm64,
+  and macOS arm64 ran the same Wolfenstein 3D bundle test with identical 600-frame hash
+  `0x110E7DC5`, PC `366944`, and PNG SHA-256; `selftest` 15/15 and the frontend smoke
+  passed on every target.
 - **Windows x64, Linux x64, and macOS arm64 are validated GPU targets.** Linux passes
   hardware OpenGL 4.2, Vulkan 1.2 through X11, a 600 s real-device audio soak with 0
   drops/underruns, evdev gamepads, display sleep, and the full acceptance pass on
   bare-metal hardware. macOS arm64 passes the Vulkan/MoltenVK presenter, all eight
-  filters, the full suite, and a 60 fps packaged game. Linux arm64 and Windows arm64 pass
-  the native CLI/frontend runtime smoke. Intel macOS is unsupported as of 1.12.0.
-- v1.17.0 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.17.0)
+  filters, the full suite, and a 60 fps packaged game. Linux arm64 and Windows arm64
+  run the native runtime smoke.
+- v1.17.1 is published on [GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.17.1)
   as one bundle per system and architecture (Windows/Linux, x64 and arm64; macOS arm64),
   each with the CLI, desktop app, and SHA-256 checksums; macOS is distributed as a DMG.
   The .NET 11 runtime is embedded in the self-contained apphosts. See

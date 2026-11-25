@@ -3,7 +3,7 @@
 > [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.17.0.
+> history through v1.17.1.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -878,8 +878,17 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.17.0)
+## 14. Release history (v1.9.1 - v1.17.1)
 
+- **v1.17.1 (2026-11-25):** bug-fix release - malformed ZIP central-directory failures
+  are translated to `DiscImageException` and listed as library errors (#70180);
+  unobserved `OpenGL FBO` compositor failures fall back to the CPU presenter without a
+  bug report (#70015, #70377); stop waits five seconds and reports once (#70299,
+  #70300). Linux releases publish `SHA256SUMS` only; GPG signatures/keyring removed.
+  Avalonia 12.2.0, CHDSharp 1.7.2, Meziantou.Analyzer 3.0.342, mkdocs-material 9.8.2.
+  Suite 2,602/2,602; five-target bundle check (Windows/Linux x64+arm64 and macOS arm64)
+  produced identical Wolfenstein 3D 600-frame hash `0x110E7DC5`, PC `366944`, and PNG
+  SHA-256. Release run recorded in `docs/Status.md`.
 - **v1.17.0 (2026-11-22):** autosave and archive-container release - UX-37 adds a
   rolling `states/autosave/` copy written on pause, clean exit, and a 1-60 minute
   interval, restored at startup only when the disc game ID and effective BIOS MD5

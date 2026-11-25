@@ -199,12 +199,20 @@ public class App : Application
         }
 
         // The fallback detaches the GL control, so it must run on the UI thread.
-        if (Application.Current is App app)
+        if (Application.Current is not App app)
         {
-            Dispatcher.UIThread.Post(() =>
-                app.TryHandleOpenGlSurfaceFailure(openGlException, forceFallback: true));
+            return false;
         }
 
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!app.TryHandleOpenGlSurfaceFailure(openGlException, forceFallback: true))
+            {
+                Serilog.Log.Error(
+                    openGlException,
+                    "The unobserved OpenGL framebuffer failure could not be routed to a presenter fallback.");
+            }
+        });
         return true;
     }
 

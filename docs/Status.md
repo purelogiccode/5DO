@@ -1,8 +1,25 @@
 # Project Status and Next Steps
 
-**Unreleased:** Linux release signing was removed. The release pipeline publishes
-`SHA256SUMS.txt` and `SHA256SUMS-linux.txt` only; detached `.asc` signatures and the
-GPG keyring are no longer produced, and validation is `sha256sum -c` on the manifests.
+**2026-11-25, v1.17.1 bug-fix release:** the release fixes the malformed-ZIP library
+refresh (#70180), routes unobserved `OpenGL FBO` compositor failures to the CPU presenter
+(#70015, #70377), and waits five seconds before reporting a slow emulation stop while
+filing one report instead of two (#70299, #70300). Linux releases now publish
+`SHA256SUMS.txt` and `SHA256SUMS-linux.txt` only; detached `.asc` signatures and the GPG
+keyring were removed. Avalonia 12.2.0, CHDSharp 1.7.2, Meziantou.Analyzer 3.0.342,
+mkdocs-material 9.8.2, and the current action pins are included. The suite is
+**2,602/2,602**; build, `dotnet format`, `jb inspectcode`, and `mkdocs build --strict`
+are clean. The same release bundles were exercised on Windows x64, Windows arm64,
+Linux x64, Linux arm64, and macOS arm64 with Wolfenstein 3D (USA) and `panafz1.bin`:
+all produced frame hash `0x110E7DC5`, PC `366944`, game ID
+`3dfcdbbff14ffb59e157e27f18d9df7b`, and identical 600-frame PNG SHA-256;
+`selftest` 15/15 and the frontend smoke passed on every target (the pre-release bundles
+carry the 1.17.0 version string; the release workflow rebuilds the same sources as
+1.17.1). Windows x64
+OpenGL/Direct3D 11 probes pass on the Radeon RX 580; Windows arm64 GL/ANGLE and
+Direct3D 11 probes pass on the Microsoft Basic Render Driver. Published at
+<https://github.com/purelogiccode/5DO/releases/tag/v1.17.1>. Evidence:
+[ReleaseNotes-1.17.1.md](ReleaseNotes-1.17.1.md),
+[Compatibility.md](Compatibility.md) §10.10, and [KnownIssues.md](KnownIssues.md).
 
 **2026-11-22, v1.17.0 release:** the autosave and archive-container release ships two
 new features. **UX-37** keeps a rolling autosave under `states/autosave/`, written on

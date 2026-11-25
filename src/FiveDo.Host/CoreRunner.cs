@@ -370,9 +370,9 @@ public sealed class CoreRunner : IDisposable
 
     /// <summary>Stops the core thread and reports whether it actually exited.</summary>
     /// <returns><see langword="true"/> when the core thread is no longer running.</returns>
-    public bool StopAndWait() => TryStop();
+    public bool StopAndWait() => TryStop(logTimeout: false);
 
-    private bool TryStop()
+    private bool TryStop(bool logTimeout = true)
     {
         Thread? thread;
         lock (_stateGate)
@@ -388,12 +388,24 @@ public sealed class CoreRunner : IDisposable
             if (thread.IsAlive && !thread.Join(StopTimeout))
             {
                 // Keep _thread and _stop set: Invoke must not run an action inline while
-                // the core thread can still be mutating the machine. The frontend logs
-                // the user-visible warning; logging it here too filed duplicate reports.
-                Serilog.Log.Debug(
-                    "The core thread did not stop within {TimeoutSeconds} seconds (state {ThreadState}).",
-                    StopTimeout.TotalSeconds,
-                    thread.ThreadState);
+                // the core thread can still be mutating the machine. StopAndWait lets the
+                // frontend show the user-visible warning; disposal and other callers
+                // still need a warning in the log.
+                if (logTimeout)
+                {
+                    Serilog.Log.Warning(
+                        "The core thread did not stop within {TimeoutSeconds} seconds (state {ThreadState}).",
+                        StopTimeout.TotalSeconds,
+                        thread.ThreadState);
+                }
+                else
+                {
+                    Serilog.Log.Debug(
+                        "The core thread did not stop within {TimeoutSeconds} seconds (state {ThreadState}).",
+                        StopTimeout.TotalSeconds,
+                        thread.ThreadState);
+                }
+
                 return false;
             }
 

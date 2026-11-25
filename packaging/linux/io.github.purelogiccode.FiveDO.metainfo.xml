@@ -77,6 +77,14 @@
   </languages>
 
   <releases>
+    <release version="1.17.1" date="2026-11-25">
+      <description>
+        <p>
+          Fixes malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback,
+          and slow stop reporting. Linux releases now publish SHA256SUMS only.
+        </p>
+      </description>
+    </release>
     <release version="1.17.0" date="2026-11-22">
       <description>
         <p>

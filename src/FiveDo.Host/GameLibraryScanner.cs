@@ -75,6 +75,7 @@ public static class GameLibraryScanner
 
         var entries = new List<GameLibraryEntry>(files.Count);
         var pending = new List<string>();
+        var listedFiles = 0;
         var coverIndex = new CoverIndex(coverDirectory);
         foreach (var file in files)
         {
@@ -91,6 +92,8 @@ public static class GameLibraryScanner
                     entries.Add(CreatePlaceholder(file, coverIndex));
                     pending.Add(file);
                 }
+
+                listedFiles++;
             }
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
@@ -101,7 +104,7 @@ public static class GameLibraryScanner
 
         SortEntries(entries);
         IReadOnlyList<GameLibraryEntry> listed = deduplicate ? Deduplicate(entries) : entries;
-        return new GameLibraryScanResult(listed, pending, files.Count);
+        return new GameLibraryScanResult(listed, pending, listedFiles);
     }
 
     /// <summary>

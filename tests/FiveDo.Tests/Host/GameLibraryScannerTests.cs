@@ -372,6 +372,7 @@ public sealed class GameLibraryScannerTests
             cachePath: cachePath);
         Assert.Single(initial.Entries);
         Assert.Single(initial.PendingPaths);
+        Assert.Equal(1, initial.ImageCount);
 
         GameLibraryEntry enriched = Assert.Single(
             GameLibraryScanner.InspectPending(initial.PendingPaths, cachePath));

@@ -33,13 +33,16 @@ public sealed class OpenGlFailureTests
     }
 
     [Fact]
-    public void TryHandleUnobservedOpenGlSurfaceFailure_RecognizesTheCompositorFailure()
+    public void TryHandleUnobservedOpenGlSurfaceFailure_LeavesTheFailureUnhandledWithoutAnApp()
     {
         var failure = new OpenGlException(
             "Unable to configure OpenGL FBO failed with error GL_NO_ERROR (0x00000000)");
         var aggregate = new AggregateException(failure);
 
-        Assert.True(App.TryHandleUnobservedOpenGlSurfaceFailure(aggregate));
+        // The fallback needs the running App to post to the UI thread. Without one,
+        // report the failure as unhandled so the caller logs it instead of silently
+        // suppressing it.
+        Assert.False(App.TryHandleUnobservedOpenGlSurfaceFailure(aggregate));
         Assert.False(App.TryHandleUnobservedOpenGlSurfaceFailure(new InvalidOperationException("boom")));
     }
 }

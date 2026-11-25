@@ -2,12 +2,15 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-22):** v1.17.0 adds the rolling autosave with validated
-startup resume (UX-37) and direct ZIP/7z ISO, BIN, and CUE+BIN containers (SYS-27). It
-retains the 1.16.1 `disc audio`/`disc verify` diagnostics, the 1.16.0 physical CD-DA and
-read-error work, the 1.15.0 Steam Deck/SteamOS first-run setup, `ArcadeCrt` filter,
-Windows optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes, and does not
-change the default 320x240 compatibility path or the documented title matrix.
+**Current release (2026-11-25):** v1.17.1 is the bug-fix release for v1.17.0. It fixes
+the malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback, and slow stop
+reporting, and removes Linux GPG signing/keyring publication in favor of
+`SHA256SUMS`-only validation. It retains the 1.17.0 rolling autosave with validated
+startup resume (UX-37) and direct ZIP/7z ISO, BIN, and CUE+BIN containers (SYS-27), the
+1.16.1 `disc audio`/`disc verify` diagnostics, the 1.16.0 physical CD-DA and read-error
+work, and the 1.15.0 Steam Deck/SteamOS first-run setup, `ArcadeCrt` filter, Windows
+optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes. The default 320x240
+compatibility path and the documented title matrix are unchanged.
 
 **Current position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
@@ -1026,6 +1029,38 @@ local collection agrees: 1,363 single-data images and 3 audio-only images, with 
 mixed-mode game. Retail 3DO titles stream music as data-track audio (ADPCM/Cinepak), so
 there is no game disc to use for an in-game CD-DA test; a normal music CD is the correct
 test disc, and the reporter's result above is that test.
+
+### 10.10 Cross-platform 1.17.1 release-bundle validation (2026-11-25)
+
+The release bundles built from commit `9003dea` (CI run 45662940544) were exercised on
+all five targets with **Wolfenstein 3D (USA).chd**, **panafz1.bin**, 600 frames, and
+`--audio null`. Every host produced frame hash `0x110E7DC5` (decimal `286162373`),
+PC `366944`, game ID `3dfcdbbff14ffb59e157e27f18d9df7b`, and the same 600-frame PNG
+SHA-256 `57580743a08a3f4ebdf57240cbcc997002ef63b7234531f946127f1495973f43`.
+`selftest` reported 15/15 and the frontend smoke passed on every target
+(`FRONTEND SMOKE OK 1.17.0` for these pre-release bundles).
+
+| Target | Host | Full suite | Probes / notes |
+|---|---|---|---|
+| Windows x64 | PETERSONPC (Ryzen 9 7900, Radeon RX 580) | 2,602/2,602 | OpenGL and Direct3D 11 probes passed |
+| Windows arm64 | Azure `winarm-test` (Cobalt 100) | 2,602/2,602 | GL/ANGLE and Direct3D 11 probes passed; both apphosts and bundled native DLLs are PE `0xAA64` |
+| Linux x64 | Hyper-V `LinuxMint` (x86_64) | 2,602/2,602 | CPU bundle and X11 smoke |
+| Linux arm64 | Azure `linuxarm-test` (Neoverse-N2) | 2,602/2,602 | `xvfb-run` smoke; no GPU |
+| macOS arm64 | NoMac Apple M5 Pro (virtual) | 2,602/2,602 | CLI and smoke run from the mounted DMG |
+
+The five bundle SHA-256 values were recorded locally:
+
+| Bundle | SHA-256 |
+|---|---|
+| `5do-1.17.0-win-x64.zip` | `7B505721BAD095BC4FBC2F12B1A3AAEDCBA30363E61704BE241B079217A5586D` |
+| `5do-1.17.0-win-arm64.zip` | `E4AFC7A047452107540A6CF9F2C3E10F230E24353A1F95039FFFC6197AF2799F` |
+| `5do-1.17.0-linux-x64.tar.gz` | `C9E0F0C1D7D394D861C9D772479B0A5806164D3166039E2B46917A8F66053712` |
+| `5do-1.17.0-linux-arm64.tar.gz` | `ADE0798EBA2F7692B8A4A06B653A9E99B4910AD47AACE0A6F97D6975450BA29B` |
+| `5do-1.17.0-osx-arm64.dmg` | `74730B804BF5363226CA081194A3D6F569DD2071B2F136C913EE6E85AA9B3E9E` |
+
+The run used the 1.17.0 version string because it validated the post-1.17.0 master
+before the 1.17.1 version bump; the release workflow rebuilds the same sources as
+1.17.1.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

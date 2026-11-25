@@ -598,8 +598,8 @@ Key properties in `Directory.Build.props`:
 | `FiveDoOpenAlSoftVersion` | `1.23.1` |
 
 Central package versions live in `Directory.Packages.props`. The notable dependencies
-are Avalonia 12.1.6 (diagnostics 12.1.4), CommunityToolkit.Mvvm,
-System.CommandLine 3.0.0, Silk.NET.OpenGL/OpenAL, CHDSharp 1.6.3,
+are Avalonia 12.2.0, CommunityToolkit.Mvvm,
+System.CommandLine 3.0.0, Silk.NET.OpenGL/OpenAL, CHDSharp 1.7.2,
 Microsoft.NET.Test.Sdk 18.11.1, xUnit, and BenchmarkDotNet (present but the current
 benchmark harness is custom).
 The 3DO Opera file-system reader used by `5do fs` is first-party

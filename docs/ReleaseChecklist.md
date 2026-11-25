@@ -1,9 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.17.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.17.1 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.17.0 adds rolling autosave with validated
+v1.2.x. macOS is published as a DMG. v1.17.1 fixes the malformed-ZIP library refresh,
+unobserved OpenGL framebuffer fallback, and slow stop reporting, and removes Linux GPG
+signing in favor of `SHA256SUMS` only. v1.17.0 added rolling autosave with validated
 startup resume and direct ZIP/7z ISO/BIN/CUE+BIN containers. v1.16.1 added `disc audio`
 CD-DA extraction and `disc verify` progress/mixed-mode totals, and recorded the optical
 collection/BIOS sweep. v1.16.0 added physical CD-DA playback from a host optical drive
@@ -49,6 +51,26 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 `docs/Compatibility.md`, `docs/KnownIssues.md`, and `CHANGELOG.md` as items complete.
 
 ---
+
+## 1.17.1 bug-fix gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status, MkDocs
+      navigation, AppStream `<release>`, AUR `PKGBUILD`, changelog, and release notes to
+      `1.17.1`; restore refreshes the project-version entries in every
+      `packages.lock.json`.
+- [x] Fix the malformed-ZIP library refresh (#70180), unobserved `OpenGL FBO` fallback
+      (#70015, #70377), and slow stop reporting (#70299, #70300); add regression tests.
+- [x] Remove Linux GPG signing/keyring publication and make `SHA256SUMS.txt` /
+      `SHA256SUMS-linux.txt` the only release validation files.
+- [x] Full Release suite **2,602/2,602**; `dotnet build`, `dotnet format`, `jb
+      inspectcode --severity=WARNING`, and `mkdocs build --strict` clean.
+- [x] Cross-platform release-bundle check on Windows x64/arm64, Linux x64/arm64, and
+      macOS arm64: identical Wolfenstein 3D 600-frame hash `0x110E7DC5`, PC `366944`,
+      and PNG SHA-256; `selftest` 15/15 and the frontend smoke on every target (the
+      pre-release bundles carry the 1.17.0 string; release CI verifies 1.17.1).
+      Evidence in [Compatibility.md](Compatibility.md) §10.10.
+- [ ] Push `master`, tag `v1.17.1`, and verify the release workflow publishes the five
+      bundles, Linux packages, both checksum manifests, and no signature assets.
 
 ## 1.17.0 autosave and archive-container gate
 

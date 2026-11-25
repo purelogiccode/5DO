@@ -327,10 +327,11 @@ public static class ArchiveDiscImage
 
         public void Dispose()
         {
-            _archive?.Dispose();
+            IArchive? archive = _archive;
             _archive = null;
-            _cache.Clear();
             _entries.Clear();
+            _cache.Clear();
+            archive?.Dispose();
         }
     }
 
@@ -356,8 +357,14 @@ public static class ArchiveDiscImage
 
         public void Dispose()
         {
-            _inner.Dispose();
-            _files.Dispose();
+            try
+            {
+                _inner.Dispose();
+            }
+            finally
+            {
+                _files.Dispose();
+            }
         }
     }
 
@@ -397,8 +404,14 @@ public static class ArchiveDiscImage
 
         public void Dispose()
         {
-            _inner.Dispose();
-            _files.Dispose();
+            try
+            {
+                _inner.Dispose();
+            }
+            finally
+            {
+                _files.Dispose();
+            }
         }
     }
 }
