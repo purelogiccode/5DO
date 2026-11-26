@@ -114,6 +114,23 @@ public sealed class Quartz : IStateSection
                 throw new ArgumentOutOfRangeException(nameof(value), value, "The ARM clock must be positive.");
             }
 
+            if (value != _armClock)
+            {
+                // Preserve the phase of the cycle-based accumulators. Without this, a
+                // lower clock can leave an accumulator above the new threshold and emit
+                // a short catch-up burst at the switch boundary.
+                double ratio = value / (double)_armClock;
+                _dspCycleRemainder = (uint)Math.Min(
+                    uint.MaxValue,
+                    Math.Round(_dspCycleRemainder * ratio));
+                _vdlAccumulator = (ulong)Math.Min(
+                    ulong.MaxValue,
+                    Math.Round(_vdlAccumulator * ratio));
+                _timerAccumulator1616 = (ulong)Math.Min(
+                    ulong.MaxValue,
+                    Math.Round(_timerAccumulator1616 * ratio));
+            }
+
             _armClock = value;
             UpdateVdlClock();
         }

@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using FiveDo.Core;
 using FiveDo.Video;
@@ -94,10 +93,30 @@ public sealed class FrameInterpolatorTests
     }
 
     [Fact]
+    public void LongSubmitGap_ResetsTheIntervalInsteadOfSmoothingIt()
+    {
+        var interpolator = new FrameInterpolator();
+        long interval = Stopwatch.Frequency / 60;
+        interpolator.Advance(MakeFrame(0), 1000, interval);
+        interpolator.Advance(MakeFrame(1), 1000 + interval, interval);
+        Assert.InRange(interpolator.IntervalSeconds, 0.016, 0.017);
+
+        interpolator.Advance(MakeFrame(2), 1000 + interval + Stopwatch.Frequency, Stopwatch.Frequency);
+        Assert.Equal(0, interpolator.IntervalSeconds);
+        Assert.Equal(1.0, interpolator.PositionAt(1000 + interval + Stopwatch.Frequency), precision: 3);
+
+        interpolator.Advance(
+            MakeFrame(3),
+            1000 + interval + Stopwatch.Frequency + interval,
+            interval);
+        Assert.InRange(interpolator.IntervalSeconds, 0.016, 0.017);
+    }
+
+    [Fact]
     public void IncompatibleFrames_DisableThePair()
     {
         var interpolator = new FrameInterpolator();
-        interpolator.Advance(MakeFrame(10, Width, Height), 1000);
+        interpolator.Advance(MakeFrame(10), 1000);
         VdlFrame smaller = MakeFrame(20, Width, Height - 20);
         interpolator.Advance(smaller, 1000 + (Stopwatch.Frequency / 60));
 
@@ -184,10 +203,8 @@ public sealed class FrameInterpolatorTests
         interpolator.Advance(MakeFrame(255), 1000 + (Stopwatch.Frequency / 60));
         VdlFrame blended = Assert.IsType<VdlFrame>(interpolator.FrameAt(0.5));
 
-        using var renderer = new CpuVideoRenderer
-        {
-            Settings = new RendererSettings { Filter = VideoFilter.Nearest, IntegerScale = true },
-        };
+        using var renderer = new CpuVideoRenderer();
+        renderer.Settings = new RendererSettings { Filter = VideoFilter.Nearest, IntegerScale = true };
         renderer.Initialize(Width, Height);
         renderer.Present(blended);
 

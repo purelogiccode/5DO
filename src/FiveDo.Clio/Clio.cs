@@ -100,6 +100,10 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
         }
 
         _armClock = clock;
+        if (_flagTime != 0)
+        {
+            _flagTime = Math.Max(1, clock / 2_000_000);
+        }
     }
 
     /// <summary>Gets or sets whether Opera's DIPIR latches and access aborts are active.</summary>

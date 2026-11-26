@@ -26,11 +26,11 @@ The authoritative build instructions and script arguments are in
 The installed desktop app accepts a positional disc path or `--disc <path>`, which is
 the same path the shell passes from a file association.
 
-- **Windows:** Inno Setup registers `5DO.Disc` for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`
+- **Windows:** Inno Setup registers `5DO.Disc` for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, `.nrg`, `.mds`, `.mdx`, and `.ccd`
   and `5DO.Playlist` for `.m3u`. The association is per-user when the installer is not
   elevated and machine-wide when it is.
 - **Linux:** the package installs `/usr/share/mime/packages/5do.xml` with the
-  `application/x-3do-disc` MIME type for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`, plus the
+  `application/x-3do-disc` MIME type for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, `.nrg`, `.mds`, `.mdx`, and `.ccd`, plus the
   `5do.desktop` entry and `5do` SVG icon. `postinst` refreshes the desktop and MIME
   databases. The Flatpak bundle exports the same MIME definition, desktop entry, and
   icons from inside the sandbox under the `io.github.purelogiccode.FiveDO` app ID.

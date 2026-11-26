@@ -132,6 +132,52 @@ public sealed class MdsCcdDiscImageTests
     }
 
     [Fact]
+    public void Factory_OpensRelativeMdsAndCcdPaths()
+    {
+        using var fixture = new MdsCcdFixture(dataSectors: 8);
+        fixture.WriteMds(singleTrack: true);
+        fixture.WriteCcd(singleTrack: true);
+
+        string local = Path.Combine(
+            Environment.CurrentDirectory,
+            "artifacts",
+            "relative-mdsccd-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(local);
+        try
+        {
+            File.Copy(fixture.MdsPath, Path.Combine(local, "disc.mds"));
+            File.Copy(Path.Combine(fixture.Directory, "disc.mdf"), Path.Combine(local, "disc.mdf"));
+            File.Copy(fixture.CcdPath, Path.Combine(local, "disc.ccd"));
+            File.Copy(Path.Combine(fixture.Directory, "disc.img"), Path.Combine(local, "disc.img"));
+
+            string relativeMds = Path.Combine("artifacts", Path.GetFileName(local), "disc.mds");
+            string relativeCcd = Path.Combine("artifacts", Path.GetFileName(local), "disc.ccd");
+            Assert.False(Path.IsPathRooted(relativeMds));
+            Assert.False(Path.IsPathRooted(relativeCcd));
+
+            using (IDiscSource mds = DiscImageFactory.Open(relativeMds))
+            {
+                Assert.IsType<MdsDiscImage>(mds);
+                var sector = new byte[2048];
+                mds.ReadSector(0, sector);
+                Assert.Equal(ExpectedData(0), sector);
+            }
+
+            using (IDiscSource ccd = DiscImageFactory.Open(relativeCcd))
+            {
+                Assert.IsType<CcdDiscImage>(ccd);
+                var sector = new byte[2048];
+                ccd.ReadSector(0, sector);
+                Assert.Equal(ExpectedData(0), sector);
+            }
+        }
+        finally
+        {
+            Directory.Delete(local, recursive: true);
+        }
+    }
+
+    [Fact]
     public void LibraryScanner_RecognizesMdsAndCcdExtensions()
     {
         using var fixture = new MdsCcdFixture(dataSectors: 8);

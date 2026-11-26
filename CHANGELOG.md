@@ -1,7 +1,58 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.17.1, the bug-fix release
-for the autosave and archive-container release.
+All notable changes are recorded here. The project is at v1.18.0, the feature release for
+MDS/CCD images, MP4 recording, high-refresh interpolation, patterned GPU bars, and live
+CPU-clock changes.
+
+## [1.18.0] - 2026-11-26
+
+### Added
+
+- **Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc images (SYS-29, readers).** The desktop,
+  CLI, library, and game database open read-only MDS/MDF/MDX and CCD/IMG/SUB images.
+  MDS images that are split, subchannel-bearing, pregap-padded, compressed, or encrypted
+  are prepared into a temp CUE cache; malformed descriptors fail with typed errors.
+  Synthetic data/audio and malformed-input tests are included. Representative real-image
+  boot-hash parity remains open in the plan.
+- **MP4 recording through an external FFmpeg (UX-38).** Desktop **File > Record MP4...**
+  and CLI `--record-mp4` capture the presented frame and DSP/CD audio mix as H.264/AAC
+  with `+faststart`. Low/Medium/High quality is available through `--record-quality` and
+  Settings > Video > MP4 quality. FFmpeg is auto-detected from `FIVEDO_FFMPEG`, the
+  apphost folder, or `PATH`; it is not bundled. Pause omits the gap, and fast-forward or
+  rewind stops the recording before the timelines diverge.
+- **High-refresh frame interpolation (VID-22).** Settings > Video blends the two most
+  recent completed fields at presentation rates above 60 Hz. It requires a fixed rate
+  and is disabled with VRR; endpoint frames, gameplay, audio, save states, and frame
+  hashes are unchanged.
+- **Patterned GPU void bars (UX-33).** Solid, Checker, Grid, Scanline, FourDO, Bumps, and
+  Metal patterns render in the letterbox/pillarbox area on OpenGL, Direct3D 11, and
+  Vulkan.
+- **Live CPU-clock changes (SYS-25).** `FiveDoMachine.SetArmClock` updates the machine and
+  component clocks at the next frame boundary without recreating the machine; save states
+  record the active clock.
+
+### Changed
+
+- **License and database record.** The FreeDO modified GNU LGPL is retained as
+  non-commercial donationware. The 4DO game database is recorded as a separate GPL-2.0
+  data component with the complete text in `docs/GPL-2.0.txt`; official distribution
+  channels and Flathub remain not eligible.
+- README, installation, status, compatibility, known-issues, release, and wiki documents
+  now describe 1.18.0 and the new formats and features.
+
+### Reliability
+
+- MDS/CCD relative paths, stored first-track pregaps, split MDS volumes, companion-data
+  cache invalidation, and case-insensitive `.img` lookups are handled correctly.
+- MP4 recording keeps frame skip off while saving Settings, starts the encoder inside
+  the guarded path, muxes through a sibling temp file, cleans temp files on failure,
+  caps the WAV with `--record-frames`, stops on a region change, and treats a zero-frame
+  desktop stop as a cancellation.
+- Vulkan void patterns are no longer vertically mirrored; the OpenGL void program is
+  released; interpolation resets on pause, step, rewind, state load, and disc change;
+  outlier submit gaps reset the interval.
+- A live CPU-clock change clears rewind history and rescales the Quartz/Clio cycle
+  accumulators.
 
 ## [1.17.1] - 2026-11-25
 

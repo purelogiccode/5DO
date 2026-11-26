@@ -3,6 +3,10 @@ using System;
 namespace FiveDo.Frontend.Avalonia.Controls;
 
 /// <summary>Event data for <see cref="VulkanVideoSurface.Failed"/>.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Read by the Avalonia failure handler.")]
 public sealed class VulkanFailedEventArgs : EventArgs
 {
     /// <summary>Initializes a new instance of the <see cref="VulkanFailedEventArgs"/> class.</summary>

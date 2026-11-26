@@ -1,7 +1,7 @@
 # 5DO — Missing Features
 
 **Snapshot:** 2026-11-26
-**Release:** v1.17.1
+**Release:** v1.18.0
 **Status:** the compatibility program is complete. This file tracks **remaining work
 only**; completed items, their evidence, the full stable-ID history, and the completed
 portions of partially open IDs are in

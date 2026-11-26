@@ -61,7 +61,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"
-Name: "fileassoc"; Description: "Associate 3DO disc images (.iso, .cue, .chd, .bin, .cdi, .nrg, .m3u) with 5DO"; GroupDescription: "File associations:"
+Name: "fileassoc"; Description: "Associate 3DO disc images (.iso, .cue, .chd, .bin, .cdi, .nrg, .mds, .mdx, .ccd, .m3u) with 5DO"; GroupDescription: "File associations:"
 
 [Files]
 Source: "{#BundleDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -80,6 +80,9 @@ Root: HKA; Subkey: "Software\Classes\.cue"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.chd"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\.cdi"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\.nrg"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\.mds"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\.mdx"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\.ccd"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\.bin"; ValueType: string; ValueName: ""; ValueData: "5DO.Disc"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\.m3u"; ValueType: string; ValueName: ""; ValueData: "5DO.Playlist"; Flags: uninsdeletevalue; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\5DO.Disc"; ValueType: string; ValueName: ""; ValueData: "3DO Disc Image"; Flags: uninsdeletekey; Tasks: fileassoc
@@ -93,6 +96,9 @@ Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; Va
 Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".chd"; ValueData: ""; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".cdi"; ValueData: ""; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".nrg"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".mds"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".mdx"; ValueData: ""; Tasks: fileassoc
+Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".ccd"; ValueData: ""; Tasks: fileassoc
 Root: HKA; Subkey: "Software\Classes\Applications\FiveDo.exe\SupportedTypes"; ValueType: string; ValueName: ".bin"; ValueData: ""; Tasks: fileassoc
 
 [Run]

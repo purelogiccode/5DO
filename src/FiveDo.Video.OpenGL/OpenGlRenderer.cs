@@ -1086,7 +1086,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
     private void DisposeResources()
     {
-        if (_paletteProgram == 0 && _scaleProgram == 0 && _hqxProgram == 0 && _mmpxProgram == 0 && _vao == 0)
+        if (_paletteProgram == 0
+            && _scaleProgram == 0
+            && _hqxProgram == 0
+            && _mmpxProgram == 0
+            && _voidProgram == 0
+            && _vao == 0)
         {
             return;
         }
@@ -1120,6 +1125,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         {
             gl.DeleteProgram(_mmpxProgram);
             _mmpxProgram = 0;
+        }
+
+        if (_voidProgram != 0)
+        {
+            gl.DeleteProgram(_voidProgram);
+            _voidProgram = 0;
         }
 
         if (_fsrEasuProgram != 0)

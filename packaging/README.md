@@ -150,7 +150,7 @@ Apple account is available; Linux release packages are unsigned and validated wi
 ### Windows (Inno Setup)
 
 `packaging/windows/5do.iss` installs both apphosts, creates Start Menu/desktop
-shortcuts, and registers a `5DO.Disc` ProgID for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, and `.nrg`
+shortcuts, and registers a `5DO.Disc` ProgID for `.iso`, `.cue`, `.chd`, `.bin`, `.cdi`, `.nrg`, `.mds`, `.mdx`, and `.ccd`
 plus `5DO.Playlist` for `.m3u`. Associations use `HKA`, so an unelevated install writes
 to `HKCU` and an elevated install writes to `HKLM`.
 
@@ -176,7 +176,7 @@ Requires Inno Setup 6 (`ISCC.exe`). The output is
 The Linux packages install the apphosts under `/opt/5do`, add `/usr/bin/5do` and
 `/usr/bin/5do-cli`, install the desktop entry, a 256 px and SVG icon, the AppStream
 metainfo, and the `application/x-3do-disc` MIME type with `*.iso`, `*.cue`, `*.chd`,
-`*.bin`, `*.cdi`, and `*.nrg` globs. The bundles are self-contained, so the packages
+`*.bin`, `*.cdi`, `*.nrg`, `*.mds`, `*.mdx`, and `*.ccd` globs. The bundles are self-contained, so the packages
 depend on the X11/fontconfig/freetype/GL libraries only — never on a
 `dotnet-runtime` package.
 
@@ -207,7 +207,7 @@ The scripts require `dpkg-deb` (dpkg), `rpmbuild` (rpm-build), `appimagetool`,
 `org.freedesktop.Platform//26.08` runtime/SDK from Flathub when it is missing (pass
 `--no-install-deps` to skip), and keeps the OSTree repository with `--repo-dir` for a
 self-hosted Flatpak repository. Open the installed `5do` entry or a
-`.iso`/`.cue`/`.chd`/`.cdi`/`.nrg` file to launch the frontend with the disc path.
+`.iso`/`.cue`/`.chd`/`.cdi`/`.nrg`/`.mds`/`.mdx`/`.ccd` file to launch the frontend with the disc path.
 
 #### Linux release integrity
 

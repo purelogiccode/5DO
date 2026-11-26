@@ -1,13 +1,16 @@
 # Known Issues
 
-**Snapshot:** 2026-11-25, v1.17.1. The 1.17.1 release fixes the malformed-ZIP library
-refresh, unobserved OpenGL framebuffer fallback, and slow stop reporting, and removes
-Linux GPG signing/keyring publication in favor of `SHA256SUMS`-only validation. It
-retains the 1.17.0 rolling autosave with validated startup resume and ZIP/7z
-ISO/BIN/CUE+BIN containers, the 1.16.1 `disc audio`/`disc verify` diagnostics, the
-1.16.0 physical CD-DA and read-error work, the 1.15.0 Steam Deck/SteamOS first-run
-setup, Arcade CRT filter, Windows physical optical-drive discovery, JIT soft-reset, and
-single-pad PBUS fixes. The 1.14.2 release fixed the Windows app-local MSVC runtime,
+**Snapshot:** 2026-11-26, v1.18.0. The 1.18.0 release adds read-only Alcohol MDS/MDX
+and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through an external
+FFmpeg, high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock
+changes. It retains the 1.17.x rolling autosave with validated startup resume and ZIP/7z
+ISO/BIN/CUE+BIN containers, the `disc audio`/`disc verify` diagnostics, physical CD-DA
+and read-error recovery, the Steam Deck first-run setup, Arcade CRT filter, Windows
+physical optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes.
+
+The 1.17.1 release fixed the malformed-ZIP library refresh, unobserved OpenGL framebuffer
+fallback, and slow stop reporting, and removed Linux GPG signing/keyring publication in
+favor of `SHA256SUMS`-only validation. The 1.14.2 release fixed the Windows app-local MSVC runtime,
 AppImage update metadata, cover-catalog HTTP
 fallback, and expected-condition bug reports. The 1.14.1 deep-review release fixed CHD
 Mode 2 sectors, crop dimensions, persistence, and shutdown races. The list below remains
@@ -71,7 +74,13 @@ checksums are attached, and legal/attribution sign-off is recorded.
   password prompt yet.
 - Plain raw/cooked MDS images are referenced in place. Split, subchannel-bearing,
   pregap-padded, compressed, encrypted, or MDX images are prepared into a per-source
-  cache under the process temp folder; entries older than 30 days are cleaned up.
+  cache under the process temp folder; the key includes the descriptor and companion
+  data-file identity plus a cache-format version. Entries older than 30 days are
+  cleaned up.
+- Preparing a large split, subchannel-bearing, compressed, or MDX image runs
+  synchronously on the opening thread. The desktop can pause with no progress or cancel
+  option while gigabytes are joined, stripped, or decoded; use the CLI or wait for the
+  cache entry to be prepared.
 - CloneCD descriptors are parsed by CCDSharp, including TOC-only descriptors, INDEX
   00/02+, FLAGS, ISRC, and CATALOG. The `.img` is referenced by a generated CUE. The
   optional `.sub` file is ignored because the 3DO CD-ROM device does not need subcode.
@@ -589,10 +598,15 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   the emulated 59.94/50 Hz rate. Odd dimensions are trimmed to even values, and a
   mid-recording 240/480-line change is scaled to the initial size. Quality is
   Low/Medium/High (`--record-quality` or Settings > Video > MP4 quality); libx264 maps
-  them to CRF 30/23/18, and hardware encoders use the nearest equivalent.
+  them to CRF 30/23/18, and hardware encoders use the nearest equivalent. The MP4 is
+  tagged 4:3, so 480/576-line weave composites display with the intended pixel aspect.
 - Pause suspends capture, so the paused wall-clock gap is omitted from the MP4.
   Fast-forward and rewind stop the recording before the frame/audio timeline diverges.
-  Disc swap continues recording; the audio buffer keeps running.
+  A disc swap continues recording only when the region/field rate stays the same; a
+  PAL/NTSC change stops it first so audio and video do not acquire different clocks.
+  Saving Settings while recording keeps frame skip off.
+- A zero-frame desktop stop is reported as a cancelation and removes the temp WAV/video.
+  A failed mux writes to a sibling temp file and leaves the previous file untouched.
 - Windows desktop/CLI, Linux x64 CLI, and macOS arm64 CLI were validated with H.264/AAC
   and non-silent audio. The desktop menu itself was exercised on Windows; Linux and macOS
   ran the frontend smoke and the same recorder path through the CLI. See

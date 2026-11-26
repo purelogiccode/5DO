@@ -26,6 +26,10 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// Edits presentation, audio, emulation, and path settings. Changes are applied by the caller
 /// only after the dialog returns <see langword="true"/>.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Read by the Avalonia main window after the settings dialog closes.")]
 public partial class SettingsWindow : Window
 {
     private static readonly RendererOption[] _rendererOptions = CreateRendererOptions();
@@ -1075,10 +1079,6 @@ public partial class SettingsWindow : Window
             : AppSettings.DefaultDisplayRefreshRate;
         var available = rate > AppSettings.DefaultDisplayRefreshRate && VrrCheck.IsChecked != true;
         FrameInterpolationCheck.IsEnabled = available;
-        if (!available)
-        {
-            FrameInterpolationCheck.IsChecked = false;
-        }
     }
 
     private void OnProfileChanged(object? sender, SelectionChangedEventArgs e)

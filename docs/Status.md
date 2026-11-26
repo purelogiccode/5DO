@@ -1,5 +1,14 @@
 # Project Status and Next Steps
 
+**2026-11-26, v1.18.0 feature release (GitHub Releases):** the release adds read-only
+Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through
+an external FFmpeg with Low/Medium/High quality, high-refresh frame interpolation,
+patterned GPU void bars on OpenGL/Direct3D 11/Vulkan, and live CPU-clock changes that
+apply at the next frame boundary. Windows desktop/CLI, Linux x64 CLI, and macOS arm64 CLI
+validated the MP4 path; the full suite is **2,644/2,644**. The active plan tracks
+**13 open items**. Release bundles and checksums are produced by the tag workflow; see
+[ReleaseNotes-1.18.0.md](ReleaseNotes-1.18.0.md).
+
 **2026-11-26, MP4 video recording:** `UX-38` is complete. The desktop **File > Record
 MP4...** menu and CLI `--record-mp4` use an external FFmpeg (`FIVEDO_FFMPEG`, apphost
 folder, or `PATH`), record the presented frame and DSP/CD audio mix, and mux H.264/AAC

@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at **v1.17.1** (published on GitHub). Windows x64 and Linux x64 are the
+The project is at **v1.18.0** (published on GitHub). Windows x64 and Linux x64 are the
 validated desktop targets; macOS arm64 renders through Vulkan/MoltenVK; Linux arm64 and
 Windows arm64 pass native CLI/frontend runtime smoke. The compatibility program is
 complete on the current corpus:
@@ -19,11 +19,14 @@ complete on the current corpus:
 - Five self-contained bundles are published (Windows/Linux x64+arm64 and macOS arm64);
   Linux also has `.deb`, `.rpm`, AppImage, and Flatpak assets. The .NET 11 runtime is
   embedded, so no separate runtime is required. Intel macOS is unsupported.
+- v1.18.0 adds read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional
+  FFmpeg-based H.264/AAC MP4 recording with Low/Medium/High quality, high-refresh frame
+  interpolation, patterned GPU void bars, and live CPU-clock changes.
 - The current release retains rolling autosave/auto-resume, ZIP/7z ISO/BIN/CUE+BIN
   containers, physical CD-DA and read-error recovery, the Steam Deck first-run layout,
   Arcade CRT, RetroAchievements, TAS movies, rewind/run-ahead, cheats, and the library.
 
-## Next (post-1.17.1)
+## Next (post-1.18.0)
 
 The full ordered backlog is in [ImplementationPlan.md](ImplementationPlan.md). The
 short version:
@@ -51,15 +54,11 @@ short version:
 
 **Product and rendering**
 
-- `UX-38` MP4 video recording with Low/Medium/High quality is complete: Windows
-  desktop/CLI, Linux CLI, and macOS CLI use external FFmpeg; see [Video.md](Video.md).
 - `NET-01` netplay loopback probe (commit only if the probe is clean).
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
-  bounded probe. `VID-22` high-refresh frame interpolation, `UX-33` patterned GPU void
-  bars, and `SYS-25` live CPU-clock changes are implemented after 1.17.1; see
-  [Performance.md](Performance.md) §8.9 and [Video.md](Video.md).
+  bounded probe.
 
 **Accuracy residuals (not release blockers)**
 

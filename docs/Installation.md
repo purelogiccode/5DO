@@ -8,7 +8,7 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 | Requirement | Details |
 |---|---|
 | 3DO BIOS | A 1 MB BIOS image such as `panafz1.bin`. An optional second 1 MB ROM can be used as BIOS2/Kanji. |
-| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, Nero NRG, or ISO/BIN/CUE+BIN inside ZIP/7z. |
+| Disc image | ISO (2048-byte sectors), BIN (2352-byte sectors), CUE+BIN, CHD, DiscJuggler CDI, Nero NRG, Alcohol MDS/MDX, CloneCD CCD/IMG/SUB, or ISO/BIN/CUE+BIN inside ZIP/7z. |
 | .NET | The published bundles are **self-contained**: the .NET 11 runtime is embedded, so no separate runtime install is required. The .NET 11 SDK is only needed for source builds. |
 | Desktop | Windows 10+, a current Linux desktop, or macOS 12+. |
 | GPU | OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation. A CPU fallback is available. |
@@ -18,15 +18,15 @@ include a BIOS ROM or any game images. You must supply legally obtained files.
 ## Download
 
 Download the bundle for your system and architecture from
-[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.17.1):
+[GitHub Releases](https://github.com/purelogiccode/5DO/releases/tag/v1.18.0):
 
 | System | Bundle |
 |---|---|
-| Windows x64 | `5do-1.17.1-win-x64.zip` |
-| Windows arm64 | `5do-1.17.1-win-arm64.zip` |
-| Linux x64 | `5do-1.17.1-linux-x64.tar.gz` |
-| Linux arm64 | `5do-1.17.1-linux-arm64.tar.gz` |
-| macOS arm64 | `5do-1.17.1-osx-arm64.dmg` |
+| Windows x64 | `5do-1.18.0-win-x64.zip` |
+| Windows arm64 | `5do-1.18.0-win-arm64.zip` |
+| Linux x64 | `5do-1.18.0-linux-x64.tar.gz` |
+| Linux arm64 | `5do-1.18.0-linux-arm64.tar.gz` |
+| macOS arm64 | `5do-1.18.0-osx-arm64.dmg` |
 
 Each bundle contains both the desktop app and the CLI. The .NET 11 runtime is embedded
 in the self-contained apphosts, so no separate runtime install is required. On Windows
@@ -34,15 +34,15 @@ extract the ZIP and run
 `FiveDo.exe`; on Linux extract the tarball and run
 `./FiveDo`; on macOS open the DMG and drag `5DO.app` to Applications.
 
-Bundles are versioned, for example `5do-1.17.1-win-arm64.zip` or
-`5do-1.17.1-osx-arm64.dmg`.
+Bundles are versioned, for example `5do-1.18.0-win-arm64.zip` or
+`5do-1.18.0-osx-arm64.dmg`.
 
 ### Installers and file associations
 
 Optional unsigned installers can be built from the bundles; see
 [Installers and file associations](Installers.md) and
 [`packaging/README.md`](https://github.com/purelogiccode/5DO/blob/master/packaging/README.md).
-The Windows installer registers `.iso`/`.cue`/`.chd`/`.bin`/`.cdi`/`.nrg` file
+The Windows installer registers `.iso`/`.cue`/`.chd`/`.bin`/`.cdi`/`.nrg`/`.mds`/`.mdx`/`.ccd` file
 associations. The Linux
 packages install a desktop entry, icon, and `application/x-3do-disc` MIME type. The
 macOS `.app` declares its document UTI. Signing and notarization run only when the

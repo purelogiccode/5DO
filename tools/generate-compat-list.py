@@ -24,7 +24,7 @@ from pathlib import Path
 DEFAULT_MHTML_GLOB = "References/4DO-master/*Compatibility List*.mhtml"
 DEFAULT_ROOTS = (r"J:\Panasonic 3DO", r"G:\MAME\MAME Software List CHDs\3do")
 DEFAULT_OUT = "docs/GameCompatibilityList.md"
-DISC_EXTENSIONS = (".chd", ".iso", ".bin", ".cue", ".cdi", ".nrg")
+DISC_EXTENSIONS = (".chd", ".iso", ".bin", ".cue", ".cdi", ".nrg", ".mds", ".mdx", ".ccd")
 
 
 @dataclass

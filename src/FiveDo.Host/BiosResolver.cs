@@ -13,6 +13,10 @@ namespace FiveDo.Host;
 /// <param name="Source">Selection source: <c>override</c>, <c>auto</c>, <c>configured</c>, or <c>none</c>.</param>
 /// <param name="Reason">Human-readable selection explanation.</param>
 /// <param name="Warnings">Non-fatal selection problems, such as a missing override or folder.</param>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "NotAccessedPositionalProperty.Global",
+    Justification = "Consumed by the Avalonia BIOS-open path.")]
 public sealed record ResolvedBios(
     string? PrimaryPath,
     string SecondaryPath,

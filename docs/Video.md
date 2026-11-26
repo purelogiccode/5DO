@@ -626,12 +626,13 @@ Both paths capture the presented frame, including the active field handling: a w
 the presented frame and a `WavAudioSink` receives the DSP/CD mix through the host audio
 tee. Frames stream to an external FFmpeg raw-BGRA encoder; audio is written to a temporary
 44.1 kHz stereo WAV. On stop, a second FFmpeg muxes the encoded video with AAC audio into
-the requested MP4 (`-c:v copy`, `-movflags +faststart`). The recorder prefers `libx264`,
-then a platform H.264 encoder, then FFmpeg's `mpeg4`. Quality is Low/Medium/High (libx264
-CRF 30/23/18) through `--record-quality` or Settings > Video > MP4 quality.
-Fast-forward and rewind stop the recording before the frame/audio timelines diverge;
-pause omits the wall-clock gap. FFmpeg is not bundled. See
-[`KnownIssues.md`](KnownIssues.md) "MP4 video recording".
+the requested MP4 through a sibling temp file (`-c:v copy`, `-aspect 4:3`,
+`-movflags +faststart`) and moves it into place only after success. The recorder prefers
+`libx264`, then a platform H.264 encoder, then FFmpeg's `mpeg4`. Quality is
+Low/Medium/High (libx264 CRF 30/23/18) through `--record-quality` or Settings > Video >
+MP4 quality. Fast-forward and rewind stop the recording before the frame/audio timelines
+diverge; pause omits the wall-clock gap, and a region/field-rate change stops it. FFmpeg
+is not bundled. See [`KnownIssues.md`](KnownIssues.md) "MP4 video recording".
 
 ---
 

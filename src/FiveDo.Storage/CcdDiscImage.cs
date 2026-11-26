@@ -49,6 +49,7 @@ public sealed class CcdDiscImage : ITrackedDiscSource
     public static CcdDiscImage Open(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        path = Path.GetFullPath(path);
         if (!File.Exists(path))
         {
             throw new DiscImageException($"CloneCD descriptor '{path}' does not exist.");
@@ -82,21 +83,49 @@ public sealed class CcdDiscImage : ITrackedDiscSource
                 + "descramble the image before opening it in 5DO.");
         }
 
-        if (string.IsNullOrWhiteSpace(disc.ImgFilePath) || !File.Exists(disc.ImgFilePath))
+        string? imagePath = string.IsNullOrWhiteSpace(disc.ImgFilePath)
+            || !File.Exists(disc.ImgFilePath)
+                ? ResolveImagePath(path)
+                : Path.GetFullPath(disc.ImgFilePath);
+        if (imagePath is null)
         {
             throw new DiscImageException(
                 $"CloneCD image '{path}' is missing its .img data file.");
         }
 
-        string cacheDirectory = DiscPreparationCache.GetDirectory(path, "ccd");
+        string cacheDirectory;
         try
         {
-            return new CcdDiscImage(CueDiscImage.Open(GetPreparedCue(disc, cacheDirectory)));
+            cacheDirectory = DiscPreparationCache.GetDirectory(path, "ccd", [imagePath]);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or NotSupportedException)
+        {
+            throw new DiscImageException(
+                $"CloneCD image '{path}' could not create its preparation cache: {exception.Message}",
+                exception);
+        }
+
+        try
+        {
+            return new CcdDiscImage(CueDiscImage.Open(GetPreparedCue(disc, cacheDirectory, imagePath)));
         }
         catch (DiscImageException)
         {
             DiscPreparationCache.Invalidate(cacheDirectory);
-            Directory.CreateDirectory(cacheDirectory);
+            try
+            {
+                Directory.CreateDirectory(cacheDirectory);
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException
+                or NotSupportedException)
+            {
+                throw new DiscImageException(
+                    $"CloneCD image '{path}' could not recreate its preparation cache: {exception.Message}",
+                    exception);
+            }
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -109,7 +138,7 @@ public sealed class CcdDiscImage : ITrackedDiscSource
 
         try
         {
-            return new CcdDiscImage(CueDiscImage.Open(GetPreparedCue(disc, cacheDirectory)));
+            return new CcdDiscImage(CueDiscImage.Open(GetPreparedCue(disc, cacheDirectory, imagePath)));
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -135,7 +164,7 @@ public sealed class CcdDiscImage : ITrackedDiscSource
     /// <summary>Disposes the prepared CUE reader.</summary>
     public void Dispose() => _inner.Dispose();
 
-    private static string GetPreparedCue(DiscImage disc, string cacheDirectory)
+    private static string GetPreparedCue(DiscImage disc, string cacheDirectory, string imagePath)
     {
         string? existing = DiscPreparationCache.FindPreparedCue(cacheDirectory);
         if (existing is not null)
@@ -152,11 +181,45 @@ public sealed class CcdDiscImage : ITrackedDiscSource
             }
 
             string cuePath = Path.Combine(cacheDirectory, DiscPreparationCache.PreparedCueName);
-            string cueText = CcdConverter.GenerateCueSheet(disc, disc.ImgFilePath!);
+            string cueText = CcdConverter.GenerateCueSheet(disc, imagePath);
 
             // No BOM: the shared CUE parser, like chdman, treats a BOM as part of the first token.
             File.WriteAllText(cuePath, cueText, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             return cuePath;
         }
+    }
+
+    private static string? ResolveImagePath(string descriptorPath)
+    {
+        string directory = Path.GetDirectoryName(descriptorPath) ?? string.Empty;
+        string baseName = Path.GetFileNameWithoutExtension(descriptorPath);
+        try
+        {
+            foreach (string candidate in Directory.EnumerateFiles(
+                directory,
+                "*",
+                SearchOption.TopDirectoryOnly))
+            {
+                if (string.Equals(
+                        Path.GetFileNameWithoutExtension(candidate),
+                        baseName,
+                        StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        Path.GetExtension(candidate),
+                        ".img",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return Path.GetFullPath(candidate);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or NotSupportedException)
+        {
+            // A case-insensitive companion is optional; the caller reports the missing file.
+        }
+
+        return null;
     }
 }

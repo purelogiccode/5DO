@@ -235,7 +235,9 @@ prints a warning and runs silently. `--realtime` only affects pacing, not the ba
 `--record-mp4` requires FFmpeg on `PATH`, `FIVEDO_FFMPEG`, or beside the apphost. It
 prefers `libx264`, then a platform H.264 encoder, then FFmpeg's `mpeg4`; audio is AAC at
 192 kb/s. `--record-quality` selects Low/Medium/High (CRF 30/23/18 for libx264). Pause
-compresses the gap, and fast-forward/rewind are not captured.
+compresses the gap, and fast-forward/rewind are not captured. A failed MP4 finalize sets
+`ok` to `false`, adds an `mp4:` warning, omits `mp4Path`/`mp4Frames`, and exits with code
+2; a missing FFmpeg is reported as an expected user error before the run starts.
 
 ### Input and automation options
 

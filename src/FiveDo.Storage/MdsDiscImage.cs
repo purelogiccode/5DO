@@ -49,6 +49,7 @@ public sealed class MdsDiscImage : ITrackedDiscSource
     public static MdsDiscImage Open(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        path = Path.GetFullPath(path);
         if (!File.Exists(path))
         {
             throw new DiscImageException($"MDS descriptor '{path}' does not exist.");
@@ -73,7 +74,29 @@ public sealed class MdsDiscImage : ITrackedDiscSource
                 $"MDS image '{path}' declares DVD media; 5DO supports 3DO CD images only.");
         }
 
-        string cacheDirectory = DiscPreparationCache.GetDirectory(path, "mds");
+        string cacheDirectory;
+        try
+        {
+            var dataFiles = new List<string>(disc.DataFilePaths);
+            foreach (string dataFile in disc.DataFilePaths)
+            {
+                if (SplitImageJoiner.TryGetVolumeSet(dataFile) is { } volumes)
+                {
+                    dataFiles.AddRange(volumes);
+                }
+            }
+
+            cacheDirectory = DiscPreparationCache.GetDirectory(path, "mds", dataFiles);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or NotSupportedException)
+        {
+            throw new DiscImageException(
+                $"MDS image '{path}' could not create its preparation cache: {exception.Message}",
+                exception);
+        }
+
         try
         {
             return new MdsDiscImage(CueDiscImage.Open(GetPreparedCue(disc, cacheDirectory)));
@@ -82,7 +105,18 @@ public sealed class MdsDiscImage : ITrackedDiscSource
         {
             // A stale or partially prepared cache entry must not hide a readable source.
             DiscPreparationCache.Invalidate(cacheDirectory);
-            Directory.CreateDirectory(cacheDirectory);
+            try
+            {
+                Directory.CreateDirectory(cacheDirectory);
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException
+                or NotSupportedException)
+            {
+                throw new DiscImageException(
+                    $"MDS image '{path}' could not recreate its preparation cache: {exception.Message}",
+                    exception);
+            }
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -172,6 +206,8 @@ public sealed class MdsDiscImage : ITrackedDiscSource
     private static bool CanReferenceDataFileDirectly(MdsDisc disc)
     {
         return disc.DataFilePaths.Count == 1
+            && SplitImageJoiner.TryGetVolumeSet(disc.DataFilePaths[0]) is null
+            && disc.SessionCount == 1
             && !disc.HasPregapInfo
             && disc.Tracks.All(static track => track.PregapSectors == 0)
             && !disc.NeedsSubchannelStrip
@@ -179,9 +215,9 @@ public sealed class MdsDiscImage : ITrackedDiscSource
             && !disc.HasCompressedTrackData
             && !disc.IsMdxContainer
             && disc.AllTracksDescribable
-            && disc.SectorSize is MdsDisc.RawSectorSize
+            && disc.Tracks.All(static track => track.SectorSize is MdsDisc.RawSectorSize
                 or MdsDisc.CookedSectorSize
                 or MdsDisc.Mode2XaSectorSize
-                or MdsDisc.Mode2Form2SectorSize;
+                or MdsDisc.Mode2Form2SectorSize);
     }
 }

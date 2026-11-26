@@ -53,6 +53,12 @@ bios/
 *.sub
 *.fstree
 !tests/**/Fixtures/**/*.bin
+!tests/**/Fixtures/**/*.mds
+!tests/**/Fixtures/**/*.mdf
+!tests/**/Fixtures/**/*.mdx
+!tests/**/Fixtures/**/*.ccd
+!tests/**/Fixtures/**/*.img
+!tests/**/Fixtures/**/*.sub
 
 # OS
 .DS_Store

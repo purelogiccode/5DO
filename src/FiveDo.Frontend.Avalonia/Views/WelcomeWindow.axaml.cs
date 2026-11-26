@@ -19,6 +19,10 @@ namespace FiveDo.Frontend.Avalonia.Views;
 /// include the BIOS folder plus a re-scan action so the dialog is usable without a
 /// keyboard.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Read by the Avalonia main window after the dialog closes.")]
 public partial class WelcomeWindow : Window
 {
     private readonly bool _deckLayout;

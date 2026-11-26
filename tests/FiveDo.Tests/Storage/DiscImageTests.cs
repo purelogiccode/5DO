@@ -170,6 +170,64 @@ public sealed class DiscImageTests
     }
 
     [Fact]
+    public void CueSheet_SkipsAStoredFirstTrackPregap()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"fivedo-cue-pregap-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string binPath = Path.Combine(directory, "disc.bin");
+        string cuePath = Path.Combine(directory, "disc.cue");
+        try
+        {
+            using (FileStream bin = File.Create(binPath))
+            {
+                for (var lba = 0; lba < 150; lba++)
+                {
+                    bin.Write(new byte[2352]);
+                }
+
+                for (var lba = 0; lba < 16; lba++)
+                {
+                    var raw = new byte[2352];
+                    raw[0] = 0x00;
+                    for (var i = 1; i <= 10; i++)
+                    {
+                        raw[i] = 0xFF;
+                    }
+
+                    raw[11] = 0x00;
+                    raw[12] = (byte)((lba / (60 * 75)) % 100);
+                    raw[13] = (byte)((lba / 75) % 60);
+                    raw[14] = (byte)(lba % 75);
+                    raw[15] = 1;
+                    DiscFixture.Expected(lba).CopyTo(raw.AsSpan(16));
+                    bin.Write(raw);
+                }
+            }
+
+            File.WriteAllText(
+                cuePath,
+                $"FILE \"{Path.GetFileName(binPath)}\" BINARY\n"
+                + "  TRACK 01 MODE1/2352\n"
+                + "    INDEX 00 00:00:00\n"
+                + "    INDEX 01 00:02:00\n");
+
+            using var image = CueDiscImage.Open(cuePath);
+            DiscTrack track = Assert.Single(image.Tracks);
+            Assert.Equal(0, track.StartLba);
+            Assert.Equal(16, track.SectorCount);
+            Assert.Equal(16, image.TotalSectorCount);
+
+            var data = new byte[2048];
+            image.ReadSector(0, data);
+            Assert.Equal(DiscFixture.Expected(0), data);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void CueSheet_ExposesMultiTrackTableOfContentsAndAudioSectors()
     {
         using var fixture = new DiscFixture(sectorCount: 16, audioSectorCount: 4);

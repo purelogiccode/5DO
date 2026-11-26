@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,6 +20,7 @@ namespace FiveDo.Storage;
 internal static class DiscPreparationCache
 {
     internal const string PreparedCueName = "prepared.cue";
+    internal const int CacheFormatVersion = 2;
 
     private const int RetentionDays = 30;
     private static readonly string Root = Path.Combine(Path.GetTempPath(), "5do-disc-cache");
@@ -30,22 +32,76 @@ internal static class DiscPreparationCache
     /// <summary>Gets the cache directory for one source file and format.</summary>
     /// <param name="sourcePath">Source disc image path.</param>
     /// <param name="format">Short format name, such as <c>mds</c> or <c>ccd</c>.</param>
+    /// <param name="dataPaths">Companion data files whose identity must invalidate the cache.</param>
     /// <returns>An existing or newly created cache directory.</returns>
-    internal static string GetDirectory(string sourcePath, string format)
+    internal static string GetDirectory(
+        string sourcePath,
+        string format,
+        IEnumerable<string>? dataPaths = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(format);
 
-        var info = new FileInfo(sourcePath);
-        string key = string.Create(
-            System.Globalization.CultureInfo.InvariantCulture,
-            $"{Path.GetFullPath(sourcePath)}|{info.Length}|{info.LastWriteTimeUtc.Ticks}|{format}");
-        string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))
+        var identity = new StringBuilder();
+        identity.Append('v').Append(CacheFormatVersion).Append('|');
+        AppendFileIdentity(identity, sourcePath);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            Path.GetFullPath(sourcePath),
+        };
+        if (dataPaths is not null)
+        {
+            foreach (string dataPath in dataPaths)
+            {
+                if (string.IsNullOrWhiteSpace(dataPath))
+                {
+                    continue;
+                }
+
+                string fullPath = Path.GetFullPath(dataPath);
+                if (seen.Add(fullPath))
+                {
+                    AppendFileIdentity(identity, fullPath);
+                }
+            }
+        }
+
+        identity.Append('|').Append(format);
+        string hash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(identity.ToString())))
             .ToLowerInvariant()[..16];
         string directory = Path.Combine(Root, format, hash);
         Directory.CreateDirectory(directory);
         CleanupOnce();
         return directory;
+    }
+
+    private static void AppendFileIdentity(StringBuilder builder, string path)
+    {
+        builder.Append(Path.GetFullPath(path)).Append('|');
+        try
+        {
+            var info = new FileInfo(path);
+            if (info.Exists)
+            {
+                builder.Append(info.Length)
+                    .Append('|')
+                    .Append(info.LastWriteTimeUtc.Ticks);
+            }
+            else
+            {
+                builder.Append("missing");
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            builder.Append("unreadable");
+        }
+
+        builder.Append('|');
     }
 
     /// <summary>Finds a prepared CUE in a cache directory.</summary>
@@ -68,7 +124,25 @@ internal static class DiscPreparationCache
             return;
         }
 
-        File.Copy(cuePath, destination, overwrite: true);
+        string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.Copy(cuePath, temporary, overwrite: false);
+            File.Move(temporary, destination, overwrite: true);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(temporary))
+                {
+                    File.Delete(temporary);
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
     }
 
     /// <summary>Removes a cache directory after a failed open.</summary>

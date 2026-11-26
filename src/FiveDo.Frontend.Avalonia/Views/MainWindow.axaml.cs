@@ -1598,6 +1598,14 @@ public partial class MainWindow : Window, IDisposable
             }
 
             VideoRegion region = ResolveRegionForBios(resolved.PrimaryPath, gameId);
+            if (_mp4Recorder is not null
+                && _machine is not null
+                && _machine.RegionProfile.Region != region)
+            {
+                StopMp4Recording();
+                ShowOsd("MP4 recording stopped for a region change.", OsdSeverity.Warning);
+            }
+
             var nvramChanged =
                 _settings.NvramStorageMode != _nvramMode
                 || _settings.NvramVersion != _nvramVersion
@@ -1643,6 +1651,7 @@ public partial class MainWindow : Window, IDisposable
                     machine.Reset();
                 }
             });
+            ResetFrameInterpolation();
             if (nextNvramStore is not null)
             {
                 NvramStore previous = _nvramStore;
@@ -1905,6 +1914,7 @@ public partial class MainWindow : Window, IDisposable
             CancelFastForward();
             StopDisplayRefresh();
             _runner?.Pause();
+            ResetFrameInterpolation();
             _playtime.Stop();
             RefreshLibraryDecorations();
             FlushNvram();
@@ -2151,6 +2161,7 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        ResetFrameInterpolation();
         if (_machine.StateWarnings.Count > 0)
         {
             StatusText.Text = $"State loaded with warnings: {string.Join(" ", _machine.StateWarnings)}";
@@ -2662,7 +2673,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void UpdateAudioSink()
     {
-        if (_runner is not null && _machine is not null)
+        if (_runner is not null && _machine is not null && _runner.IsRunning)
         {
             _runner.Invoke(UpdateAudioSinkCore);
             return;
@@ -2865,6 +2876,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         Mp4Recorder? recorder = null;
+        var previousFrameSkip = _runner?.FrameSkip ?? _settings.FrameSkip;
         try
         {
             recorder = Mp4Recorder.Start(
@@ -2875,18 +2887,22 @@ public partial class MainWindow : Window, IDisposable
                 quality: _settings.ResolveMp4Quality());
             _mp4Recorder = recorder;
             _mp4Path = path;
-            _mp4PreviousFrameSkip = _settings.FrameSkip;
+            _mp4PreviousFrameSkip = previousFrameSkip;
             if (_runner is not null)
             {
                 _runner.FrameSkip = FrameSkipMode.Off;
-                _runner.Invoke(() => _machine.FrameSink = _mp4Recorder);
+                _runner.Invoke(() =>
+                {
+                    _machine.FrameSink = _mp4Recorder;
+                    UpdateAudioSinkCore();
+                });
             }
             else
             {
                 _machine.FrameSink = recorder;
+                UpdateAudioSinkCore();
             }
 
-            UpdateAudioSink();
             RecordMp4MenuItem.Header = "Stop MP4 Recording";
             ShowOsd($"Recording MP4: {Path.GetFileName(path)}", OsdSeverity.Success);
             StatusText.Text = $"Recording MP4: {path}.";
@@ -2930,8 +2946,6 @@ public partial class MainWindow : Window, IDisposable
     {
         Mp4Recorder? recorder = _mp4Recorder;
         var path = _mp4Path;
-        _mp4Recorder = null;
-        _mp4Path = null;
         if (recorder is null)
         {
             return;
@@ -2939,23 +2953,35 @@ public partial class MainWindow : Window, IDisposable
 
         if (_machine is not null)
         {
-            if (_runner is not null)
+            try
             {
-                _runner.Invoke(() =>
+                if (_runner is not null && _runner.IsRunning)
                 {
-                    if (_machine.FrameSink is Mp4Recorder)
+                    _runner.Invoke(() =>
                     {
-                        _machine.FrameSink = null;
-                    }
-                });
+                        if (_machine.FrameSink is Mp4Recorder)
+                        {
+                            _machine.FrameSink = null;
+                        }
+                    });
+                }
+                else if (_machine.FrameSink is Mp4Recorder)
+                {
+                    _machine.FrameSink = null;
+                }
             }
-            else if (_machine.FrameSink is Mp4Recorder)
+            catch (InvalidOperationException exception)
             {
-                _machine.FrameSink = null;
+                _logger.ForCategory(LogCategory.Video).Warning(
+                    exception,
+                    "MP4 recording could not be detached from the stopping core thread.");
+                return;
             }
         }
 
-        if (_runner is not null)
+        _mp4Recorder = null;
+        _mp4Path = null;
+        if (_runner is not null && _runner.IsRunning)
         {
             _runner.FrameSkip = _mp4PreviousFrameSkip;
         }
@@ -2975,6 +3001,14 @@ public partial class MainWindow : Window, IDisposable
         }
 
         RecordMp4MenuItem.Header = "Record MP4...";
+        if (recorder.CapturedFrames == 0)
+        {
+            recorder.Dispose();
+            StatusText.Text = "MP4 recording canceled; no frames were captured.";
+            ShowOsd("MP4 recording canceled; no frames were captured.", OsdSeverity.Warning);
+            return;
+        }
+
         try
         {
             recorder.Complete();
@@ -5318,7 +5352,9 @@ public partial class MainWindow : Window, IDisposable
 
         if (_runner is not null)
         {
-            _runner.FrameSkip = _settings.FrameSkip;
+            _runner.FrameSkip = _gifRecorder is not null || _mp4Recorder is not null
+                ? FrameSkipMode.Off
+                : _settings.FrameSkip;
             ApplyLatencySettings(effective);
         }
 
@@ -5385,6 +5421,7 @@ public partial class MainWindow : Window, IDisposable
                     machine.SetArmClock(clock);
                 }
 
+                _runner?.ResetRewind();
                 _logger.ForCategory(LogCategory.Host).Information(
                     "CPU clock changed live to {Clock} Hz ({Multiplier:0.###}x); no machine restart.",
                     clock,
@@ -5706,6 +5743,10 @@ public partial class MainWindow : Window, IDisposable
     private void RecreateMachine(bool flushNvram = true)
     {
         StopInputRecording(save: true);
+        StopAudioRecording();
+        StopGifRecording();
+        StopMp4Recording();
+        StopMovie(save: true);
         if (flushNvram)
         {
             FlushNvram();
@@ -6257,6 +6298,13 @@ public partial class MainWindow : Window, IDisposable
     private void OnQuickMenuClose(object? sender, RoutedEventArgs e)
     {
         CloseQuickMenu();
+    }
+
+    private void ResetFrameInterpolation()
+    {
+        Video.ResetInterpolation();
+        Direct3DVideo.ResetInterpolation();
+        VulkanVideo.ResetInterpolation();
     }
 
     private void OnCoreStatus(CoreStatus status)
@@ -7234,6 +7282,9 @@ public partial class MainWindow : Window, IDisposable
                 SetPlayState(running: false);
                 StatusText.Text = $"Emulation error: {exception.Message}";
                 _logger.ForCategory(LogCategory.Machine).Error(exception, "Emulation fault.");
+                StopMp4Recording();
+                StopGifRecording();
+                StopAudioRecording();
                 ShowLibraryView();
                 ShowError("Emulation error", exception.Message);
             });
@@ -8289,6 +8340,7 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _runner.StepFrame();
+        ResetFrameInterpolation();
         StatusText.Text = $"Advanced to frame {_machine.FramesExecuted}.";
     }
 
@@ -8314,12 +8366,6 @@ public partial class MainWindow : Window, IDisposable
         }
 
         CancelFastForward();
-        if (_mp4Recorder is not null)
-        {
-            StopMp4Recording();
-            ShowOsd("MP4 recording stopped for rewind.", OsdSeverity.Warning);
-        }
-
         if (_runner.RunAhead > 0)
         {
             StatusText.Text = "Rewind is unavailable while run-ahead is active.";
@@ -8327,10 +8373,17 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        if (_mp4Recorder is not null)
+        {
+            StopMp4Recording();
+            ShowOsd("MP4 recording stopped for rewind.", OsdSeverity.Warning);
+        }
+
         if (_runner.Rewind(frames))
         {
             _inputRecorder?.ResetTimeline(_machine.FramesExecuted);
             _runner.Invoke(() => _achievements?.ResetRuntime());
+            ResetFrameInterpolation();
             StatusText.Text = $"Rewound to frame {_machine.FramesExecuted}.";
             ShowOsd($"Rewound to frame {_machine.FramesExecuted}");
         }

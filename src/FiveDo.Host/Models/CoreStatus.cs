@@ -11,6 +11,14 @@ namespace FiveDo.Host;
 /// <param name="FramesPerSecond">Measured emulated frame rate over the status interval.</param>
 /// <param name="TargetFramesPerSecond">Audio-derived target frame rate, or 0 before measurement.</param>
 [StructLayout(LayoutKind.Sequential)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "NotAccessedPositionalProperty.Global",
+    Justification = "Presentation DTO read by the Avalonia shell.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Presentation DTO read by the Avalonia shell.")]
 public readonly record struct CoreStatus(
     long Frames,
     uint ProgramCounter,

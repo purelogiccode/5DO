@@ -1,14 +1,15 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.17.1 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.18.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.17.1 fixes the malformed-ZIP library refresh,
-unobserved OpenGL framebuffer fallback, and slow stop reporting, and removes Linux GPG
-signing in favor of `SHA256SUMS` only. v1.17.0 added rolling autosave with validated
-startup resume and direct ZIP/7z ISO/BIN/CUE+BIN containers. v1.16.1 added `disc audio`
-CD-DA extraction and `disc verify` progress/mixed-mode totals, and recorded the optical
-collection/BIOS sweep. v1.16.0 added physical CD-DA playback from a host optical drive
+v1.2.x. macOS is published as a DMG. v1.18.0 adds Alcohol MDS/MDX and CloneCD
+CCD/IMG/SUB images, optional FFmpeg H.264/AAC MP4 recording with quality presets,
+high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
+v1.17.1 fixed the malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback,
+and slow stop reporting, and removed Linux GPG signing in favor of `SHA256SUMS` only.
+v1.16.1 added `disc audio` CD-DA extraction and `disc verify` progress/mixed-mode totals,
+and recorded the optical collection/BIOS sweep. v1.16.0 added physical CD-DA playback from a host optical drive
 and reports failed disc
 reads to the guest instead of faulting the core, with guarded screenshot and save-slot
 thumbnail writes. v1.15.0 added Steam Deck/SteamOS
@@ -75,6 +76,27 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       17 assets downloaded and both manifests verify with 0 mismatches. The published
       win-x64 bundle reports 1.17.1, `selftest` 15/15, the same 600-frame hash/PC, and
       `FRONTEND SMOKE OK 1.17.1`.
+
+## 1.18.0 feature gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, AUR `PKGBUILD`, changelog, what's new,
+      and `ReleaseNotes-1.18.0.md` to `1.18.0`.
+- [x] Review every commit after `v1.17.1` for regressions; fix confirmed bugs and record
+      any intentional behavior changes. The fixes cover MDS/CCD paths/pregaps/cache,
+      MP4 frame-skip/cleanup/atomic mux/aspect/region changes, interpolation
+      invalidation, the Vulkan void flip, the OpenGL program leak, and live-clock rewind.
+- [x] Full Release suite **2,644/2,644**, `dotnet build`, `dotnet format`,
+      `jb inspectcode --severity=WARNING` (**0 results**), and `mkdocs build --strict`
+      clean.
+- [ ] Windows x64 bundle: `--version`, `selftest`, 600-frame hash/PC, MP4, and frontend
+      smoke.
+- [ ] Push `master`, tag `v1.18.0`, and verify the release workflow publishes the five
+      bundles, Linux packages, and both checksum manifests.
+- [ ] Download the published assets, verify both manifests, and record the release run
+      and validation result in [Compatibility.md](Compatibility.md) and
+      [Status.md](Status.md).
+- [ ] Keep local bundle copies under `src/FiveDo.Frontend.Avalonia/bin/Release`.
 
 ## Post-1.17.1 compliance, evidence, and documentation gate
 
@@ -1067,8 +1089,8 @@ been validated.**
 | Renderer | OpenGL default, optional Vulkan/Direct3D 11, CPU fallback | Filter family is complete; high-refresh frame interpolation is implemented (`VID-22`) |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is embedded. Linux also ships `.deb`/`.rpm`/AppImage/Flatpak; the Windows installer is built but not published |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales. The 2026-11-25 `REL-13` decision retains the FreeDO modified GNU LGPL; the 4DO game database is GPL-2.0 |
-| Version | **`v1.17.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; earlier releases are historical |
-| Release timing | **Published 2026-11-25** | Five bundles, Linux packages, and `SHA256SUMS` are attached to the GitHub release |
+| Version | **`v1.18.0`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; earlier releases are historical |
+| Release timing | **Published 2026-11-26** | Five bundles, Linux packages, and `SHA256SUMS` are attached to the GitHub release |
 
 ---
 

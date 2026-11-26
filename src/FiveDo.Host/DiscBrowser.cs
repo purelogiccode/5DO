@@ -180,6 +180,10 @@ public sealed class DiscBrowser : IDisposable
         ".BIN" => "BIN",
         ".CUE" => "CUE",
         ".CHD" => "CHD",
+        ".CDI" => "CDI",
+        ".NRG" => "NRG",
+        ".MDS" or ".MDX" => "MDS",
+        ".CCD" => "CCD",
         _ => "Disc",
     };
 

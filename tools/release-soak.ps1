@@ -87,7 +87,7 @@ $titles = @(
     @{ Key = 'returnfire'; Label = 'Return Fire'; DiscPattern = 'Return Fire'; StatePattern = 'Return-Fire' }
 )
 
-$discFiles = @(Get-ChildItem -LiteralPath $gamesRootPath -Recurse -File -Include '*.chd', '*.iso', '*.cue', '*.cdi', '*.nrg' -ErrorAction SilentlyContinue)
+$discFiles = @(Get-ChildItem -LiteralPath $gamesRootPath -Recurse -File -Include '*.chd', '*.iso', '*.cue', '*.cdi', '*.nrg', '*.mds', '*.mdx', '*.ccd' -ErrorAction SilentlyContinue)
 $stateFiles = @()
 if ($stateRoot) {
     $stateFiles = @(Get-ChildItem -LiteralPath $stateRoot -Recurse -File -Filter '*.state' -ErrorAction SilentlyContinue)
@@ -100,6 +100,9 @@ function Get-ExtensionRank([string] $extension) {
         '.cue' { return 2 }
         '.cdi' { return 3 }
         '.nrg' { return 4 }
+        '.mds' { return 4 }
+        '.mdx' { return 4 }
+        '.ccd' { return 4 }
         default { return 5 }
     }
 }

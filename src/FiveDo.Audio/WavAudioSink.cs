@@ -15,13 +15,16 @@ public sealed class WavAudioSink : IAudioSink, IDisposable
 {
     private readonly Pcm16WavWriter _writer;
     private readonly AudioStatistics _statistics = new();
+    private readonly long _maxSamples;
     private long _sampleCount;
 
     /// <summary>Initializes a new instance of the <see cref="WavAudioSink"/> class.</summary>
     /// <param name="path">Destination WAV path.</param>
-    public WavAudioSink(string path)
+    /// <param name="maxSamples">Maximum stereo frames to write, or zero for unlimited.</param>
+    public WavAudioSink(string path, long maxSamples = 0)
     {
         _writer = new Pcm16WavWriter(path, EmulatorConstants.SoundClock);
+        _maxSamples = maxSamples > 0 ? maxSamples : long.MaxValue;
     }
 
     /// <summary>Gets the number of stereo frames written.</summary>
@@ -36,6 +39,11 @@ public sealed class WavAudioSink : IAudioSink, IDisposable
     /// <inheritdoc />
     public void PushSample(uint packedSample)
     {
+        if (_sampleCount >= _maxSamples)
+        {
+            return;
+        }
+
         var sample = AudioSample.FromPacked(packedSample);
         _writer.WriteSample(sample.Left, sample.Right);
         _sampleCount++;

@@ -25,6 +25,9 @@
     <glob pattern="*.chd" weight="50"/>
     <glob pattern="*.cdi" weight="50"/>
     <glob pattern="*.nrg" weight="50"/>
+    <glob pattern="*.mds" weight="50"/>
+    <glob pattern="*.mdx" weight="50"/>
+    <glob pattern="*.ccd" weight="50"/>
     <glob pattern="*.bin" weight="10"/>
     <generic-icon name="application-x-executable"/>
   </mime-type>

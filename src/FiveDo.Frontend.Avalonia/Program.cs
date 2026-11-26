@@ -17,6 +17,10 @@ using FiveDo.Storage;
 
 namespace FiveDo.Frontend.Avalonia;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Read by the Avalonia main window.")]
 internal static class Program
 {
     internal static readonly System.Diagnostics.Stopwatch StartupClock = System.Diagnostics.Stopwatch.StartNew();

@@ -16,16 +16,17 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.17.1 bug-fix release"
-    5DO is at v1.17.1. It fixes malformed-ZIP library crashes, OpenGL framebuffer
-    fallback, and slow stop reporting. Linux releases now publish `SHA256SUMS` only;
-    no GPG signatures or keyring are produced. The 1.17.0 desktop keeps a rolling
-    autosave under `states/autosave/`, written on pause, clean exit, and a configurable
-    interval and restored at startup only when the disc game ID and effective BIOS MD5
-    match. ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z
-    archives. `--high-res` remains a presentation-only 2x upscale, and retail Gamegun
-    titles keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward,
-    **F1** connects the Gamegun, and **Alt+Enter** toggles fullscreen.
+!!! important "v1.18.0 feature release"
+    5DO is at v1.18.0. It adds read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc
+    images, optional FFmpeg-based H.264/AAC MP4 recording with Low/Medium/High quality,
+    high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock
+    changes without restarting the machine. The 1.17.0 desktop keeps a rolling autosave
+    under `states/autosave/`, written on pause, clean exit, and a configurable interval
+    and restored at startup only when the disc game ID and effective BIOS MD5 match.
+    ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z archives.
+    `--high-res` remains a presentation-only 2x upscale, and retail Gamegun titles keep
+    a joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1** connects the
+    Gamegun, and **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
     DMG. The macOS arm64 bundle includes MoltenVK and the Vulkan loader; the CPU
@@ -85,21 +86,25 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.17.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.18.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-26 post-1.17.1 update.** High-refresh frame interpolation (`VID-22`), patterned
-GPU void bars (`UX-33`), and live CPU-clock changes (`SYS-25`) are implemented, and
-`UX-38` H.264/AAC MP4 recording through an external FFmpeg (`FIVEDO_FFMPEG` or
-`PATH`) with Low/Medium/High quality is complete and validated on Windows desktop/CLI,
-Linux CLI, and macOS CLI. The void pattern (Solid, Checker, Grid, Scanline, FourDO,
-Bumps, or Metal) renders in the GPU bars on OpenGL, Direct3D 11, and Vulkan; the CPU-clock
-setting applies at the next frame boundary without recreating the machine. Native Wayland
-Vulkan is deferred until Avalonia officially supports Wayland, so the active plan tracks
-**13 open items** and the test assembly has **2,641 tests**; see [Status](Status.md),
-[Performance](Performance.md) §8.9, and [Video](Video.md).
+**2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and
+CloneCD CCD/IMG/SUB images are now supported, and optional H.264/AAC MP4 recording uses
+an external FFmpeg (`FIVEDO_FFMPEG`, apphost, or `PATH`) with Low/Medium/High quality.
+High-refresh frame interpolation blends the two most recent completed fields at the
+presentation rate; patterned void bars render on OpenGL, Direct3D 11, and Vulkan; and
+CPU-clock changes apply at the next frame boundary without recreating the machine. The
+release is validated on Windows desktop/CLI, Linux x64 CLI, and macOS arm64 CLI. The
+active plan tracks **13 open items** and the test assembly has **2,644 tests**; see
+[Status](Status.md), [Performance](Performance.md) §8.9, and [Video](Video.md).
+
+**2026-11-26, post-1.17.1 update.** Patterned GPU void bars (`UX-33`), live CPU-clock
+changes (`SYS-25`), and `UX-38` MP4 recording with Low/Medium/High quality were completed
+and validated before the 1.18.0 release; native Wayland Vulkan remains deferred until
+Avalonia officially supports Wayland.
 
 **2026-11-25, v1.17.1 bug-fix release (GitHub Releases).**
 

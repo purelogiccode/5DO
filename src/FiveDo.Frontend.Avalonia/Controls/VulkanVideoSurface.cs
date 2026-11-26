@@ -297,6 +297,14 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         }
     }
 
+    /// <summary>Drops the interpolation pair after a pause, step, rewind, state load, or disc change.</summary>
+    public void ResetInterpolation()
+    {
+        _interpolator.Reset();
+        _interpolationSequence = -1;
+        _interpolationFrameLogged = false;
+    }
+
     /// <summary>Copies one machine frame into the presentation mailbox.</summary>
     /// <param name="frame">Completed machine frame.</param>
     public void SubmitFrame(VdlFrame frame)

@@ -84,7 +84,14 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         _frameRateDenominator = frameRateDenominator;
         _maxFrames = maxFrames;
         _quality = quality;
-        _audio = new WavAudioSink(_audioPath);
+        long maxSamples = maxFrames > 0
+            ? (long)Math.Ceiling(
+                maxFrames
+                * (double)EmulatorConstants.SoundClock
+                * frameRateDenominator
+                / frameRateNumerator)
+            : 0;
+        _audio = new WavAudioSink(_audioPath, maxSamples);
     }
 
     /// <summary>Gets the audio sink that the host must tee into the machine's audio path.</summary>
@@ -189,14 +196,29 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             Path.GetTempPath(),
             "5do-mp4-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDirectory);
-        return new Mp4Recorder(
-            fullOutput,
-            Path.GetFullPath(ffmpeg),
-            tempDirectory,
-            frameRateNumerator,
-            frameRateDenominator,
-            maxFrames,
-            quality);
+        try
+        {
+            return new Mp4Recorder(
+                fullOutput,
+                Path.GetFullPath(ffmpeg),
+                tempDirectory,
+                frameRateNumerator,
+                frameRateDenominator,
+                maxFrames,
+                quality);
+        }
+        catch
+        {
+            try
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+            }
+
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -266,7 +288,8 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         {
             if (_videoProcess is null || _capturedFrames == 0)
             {
-                throw new InvalidOperationException("No video frames were captured.");
+                throw new InvalidOperationException(
+                    Failure ?? "No video frames were captured.");
             }
 
             CloseVideoEncoder();
@@ -275,6 +298,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         }
         finally
         {
+            _audio.Dispose();
             Cleanup();
         }
     }
@@ -302,6 +326,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             {
                 Failure ??= exception.Message;
                 KillVideoProcess();
+                _audio.Dispose();
                 Cleanup();
             }
         }
@@ -314,7 +339,6 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         _width = Math.Max(2, frame.SourceWidth & ~1);
         _height = Math.Max(2, frame.SourceHeight & ~1);
         _frameBuffer = new FrameBuffer(_width, _height);
-        var encoder = SelectEncoder(_ffmpegPath);
         var startInfo = new ProcessStartInfo
         {
             FileName = _ffmpegPath,
@@ -325,23 +349,24 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             CreateNoWindow = true,
         };
 
-        AddArguments(startInfo, "-hide_banner", "-loglevel", "error", "-y");
-        AddArguments(
-            startInfo,
-            "-f", "rawvideo",
-            "-pixel_format", "bgra",
-            "-video_size", string.Create(CultureInfo.InvariantCulture, $"{_width}x{_height}"),
-            "-framerate", string.Create(
-                CultureInfo.InvariantCulture,
-                $"{_frameRateNumerator}/{_frameRateDenominator}"),
-            "-i", "pipe:0",
-            "-an",
-            "-c:v", encoder);
-        AddQualityArguments(startInfo, encoder);
-        AddArguments(startInfo, "-pix_fmt", "yuv420p", _videoPath);
-
         try
         {
+            var encoder = SelectEncoder(_ffmpegPath);
+            AddArguments(startInfo, "-hide_banner", "-loglevel", "error", "-y");
+            AddArguments(
+                startInfo,
+                "-f", "rawvideo",
+                "-pixel_format", "bgra",
+                "-video_size", string.Create(CultureInfo.InvariantCulture, $"{_width}x{_height}"),
+                "-framerate", string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{_frameRateNumerator}/{_frameRateDenominator}"),
+                "-i", "pipe:0",
+                "-an",
+                "-c:v", encoder);
+            AddQualityArguments(startInfo, encoder);
+            AddArguments(startInfo, "-pix_fmt", "yuv420p", _videoPath);
+
             var process = new Process { StartInfo = startInfo };
             process.ErrorDataReceived += (sender, args) =>
             {
@@ -408,6 +433,11 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
     private void Mux()
     {
         var audioBytes = _audio.DataBytes;
+        string directory = Path.GetDirectoryName(_outputPath) ?? string.Empty;
+        string tempOutput = Path.Combine(
+            directory,
+            Path.GetFileNameWithoutExtension(_outputPath)
+            + "." + Guid.NewGuid().ToString("N") + ".mp4");
         var startInfo = new ProcessStartInfo
         {
             FileName = _ffmpegPath,
@@ -417,7 +447,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             CreateNoWindow = true,
         };
 
-        AddArguments(startInfo, "-hide_banner", "-loglevel", "error", "-y", "-i", _videoPath);
+        AddArguments(startInfo, "-hide_banner", "-loglevel", "error", "-y", "-nostdin", "-i", _videoPath);
         if (audioBytes > 0)
         {
             AddArguments(startInfo, "-i", _audioPath, "-map", "0:v:0", "-map", "1:a:0");
@@ -427,7 +457,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             AddArguments(startInfo, "-map", "0:v:0");
         }
 
-        AddArguments(startInfo, "-c:v", "copy");
+        AddArguments(startInfo, "-c:v", "copy", "-aspect", "4:3");
         if (audioBytes > 0)
         {
             AddArguments(
@@ -437,8 +467,30 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
                 "-shortest");
         }
 
-        AddArguments(startInfo, "-movflags", "+faststart", _outputPath);
-        RunMux(startInfo);
+        AddArguments(startInfo, "-movflags", "+faststart", tempOutput);
+        try
+        {
+            RunMux(startInfo);
+            File.Move(tempOutput, _outputPath, overwrite: true);
+        }
+        catch
+        {
+            try
+            {
+                if (File.Exists(tempOutput))
+                {
+                    File.Delete(tempOutput);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+
+            throw;
+        }
     }
 
     private void RunMux(ProcessStartInfo startInfo)
@@ -501,6 +553,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+        process.StartInfo.ArgumentList.Add("-nostdin");
         foreach (var argument in arguments)
         {
             process.StartInfo.ArgumentList.Add(argument);
@@ -511,10 +564,25 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             return string.Empty;
         }
 
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        process.WaitForExit(10_000);
-        return output + error;
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(10_000))
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit(5_000);
+            }
+            catch (Exception exception) when (exception is InvalidOperationException
+                or System.ComponentModel.Win32Exception)
+            {
+            }
+
+            return string.Empty;
+        }
+
+        Task.WaitAll(outputTask, errorTask);
+        return outputTask.Result + errorTask.Result;
     }
 
     private void AddQualityArguments(ProcessStartInfo startInfo, string encoder)
@@ -617,6 +685,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
 
     private void Cleanup()
     {
+        _audio.Dispose();
         _videoInput?.Dispose();
         _videoInput = null;
         _videoProcess?.Dispose();

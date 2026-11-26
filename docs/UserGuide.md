@@ -585,7 +585,9 @@ recorder prefers `libx264`, then a platform H.264 encoder, and falls back to FFm
 `mpeg4` encoder; audio is 44.1 kHz stereo AAC. Choose **Low**, **Medium**, or **High**
 under **Settings > Video > MP4 quality** (the default is Medium); the CLI equivalent is
 `--record-quality`. Pause suspends capture (the gap is omitted), while fast-forward and
-rewind stop the recording so audio and video never desynchronize. MKV output is not exposed yet. The gallery writes from the OpenGL
+rewind stop the recording so audio and video never desynchronize. A disc swap keeps
+recording only when the region/field rate is unchanged; a PAL/NTSC change stops it.
+Saving Settings during a recording keeps frame skip off. MKV output is not exposed yet. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
 frame with screenshots** in **Settings > Video** to write a second `-native.png`
 image from the CPU frame assembler. The default directory is your Pictures folder;

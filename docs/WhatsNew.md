@@ -1,24 +1,25 @@
-# What's new in 5DO 1.17.1
+# What's new in 5DO 1.18.0
 
-**Released:** 2026-11-25
+**Released:** 2026-11-26
 
-5DO 1.17.1 is a bug-fix release for the 1.17.0 autosave and archive-container release.
-It fixes a malformed-ZIP library crash, cleanly falls back from `OpenGL FBO` compositor
-failures, and waits longer before reporting a slow stop. Linux releases now use
-`SHA256SUMS` only.
+5DO 1.18.0 adds more disc formats and desktop features while keeping the documented
+320x240 compatibility path unchanged. It opens read-only Alcohol MDS/MDX and CloneCD
+CCD/IMG/SUB images, records H.264/AAC MP4 through an optional external FFmpeg, blends
+high-refresh presentation frames, draws patterned GPU void bars, and applies CPU-clock
+changes without restarting the machine.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.17.1-win-x64.zip` |
-| Windows on ARM | `5do-1.17.1-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.17.1-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.17.1_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.17.1-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.17.1-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.17.1-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable | `5do-1.17.1-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.18.0-win-x64.zip` |
+| Windows on ARM | `5do-1.18.0-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.18.0-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.18.0_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.18.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.18.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.18.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable | `5do-1.18.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
 Extract the archive before running it: the apphosts load `libSkiaSharp`,
 `libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder. The `.zsync`
@@ -27,26 +28,36 @@ files feed `AppImageUpdate`.
 `SHA256SUMS.txt` and `SHA256SUMS-linux.txt` are the only validation files. There are no
 `.asc` signatures and no keyring; run `sha256sum -c` after downloading.
 
-## Fixes
+## New features
 
-- **Malformed ZIP files no longer abort the library refresh.** SharpCompress index
-  errors are translated into a readable disc-image error, and the file stays in the
-  library with its error instead of faulting the whole scan.
-- **OpenGL framebuffer failures fall back to the CPU presenter.** The compositor
-  failure can arrive through an unobserved task; it now uses the same presenter
-  fallback as a UI-thread failure and no longer generates a bug report for a handled
-  driver limitation.
-- **Stopping emulation waits five seconds.** A slow disc read or audio callback no
-  longer trips the old two-second timeout, and the timeout is reported once instead of
-  twice.
+- **Alcohol and CloneCD images.** The desktop, CLI, library, and game database now open
+  read-only Alcohol MDS/MDF/MDX and CloneCD CCD/IMG/SUB images. Prepared CUE sheets are
+  cached, malformed inputs fail with typed errors, and encrypted, compressed, or
+  subchannel-padded MDS images are prepared in the temp cache. Representative real-image
+  parity is still tracked as `SYS-29`.
+- **MP4 recording.** **File > Record MP4...** and CLI `--record-mp4` capture the presented
+  frame and DSP/CD audio mix as H.264/AAC through an optional external FFmpeg.
+  Low/Medium/High quality is available in **Settings > Video > MP4 quality** or
+  `--record-quality`. FFmpeg is not bundled; install it on `PATH`, set `FIVEDO_FFMPEG`,
+  or place `ffmpeg`/`ffmpeg.exe` beside 5DO.
+- **High-refresh frame interpolation.** **Settings > Video > Frame interpolation** blends
+  the two most recent completed fields when the display runs above 60 Hz. It needs a
+  fixed rate and is disabled with VRR. Endpoint frames stay at full precision; gameplay,
+  audio, save states, and frame hashes are unchanged.
+- **Patterned GPU void bars.** The letterbox/pillarbox area can draw Solid, Checker, Grid,
+  Scanline, FourDO, Bumps, or Metal patterns on OpenGL, Direct3D 11, and Vulkan.
+- **Live CPU clock.** Changing the CPU-clock setting applies at the next frame boundary
+  without recreating the machine or reloading the disc. Save states record the clock in
+  use.
 
-## Linux release integrity
+## Licensing
 
-Linux releases no longer publish detached GPG signatures or a keyring. The `.deb`,
-`.rpm`, AppImage, and Flatpak files are covered by `SHA256SUMS-linux.txt`; the five
-bundles and the Linux packages are covered by `SHA256SUMS.txt`.
+The 2026-11-25 `REL-13` decision is retained: the project remains under the FreeDO
+modified GNU LGPL as non-commercial donationware. The 4DO game database is a separate
+**GPL-2.0** data component; its complete text ships in `docs/GPL-2.0.txt`. Official
+Debian/Ubuntu/Fedora/openSUSE archives and Flathub are not eligible under those terms.
 
-## Still included from 1.17.0
+## Still included from 1.17.x
 
 - Rolling autosave with startup resume, written on pause, clean exit, and a configurable
   interval and restored only when the disc game ID and BIOS MD5 match.
@@ -54,24 +65,39 @@ bundles and the Linux packages are covered by `SHA256SUMS.txt`.
   extraction guidance for CHD/CDI/NRG, encrypted, and multi-volume archives.
 - CD-DA extraction via `disc audio`, `disc verify` progress and mixed-mode totals, and
   guest-visible disc read-error reporting.
+- The five self-contained bundles (Windows/Linux x64+arm64 and macOS arm64), Linux
+  `.deb`/`.rpm`/AppImage/Flatpak packages, ROM-free packaging, and `SHA256SUMS`
+  verification.
 
 ## Verification
 
-- 2,602/2,602 tests pass in Release; build, `dotnet format`, `jb inspectcode`, and
+- The full test suite passes in Release; build, `dotnet format`, `jb inspectcode`, and
   `mkdocs build --strict` are clean.
-- Windows x64, Windows arm64, Linux x64, Linux arm64, and macOS arm64 ran the same
-  bundle test: Wolfenstein 3D (USA) with `panafz1.bin`, 600 frames, frame hash
-  `0x110E7DC5`, PC `366944`, and identical PNG SHA-256.
-- `selftest` 15/15 and the frontend smoke passed on every target.
-- Windows x64 OpenGL/Direct3D 11 probes pass; Windows arm64 GL/ANGLE and Direct3D 11
-  probes pass.
+- MP4 recording produced 60.06 s H.264/AAC files at 60000/1001 with non-silent audio on
+  Windows x64, Linux x64, and macOS arm64. Linux Low/Medium/High sizes were
+  1.72/2.97/5.19 MB, and the desktop selector round-tripped High through `settings.json`.
+- High-refresh interpolation held emulation at 59.4-60.4 fps while presentation measured
+  148-167 Hz on OpenGL, 132 Hz on Vulkan, and 83 Hz on Direct3D 11, with no audio
+  underruns.
+- MDS/CCD readers pass synthetic data/audio, malformed-input, and library/database tests;
+  real-image boot-hash parity remains `SYS-29`.
+- The release workflow builds all five bundles, the Linux packages, and both checksum
+  manifests. The Windows and Linux bundles run CLI `selftest` and the frontend smoke;
+  the macOS arm64 bundle verifies its Mach-O apphosts and bundled MoltenVK runtime.
 
 ## Known issues
 
-- A ZIP/7z holds one image or CUE+BIN set. Entries are decompressed in memory with a
-  1.5 GB per-entry limit, and CHD/CDI/NRG, encrypted, and multi-volume archives must be
-  extracted or decrypted first.
-- The FZ-10 audio-only BIOS player transport remains at STOP (SYS-01). Use `disc audio`
-  to verify the drive's CD-DA path.
+- MDS/MDX and CCD/IMG/SUB are read-only and synthetically tested; representative real
+  images have not yet been compared with the equivalent BIN/CUE (`SYS-29`).
+- MP4 recording requires an external FFmpeg and is not available without it. Pause omits
+  the gap; fast-forward and rewind stop the recording before audio/video diverge.
+- Frame interpolation needs a fixed presentation rate above 60 Hz and is disabled with
+  VRR. It adds up to one field of display latency by design.
+- `--high-res` remains a presentation-only 2x upscale; true 2x CEL completeness is
+  `VID-20`.
+- A ZIP/7z holds one image or CUE+BIN set. CHD/CDI/NRG/MDS/CCD, encrypted, and
+  multi-volume archives must be extracted first.
+- The FZ-10 audio-only BIOS player transport remains at STOP (`SYS-01`). Use `disc audio`
+  to verify CD-DA.
 - `--opera-soft-reset` remains opt-in/experimental; `--opera-dipir` still blocks the
   reporter's boot and needs a CSTAT/DIPIR transcript.

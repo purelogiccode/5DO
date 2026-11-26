@@ -2,14 +2,13 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-25):** v1.17.1 is the bug-fix release for v1.17.0. It fixes
-the malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback, and slow stop
-reporting, and removes Linux GPG signing/keyring publication in favor of
-`SHA256SUMS`-only validation. It retains the 1.17.0 rolling autosave with validated
-startup resume (UX-37) and direct ZIP/7z ISO, BIN, and CUE+BIN containers (SYS-27), the
-1.16.1 `disc audio`/`disc verify` diagnostics, the 1.16.0 physical CD-DA and read-error
-work, and the 1.15.0 Steam Deck/SteamOS first-run setup, `ArcadeCrt` filter, Windows
-optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes. The default 320x240
+**Current release (2026-11-26):** v1.18.0 is the feature release after v1.17.1. It adds
+read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc images, optional H.264/AAC MP4
+recording through an external FFmpeg with Low/Medium/High quality, high-refresh frame
+interpolation, patterned GPU void bars, and live CPU-clock changes. It retains the 1.17.x
+rolling autosave with validated startup resume (UX-37), direct ZIP/7z ISO, BIN, and
+CUE+BIN containers (SYS-27), the `disc audio`/`disc verify` diagnostics, physical CD-DA
+and read-error recovery, and the Steam Deck first-run setup. The default 320x240
 compatibility path and the documented title matrix are unchanged.
 
 **Earlier position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
@@ -1156,6 +1155,28 @@ All runs used an external FFmpeg; 5DO does not bundle an encoder. Fast-forward a
 stop the recording and pause omits the gap. The desktop menu was exercised on Windows;
 Linux and macOS ran the frontend smoke and the same validated `Mp4Recorder` CLI path.
 See [TestCorpus.md](TestCorpus.md) 1.1cx.
+
+### 10.15 v1.18.0 release validation (2026-11-26)
+
+The 1.18.0 source gate passed the full Release suite **2,644/2,644**, build,
+`dotnet format`, `jb inspectcode --severity=WARNING`, and `mkdocs build --strict`. The
+release adds read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB readers with synthetic
+data/audio, malformed-input, factory, library, and database tests; representative
+real-image parity remains `SYS-29`. The review fixed relative descriptor paths, stored
+first-track pregaps, split-volume truncation, cache identity, and cache publication, and
+added regression tests for relative paths and pregaps.
+
+A post-fix 600-frame Road Rash CLI recording produced a 10.010 s H.264/AAC MP4 with a
+4:3 display aspect (320x240, SAR 1:1, 60000/1001). MP4 finalization now uses a sibling
+temp file, failed recordings remove their temp WAV/video, and `--record-frames` caps the
+WAV. Interpolation resets after pause/step/rewind/state load/disc change; the Vulkan void
+pattern is no longer vertically mirrored; the OpenGL void program is released; and a live
+clock change clears rewind history and rescales the Quartz/Clio accumulators.
+
+The Windows x64 bundle runs the CLI `selftest`, the 600-frame hash/PC check, an MP4
+recording with non-silent AAC, and the frontend smoke. The tag workflow builds the five
+bundles and Linux packages; the published asset list and checksum verification are
+recorded with the release run after publication.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

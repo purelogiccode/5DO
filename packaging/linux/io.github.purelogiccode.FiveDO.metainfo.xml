@@ -77,6 +77,16 @@
   </languages>
 
   <releases>
+    <release version="1.18.0" date="2026-11-26">
+      <description>
+        <p>
+          Adds read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional
+          FFmpeg-based H.264/AAC MP4 recording with Low/Medium/High quality,
+          high-refresh frame interpolation, patterned GPU void bars, and live
+          CPU-clock changes.
+        </p>
+      </description>
+    </release>
     <release version="1.17.1" date="2026-11-25">
       <description>
         <p>

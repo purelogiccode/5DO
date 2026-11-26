@@ -73,15 +73,30 @@ public sealed class FrameInterpolator
             var seconds = intervalTicks / (double)Stopwatch.Frequency;
             if (_intervalSeconds > 0)
             {
-                // Smooth successive submissions so a burst after a stall does not
-                // collapse the blend interval for the next few frames.
-                seconds = (_intervalSeconds * 0.75) + (seconds * 0.25);
+                if (seconds > Math.Max(_intervalSeconds * 2.0, 0.05))
+                {
+                    // A pause, state load, or host stall is not a new field interval.
+                    // Forget the old estimate and let the next submission set a fresh one.
+                    _intervalSeconds = 0;
+                }
+                else
+                {
+                    // Smooth successive submissions so a burst after a stall does not
+                    // collapse the blend interval for the next few frames.
+                    seconds = (_intervalSeconds * 0.75) + (seconds * 0.25);
+                    _intervalSeconds = Math.Clamp(
+                        seconds,
+                        MinimumIntervalSeconds,
+                        MaximumIntervalSeconds);
+                }
             }
-
-            _intervalSeconds = Math.Clamp(
-                seconds,
-                MinimumIntervalSeconds,
-                MaximumIntervalSeconds);
+            else
+            {
+                _intervalSeconds = Math.Clamp(
+                    seconds,
+                    MinimumIntervalSeconds,
+                    MaximumIntervalSeconds);
+            }
         }
         else if (_hasCurrent)
         {

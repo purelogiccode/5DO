@@ -4,7 +4,7 @@
 > which now carries only the remaining work for each open ID.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, partial deliveries, stable IDs, platform
-> workstreams, and release history through v1.17.1.
+> workstreams, and release history through v1.18.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -891,8 +891,15 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.17.1)
+## 14. Release history (v1.9.1 - v1.18.0)
 
+- **v1.18.0 (2026-11-26):** feature release - read-only Alcohol MDS/MDX and CloneCD
+  CCD/IMG/SUB images, optional FFmpeg H.264/AAC MP4 recording with quality presets,
+  high-refresh frame interpolation, patterned GPU void bars, live CPU-clock changes, and
+  the GPL-2.0 4DO database record. The pre-release review fixed MDS/CCD relative
+  paths/pregaps/split volumes/cache identity, MP4 frame-skip/cleanup/atomic mux/aspect
+  handling, the Vulkan void flip, the OpenGL program leak, interpolation invalidation,
+  and live-clock rewind/accumulator scaling; suite 2,644/2,644.
 - **v1.17.1 (2026-11-25):** bug-fix release - malformed ZIP central-directory failures
   are translated to `DiscImageException` and listed as library errors (#70180);
   unobserved `OpenGL FBO` compositor failures fall back to the CPU presenter without a

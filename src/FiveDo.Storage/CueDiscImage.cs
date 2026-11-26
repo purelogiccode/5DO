@@ -200,15 +200,32 @@ public sealed class CueDiscImage : ITrackedDiscSource
                 continue;
             }
 
+            // A stored first-track pregap is part of the file, not part of the 3DO
+            // logical address space. INDEX 00 points at the pregap and INDEX 01 at the
+            // first user sector, so skip the difference. A PREGAP command leaves
+            // Index00 at -1 and must not be skipped because it has no stored sectors.
+            int storedPregap = info.Index00 >= 0 && info.Index00 < info.Index01
+                ? info.Index01 - info.Index00
+                : 0;
+            int dataFrames = info.Frames - storedPregap;
+            if (dataFrames <= 0)
+            {
+                continue;
+            }
+
+            CdTrack data = info;
+            data.FileOffset += (long)storedPregap * (sectorSize + info.SubSize);
+            data.Frames = dataFrames;
+
             var discTrack = new DiscTrack(
                 info.Number,
                 info.TrackType == CdTrackType.Audio ? DiscTrackKind.Audio : DiscTrackKind.Data,
                 startLba,
-                info.Frames,
+                data.Frames,
                 sectorSize,
                 GetPayloadOffset(info));
-            result.Add(new CueTrack(discTrack, info));
-            startLba += info.Frames;
+            result.Add(new CueTrack(discTrack, data));
+            startLba += data.Frames;
         }
 
         return result;

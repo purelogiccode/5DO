@@ -3,6 +3,10 @@ using System;
 namespace FiveDo.Frontend.Avalonia.Controls;
 
 /// <summary>Event data for <see cref="Direct3DVideoSurface.Failed"/>.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "UnusedAutoPropertyAccessor.Global",
+    Justification = "Read by the Avalonia failure handler.")]
 public sealed class Direct3D11FailedEventArgs : EventArgs
 {
     /// <summary>Creates the event data.</summary>

@@ -4927,8 +4927,18 @@ Wolfenstein 3D high run produced a 4,123,123-byte 60.060 s H.264/AAC MP4; decode
 peak 32,400, RMS 5,066.3, 0 clipped. The frontend `--smoke-test` reported
 `FRONTEND SMOKE OK 1.17.1`.
 
+**Review fixes.** The post-1.17.1 review fixed MDS/CCD relative paths, stored first-track
+pregaps, split-volume truncation, companion-data cache identity, case-insensitive `.img`
+lookups, and cache publication/cleanup. MP4 recording now keeps frame skip off while
+Settings is saved, attaches the frame sink and audio tee in one core invocation, starts
+the encoder inside the guarded path, reports the stored failure on a zero-frame finalize,
+muxes through a sibling temp file with a 4:3 display aspect, caps the WAV with
+`--record-frames`, stops on region changes, and cancels a zero-frame desktop stop without
+a modal error. The MP4 tests no longer leave temp directories. The new relative-path and
+pregap tests bring the suite to **2,644**.
+
 **Limits.** Quality is Low/Medium/High (libx264 CRF 30/23/18). Pause omits the wall-clock
 gap; fast-forward and rewind stop the recording before the timeline diverges. FFmpeg is
 not bundled. The desktop menu was exercised on Windows; the Linux/macOS frontend smokes
-pass and both use the same validated `Mp4Recorder` path. Full suite **2,641/2,641**;
+pass and both use the same validated `Mp4Recorder` path. Full suite **2,644/2,644**;
 build 0 warnings/0 errors; `dotnet format --verify-no-changes` clean.

@@ -46,6 +46,7 @@ public static class DiscImageFactory
             return PhysicalDiscSource.Open(path);
         }
 
+        path = Path.GetFullPath(path);
         if (!File.Exists(path))
         {
             throw new DiscImageException($"Disc image '{path}' does not exist.");

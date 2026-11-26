@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/UI-Avalonia-8B44AC" alt="Avalonia">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Windows, Linux, and macOS">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License: FreeDO modified LGPL"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.17.1-orange" alt="Version 1.17.1"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.18.0-orange" alt="Version 1.18.0"></a>
 </p>
 
 <p align="center">
@@ -27,15 +27,16 @@
 </p>
 
 > [!IMPORTANT]
-> 5DO is at **v1.17.1**, the bug-fix release for the 1.17.0 autosave and archive-container
-> release. It fixes malformed-ZIP library crashes, OpenGL framebuffer fallback, and slow
-> stop reporting; Linux releases now publish `SHA256SUMS` only. The desktop keeps a
-> rolling autosave written on pause, clean exit, and a configurable interval, and
-> restores it at startup only when the disc game ID and effective BIOS MD5 match.
-> ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z archives.
-> `--high-res` remains a safe presentation-only 2x upscale, and Gamegun titles keep a
-> joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1** connects the
-> Gamegun, and **Alt+Enter** toggles fullscreen.
+> 5DO is at **v1.18.0**, the feature release after 1.17.1. It adds read-only Alcohol
+> MDS/MDX and CloneCD CCD/IMG/SUB images, H.264/AAC MP4 recording through an optional
+> external FFmpeg with Low/Medium/High quality, high-refresh frame interpolation,
+> patterned GPU void bars, and live CPU-clock changes without restarting the machine.
+> The desktop keeps a rolling autosave written on pause, clean exit, and a configurable
+> interval, and restores it at startup only when the disc game ID and effective BIOS MD5
+> match. ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z
+> archives. `--high-res` remains a safe presentation-only 2x upscale, and Gamegun titles
+> keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1** connects
+> the Gamegun, and **Alt+Enter** toggles fullscreen.
 > Windows x64 and Linux x64 remain validated targets; macOS arm64, Linux arm64, and
 > Windows arm64 pass the native CLI/frontend runtime smoke. Intel macOS is no longer
 > supported. The macOS arm64 bundle includes the Vulkan loader and MoltenVK, so no
@@ -92,10 +93,10 @@ test harness designed for reproducible compatibility evidence.
 
 | Area | Current state |
 |---|---|
-| Version | `1.17.1` release (GitHub Releases) |
+| Version | `1.18.0` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,610 tests** in the current test assembly |
+| Automated tests | **2,644 tests** in the current test assembly |
 | Optical media | 1,366 local CHDs opened and track-probed; **496 unique titles fully sector-verified**; 26-case BIOS matrix; 3 audio-only CHDs; `disc audio` exports CD-DA to WAV; physical Red Book CD-DA verified on a real drive |
 | Disc containers | ISO, BIN, CUE+BIN, CHD (parent/child), CDI, NRG, Alcohol MDS/MDX, CloneCD CCD/IMG/SUB, and ISO/BIN/CUE+BIN inside ZIP/7z |
 | Save states | Ten numbered slots plus a rolling autosave with validated startup resume; manual slots are never overwritten |
@@ -120,11 +121,11 @@ One bundle per system and architecture, each containing both the desktop app and
 
 | System | Bundle |
 |---|---|
-| Windows x64 | [`5do-1.17.1-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.17.1/5do-1.17.1-win-x64.zip) |
-| Windows arm64 | [`5do-1.17.1-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.17.1/5do-1.17.1-win-arm64.zip) |
-| Linux x64 | [`5do-1.17.1-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.17.1/5do-1.17.1-linux-x64.tar.gz) |
-| Linux arm64 | [`5do-1.17.1-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.17.1/5do-1.17.1-linux-arm64.tar.gz) |
-| macOS arm64 | [`5do-1.17.1-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.17.1/5do-1.17.1-osx-arm64.dmg) |
+| Windows x64 | [`5do-1.18.0-win-x64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.18.0/5do-1.18.0-win-x64.zip) |
+| Windows arm64 | [`5do-1.18.0-win-arm64.zip`](https://github.com/purelogiccode/5DO/releases/download/v1.18.0/5do-1.18.0-win-arm64.zip) |
+| Linux x64 | [`5do-1.18.0-linux-x64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.18.0/5do-1.18.0-linux-x64.tar.gz) |
+| Linux arm64 | [`5do-1.18.0-linux-arm64.tar.gz`](https://github.com/purelogiccode/5DO/releases/download/v1.18.0/5do-1.18.0-linux-arm64.tar.gz) |
+| macOS arm64 | [`5do-1.18.0-osx-arm64.dmg`](https://github.com/purelogiccode/5DO/releases/download/v1.18.0/5do-1.18.0-osx-arm64.dmg) |
 
 The Windows bundles contain both `OpenAL32.dll` and `soft_oal.dll`, so the bundled
 OpenAL Soft 1.23.1 runtime is loaded instead of a system copy. The Linux bundles ship
@@ -132,20 +133,20 @@ the same OpenAL Soft runtime and do not require a system OpenAL install.
 
 The apps are **self-contained single-file executables**: the .NET 11 runtime is
 embedded, so no separate runtime install is required. See the
-[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.17.1)
+[release page](https://github.com/purelogiccode/5DO/releases/tag/v1.18.0)
 for `SHA256SUMS.txt` and [what's new](https://purelogiccode.github.io/5DO/WhatsNew.html).
 
 Linux users can also install the `.deb`/`.rpm` packages, run the portable AppImage, or
 install the single-file Flatpak bundle; all four are built for x64 and arm64 from the
 same bundles. The Linux files carry the platform and version in their names, for example
-`5do_1.17.1_amd64.deb`, `5do-1.17.1-1.linux.x86_64.rpm`,
-`5do-1.17.1-linux-x86_64.AppImage`, and `5do-1.17.1-linux-x86_64.flatpak`; the release
+`5do_1.18.0_amd64.deb`, `5do-1.18.0-1.linux.x86_64.rpm`,
+`5do-1.18.0-linux-x86_64.AppImage`, and `5do-1.18.0-linux-x86_64.flatpak`; the release
 page opens with a table that maps each system to the one file it needs. Verification
 commands, the checksum policy, and the optional mirror setup are in the
 [Linux distribution guide](https://purelogiccode.github.io/5DO/LinuxDistribution.html).
 
-Bundles are versioned and published for x64 and arm64, for example `5do-1.17.1-win-arm64.zip`
-or `5do-1.17.1-osx-arm64.dmg`.
+Bundles are versioned and published for x64 and arm64, for example `5do-1.18.0-win-arm64.zip`
+or `5do-1.18.0-osx-arm64.dmg`.
 
 Extract a bundle to a folder before running it. The apphosts load `libSkiaSharp`,
 `libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder, so running
@@ -253,7 +254,7 @@ app; it now reports the missing files by name instead of crashing inside Skia.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
 
 > [!NOTE]
-> v1.17.1 is published on GitHub Releases as five bundles (Windows/Linux x64+arm64 and
+> v1.18.0 is published on GitHub Releases as five bundles (Windows/Linux x64+arm64 and
 > macOS arm64), each with the CLI, desktop app, and SHA-256 checksums. The .NET 11
 > runtime is embedded in each self-contained single-file apphost, so no separate runtime
 > install is required. Build from source below if you prefer.

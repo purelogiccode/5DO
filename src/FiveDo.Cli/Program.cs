@@ -498,6 +498,13 @@ internal static class Program
             throw new ArgumentException("--record-fps must be between 1 and 60.", nameof(args));
         }
         var recordMp4Path = options.Get("--record-mp4");
+        if (recordMp4Path is not null && Mp4Recorder.FindFfmpeg() is null)
+        {
+            throw new ArgumentException(
+                "FFmpeg was not found. Install FFmpeg, place ffmpeg beside 5DO, or set FIVEDO_FFMPEG to its executable path.",
+                nameof(args));
+        }
+
         var recordQuality = ParseVideoRecordingQuality(options.Get("--record-quality"));
         var clioTrace = options.Get("--clio-trace");
         var fiqTrace = options.Get("--fiq-trace");
@@ -1391,6 +1398,7 @@ internal static class Program
 
         string? completedMp4Path = null;
         int? completedMp4Frames = null;
+        string? mp4Error = null;
         if (mp4Recorder is not null)
         {
             try
@@ -1401,12 +1409,12 @@ internal static class Program
             }
             catch (Exception exception) when (exception is IOException or InvalidOperationException)
             {
+                mp4Error = exception.Message;
                 Console.Error.WriteLine($"mp4: {exception.Message}");
             }
             finally
             {
                 mp4Recorder.Dispose();
-                mp4Recorder = null;
             }
         }
 
@@ -1693,11 +1701,20 @@ internal static class Program
             BiosRsaPatched: biosLoad.Image?.RsaPatched ?? false,
             BiosRsaDisabled: biosLoad.Image?.RsaDisabled ?? false);
 
+        if (mp4Error is not null)
+        {
+            result = result with
+            {
+                Ok = false,
+                Warnings = [.. result.Warnings, "mp4: " + mp4Error],
+            };
+        }
+
         SaveNvramIfRequested(machine, nvramSelection);
 
         disc?.Dispose();
         WriteRunResult(result, json);
-        return movieVerification is { Ok: false } ? 2 : 0;
+        return mp4Error is not null || movieVerification is { Ok: false } ? 2 : 0;
     }
 
     private static int TraceCommand(string[] args)

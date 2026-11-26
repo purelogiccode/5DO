@@ -13,10 +13,10 @@ namespace FiveDo.Storage;
 /// </summary>
 /// <remarks>
 /// Archive entries are decompressed once into memory and presented through the same
-/// <see cref="IDiscSource"/> API as an extracted image. CHD, CDI, and NRG files inside an
-/// archive are rejected with extraction guidance because those containers are already
-/// compressed or need their own random-access layout. Encrypted and multi-volume
-/// archives are rejected rather than partially read.
+/// <see cref="IDiscSource"/> API as an extracted image. CHD, CDI, NRG, MDS/MDX, and
+/// CloneCD files inside an archive are rejected with extraction guidance because those
+/// containers are already compressed or need their own random-access layout. Encrypted
+/// and multi-volume archives are rejected rather than partially read.
 /// </remarks>
 public static class ArchiveDiscImage
 {

@@ -198,6 +198,10 @@ public sealed record CoverDownloadFailure(string EntryPath, string CoverId, stri
 /// <param name="UsedPack">Whether the bulk pack was used.</param>
 /// <param name="Failures">Failed items.</param>
 /// <param name="CoverPaths">Resolved cover paths keyed by disc path.</param>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "ReSharper",
+    "NotAccessedPositionalProperty.Global",
+    Justification = "Consumed by the Avalonia cover workflow.")]
 public sealed record CoverDownloadResult(
     int Downloaded,
     int Skipped,

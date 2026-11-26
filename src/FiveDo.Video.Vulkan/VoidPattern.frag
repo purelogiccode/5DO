@@ -115,6 +115,6 @@ vec3 patternColor(vec2 pixel)
 
 void main()
 {
-    vec2 pixel = vec2(gl_FragCoord.x, pc.outputSize.y - gl_FragCoord.y);
+    vec2 pixel = gl_FragCoord.xy;
     fragColor = vec4(patternColor(pixel), 1.0);
 }
