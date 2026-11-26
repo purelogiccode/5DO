@@ -281,6 +281,8 @@
     "ui.vsync_where_supported": "VSync (quando compatível)",
     "ui.display_refresh": "Taxa de atualização da tela",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "O 3DO gera 60 campos por segundo (50 em PAL). Taxas acima de 60 reapresentam o último quadro; elas não criam movimento extra.",
+    "ui.frame_interpolation": "Interpolação de quadros (requer >60 Hz)",
+    "ui.frame_interpolation_note": "O 3DO gera 60 campos por segundo (50 no PAL). Taxas acima de 60 reapresentam o quadro mais recente; a interpolação mistura os dois últimos quadros concluídos para um movimento mais suave. Requer uma taxa fixa acima de 60 Hz e é desativada com VRR.",
     "ui.frame_skip": "Salto de quadros",
     "ui.auto_only_drops_presentation_frames_when_the_loop_misses": "O modo automático só descarta quadros de apresentação quando o loop perde seu prazo. O jogo continua em velocidade normal, portanto entrada, áudio e estados salvos não mudam.",
     "ui.show_fps_status_overlay": "Mostrar sobreposição de FPS/status",

@@ -122,6 +122,27 @@ public sealed class FrameAssembler
         return (byte)((value << 3) | (value >> 2));
     }
 
+    /// <summary>Packs 8-bit RGB into a fixed-CLUT 15-bit direct-color pixel.</summary>
+    /// <param name="red">Red component.</param>
+    /// <param name="green">Green component.</param>
+    /// <param name="blue">Blue component.</param>
+    /// <returns>
+    /// A pixel with bit 15 set so the palette shader takes the fixed-CLUT path.
+    /// </returns>
+    /// <remarks>
+    /// The 3DO direct-color path stores 5 bits per channel. The conversion rounds rather
+    /// than truncates so a blended frame stays as close as possible to the 8-bit source.
+    /// </remarks>
+    public static ushort PackDirectColor(byte red, byte green, byte blue)
+    {
+        return (ushort)(0x8000 | (Quantize5(red) << 10) | (Quantize5(green) << 5) | Quantize5(blue));
+    }
+
+    private static int Quantize5(byte value)
+    {
+        return Math.Min(31, ((value * 31) + 127) / 255);
+    }
+
     /// <summary>Converts a VDL frame to packed 0RGB1555 pixels.</summary>
     /// <param name="source">Source VDL frame.</param>
     /// <param name="destination">Destination pixels, one <see cref="ushort"/> per pixel.</param>

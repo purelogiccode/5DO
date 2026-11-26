@@ -75,10 +75,14 @@
                                    ToolTip.Tip="Refresh rate used to present the latest emulated frame." />
                         <ComboBox x:Name="DisplayRefreshRateCombo" Grid.Row="11" Grid.Column="1" Margin="0,0,0,4"
                                   ToolTip.Tip="60 Hz keeps render-on-demand. Higher rates re-present the latest frame more often for lower latency. The game still runs at normal speed." />
-                        <TextBlock Grid.Row="12" Grid.Column="1"
-                                   Text="The 3DO outputs 60 fields per second (50 for PAL). Rates above 60 re-present the latest frame; they do not create extra motion."
-                                   Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
-                                   ToolTip.Tip="Presentation-only. Emulation speed, audio, and save states are unchanged." />
+                        <StackPanel Grid.Row="12" Grid.Column="1" Margin="0,0,0,8" Spacing="4">
+                            <CheckBox x:Name="FrameInterpolationCheck"
+                                      Content="Frame interpolation (needs &gt;60 Hz)"
+                                      ToolTip.Tip="Blend the last two completed frames at the display rate. Adds up to one field of display latency; gameplay, audio, and save states are unchanged." />
+                            <TextBlock Text="The 3DO outputs 60 fields per second (50 for PAL). Rates above 60 re-present the latest frame; interpolation blends the last two completed frames for smoother motion. It needs a fixed rate above 60 Hz and is disabled with VRR."
+                                       Opacity="0.7" FontSize="11" TextWrapping="Wrap"
+                                       ToolTip.Tip="Presentation-only. Emulation speed, audio, frame hashes, and save states are unchanged." />
+                        </StackPanel>
                         <TextBlock Grid.Row="13" Grid.Column="0" Text="Frame skip" VerticalAlignment="Center"
                                    ToolTip.Tip="Skip presentation frames when the emulator falls behind. Emulation and audio keep full speed." />
                         <ComboBox x:Name="FrameSkipCombo" Grid.Row="13" Grid.Column="1" Margin="0,0,0,4"

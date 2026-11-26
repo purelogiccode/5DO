@@ -1,30 +1,35 @@
 # Project Status and Next Steps
 
+**2026-11-26, high-refresh frame interpolation:** `VID-22` is complete. **Settings > Video
+> Frame interpolation** blends the two most recent completed fields at the presentation
+rate; it requires a fixed rate above 60 Hz and is disabled with VRR. Road Rash on the
+RTX 4070 / 164 Hz host held 59.4-60.4 fps with 148-167 Hz presentation on OpenGL, 132 Hz
+on Vulkan, and 83 Hz on Direct3D 11, `audio ... u0 d0`, and ~3 ms input-to-submit latency;
+the toggle-off run presented at 167 Hz without interpolation. The emulated machine, audio
+clock, frame/state/audio hashes, and save states are unchanged; blended frames use the
+15-bit direct-color path and the visible output lags the newest field by up to one field.
+`PLAT-19` native Wayland Vulkan is parked in plan §4 until Avalonia officially supports
+Wayland, so the active plan now tracks **16 open items**. The suite is **2,627/2,627**;
+build, `dotnet format`, and `mkdocs build --strict` are clean.
+
 **2026-11-26, MDS/CCD readers and post-1.17.1 plan review:** the license review is
 complete. 5DO **retains the FreeDO modified GNU LGPL** as non-commercial donationware;
 the 4DO game database is resolved as a separate **GPL-2.0** data component with its
 complete text in `docs/GPL-2.0.txt`. Official Debian/Ubuntu/Fedora/openSUSE archives and
 Flathub remain **not eligible**. The post-decision documentation sweep is complete, so
-`REL-13` and `REL-12` are closed and the active plan now tracks **18 open items**:
-`REL-14` RetroAchievements hardcore approval (request submitted; awaiting external
-review), `TEST-09` a full-library soak (all 1,371 images at 10,000 frames; all 414 unique
-titles at 30,000 frames), `PLAT-19` native
-Wayland Vulkan, `UX-38` video recording, `SYS-29` representative real 3DO MDS/CCD
-validation,
-and `VID-22` high-refresh presentation/interpolation research that keeps gameplay at the
-native 59.94/50 Hz rate. `SYS-29`'s read-only MDS/MDX and CloneCD readers are implemented
-with synthetic data/audio tests and a real MDS v2 compressed-fixture smoke; only
-representative real 3DO MDS/CCD boot-hash parity remains. `SYS-28` is closed by the issue
-#8 re-burn evidence: the 1.17.0 CD-R boot logged no warnings or read errors over more than
-3,000 frames, `disc verify` read 157,996/157,996 sectors with 0 errors, and the Red Book
-audio CD extracted without a core stop. The README, Roadmap, FAQ,
-Compatibility, KnownIssues, ReleaseLegalReview, THIRD-PARTY-NOTICES, Licensing,
-GameDatabase, LinuxDistribution, Installation, Installers, BuildAndTest,
-ReferenceStrategy, UserGuide, Performance, OpenALSoft, ReleaseChecklist, and the wiki
-Legal page were corrected to the retained-license state. Build, `dotnet format`,
-`jb inspectcode`, and `mkdocs build --strict` are clean; the full suite is
-**2,610/2,610** on a clean run (one load-sensitive latency test failed once under
-full-suite load and passed on rerun).
+`REL-13` and `REL-12` are closed and the active plan tracks `REL-14` RetroAchievements
+hardcore approval (request submitted; awaiting external review), `TEST-09` a full-library
+soak (all 1,371 images at 10,000 frames; all 414 unique titles at 30,000 frames), `UX-38`
+video recording, and `SYS-29` representative real 3DO MDS/CCD validation. `SYS-29`'s
+read-only MDS/MDX and CloneCD readers are implemented with synthetic data/audio tests and a
+real MDS v2 compressed-fixture smoke; only representative real 3DO MDS/CCD boot-hash parity
+remains. `SYS-28` is closed by the issue #8 re-burn evidence: the 1.17.0 CD-R boot logged
+no warnings or read errors over more than 3,000 frames, `disc verify` read
+157,996/157,996 sectors with 0 errors, and the Red Book audio CD extracted without a core
+stop. The README, Roadmap, FAQ, Compatibility, KnownIssues, ReleaseLegalReview,
+THIRD-PARTY-NOTICES, Licensing, GameDatabase, LinuxDistribution, Installation, Installers,
+BuildAndTest, ReferenceStrategy, UserGuide, Performance, OpenALSoft, ReleaseChecklist, and
+the wiki Legal page were corrected to the retained-license state.
 
 **2026-11-25, v1.17.1 bug-fix release:** the release fixes the malformed-ZIP library
 refresh (#70180), routes unobserved `OpenGL FBO` compositor failures to the CPU presenter

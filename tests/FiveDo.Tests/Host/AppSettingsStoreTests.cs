@@ -1041,6 +1041,52 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void FrameInterpolation_RequiresAFixedRateAboveSixtyAndNoVrr()
+    {
+        var settings = new AppSettings
+        {
+            FrameInterpolation = true,
+            DisplayRefreshRate = 144,
+        };
+
+        Assert.True(settings.ResolveFrameInterpolation());
+        Assert.True(settings.ToRendererSettings().FrameInterpolation);
+
+        settings.DisplayRefreshRate = AppSettings.DefaultDisplayRefreshRate;
+        Assert.False(settings.ResolveFrameInterpolation());
+        Assert.False(settings.ToRendererSettings().FrameInterpolation);
+
+        settings.DisplayRefreshRate = 0;
+        Assert.False(settings.ResolveFrameInterpolation());
+
+        settings.DisplayRefreshRate = 144;
+        settings.Vrr = true;
+        Assert.False(settings.ResolveFrameInterpolation());
+
+        settings.Vrr = false;
+        settings.FrameInterpolation = false;
+        Assert.False(settings.ResolveFrameInterpolation());
+    }
+
+    [Fact]
+    public void FrameInterpolation_Roundtrips()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings
+        {
+            FrameInterpolation = true,
+            DisplayRefreshRate = 144,
+        };
+
+        AppSettingsStore.Save(settings, path);
+        AppSettings loaded = AppSettingsStore.Load(path);
+
+        Assert.True(loaded.FrameInterpolation);
+        Assert.Equal(144, loaded.DisplayRefreshRate);
+    }
+
+    [Fact]
     public void AutoSaveSettings_RoundtripAndClampTheInterval()
     {
         using var temp = new TemporaryDirectory();

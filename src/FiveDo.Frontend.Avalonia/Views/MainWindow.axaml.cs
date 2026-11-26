@@ -166,6 +166,8 @@ public partial class MainWindow : Window, IDisposable
     private DispatcherTimer? _displayTimer;
     private bool _displayFrameLoop;
     private int _displayFrameGeneration;
+    private bool _frameInterpolationActive;
+    private bool _frameInterpolationWasActive;
     private long _displayPresents;
     private long _presentRateStartTicks = Stopwatch.GetTimestamp();
     private long _lastAudioUnderruns;
@@ -6065,7 +6067,8 @@ public partial class MainWindow : Window, IDisposable
         _presentRateStartTicks = presentNow;
         var display = _settings.DisplayRefreshRate == AppSettings.DefaultDisplayRefreshRate
             ? string.Empty
-            : $"  display {(presentSeconds > 0 ? presents / presentSeconds : 0):F0} Hz";
+            : $"  display {(presentSeconds > 0 ? presents / presentSeconds : 0):F0} Hz"
+                + (_frameInterpolationActive ? " interp" : string.Empty);
         var skip = status.FrameSkipMode == FrameSkipMode.Off && status.FrameSkipCadence <= 1
             ? string.Empty
             : $" ({FrameSkipPolicy.Describe(status.FrameSkipMode, status.FrameSkipCadence)})";
@@ -7406,6 +7409,7 @@ public partial class MainWindow : Window, IDisposable
     private void ApplyDisplayRefreshRate()
     {
         StopDisplayRefresh();
+        _frameInterpolationActive = false;
 
         AppSettings effective = _settings.CreateEffectiveForGame(_gameId);
         int rate;
@@ -7428,6 +7432,7 @@ public partial class MainWindow : Window, IDisposable
             _cpuTimer.Interval = rate > AppSettings.DefaultDisplayRefreshRate
                 ? TimeSpan.FromSeconds(1.0 / rate)
                 : TimeSpan.FromMilliseconds(16);
+            SetFrameInterpolationState(effective, rate);
             return;
         }
 
@@ -7452,11 +7457,13 @@ public partial class MainWindow : Window, IDisposable
                     "Presentation refresh rate follows the compositor.");
             }
 
+            SetFrameInterpolationState(effective, rate);
             return;
         }
 
         if (rate <= AppSettings.DefaultDisplayRefreshRate)
         {
+            SetFrameInterpolationState(effective, rate);
             return;
         }
 
@@ -7466,6 +7473,36 @@ public partial class MainWindow : Window, IDisposable
         _logger.ForCategory(LogCategory.Video).Information(
             "Presentation refresh rate set to {Rate} Hz.",
             rate);
+        SetFrameInterpolationState(effective, rate);
+    }
+
+    private void SetFrameInterpolationState(AppSettings effective, int rate)
+    {
+        var active = rate > AppSettings.DefaultDisplayRefreshRate
+            && effective.ResolveFrameInterpolation();
+        if (active != _frameInterpolationWasActive)
+        {
+            if (active)
+            {
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "Frame interpolation enabled: blending the last two completed frames at {Rate} Hz. Emulation, audio, and frame hashes stay at the native rate; the visible output lags the newest field by up to one field.",
+                    rate);
+            }
+            else
+            {
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "Frame interpolation disabled; presenting the latest completed frame.");
+            }
+
+            _frameInterpolationWasActive = active;
+        }
+        else if (!active && effective.FrameInterpolation)
+        {
+            _logger.ForCategory(LogCategory.Video).Debug(
+                "Frame interpolation was requested but needs a fixed display rate above 60 Hz and VRR off.");
+        }
+
+        _frameInterpolationActive = active;
     }
 
     private void RequestDisplayFrame(int generation)

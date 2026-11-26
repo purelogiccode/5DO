@@ -458,9 +458,13 @@ selects the rate used to present the latest frame. **60 Hz** keeps render-on-dem
 higher values (75/90/120/144/165/240 Hz) re-present the latest frame at that rate, and
 **Match display** follows the compositor. The 3DO outputs 60 fields per second (50 for
 PAL), so a higher rate reduces presentation latency but does not create extra motion;
-emulation speed, audio, and save states are unchanged. Optional frame
-interpolation/high-refresh motion is a research candidate (`VID-22`), not implemented
-yet; it must keep the emulated machine at the native 59.94/50 Hz rate.
+emulation speed, audio, and save states are unchanged. **Frame interpolation** (off by
+default) blends the two most recent completed frames for smoother motion. It requires a
+fixed display rate above 60 Hz and is disabled with VRR; the status bar adds `interp`
+while it is active. It keeps the emulated machine, input sampling, audio clock, and
+hashes at the native rate, but the visible output lags the newest field by up to one field
+period, and Bob-deinterlaced 480i content can ghost; use Auto/Weave or turn it off for
+those titles.
 
 The status bar carries an **emulation-health badge** between the renderer label and the
 FPS counter. A green **OK** means the frame rate matches the audio-derived target and

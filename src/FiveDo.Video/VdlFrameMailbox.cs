@@ -61,6 +61,23 @@ public sealed class VdlFrameMailbox
         reader(destination);
     }
 
+    /// <summary>
+    /// Copies the latest snapshot into a caller-owned frame and returns the sequence
+    /// number of that exact snapshot.
+    /// </summary>
+    /// <param name="destination">Caller-owned scratch frame, reused across calls.</param>
+    /// <returns>The mailbox sequence associated with the copied frame.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="destination"/> is null.</exception>
+    public long ReadWithSequence(VdlFrame destination)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        lock (_gate)
+        {
+            Copy(_snapshot, destination);
+            return _sequence;
+        }
+    }
+
     private static void Copy(VdlFrame source, VdlFrame destination)
     {
         destination.CopyFrom(source);

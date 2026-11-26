@@ -23,10 +23,9 @@ namespace FiveDo.Frontend.Avalonia.Controls;
 /// </remarks>
 public sealed class VideoSurface : OpenGlControlBase, IDisposable
 {
-    private static readonly Action<VdlFrame> NoOp = _ => { };
-
     private readonly VdlFrameMailbox _mailbox = new();
     private readonly VdlFrame _presentFrame = new();
+    private readonly FrameInterpolator _interpolator = new();
     private readonly Action _requestRender;
     private readonly Action _requestRenderFromCore;
     private int _renderRequestPending;
@@ -40,6 +39,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     private Action<VdlFrame>? _present;
     private RendererSettings _settings = new();
     private long _renderedSequence = -1;
+    private long _interpolationSequence = -1;
+    private long _submittedTimestamp;
+    private long _lastSubmitTimestamp;
+    private long _submitIntervalTicks;
+    private bool _interpolationFrameLogged;
     private int _renderedWidth;
     private int _renderedHeight;
     private int _renderedWindowWidth;
@@ -189,6 +193,15 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     /// <param name="frame">Completed machine frame.</param>
     public void SubmitFrame(VdlFrame frame)
     {
+        ArgumentNullException.ThrowIfNull(frame);
+        long now = Stopwatch.GetTimestamp();
+        long previous = Interlocked.Exchange(ref _lastSubmitTimestamp, now);
+        if (previous > 0 && now > previous)
+        {
+            Interlocked.Exchange(ref _submitIntervalTicks, now - previous);
+        }
+
+        Interlocked.Exchange(ref _submittedTimestamp, now);
         _mailbox.Write(frame);
         if (_renderer is null)
         {
@@ -227,7 +240,54 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
     {
         ArgumentNullException.ThrowIfNull(renderer);
         renderer.Resize(width, height);
-        _mailbox.Read(_presentFrame, renderer.Present);
+        long sequence = _mailbox.ReadWithSequence(_presentFrame);
+        renderer.Present(SelectPresentationFrame(sequence));
+    }
+
+    private VdlFrame SelectPresentationFrame(long sequence, bool forceCurrent = false)
+    {
+        if (!_settings.FrameInterpolation)
+        {
+            // Keep the interpolator cold so enabling the option starts from the next pair.
+            _interpolator.Reset();
+            _interpolationSequence = sequence;
+            _interpolationFrameLogged = false;
+            return _presentFrame;
+        }
+
+        if (sequence != _interpolationSequence)
+        {
+            long timestamp = Interlocked.Read(ref _submittedTimestamp);
+            if (timestamp == 0)
+            {
+                timestamp = Stopwatch.GetTimestamp();
+            }
+
+            _interpolator.Advance(
+                _presentFrame,
+                timestamp,
+                Interlocked.Read(ref _submitIntervalTicks));
+            _interpolationSequence = sequence;
+        }
+
+        if (forceCurrent)
+        {
+            return _presentFrame;
+        }
+
+        VdlFrame? frame = _interpolator.FrameAt(
+            _interpolator.PositionAt(Stopwatch.GetTimestamp()));
+        if (_interpolator.LastFrameBlended
+            && !_interpolationFrameLogged
+            && _interpolator.BlendedFrames >= 30)
+        {
+            _interpolationFrameLogged = true;
+            Serilog.Log.Information(
+                "Frame interpolation started: presenting blended frames at an estimated {Interval:F2} ms field interval.",
+                _interpolator.IntervalSeconds * 1000.0);
+        }
+
+        return frame ?? _presentFrame;
     }
 
     /// <inheritdoc />
@@ -243,6 +303,11 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             _glVendor = gl.Vendor;
             _glRenderer = gl.Renderer;
             _renderedSequence = -1;
+            _interpolator.Reset();
+            _interpolationSequence = -1;
+            _interpolationFrameLogged = false;
+            _lastSubmitTimestamp = 0;
+            _submitIntervalTicks = 0;
             _adapter = new GlContextAdapter(_gl);
             ISwapIntervalBackend? swapInterval = SwapInterval.TryCreate(gl.GetProcAddress);
             _renderer = new OpenGlRenderer(_adapter, swapInterval);
@@ -352,7 +417,6 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
             return;
         }
 
-        _renderedSequence = sequence;
         _renderedWidth = width;
         _renderedHeight = height;
         _renderedWindowWidth = windowSize.Width;
@@ -362,9 +426,10 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderer.Resize(width, height);
         var presentStart = Stopwatch.GetTimestamp();
         var allocationStart = MeasureAllocations ? GC.GetAllocatedBytesForCurrentThread() : 0;
-        _mailbox.Read(_presentFrame, NoOp);
+        sequence = _mailbox.ReadWithSequence(_presentFrame);
+        _renderedSequence = sequence;
         var rendererAllocationStart = MeasureAllocations ? GC.GetAllocatedBytesForCurrentThread() : 0;
-        _present?.Invoke(_presentFrame);
+        _present?.Invoke(SelectPresentationFrame(sequence, _captureRequested));
         if (MeasureAllocations)
         {
             var after = GC.GetAllocatedBytesForCurrentThread();

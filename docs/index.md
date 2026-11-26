@@ -90,9 +90,17 @@
 
 ## Current snapshot
 
+**2026-11-26 post-1.17.1 update.** High-refresh frame interpolation (`VID-22`) is
+implemented: **Settings > Video > Frame interpolation** blends the last two completed
+fields at a fixed rate above 60 Hz (disabled with VRR) while emulation, input, audio, and
+frame/state/audio hashes stay native. The status bar adds `interp` while it is active.
+Native Wayland Vulkan is deferred until Avalonia officially supports Wayland, so the
+active plan tracks **16 open items** and the test assembly has **2,627 tests**; see
+[Status](Status.md) and [Performance](Performance.md) §8.9.
+
 **2026-11-25, v1.17.1 bug-fix release (GitHub Releases).**
 
-- **2,610 tests** are present in the current test assembly.
+- **2,610 tests** were present at the 1.17.1 release.
 - **Library and renderer fixes:** a malformed ZIP now appears as an error entry instead
   of faulting the parallel library refresh; Avalonia `OpenGL FBO` failures that arrive
   through an unobserved task now switch to the CPU presenter; the core stop window is

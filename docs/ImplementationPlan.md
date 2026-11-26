@@ -6,8 +6,8 @@
 only**; completed items, their evidence, the full stable-ID history, and the completed
 portions of partially open IDs are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II and §17.
-**Open items:** 18 - 2 P0 compliance/evidence, 4 platform/presentation, 3 release/packaging,
-4 product, 3 rendering, 2 hardware/media.
+**Open items:** 16 - 2 P0 compliance/evidence, 3 platform/presentation, 3 release/packaging,
+4 product, 2 rendering, 2 hardware/media.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -24,7 +24,7 @@ portions of partially open IDs are in
 ## 1. Completed baseline
 
 No remaining §3 item is fully implemented; every open ID still has a remaining `Done when`
-condition. The completed `REL-13`/`REL-12`/`SYS-28` rows are in
+condition. The completed `REL-13`/`REL-12`/`SYS-28`/`VID-22` rows are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §12, completed sub-features of
 the still-partial IDs are in §17, and the completed baseline, results, stable-ID history,
 and release history are in §10–§16. Do not reopen a completed ID without new measurement.
@@ -77,9 +77,8 @@ archive.
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
 | **PLAT-06** | Partial | M | **GLES 3.1 and Tier B timing validation**: run real GLES 3.1 hardware and a real Tier B percentile run. The earlier DPI/ANGLE/4K matrix is in archive §17. | The renderer and benchmark harness exist; only the named hardware is missing. | Results are recorded in [Performance.md](Performance.md) §8.8, with every residual labeled `validated` or `best-effort`. |
-| **PLAT-19** | Open | M | **Native Wayland Vulkan surface**: add a `VK_KHR_wayland_surface` path so `--gl-backend vulkan` and the desktop shell present through Wayland without XWayland. Keep the X11/Win32/Metal surfaces and the offscreen fallback. | The Vulkan presenter already has platform surface implementations for Win32, X11, and Metal, and the Avalonia native-handle path is established. Wayland needs a `wl_display`/`wl_surface` handoff and resize/fullscreen handling, not a new renderer. | On a Wayland-only compositor, `--vk-window-probe` and the desktop shell present through the Wayland surface with 0 renderer bytes/frame, live resize and fullscreen work, the offscreen fallback remains, and [Vulkan.md](Vulkan.md)/[Compatibility.md](Compatibility.md) record the validated compositor(s). |
 
-### 3.3 P1 — Release and packaging
+### 3.3 P1 - Release and packaging
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
@@ -106,9 +105,8 @@ and channel files: [Installers.md](Installers.md),
 |---|---|---|---|---|---|
 | **VID-20** | Candidate | L | **True 2x production completeness**: add bitmap/SPORT high-resolution sampling and framebuffer-read semantics, validate per title across the 378-title corpus. The `--true-2x` base path, gate removal, and OpenGL upload fix are in archive §17. | The existing path already writes independent 480-line fields and matches the reference on a 3D and a 2D title; [HighResolutionCelResearch.md](HighResolutionCelResearch.md) scopes the remaining bitmap/SPORT work, and the existing frame-hash harness can gate every step. This is a bounded production slice of `VID-01`, not open-ended 4K research. | The 50-title accuracy panel and 378-title corpus run with true 2x where validated, native frame/state/audio hashes stay unchanged, Road Rash transitions show no stale rows, the mode is available to every title or documented per title, and the results are recorded in [HighResolutionCelResearch.md](HighResolutionCelResearch.md) and [Compatibility.md](Compatibility.md). |
 | **VID-21** | Candidate | XL | **GPU 3D CEL rasterization**: move packed, scaled, and arbitrary CEL rasterization to the GPU with palette/CLUT-correct output, texture sampling/filtering, SPORT fill/copy interaction, and a CPU fallback. Keep the CPU rasterizer as the accuracy oracle and compare every stage against it. | 5DO already owns the CEL command parser, CLUT/VRAM layout, and GL/Vulkan/D3D11 presenters, and Phoenix demonstrates that GPU CEL rendering is feasible; the 50-title panel and true-2x captures provide the parity oracle. This is a large, high-risk rendering project, so it starts as a probe. | A GPU path matches the CPU reference on a defined CEL-heavy subset (at least the 50-title panel at frame 300) with zero pixel differences, the default path is unchanged, all three backends render the same frame, the CPU fallback remains, and the measured frame time improves on a named title; otherwise the probe is closed with evidence. |
-| **VID-22** | Candidate | L | **High-refresh frame interpolation**: add optional interpolation from two completed emulated frames (with a toggle and a no-interpolation fallback) and validate the 120 Hz+ presentation rate, latency, and telemetry. Keep the guest at its native 59.94/50 Hz and do not change the audio clock. Re-presentation above 60 Hz is in archive §17. | The frontend already has a display-refresh setting, a presentation loop, frame-history capture, GPU filters, and 60 fps telemetry. A probe can measure interpolation on 120 Hz+ hardware without touching the emulation core. | On a 120 Hz+ display, presentation updates exceed 60 Hz while `FramesExecuted` still advances at 60/50 Hz; frame/state/audio hashes are unchanged; audio stays synchronized; input latency is no worse than the configured baseline; a toggle disables interpolation and restores native re-presentation; [Performance.md](Performance.md) and [KnownIssues.md](KnownIssues.md) explain that gameplay speed is unchanged. |
 
-### 3.6 P3 — Hardware evidence and disc formats
+### 3.6 P3 - Hardware evidence and disc formats
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
@@ -130,6 +128,7 @@ was measured and closed with a documented limitation, not that it is unachievabl
 | **Official Linux archives (Debian, Ubuntu, Fedora, openSUSE)** | The FreeDO notice forbids commercial use without the rights holders' approval, which fails the Debian DFSG and Fedora legal tests; the archive builders also run without network access, so the NuGet graph must be vendored. The 2026-11-25 `REL-13` decision retained those terms, so the archives and Flathub remain closed; direct downloads plus the optional self-hosted mirror tooling (`packaging/linux/build-*-repo.sh`) are the supported paths. | The FreeDO rights holders grant a licence compatible with the archives **or** the restricted core is replaced, **and** a network-free, vendored source build exists. |
 | **Intel macOS** | **Dropped in 1.12.0.** The rented NoMac host is arm64 and there is no Intel Mac with a usable Metal device; the project supports Apple Silicon macOS only. | Product scope changes and an Intel Mac becomes available for validation. |
 | **PLAT-17 Retina 2x row** | The rented NoMac host's paravirtual display advertises 11 modes that are all 1:1, and a private `CGVirtualDisplay` created with `hiDPI` is also handed 1x modes, so `backingScaleFactor` stays 1.0 and the shell never sees scale 2. Every other PLAT-17 row is validated (2026-11-18). | A macOS host with a HiDPI display, or a virtual display that advertises 2x modes, is available. |
+| **PLAT-19 native Wayland Vulkan surface** | Blocked by upstream: Avalonia 12.2 has no officially supported native Wayland backend. `Avalonia.Wayland` is an experimental opt-in package that `UsePlatformDetect()` does not select, and Wayland has no native child-window model for the existing embedded presenters. The `VK_KHR_wayland_surface` work would need a stable native window/subsurface handoff from Avalonia first. | Avalonia officially supports Wayland in the default desktop backend, including a stable native window or subsurface handle for the embedded video presenter, and a Wayland-only compositor host is available. |
 | **SYS-16 six-player/multi-tap** | No matrix title requires it and the hardware is unavailable. | A matrix title requires six players and hardware is available. |
 | **SYS-01 audio-only CD playback** | The FZ-10 BIOS CD player lists the 14-track TOC after the 2352+96 subcode fix, but its transport controls remain inert; the 4DO reference documents the same BIOS limitation. A guest CD-player application or a reference capture is needed. | A 3DO CD-player application (or a hardware/Opera capture) starts playback from an audio-only disc. |
 | **CORE-01 ARM60 cycle-class** | Closed: the panel proved frame-boundary phase, not a cycle-model gap; no game-visible effect. | A title changes status with the ARM timing model and no other cause explains it. |
@@ -173,15 +172,15 @@ was measured and closed with a documented limitation, not that it is unachievabl
    probe is not clean; do not keep it open as a wish.
 5. **Network:** `NET-01` starts with a two-instance loopback probe; commit to a netplay
    implementation only if the probe is clean.
-6. **Rendering:** `VID-20` true-2x completeness first, then `VID-22` high-refresh
-   presentation/interpolation probe, then `VID-21` GPU CEL rasterization as a bounded
-   probe. `VID-22` must keep the emulated machine at its native 59.94/50 Hz; only the
-   presentation rate may rise.
+6. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
+   as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
+   keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation
+   rate.
 7. **Hardware/media evidence:** `SYS-23` as soon as a DirectInput-only pad is available;
    `SYS-29` when representative real MDS/MDF and CCD/IMG/SUB images are available for
    boot-hash parity.
-8. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable;
-   `PLAT-19` on a Wayland-only compositor with Vulkan.
+8. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
+   `PLAT-19` is blocked on official Avalonia Wayland support (§4).
 
 **Stop rule:** do not start P3 product work while a P0 compliance item, P1 platform smoke,
 or packaging gate is failing. §4 items stay blocked until their revisit condition is met.

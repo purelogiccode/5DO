@@ -410,9 +410,12 @@ swap-interval path: on Windows WGL it resolves `WGL_EXT_swap_control` and report
 `VsyncActive: true` when requested; the compositor may still pace independently.
 `DisplayRefreshRate` (Settings > Video) can re-present the latest frame above 60 Hz
 (default 60). It lowers presentation latency but does not add motion, because the
-3DO still produces 60 fields per second (50 for PAL). High-refresh presentation with
-optional frame interpolation is a research candidate (`VID-22`); it must keep the
-emulated machine, input sampling, and audio at the native rate.
+3DO still produces 60 fields per second (50 for PAL). The optional
+**Frame interpolation** toggle blends the two most recent completed frames at that
+rate for smoother motion; it requires a fixed rate above 60 Hz and is disabled with
+VRR. It keeps the emulated machine, input sampling, audio clock, frame hashes, and
+save states at the native rate, but the visible output intentionally lags the newest
+field by up to one field period. See §8.9.
 The renderer/mailbox present path reports **0 managed bytes/frame** after warm-up.
 The residual probe allocation (~2.3 KB/frame) is outside `OpenGlRenderer.Present`
 and comes from the Avalonia UI/compositor loop; it is a host-side follow-up, not
@@ -1028,3 +1031,38 @@ attached screens, including a private `CGVirtualDisplay` created with `hiDPI` se
 shell never receives scale 2. The 2x code path is covered by `PixelSizeTests` and by
 `MacMetalSurface`, which sizes the drawable as points × backing scale, but it is not
 hardware-validated. `PLAT-17` therefore keeps only that row open.
+
+### 8.9 High-refresh frame interpolation (VID-22, 2026-11-26)
+
+`FrameInterpolator` keeps the two most recent completed VDL frames and, on every
+presentation tick above 60 Hz, blends them through the existing fixed-CLUT direct-color
+path. Every buffer is reused, the endpoint frames are returned unchanged so the native
+frame keeps its full 8-bit palette, and the emulated machine, input sampling, audio clock,
+frame/state/audio hashes, and save states are untouched. The toggle is **Settings > Video
+> Frame interpolation**; it requires a fixed `DisplayRefreshRate` above 60 Hz and is
+disabled with VRR, where the compositor already owns the cadence.
+
+Measured on the Windows 11 / RTX 4070 development host (3440x1440 at 164 Hz), Road Rash
+(EU, `panafz1.bin`), 640x480 CRT output. The status bar reports the measured presentation
+rate and an `interp` marker:
+
+| Renderer | Presentation | Notes |
+|---|---:|---|
+| OpenGL 4.0 | 148-167 Hz | 164-165 Hz typical; `gpu 0.14-0.18 ms`, `present 0.41-2.76 ms` |
+| Vulkan 1.2 (RTX 4070) | 132 Hz | swapchain 1590x697, live-resized to 1978x751 |
+| Direct3D 11 | 83 Hz | dispatcher-driven child surface; still above 60 Hz |
+
+The emulated rate stayed at **59.4-60.4 fps** in every run. The overlay reported
+`audio ... u0 d0` (no underruns or dropped samples), and input-to-submit telemetry stayed
+around **3.0-3.4 ms mean** with interpolation on or off. The first blended frame logs the
+smoothed field interval (`16.13-16.28 ms` on OpenGL). A 36,000-frame headless run kept the
+presentation-independent current baseline (`0x8929E80A`, PC `0x0006826C`); two independent
+600-frame runs matched each other at `0x76175DC5`, PC `0x00001BD0`. With the toggle off,
+the same window presented at 167 Hz with no `interp` marker and no interpolation log.
+
+Blended frames use 5 bits per channel because the 3DO direct-color path is 15-bit; the
+endpoint frames are exact. Because the blend is built from two *completed* fields, the
+visible output lags the newest field by up to one field period. This is the documented
+trade-off, not an emulation-speed change. Bob-deinterlaced 480i content can show
+field-pair ghosting with the toggle on; use Auto/Weave for interlaced titles or turn it
+off.

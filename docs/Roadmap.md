@@ -41,8 +41,9 @@ short version:
 
 **Platform and distribution**
 
-- `PLAT-19` native Wayland Vulkan surface; `PLAT-06` GLES 3.1/DPI/Tier B validation;
-  `PLAT-17` Retina 2x and `PLAT-05` macOS gamepad hardware evidence.
+- `PLAT-06` GLES 3.1/DPI/Tier B validation; `PLAT-17` Retina 2x and `PLAT-05` macOS
+  gamepad hardware evidence. `PLAT-19` native Wayland Vulkan is blocked until Avalonia
+  officially supports Wayland.
 - `REL-08` AUR/AppImageHub/itch.io listings and `REL-10` EmuDeck/RetroDeck integration;
   `REL-09` Flatpak sandbox/repository work once the licence position is settled.
 - `UX-16` signed Windows/macOS artifacts when the certificate and Apple account are
@@ -57,8 +58,8 @@ short version:
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
-  bounded probe; `VID-22` high-refresh presentation/interpolation research that keeps
-  gameplay at the native 59.94/50 Hz rate.
+  bounded probe. `VID-22` high-refresh frame interpolation shipped in 1.17.x and is
+  documented in [Performance.md](Performance.md) §8.9.
 
 **Accuracy residuals (not release blockers)**
 

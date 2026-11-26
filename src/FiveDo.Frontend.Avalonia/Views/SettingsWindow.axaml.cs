@@ -311,6 +311,10 @@ public partial class SettingsWindow : Window
                 option => option.Value == settings.DisplayRefreshRate)
             ?? _displayRefreshRateOptions.First(
                 option => option.Value == AppSettings.DefaultDisplayRefreshRate);
+        FrameInterpolationCheck.IsChecked = settings.FrameInterpolation;
+        DisplayRefreshRateCombo.SelectionChanged += (_, _) => UpdateFrameInterpolationAvailability();
+        VrrCheck.IsCheckedChanged += (_, _) => UpdateFrameInterpolationAvailability();
+        UpdateFrameInterpolationAvailability();
         CropInsets overscan = settings.ResolveOverscan();
         OverscanLeftBox.Text = overscan.Left.ToString(CultureInfo.InvariantCulture);
         OverscanTopBox.Text = overscan.Top.ToString(CultureInfo.InvariantCulture);
@@ -1053,6 +1057,19 @@ public partial class SettingsWindow : Window
             ?? options[0];
     }
 
+    private void UpdateFrameInterpolationAvailability()
+    {
+        var rate = DisplayRefreshRateCombo.SelectedItem is DisplayRefreshRateOption option
+            ? option.Value
+            : AppSettings.DefaultDisplayRefreshRate;
+        var available = rate > AppSettings.DefaultDisplayRefreshRate && VrrCheck.IsChecked != true;
+        FrameInterpolationCheck.IsEnabled = available;
+        if (!available)
+        {
+            FrameInterpolationCheck.IsChecked = false;
+        }
+    }
+
     private void OnProfileChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (_initializing
@@ -1199,6 +1216,7 @@ public partial class SettingsWindow : Window
         settings.DisplayRefreshRate = DisplayRefreshRateCombo.SelectedItem is DisplayRefreshRateOption refreshRate
             ? refreshRate.Value
             : AppSettings.DefaultDisplayRefreshRate;
+        settings.FrameInterpolation = FrameInterpolationCheck.IsChecked == true;
         settings.SetOverscan(new CropInsets(
             ParseCrop(OverscanLeftBox, "Left overscan"),
             ParseCrop(OverscanTopBox, "Top overscan"),

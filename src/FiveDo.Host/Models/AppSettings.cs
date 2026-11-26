@@ -543,6 +543,18 @@ public sealed class AppSettings
     /// </remarks>
     public int DisplayRefreshRate { get; set; } = DefaultDisplayRefreshRate;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether presentation blends the two most recent
+    /// completed frames.
+    /// </summary>
+    /// <remarks>
+    /// This is a presentation-only option. It needs a fixed <see cref="DisplayRefreshRate"/>
+    /// above 60 Hz and VRR off; see <see cref="ResolveFrameInterpolation"/>. The emulated
+    /// machine, input sampling, audio clock, save states, and frame hashes are unchanged,
+    /// but the blended output intentionally lags the newest field by up to one field.
+    /// </remarks>
+    public bool FrameInterpolation { get; set; }
+
     /// <summary>Gets the refresh rate used when the setting is absent.</summary>
     public const int DefaultDisplayRefreshRate = 60;
 
@@ -1244,6 +1256,22 @@ public sealed class AppSettings
         return DisplayRefreshRate;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether high-refresh frame interpolation should run.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> when <see cref="FrameInterpolation"/> is enabled, VRR is off,
+    /// and a fixed display refresh above <see cref="DefaultDisplayRefreshRate"/> is
+    /// configured. Match-display presentation and VRR have no fixed presentation tick, so
+    /// they keep the latest-frame path.
+    /// </returns>
+    public bool ResolveFrameInterpolation()
+    {
+        return FrameInterpolation
+            && !Vrr
+            && DisplayRefreshRate is > DefaultDisplayRefreshRate and <= MaxDisplayRefreshRate;
+    }
+
     /// <summary>Validates and returns the run-ahead depth.</summary>
     /// <returns>The configured depth, 0-2.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the depth is outside 0-2.</exception>
@@ -1722,6 +1750,7 @@ public sealed class AppSettings
             // compositor loop and the display/driver own the cadence.
             Vsync = Vsync && !effective.Vrr,
             IntegerScale = IntegerScale,
+            FrameInterpolation = effective.ResolveFrameInterpolation(),
             Bloom = Bloom,
             FsrSharpness = FsrSharpness,
             OutputResolution = OutputResolution,

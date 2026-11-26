@@ -29,6 +29,23 @@ public sealed class VdlFrameMailboxTests
     }
 
     [Fact]
+    public void ReadWithSequence_ReturnsTheSequenceOfTheCopiedSnapshot()
+    {
+        var frame = new VdlFrame { SourceWidth = 2, SourceHeight = 1 };
+        frame[0].Width = 2;
+        frame[0].Pixels[0] = 5;
+        var mailbox = new VdlFrameMailbox();
+        mailbox.Write(frame);
+        frame[0].Pixels[0] = 9;
+
+        var destination = new VdlFrame();
+        long sequence = mailbox.ReadWithSequence(destination);
+
+        Assert.Equal(1, sequence);
+        Assert.Equal(5, destination[0].Pixels[0]);
+    }
+
+    [Fact]
     public void ReadInto_CopiesSnapshotAndLetsTheReaderMutateItsOwnFrame()
     {
         var frame = new VdlFrame { SourceWidth = 2, SourceHeight = 1 };

@@ -281,6 +281,8 @@
     "ui.vsync_where_supported": "VSync (si se admite)",
     "ui.display_refresh": "Frecuencia de actualización",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "La 3DO emite 60 campos por segundo (50 en PAL). Las frecuencias superiores a 60 vuelven a mostrar el último fotograma; no generan movimiento adicional.",
+    "ui.frame_interpolation": "Interpolación de fotogramas (requiere >60 Hz)",
+    "ui.frame_interpolation_note": "El 3DO emite 60 campos por segundo (50 en PAL). Las frecuencias superiores a 60 vuelven a presentar el último fotograma; la interpolación mezcla los dos últimos fotogramas completados para un movimiento más fluido. Requiere una frecuencia fija superior a 60 Hz y se desactiva con VRR.",
     "ui.frame_skip": "Salto de fotogramas",
     "ui.auto_only_drops_presentation_frames_when_the_loop_misses": "Auto solo descarta fotogramas de presentación cuando el bucle incumple su plazo. El juego sigue funcionando a plena velocidad, así que la entrada, el audio y los estados guardados no cambian.",
     "ui.show_fps_status_overlay": "Mostrar superposición de FPS/estado",

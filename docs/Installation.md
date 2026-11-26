@@ -209,8 +209,8 @@ Named profiles live under `profiles/<name>/` and can be selected with
   build. It keeps its data under `~/.var/app/io.github.purelogiccode.FiveDO/`, while the
   file picker can still read BIOS and disc images from your home directory.
 - X11 works directly. On a Wayland session the shell uses the OpenGL presenter; native
-  Wayland Vulkan is still unsupported and is tracked as `PLAT-19`. `5do-cli doctor`
-  reports which session case applies.
+  Wayland Vulkan is deferred until Avalonia officially supports Wayland (plan §4).
+  `5do-cli doctor` reports which session case applies.
 - The portable tarball includes a `packaging/` folder with the desktop entry, MIME
   definition, AppStream metainfo, and icons for third-party packagers.
 - The self-contained `linux-x64` and `linux-arm64` bundles are produced by CI.

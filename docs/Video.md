@@ -561,6 +561,29 @@ run at 4 Hz.
 The FPS overlay reports the rolling input-poll-to-frame-submit time and the active
 `raN`/`fdN` values. See `Performance.md` §8.7.
 
+### High-refresh interpolation
+
+`FrameInterpolator` keeps the two most recent completed `VdlFrame` snapshots and returns
+either endpoint unchanged or a blended frame at a position between them. The blend expands
+both palettes and packs the result through the fixed 15-bit direct-color path, so the CPU,
+OpenGL, Direct3D 11, and Vulkan palette pipelines all understand it with no shader change.
+All buffers are reused; `Blend_DoesNotMutateTheInputs` and the 0-bytes/frame allocation
+test guard the presentation-only contract.
+
+`VideoSurface`, `Direct3DVideoSurface`, and `VulkanVideoSurface` own one interpolator each.
+`AppSettings.ResolveFrameInterpolation()` enables `RendererSettings.FrameInterpolation`
+only for a fixed display rate above 60 Hz with VRR off; below that the control resets the
+interpolator and presents the latest frame exactly as before. On each new mailbox sequence
+the control advances the interpolator with the core-thread submit timestamp and the
+smoothed submit interval, then calls `FrameAt(PositionAt(now))` on every re-presentation
+tick. A live toggle-off returns the interpolator to its cold state. Screenshots force the
+current frame, not a blend.
+
+Blended frames are 5 bits per channel; the endpoints retain the full 8-bit palette. The
+constructed frame deliberately trails the newest completed field by up to one field
+period, and the status bar shows `interp` while the mode is active. See
+`Performance.md` §8.9 for the measured rates.
+
 ---
 
 ## 8. Screenshots

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using FiveDo.Core;
 using FiveDo.Video;
 
@@ -60,6 +61,37 @@ public sealed class VideoAllocationTests
         {
             mailbox.Write(frame);
             mailbox.Read(destination, reader);
+        }
+
+        Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+    }
+
+    [Fact]
+    public void FrameInterpolator_DoesNotAllocateInSteadyState()
+    {
+        VdlFrame first = MakeFrame();
+        VdlFrame second = MakeFrame();
+        second[0].Pixels[0] = 1;
+        var interpolator = new FrameInterpolator();
+        long timestamp = Stopwatch.GetTimestamp();
+        var interval = Stopwatch.Frequency / 60;
+        for (var i = 0; i < 200; i++)
+        {
+            interpolator.Advance(i % 2 == 0 ? first : second, timestamp + (i * interval));
+            _ = interpolator.FrameAt(0.5);
+        }
+
+        for (var i = 0; i < 60; i++)
+        {
+            interpolator.Advance(i % 2 == 0 ? first : second, timestamp + (i * interval));
+            _ = interpolator.FrameAt(0.5);
+        }
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 60; i++)
+        {
+            interpolator.Advance(i % 2 == 0 ? first : second, timestamp + (i * interval));
+            _ = interpolator.FrameAt(0.5);
         }
 
         Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);

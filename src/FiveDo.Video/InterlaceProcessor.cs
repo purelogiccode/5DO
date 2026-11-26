@@ -277,7 +277,7 @@ public sealed class InterlaceProcessor
                     b = (byte)((b + pb + 1) >> 1);
                 }
 
-                target.PixelBuffer[x] = PackDirectColor(r, g, b);
+                target.PixelBuffer[x] = FrameAssembler.PackDirectColor(r, g, b);
             }
 
             target.Width = width;
@@ -306,18 +306,5 @@ public sealed class InterlaceProcessor
         destination.OutControl = source.OutControl;
         destination.ClutDma = source.ClutDma;
         destination.Background = source.Background;
-    }
-
-    private static ushort PackDirectColor(byte red, byte green, byte blue)
-    {
-        var r = Quantize5(red);
-        var g = Quantize5(green);
-        var b = Quantize5(blue);
-        return (ushort)(0x8000 | (r << 10) | (g << 5) | b);
-    }
-
-    private static int Quantize5(byte value)
-    {
-        return Math.Min(31, ((value * 31) + 127) / 255);
     }
 }

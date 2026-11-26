@@ -1097,6 +1097,28 @@ spot), not an emulator fault; `PhysicalDiscSource` reads a drive synchronously o
 emulation thread and deliberately skips the sector prefetcher so media errors surface at
 the offending sector. No image or CHD shows it, and it did not reproduce on the final run.
 
+### 10.12 High-refresh frame interpolation (2026-11-26, Windows x64)
+
+Windows 11, NVIDIA RTX 4070, 3440x1440 at 164 Hz, Road Rash (EU) with `panafz1.bin`,
+640x480 CRT output. The **Settings > Video > Frame interpolation** toggle requires a
+fixed rate above 60 Hz and is disabled with VRR:
+
+| Renderer | Emulated | Presentation | Notes |
+|---|---:|---:|---|
+| OpenGL 4.0 | 59.5-60.4 fps | 148-167 Hz | 164-165 Hz typical; `gpu 0.14-0.18 ms`, `present 0.41-2.76 ms` |
+| Vulkan 1.2 (RTX 4070) | 59.8 fps | 132 Hz | swapchain 1590x697, live-resized to 1978x751 |
+| Direct3D 11 | 60.0 fps | 83 Hz | 640x480 child surface |
+
+The status bar showed `interp`, the overlay reported `audio ... u0 d0` (no underruns or
+dropped samples), and input-to-submit telemetry stayed near 3.0-3.4 ms mean. The
+toggle-off run presented at 167 Hz with no `interp` marker and no interpolation log.
+The emulated machine, input sampling, audio clock, frame/state/audio hashes, and save
+states are unchanged: the 36,000-frame headless run kept `0x8929E80A` / PC `0x0006826C`,
+and two independent 600-frame runs matched at `0x76175DC5` / PC `0x00001BD0`. Blended
+frames use the 15-bit direct-color path, and the visible output lags the newest field by
+up to one field period; see [Performance.md](Performance.md) §8.9 and
+[TestCorpus.md](TestCorpus.md) 1.1cv for the full evidence and limits.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

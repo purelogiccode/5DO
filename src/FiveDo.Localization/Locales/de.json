@@ -281,6 +281,8 @@
     "ui.vsync_where_supported": "VSync (falls unterstützt)",
     "ui.display_refresh": "Bildwiederholrate",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "Das 3DO gibt 60 Halbbilder pro Sekunde aus (50 bei PAL). Höhere Raten zeigen das letzte Frame erneut; sie erzeugen keine zusätzliche Bewegung.",
+    "ui.frame_interpolation": "Frame-Interpolation (erfordert >60 Hz)",
+    "ui.frame_interpolation_note": "Das 3DO gibt 60 Halbbilder pro Sekunde aus (50 bei PAL). Raten über 60 zeigen das neueste Bild erneut an; die Interpolation mischt die letzten beiden fertigen Bilder für eine flüssigere Bewegung. Sie erfordert eine feste Rate über 60 Hz und ist bei VRR deaktiviert.",
     "ui.frame_skip": "Frame-Skip",
     "ui.auto_only_drops_presentation_frames_when_the_loop_misses": "Automatisch verwirft nur Präsentationsframes, wenn die Schleife ihre Frist verfehlt. Das Spiel läuft weiter mit voller Geschwindigkeit; Eingabe, Audio und Spielstände bleiben unverändert.",
     "ui.show_fps_status_overlay": "FPS-/Status-Overlay anzeigen",

@@ -4819,3 +4819,40 @@ MDSSharp's own suite.
 600-frame boot-hash parity check remains pending. CloneCD scrambled data tracks and
 password-protected MDS images without a supplied password are rejected with actionable
 messages.
+
+### 1.1cv High-refresh frame interpolation (2026-11-26)
+
+**Unit coverage.** `FrameInterpolatorTests` (13 cases) covers the first-frame path, exact
+endpoint frames, 0.25/0.5/0.75 blends through the fixed-CLUT direct-color path, the
+measured and explicit interval estimates, incompatible sizes and pixel aspects, line
+state preservation, input immutability, reset, CPU-renderer presentation, and the
+`BlendedFrames` telemetry. `VdlFrameMailboxTests.ReadWithSequence_ReturnsTheSequenceOfTheCopiedSnapshot`
+covers the atomic sequence handoff used by all three presenters; `VideoAllocationTests`
+keeps the interpolator at 0 managed bytes/frame in steady state. `AppSettingsStoreTests`
+covers the >60 Hz/VRR gate and the JSON round-trip. Full suite **2,627/2,627**; build
+0 warnings/0 errors; `dotnet format --verify-no-changes` clean.
+
+**Runtime evidence (RTX 4070, 3440x1440 at 164 Hz, Windows 11, Road Rash EU,
+`panafz1.bin`).** The status bar and overlay reported:
+
+| Renderer | Emulated | Presentation | Notes |
+|---|---:|---:|---|
+| OpenGL 4.0 | 59.5-60.4 fps | 148-167 Hz | 164-165 Hz typical; `gpu 0.14-0.18 ms`; `present 0.41-2.76 ms` |
+| Vulkan 1.2 | 59.8 fps | 132 Hz | swapchain 1590x697, live-resized to 1978x751 |
+| Direct3D 11 | 60.0 fps | 83 Hz | 640x480 child surface |
+
+Every run showed `interp` in the status bar, `audio ... u0 d0`, and input-to-submit
+telemetry around 3.0-3.4 ms mean. The first blended frame logged a 16.13-16.28 ms field
+interval on OpenGL; Vulkan and Direct3D logged their respective starts. The toggle-off
+run presented at 167 Hz with no `interp` marker and no interpolation log.
+
+**Hashes.** The presentation-independent 36,000-frame headless run kept `0x8929E80A`,
+PC `0x0006826C` (`five-do-cli run "Road Rash...chd" --bios bios/panafz1.bin --frames 36000
+--json`). Two independent 600-frame runs matched at `0x76175DC5`, PC `0x00001BD0`.
+
+**Limits.** Blended frames use the 15-bit direct-color path (5 bits per channel); the
+endpoint frames are exact. The visible output lags the newest field by up to one field
+period. Bob deinterlacing on 480i content can ghost when fields are blended, so use
+Auto/Weave or turn the toggle off for those titles. Direct3D 11 and Vulkan present through
+dispatcher-driven child surfaces and measured lower than OpenGL on this host, though all
+three stay above 60 Hz.

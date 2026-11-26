@@ -25,6 +25,17 @@ public sealed record RendererSettings
     /// <summary>Gets a value indicating whether integer scaling is required.</summary>
     public bool IntegerScale { get; init; } = true;
 
+    /// <summary>
+    /// Gets a value indicating whether presentation blends the two most recent completed
+    /// frames.
+    /// </summary>
+    /// <remarks>
+    /// The host enables this only when the presentation loop runs faster than the field
+    /// rate (a fixed display refresh above 60 Hz and VRR off). When it is disabled, the
+    /// presenter shows the latest completed frame exactly as before.
+    /// </remarks>
+    public bool FrameInterpolation { get; init; }
+
     /// <summary>Gets the CRT scanline strength (0-1).</summary>
     public float ScanlineStrength { get; init; } = 0.25f;
 

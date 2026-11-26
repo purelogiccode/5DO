@@ -99,13 +99,14 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       sectors, hash `0x84b2bef01d157a9f`, 0 errors) with no warnings, read errors, or core
       stop over more than 3,000 frames; the Red Book audio CD extracted without a core
       stop. No bounded read-ahead is needed.
-- [ ] `PLAT-19`: validate native Wayland Vulkan on a Wayland-only compositor.
+- `PLAT-19` is deferred until Avalonia officially supports Wayland; see plan §4.
 - [ ] `SYS-29`: validate representative real 3DO MDS/MDF and CCD/IMG/SUB images
       against the equivalent BIN/CUE; the readers, synthetic tests, and malformed-input
       handling are complete.
 - [ ] `UX-38`: validate synchronized video recording on all three desktop platforms.
-- [ ] `VID-22`: probe high-refresh presentation/interpolation without changing the native
-      emulation rate.
+- [x] `VID-22`: high-refresh interpolation validated on the RTX 4070 / 164 Hz host
+      (OpenGL, Vulkan, Direct3D 11; toggle on/off; audio and hash evidence); see
+      [Performance.md](Performance.md) §8.9 and [TestCorpus.md](TestCorpus.md) 1.1cv.
 - [ ] `UX-16`: publish signed Windows/macOS artifacts when the certificate and Apple
       account are available.
 
@@ -1055,7 +1056,7 @@ been validated.**
 | Secondary desktop builds | **macOS arm64** (Vulkan/MoltenVK); **Windows arm64** and **Linux arm64** native runtime smoke | GLES 3.1, Tier B timing, Retina 2x, and DPI are unvalidated; Raspberry Pi is out of scope |
 | Compatibility set | **414 unique titles / 378 game-test-set titles**; 375 playable under the binary beyond-title rule | Per-title status must stay honest and evidenced; `TEST-09` adds the longer full-library soak |
 | Disc formats | ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP/7z | Already implemented and tested; MDS/MDF and CCD/IMG/SUB are planned as `SYS-29` |
-| Renderer | OpenGL default, optional Vulkan/Direct3D 11, CPU fallback | Filter family is complete; high-refresh presentation is `VID-22` research |
+| Renderer | OpenGL default, optional Vulkan/Direct3D 11, CPU fallback | Filter family is complete; high-refresh frame interpolation is implemented (`VID-22`) |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is embedded. Linux also ships `.deb`/`.rpm`/AppImage/Flatpak; the Windows installer is built but not published |
 | Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales. The 2026-11-25 `REL-13` decision retains the FreeDO modified GNU LGPL; the 4DO game database is GPL-2.0 |
 | Version | **`v1.17.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; earlier releases are historical |

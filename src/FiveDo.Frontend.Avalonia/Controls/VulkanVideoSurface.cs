@@ -56,6 +56,7 @@ public sealed class VulkanVideoSurface : Control, IDisposable
 
     private readonly VdlFrameMailbox _mailbox = new();
     private readonly VdlFrame _presentFrame = new();
+    private readonly FrameInterpolator _interpolator = new();
     private readonly Action _presentAction;
     private int _presentRequestPending;
     private VulkanOffscreenRenderer? _renderer;
@@ -68,6 +69,11 @@ public sealed class VulkanVideoSurface : Control, IDisposable
     private volatile bool _started;
     private volatile bool _presentationVisible;
     private long _renderedSequence = -1;
+    private long _interpolationSequence = -1;
+    private long _submittedTimestamp;
+    private long _lastSubmitTimestamp;
+    private long _submitIntervalTicks;
+    private bool _interpolationFrameLogged;
     private int _childX = int.MinValue;
     private int _childY;
     private int _childWidth;
@@ -223,6 +229,11 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         _started = true;
         _startPending = false;
         _renderedSequence = -1;
+        _interpolator.Reset();
+        _interpolationSequence = -1;
+        _interpolationFrameLogged = false;
+        _lastSubmitTimestamp = 0;
+        _submitIntervalTicks = 0;
         try
         {
             UpdateChildBounds();
@@ -252,6 +263,11 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         _startPending = false;
         _presentationVisible = false;
         _renderedSequence = -1;
+        _interpolator.Reset();
+        _interpolationSequence = -1;
+        _interpolationFrameLogged = false;
+        _lastSubmitTimestamp = 0;
+        _submitIntervalTicks = 0;
         _firstFrameLogged = false;
         _renderer?.Dispose();
         _renderer = null;
@@ -286,6 +302,14 @@ public sealed class VulkanVideoSurface : Control, IDisposable
     public void SubmitFrame(VdlFrame frame)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        long now = Stopwatch.GetTimestamp();
+        long previous = Interlocked.Exchange(ref _lastSubmitTimestamp, now);
+        if (previous > 0 && now > previous)
+        {
+            Interlocked.Exchange(ref _submitIntervalTicks, now - previous);
+        }
+
+        Interlocked.Exchange(ref _submittedTimestamp, now);
         _mailbox.Write(frame);
         if (_started)
         {
@@ -395,8 +419,9 @@ public sealed class VulkanVideoSurface : Control, IDisposable
         {
             _x11Child?.Raise();
             _macSurface?.Raise();
-            _mailbox.Read(_presentFrame, _renderer.Present);
+            sequence = _mailbox.ReadWithSequence(_presentFrame);
             _renderedSequence = sequence;
+            _renderer.Present(SelectPresentationFrame(sequence));
             _presentMilliseconds =
                 (Stopwatch.GetTimestamp() - start) * 1000.0 / Stopwatch.Frequency;
             if (!_firstFrameLogged)
@@ -442,6 +467,46 @@ public sealed class VulkanVideoSurface : Control, IDisposable
             Stop();
             Failed?.Invoke(this, new VulkanFailedEventArgs(exception));
         }
+    }
+
+    private VdlFrame SelectPresentationFrame(long sequence)
+    {
+        if (!_settings.FrameInterpolation)
+        {
+            _interpolator.Reset();
+            _interpolationSequence = sequence;
+            _interpolationFrameLogged = false;
+            return _presentFrame;
+        }
+
+        if (sequence != _interpolationSequence)
+        {
+            long timestamp = Interlocked.Read(ref _submittedTimestamp);
+            if (timestamp == 0)
+            {
+                timestamp = Stopwatch.GetTimestamp();
+            }
+
+            _interpolator.Advance(
+                _presentFrame,
+                timestamp,
+                Interlocked.Read(ref _submitIntervalTicks));
+            _interpolationSequence = sequence;
+        }
+
+        VdlFrame? frame = _interpolator.FrameAt(
+            _interpolator.PositionAt(Stopwatch.GetTimestamp()));
+        if (_interpolator.LastFrameBlended
+            && !_interpolationFrameLogged
+            && _interpolator.BlendedFrames >= 30)
+        {
+            _interpolationFrameLogged = true;
+            Serilog.Log.Information(
+                "Vulkan frame interpolation started: presenting blended frames at an estimated {Interval:F2} ms field interval.",
+                _interpolator.IntervalSeconds * 1000.0);
+        }
+
+        return frame ?? _presentFrame;
     }
 
     private void TryUpdateChildBounds()

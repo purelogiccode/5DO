@@ -131,12 +131,13 @@ FSR, HQx, and MMPX filters.
 ### Can I play at more than 60 fps?
 
 The 3DO itself runs at 59.94 Hz NTSC (50 Hz PAL), and 5DO keeps that emulation rate so
-gameplay, physics, and audio stay correct. A 120/144 Hz display can currently re-present
-the latest frame more often, which lowers presentation latency but does not create new
-motion frames. True high-refresh presentation with optional frame interpolation is a
-research candidate (`VID-22`): the goal is more than 60 presentation updates per second
-while the emulated machine, input sampling, audio clock, and hashes remain at the native
-rate. It is not implemented yet.
+gameplay, physics, and audio stay correct. A 120/144 Hz display can re-present the latest
+frame more often, which lowers presentation latency but does not create new motion
+frames. **Settings > Video > Frame interpolation** (off by default) additionally blends
+the last two completed frames for smoother motion. It requires a fixed display rate above
+60 Hz and is disabled with VRR; gameplay, input sampling, the audio clock, save states,
+and frame/state/audio hashes stay at the native rate. The visible output lags the newest
+field by up to one field period, so turn it off if you prefer the lowest possible latency.
 
 ### Is there netplay or achievements?
 

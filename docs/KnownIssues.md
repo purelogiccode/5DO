@@ -498,14 +498,18 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   accepted the request. The Avalonia compositor paces the window independently, so a
   requested vsync may not cap presentation at 60 Hz; the probe reports the renderer
   cost separately.
-- **Display refresh above 60 Hz is re-presentation, not interpolation.** The 3DO outputs
-  60 fields per second (50 for PAL), so `DisplayRefreshRate` (Settings > Video) re-presents
-  the latest frame more often and lowers presentation latency, but motion stays at the
-  console rate. The achieved rate is also bounded by the platform compositor (Avalonia 12
-  raises its render timer to the monitor frequency on Windows; other platforms may stay
-  at 60). Frame interpolation/high-refresh presentation is a research candidate
-  (`VID-22`); it must keep the emulated machine, input sampling, and audio at the native
-  59.94/50 Hz rate.
+- **High-refresh interpolation is optional and costs up to one field of display latency.**
+  **Settings > Video > Frame interpolation** blends the two most recent completed frames
+  at the presentation rate. It requires a fixed `DisplayRefreshRate` above 60 Hz and is
+  disabled with VRR. The emulated machine, input sampling, audio clock, frame/state/audio
+  hashes, and save states are unchanged. Blended frames use the 3DO's 15-bit direct-color
+  path (5 bits per channel); the endpoint frames are exact. Because the blend uses two
+  *completed* fields, the visible output lags the newest field by up to one field period.
+  Explicit Bob deinterlacing on 480i content can ghost when two fields are blended; use
+  Auto/Weave or turn interpolation off for those titles. Presentation above 60 Hz without
+  the toggle is still plain re-presentation. On the Windows RTX 4070 host, OpenGL reached
+  148-167 Hz, Vulkan 132 Hz, and Direct3D 11 83 Hz; see [Performance.md](Performance.md)
+  §8.9.
 - **Run-ahead is CPU-bound and opt-in.** One frame costs a full state capture/restore
   (~5.6 ms on the current desktop) plus one extra emulated frame. Titles that cannot hold
   the audio-derived deadline are auto-disabled after 45 overruns. Rewind history is cleared
@@ -545,7 +549,8 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   Win32 child window inside the Avalonia window on Windows, so the desktop path has no
   CPU readback. The child window is outside Avalonia's compositor, so Avalonia-drawn
   overlays over the video rectangle are obscured. The X11 and Metal surfaces are
-  validated; native Wayland Vulkan is still unsupported and is tracked as `PLAT-19`.
+  validated; native Wayland Vulkan is deferred until Avalonia officially supports
+  Wayland (plan §4).
   The offscreen/readback path remains for probes, screenshots, and non-Windows fallback.
   xBR-lv2, FSR 1.0
   (EASU + RCAS), and HQx 2x/3x/4x are GPU passes. See [`Vulkan.md`](Vulkan.md).
