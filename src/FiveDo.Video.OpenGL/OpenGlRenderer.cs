@@ -45,6 +45,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private uint _mmpxProgram;
     private uint _fsrEasuProgram;
     private uint _fsrRcasProgram;
+    private uint _voidProgram;
     private uint _vao;
     private uint _vbo;
     private uint _pixelTexture;
@@ -113,6 +114,12 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
     private int _uFsrRcasRect;
     private int _uFsrRcasOutput;
     private int _uFsrRcasSharpness;
+    private int _uVoidBase;
+    private int _uVoidAccent;
+    private int _uVoidPattern;
+    private int _uVoidTile;
+    private int _uVoidScale;
+    private int _uVoidOutput;
     private RendererCapabilities _capabilities;
     private bool _isOpenGlEs;
     private bool _initialized;
@@ -150,6 +157,15 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             _settings = value;
         }
     }
+
+    /// <summary>
+    /// Gets or sets the physical pixels per logical pixel used to tile the void pattern.
+    /// </summary>
+    /// <remarks>
+    /// The shell draws the pattern in logical units and the compositor scales it; the GPU
+    /// pass uses this factor to match that visual size on HiDPI displays.
+    /// </remarks>
+    public float PatternScale { get; set; } = 1f;
 
     /// <inheritdoc />
     public RendererCapabilities Capabilities => _capabilities;
@@ -210,6 +226,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _mmpxProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentMmpx(_isOpenGlEs));
         _fsrEasuProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrEasu(_isOpenGlEs));
         _fsrRcasProgram = CreateProgram(gl, Shaders.Vertex(_isOpenGlEs), Shaders.FragmentFsrRcas(_isOpenGlEs));
+        _voidProgram = CreateProgram(gl, Shaders.VertexFullscreen(_isOpenGlEs), Shaders.FragmentVoidPattern(_isOpenGlEs));
         _vao = gl.GenVertexArray();
         gl.BindVertexArray(_vao);
         _vbo = gl.GenBuffer();
@@ -266,6 +283,14 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
         _uScaleBloom = gl.GetUniformLocation(_scaleProgram, "uBloom");
         _uScaleBloomThreshold = gl.GetUniformLocation(_scaleProgram, "uBloomThreshold");
         _uVoidColor = gl.GetUniformLocation(_scaleProgram, "uVoidColor");
+
+        gl.UseProgram(_voidProgram);
+        _uVoidBase = gl.GetUniformLocation(_voidProgram, "uVoidBase");
+        _uVoidAccent = gl.GetUniformLocation(_voidProgram, "uVoidAccent");
+        _uVoidPattern = gl.GetUniformLocation(_voidProgram, "uVoidPattern");
+        _uVoidTile = gl.GetUniformLocation(_voidProgram, "uVoidTile");
+        _uVoidScale = gl.GetUniformLocation(_voidProgram, "uVoidScale");
+        _uVoidOutput = gl.GetUniformLocation(_voidProgram, "uVoidOutput");
 
         gl.UseProgram(_xbrProgram);
         _uXbrPalette = gl.GetUniformLocation(_xbrProgram, "uPalette");
@@ -449,9 +474,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
             gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-            var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-            gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
-            gl.Clear(ClearBufferMask.ColorBufferBit);
+            DrawVoidPattern(_outputWidth, _outputHeight);
             gl.UseProgram(_fsrRcasProgram);
             gl.Uniform4(
                 _uFsrRcasRect,
@@ -546,9 +569,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)_adapter.Framebuffer);
             gl.Viewport(0, 0, (uint)_outputWidth, (uint)_outputHeight);
-            var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-            gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
-            gl.Clear(ClearBufferMask.ColorBufferBit);
+            DrawVoidPattern(_outputWidth, _outputHeight);
             gl.UseProgram(_scaleProgram);
             gl.Uniform2(_uScaleSource, filterSourceWidth, filterSourceHeight);
             gl.Uniform4(
@@ -562,6 +583,7 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
             gl.Uniform1(_uScaleScanline, _settings.ScanlineStrength);
             gl.Uniform1(_uScaleBloom, _settings.Filter is VideoFilter.Crt or VideoFilter.ArcadeCrt ? _settings.Bloom : 0f);
             gl.Uniform1(_uScaleBloomThreshold, _settings.BloomThreshold);
+            var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
             gl.Uniform3(_uVoidColor, voidRed, voidGreen, voidBlue);
 
             gl.ActiveTexture(TextureUnit.Texture0);
@@ -625,6 +647,50 @@ public sealed class OpenGlRenderer : IVideoRenderer, IRendererTiming
                 destination[target + 3] = 0xff;
             }
         }
+    }
+
+    /// <summary>
+    /// Draws the configured void pattern into the currently bound framebuffer.
+    /// </summary>
+    /// <param name="width">Target width in pixels.</param>
+    /// <param name="height">Target height in pixels.</param>
+    /// <remarks>
+    /// The host calls this from <see cref="Present"/> before the video pass, and from the
+    /// window-blit path when the filtered result lives in an offscreen target. It fills the
+    /// whole target; the video pass then covers the viewport.
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "ReSharper",
+        "RedundantCast",
+        Justification = "Silk.NET selects the uint Viewport overload.")]
+    public void DrawVoidPattern(int width, int height)
+    {
+        if (!_initialized || _voidProgram == 0 || width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        GL gl = _adapter.Gl;
+        var (baseRed, baseGreen, baseBlue) = _settings.VoidAreaColorRgb;
+        const float accentStep = 28f / 255f;
+        gl.UseProgram(_voidProgram);
+        gl.Uniform3(_uVoidBase, baseRed, baseGreen, baseBlue);
+        gl.Uniform3(
+            _uVoidAccent,
+            Math.Min(1f, baseRed + accentStep),
+            Math.Min(1f, baseGreen + accentStep),
+            Math.Min(1f, baseBlue + accentStep));
+        gl.Uniform1(_uVoidPattern, (int)_settings.VoidPattern);
+        gl.Uniform1(
+            _uVoidTile,
+            _settings.VoidPattern == VoidPattern.FourDO ? 32f : 16f);
+        gl.Uniform1(
+            _uVoidScale,
+            float.IsFinite(PatternScale) && PatternScale > 0f ? PatternScale : 1f);
+        gl.Uniform2(_uVoidOutput, (float)width, (float)height);
+        gl.Viewport(0, 0, (uint)width, (uint)height);
+        gl.BindVertexArray(_vao);
+        gl.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
     }
 
     /// <inheritdoc />

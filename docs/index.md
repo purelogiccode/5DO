@@ -90,13 +90,14 @@
 
 ## Current snapshot
 
-**2026-11-26 post-1.17.1 update.** High-refresh frame interpolation (`VID-22`) is
-implemented: **Settings > Video > Frame interpolation** blends the last two completed
-fields at a fixed rate above 60 Hz (disabled with VRR) while emulation, input, audio, and
-frame/state/audio hashes stay native. The status bar adds `interp` while it is active.
-Native Wayland Vulkan is deferred until Avalonia officially supports Wayland, so the
-active plan tracks **16 open items** and the test assembly has **2,627 tests**; see
-[Status](Status.md) and [Performance](Performance.md) §8.9.
+**2026-11-26 post-1.17.1 update.** High-refresh frame interpolation (`VID-22`), patterned
+GPU void bars (`UX-33`), and live CPU-clock changes (`SYS-25`) are implemented. The void
+pattern (Solid, Checker, Grid, Scanline, FourDO, Bumps, or Metal) renders in the GPU bars
+on OpenGL, Direct3D 11, and Vulkan; the CPU-clock setting applies at the next frame
+boundary without recreating the machine. Native Wayland Vulkan is deferred until Avalonia
+officially supports Wayland, so the active plan tracks **14 open items** and the test
+assembly has **2,638 tests**; see [Status](Status.md), [Performance](Performance.md) §8.9,
+and [Video](Video.md).
 
 **2026-11-25, v1.17.1 bug-fix release (GitHub Releases).**
 

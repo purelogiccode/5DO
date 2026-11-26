@@ -1041,6 +1041,15 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void VoidPattern_FlowsToRendererSettings()
+    {
+        var settings = new AppSettings { VoidAreaPattern = "Checker" };
+
+        Assert.Equal(VoidPattern.Checker, settings.ResolveVoidAreaPattern());
+        Assert.Equal(VoidPattern.Checker, settings.ToRendererSettings().VoidPattern);
+    }
+
+    [Fact]
     public void FrameInterpolation_RequiresAFixedRateAboveSixtyAndNoVrr()
     {
         var settings = new AppSettings

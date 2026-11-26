@@ -423,6 +423,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         _renderedWindowHeight = windowSize.Height;
         _renderer.MeasureAllocations = MeasureAllocations;
         _renderer.Settings = _settings;
+        _renderer.PatternScale = (float)(TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0);
         _renderer.Resize(width, height);
         var presentStart = Stopwatch.GetTimestamp();
         var allocationStart = MeasureAllocations ? GC.GetAllocatedBytesForCurrentThread() : 0;
@@ -485,7 +486,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
 
     private void BlitOutputToWindow(int framebuffer, int width, int height, int windowWidth, int windowHeight)
     {
-        if (_adapter is null || _outputTarget is null)
+        if (_adapter is null || _outputTarget is null || _renderer is null)
         {
             return;
         }
@@ -514,9 +515,7 @@ public sealed class VideoSurface : OpenGlControlBase, IDisposable
         gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _outputTarget.Framebuffer);
         gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)framebuffer);
         gl.Viewport(0, 0, (uint)windowWidth, (uint)windowHeight);
-        (float voidRed, float voidGreen, float voidBlue) = _settings.VoidAreaColorRgb;
-        gl.ClearColor(voidRed, voidGreen, voidBlue, 1f);
-        gl.Clear(ClearBufferMask.ColorBufferBit);
+        _renderer.DrawVoidPattern(windowWidth, windowHeight);
         gl.BlitFramebuffer(
             sourceRect.X,
             sourceRect.Y,

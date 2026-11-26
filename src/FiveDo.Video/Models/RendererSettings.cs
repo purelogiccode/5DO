@@ -54,13 +54,16 @@ public sealed record RendererSettings
     /// <summary>Gets the color drawn outside the video viewport, as <c>0xAARRGGBB</c>.</summary>
     /// <remarks>
     /// The software presenter fills this area with the Avalonia void brush. The GPU
-    /// presenters use it as the clear color of their final pass, so the letterbox and
+    /// presenters use it as the base color of their void-area pass, so the letterbox and
     /// pillarbox match the configured backdrop instead of staying black.
     /// </remarks>
     public uint VoidAreaColor { get; init; } = DefaultVoidAreaColor;
 
     /// <summary>The default void color, matching <c>AppSettings.DefaultVoidAreaColor</c>.</summary>
     public const uint DefaultVoidAreaColor = 0xFF101010;
+
+    /// <summary>Gets the void-area pattern drawn in the letterbox and pillarbox bars.</summary>
+    public VoidPattern VoidPattern { get; init; } = VoidPattern.Solid;
 
     /// <summary>Gets the void color as normalized red, green, and blue components.</summary>
     public (float Red, float Green, float Blue) VoidAreaColorRgb => (

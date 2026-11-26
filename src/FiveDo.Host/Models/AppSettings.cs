@@ -1755,6 +1755,7 @@ public sealed class AppSettings
             FsrSharpness = FsrSharpness,
             OutputResolution = OutputResolution,
             VoidAreaColor = ParseColorArgb(ResolveVoidAreaColor()),
+            VoidPattern = effective.ResolveVoidAreaPattern(),
         };
         settings.Validate();
         return settings;

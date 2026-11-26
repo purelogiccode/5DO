@@ -4856,3 +4856,34 @@ period. Bob deinterlacing on 480i content can ghost when fields are blended, so 
 Auto/Weave or turn the toggle off for those titles. Direct3D 11 and Vulkan present through
 dispatcher-driven child surfaces and measured lower than OpenGL on this host, though all
 three stay above 60 Hz.
+
+### 1.1cw Patterned GPU void bars and live CPU clock (2026-11-26)
+
+**Pattern model.** `VoidPattern` moved to `FiveDo.Video` and is carried through
+`RendererSettings.VoidPattern`. `VoidPatternTests`, `VoidBrushTests`, and the new
+`VoidPattern_FlowsToRendererSettings` case cover the enum, the shell brush, and the
+settings mapping. OpenGL adds `Shaders.VertexFullscreen`/`FragmentVoidPattern` and draws
+the fullscreen pattern before the video pass (and again in `BlitOutputToWindow` when the
+filtered image is offscreen); Direct3D 11 adds `VoidPattern.frag` and a fullscreen pass
+before the scale/FSR draw; Vulkan adds `VoidPattern.frag` and a push-constant pass before
+the final scale/FSR draw. `PatternScale` carries the physical/logical scale so the bars
+match the shell.
+
+**Visual evidence.** At 1612x986 on the RTX 4070 host, Checker rendered in the OpenGL
+bars through both the direct window path and the fixed-output blit path; FourDO showed the
+32 px diagonal gradient; Solid kept the configured `#FF101010` base. Checker also rendered
+in the Direct3D 11 and Vulkan 1590x697 child surfaces. The shader source, HLSL compile, and
+SPIR-V tests cover every pattern branch.
+
+**Live CPU clock.** `FiveDoMachine.SetArmClock` updates `Tuning`, `Quartz`, `Madam`,
+`Cdrom`, and `Clio` without recreating the machine. The desktop settings path calls it on
+the emulation thread, so the change takes effect at the next frame boundary.
+`LiveClockTests` (6) cover component-clock propagation, the frame count, invalid clocks,
+a live switch matching a clock override of the same pre-switch state, a post-switch state
+round-trip, and unchanged stock-speed runs. Full suite **2,638/2,638**; build 0
+warnings/0 errors; `dotnet format --verify-no-changes` clean.
+
+**Limits.** Grid, Scanline, Bumps, and Metal are covered by shader source/compile tests
+and the shared pattern math; Checker and FourDO were the visual captures. The D3D/Vulkan
+native child surfaces continue to use the existing child-window presentation path; the
+pattern pass does not change their bounds or swapchain behavior.

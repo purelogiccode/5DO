@@ -6,8 +6,8 @@
 only**; completed items, their evidence, the full stable-ID history, and the completed
 portions of partially open IDs are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II and §17.
-**Open items:** 16 - 2 P0 compliance/evidence, 3 platform/presentation, 3 release/packaging,
-4 product, 2 rendering, 2 hardware/media.
+**Open items:** 14 - 2 P0 compliance/evidence, 3 platform/presentation, 3 release/packaging,
+2 product, 2 rendering, 2 hardware/media.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -24,7 +24,7 @@ portions of partially open IDs are in
 ## 1. Completed baseline
 
 No remaining §3 item is fully implemented; every open ID still has a remaining `Done when`
-condition. The completed `REL-13`/`REL-12`/`SYS-28`/`VID-22` rows are in
+condition. The completed `REL-13`/`REL-12`/`SYS-28`/`VID-22`/`UX-33`/`SYS-25` rows are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §12, completed sub-features of
 the still-partial IDs are in §17, and the completed baseline, results, stable-ID history,
 and release history are in §10–§16. Do not reopen a completed ID without new measurement.
@@ -94,8 +94,6 @@ and channel files: [Installers.md](Installers.md),
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **UX-33** | Partial | S | **Patterned void bars on the GPU presenters**: render the selected 4DO/Bumps/Metal/checker/grid/scanline pattern inside the GPU letterbox/pillarbox bars on OpenGL/GLES, Vulkan, and Direct3D 11; the pattern is currently shell-composited. Land each presenter as its own change. The other presentation options are in archive §17. | 4DO and Phoenix expose these settings; 5DO already owns audio mixing, void brushes, overscan, and FPS/audio diagnostics, so each option is presentation-only and does not touch emulation state. | The selected pattern renders inside the GPU bars on all three backends and matches the shell border and software presenter; solid mode still paints the configured color; frame/state/audio hashes are unchanged; the settings round-trip; the result is documented in the UserGuide. |
-| **SYS-25** | Candidate | M | **Live CPU-clock changes**: evaluate applying the configured CPU clock without recreating the machine. Preserve save-state/timing determinism and expose the change only if the probe is clean. | FreeDO and 4DO apply the clock live, and 5DO already has a validated 0.5×–4× clock matrix and a single-threaded machine loop. This is a candidate, not a committed feature. | A live change preserves stock-speed run/state hashes, does not corrupt timing or save states, and is covered by a test; otherwise the restart-required behavior stays and the candidate is closed with evidence. |
 | **NET-01** | Candidate | XL | **Netplay**: add a two-player deterministic network mode. Choose delay-based lockstep or rollback after a loopback probe, synchronize the initial BIOS/disc/state, exchange per-frame PBUS packets, detect and recover from desync, and expose host/join, port, input delay, and reconnect settings. Start with direct IP/LAN; a lobby and NAT traversal are out of scope for the first increment. | The machine is already single-threaded, fixed-timestep, and deterministic; TAS movie playback and `MachineStateSnapshot` provide the input/state plumbing. RetroArch's frontend netplay is the only peer reference, so this starts as a bounded probe rather than a committed release feature. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
 | **UX-38** | Open | M | **Video recording**: capture gameplay as a video file with synchronized emulated audio. Start with a deterministic 640x480/60 fps or native-rate encode, a configurable output path and quality, a start/stop shortcut and desktop menu item, and clear handling of pause, fast-forward, and disc swap. Reuse the existing frame callback and DSP tap rather than adding a second emulation loop. | The frontend already has the frame callback, WAV recording, and GIF capture; the remaining work is an encoder dependency and UI/CLI plumbing. | A 60-second recording on Windows/Linux/macOS plays back with video and audio in sync, the frame count matches the emulated span, pause/fast-forward behavior is documented, CLI and desktop controls round-trip, and the output is excluded from save states and deterministic hashes. |
 
@@ -167,9 +165,8 @@ was measured and closed with a documented limitation, not that it is unachievabl
 3. **macOS platform:** `PLAT-17` keeps only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller. Nothing on macOS is
    runnable until one of those devices is attached.
-4. **Product:** `UX-33` patterned GPU bars as one presenter per change, then `UX-38` video
-   recording, then the `SYS-25` live-clock probe. Close `SYS-25` with evidence if the
-   probe is not clean; do not keep it open as a wish.
+4. **Product:** `UX-38` video recording. The `UX-33` patterned GPU bars and the `SYS-25`
+   live-clock probe are complete (archive §12).
 5. **Network:** `NET-01` starts with a two-instance loopback probe; commit to a netplay
    implementation only if the probe is clean.
 6. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization

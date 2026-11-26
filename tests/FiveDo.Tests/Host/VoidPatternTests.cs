@@ -1,4 +1,5 @@
 using FiveDo.Host;
+using FiveDo.Video;
 
 namespace FiveDo.Tests.Host;
 

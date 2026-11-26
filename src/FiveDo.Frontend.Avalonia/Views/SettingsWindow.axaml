@@ -328,7 +328,7 @@
                                ToolTip.Tip="ARM60 clock multiplier. 1.0 is the stock 12.5 MHz; 0.5x-4x is supported." />
                     <TextBox x:Name="CpuClockBox" Grid.Row="6" Grid.Column="1" Margin="0,12,0,0"
                              PlaceholderText="1.0 (stock 12.5 MHz; range 0.5-4.0)"
-                             ToolTip.Tip="Enter a multiplier between 0.5 and 4.0. Higher clocks can change timing-sensitive behavior." />
+                             ToolTip.Tip="Enter a multiplier between 0.5 and 4.0. The change applies at the next frame boundary without restarting the machine." />
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Random seed" VerticalAlignment="Center" Margin="0,12,0,0"
                                ToolTip.Tip="Initial DSP PRNG seed. Leave blank for the FreeDO default, or enter a 32-bit value." />
                     <TextBox x:Name="RandomSeedBox" Grid.Row="7" Grid.Column="1" Margin="0,12,0,0"

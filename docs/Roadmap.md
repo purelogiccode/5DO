@@ -51,15 +51,14 @@ short version:
 
 **Product and rendering**
 
-- `UX-33` GPU letterbox/pillarbox void patterns, one presenter at a time.
 - `UX-38` video recording with synchronized audio.
-- `SYS-25` live CPU-clock probe; `NET-01` netplay loopback probe (commit only if the
-  probe is clean).
+- `NET-01` netplay loopback probe (commit only if the probe is clean).
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
-  bounded probe. `VID-22` high-refresh frame interpolation is implemented after 1.17.1
-  and is documented in [Performance.md](Performance.md) §8.9.
+  bounded probe. `VID-22` high-refresh frame interpolation, `UX-33` patterned GPU void
+  bars, and `SYS-25` live CPU-clock changes are implemented after 1.17.1; see
+  [Performance.md](Performance.md) §8.9 and [Video.md](Video.md).
 
 **Accuracy residuals (not release blockers)**
 

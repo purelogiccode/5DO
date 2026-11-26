@@ -17,6 +17,7 @@ public sealed class VulkanShaderTests
         AssertSpirV(VulkanShaders.Xbr_frag);
         AssertSpirV(VulkanShaders.FsrEasu_frag);
         AssertSpirV(VulkanShaders.FsrRcas_frag);
+        AssertSpirV(VulkanShaders.VoidPattern_frag);
     }
 
     [Fact]

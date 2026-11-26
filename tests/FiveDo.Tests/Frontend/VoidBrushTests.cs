@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using FiveDo.Frontend.Avalonia.Views;
 using FiveDo.Host;
+using FiveDo.Video;
 
 namespace FiveDo.Tests.Frontend;
 

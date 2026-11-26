@@ -147,7 +147,36 @@ public sealed class FiveDoMachine
     }
 
     /// <summary>Gets the machine tuning.</summary>
-    public EmulatorTuning Tuning { get; }
+    public EmulatorTuning Tuning { get; private set; }
+
+    /// <summary>
+    /// Applies a new ARM clock without recreating the machine.
+    /// </summary>
+    /// <param name="clock">New ARM clock in hertz.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the clock is not positive.</exception>
+    /// <remarks>
+    /// The change takes effect at the next frame boundary and is recorded by the next save
+    /// state. The host must call it on the emulation thread between frames so no batch is
+    /// split across two clock rates.
+    /// </remarks>
+    public void SetArmClock(int clock)
+    {
+        if (clock <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(clock), clock, "The ARM clock must be positive.");
+        }
+
+        if (clock == Tuning.ArmClock)
+        {
+            return;
+        }
+
+        Tuning = Tuning with { ArmClock = clock };
+        Quartz.ArmClock = clock;
+        Madam.ArmClock = clock;
+        Cdrom.ArmClock = clock;
+        Clio.SetArmClock(clock);
+    }
 
     /// <summary>Gets the shared compatibility state.</summary>
     public CompatibilityState Compatibility { get; }

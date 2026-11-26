@@ -69,6 +69,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
     private Pipeline _xbrPipeline;
     private Pipeline _fsrEasuPipeline;
     private Pipeline _fsrRcasPipeline;
+    private Pipeline _voidPatternPipeline;
     private RenderPass _renderPass;
     private DescriptorPool _descriptorPool;
     private DescriptorSet _paletteSet;
@@ -195,6 +196,11 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
 
     /// <inheritdoc />
     public FrameBuffer Frame => _frame;
+
+    /// <summary>
+    /// Gets or sets the physical pixels per logical pixel used to tile the void pattern.
+    /// </summary>
+    public float PatternScale { get; set; } = 1f;
 
     /// <inheritdoc />
     public string Name => "Vulkan";
@@ -977,6 +983,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         _xbrPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.Xbr_frag);
         _fsrEasuPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrEasu_frag);
         _fsrRcasPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.FsrRcas_frag);
+        _voidPatternPipeline = CreatePipeline(_scalePipelineLayout, VulkanShaders.VoidPattern_frag);
     }
 
     private PipelineLayout CreatePipelineLayout(DescriptorSetLayout setLayout, PushConstantRange* pushRange)
@@ -2358,8 +2365,9 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         };
         _vk.CmdSetViewport(_commandBuffer, 0, 1, &outputViewport);
         _vk.CmdSetScissor(_commandBuffer, 0, 1, &outputScissor);
-        _vk.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _fsrRcasPipeline);
         DescriptorSet rcasSet = _fsrRcasSet;
+        RecordVoidPatternPass(rcasSet);
+        _vk.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _fsrRcasPipeline);
         _vk.CmdBindDescriptorSets(
             _commandBuffer,
             PipelineBindPoint.Graphics,
@@ -2391,6 +2399,46 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
             &constants);
         _vk.CmdDraw(_commandBuffer, 3, 1, 0, 0);
         _vk.CmdEndRenderPass(_commandBuffer);
+    }
+
+    private void RecordVoidPatternPass(DescriptorSet set)
+    {
+        var (baseRed, baseGreen, baseBlue) = _settings.VoidAreaColorRgb;
+        const float accentStep = 28f / 255f;
+        PushConstants constants = new()
+        {
+            Rect = new System.Numerics.Vector4(0f, 0f, _outputWidth, _outputHeight),
+            OutputSize = new System.Numerics.Vector2(_outputWidth, _outputHeight),
+            SourceWidth = _sourceWidth,
+            SourceHeight = _sourceHeight,
+            VoidColor = new System.Numerics.Vector4(baseRed, baseGreen, baseBlue, 1f),
+            VoidAccent = new System.Numerics.Vector4(
+                Math.Min(1f, baseRed + accentStep),
+                Math.Min(1f, baseGreen + accentStep),
+                Math.Min(1f, baseBlue + accentStep),
+                1f),
+            Pattern = (int)_settings.VoidPattern,
+            PatternScale = float.IsFinite(PatternScale) && PatternScale > 0f ? PatternScale : 1f,
+            PatternTile = _settings.VoidPattern == VoidPattern.FourDO ? 32f : 16f,
+        };
+        _vk!.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _voidPatternPipeline);
+        _vk.CmdBindDescriptorSets(
+            _commandBuffer,
+            PipelineBindPoint.Graphics,
+            _scalePipelineLayout,
+            0,
+            1,
+            &set,
+            0,
+            null);
+        _vk.CmdPushConstants(
+            _commandBuffer,
+            _scalePipelineLayout,
+            ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit,
+            0,
+            (uint)sizeof(PushConstants),
+            &constants);
+        _vk.CmdDraw(_commandBuffer, 3, 1, 0, 0);
     }
 
     private void RecordScalePass(
@@ -2442,6 +2490,7 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         };
         _vk.CmdSetViewport(_commandBuffer, 0, 1, &outputViewport);
         _vk.CmdSetScissor(_commandBuffer, 0, 1, &outputScissor);
+        RecordVoidPatternPass(scaleSet);
         _vk.CmdBindPipeline(_commandBuffer, PipelineBindPoint.Graphics, _scalePipeline);
         _vk.CmdBindDescriptorSets(
             _commandBuffer,
@@ -2624,6 +2673,12 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         {
             _vk.DestroyPipeline(_device, _fsrRcasPipeline, null);
             _fsrRcasPipeline = default;
+        }
+
+        if (_voidPatternPipeline.Handle != 0)
+        {
+            _vk.DestroyPipeline(_device, _voidPatternPipeline, null);
+            _voidPatternPipeline = default;
         }
 
         if (_palettePipelineLayout.Handle != 0)
@@ -3025,5 +3080,10 @@ public sealed unsafe partial class VulkanOffscreenRenderer : ICpuFrameRenderer, 
         public int Pad3;
         public int Pad4;
         public System.Numerics.Vector4 VoidColor;
+        public System.Numerics.Vector4 VoidAccent;
+        public int Pattern;
+        public float PatternScale;
+        public float PatternTile;
+        public int Pad5;
     }
 }

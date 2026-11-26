@@ -428,6 +428,7 @@ public sealed class Direct3DVideoSurface : Control, IDisposable
         {
             sequence = _mailbox.ReadWithSequence(_presentFrame);
             _renderedSequence = sequence;
+            _renderer.PatternScale = (float)(TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0);
             _renderer.Present(SelectPresentationFrame(sequence));
             _presentMilliseconds =
                 (Stopwatch.GetTimestamp() - start) * 1000.0 / Stopwatch.Frequency;

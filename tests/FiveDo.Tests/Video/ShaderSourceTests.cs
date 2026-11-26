@@ -8,6 +8,38 @@ public sealed class ShaderSourceTests
     [Theory]
     [InlineData(false, "#version 330 core")]
     [InlineData(true, "#version 300 es")]
+    public void VoidPatternShader_UsesTheContextVersionAndEveryPattern(bool es, string header)
+    {
+        var source = Shaders.FragmentVoidPattern(es);
+
+        Assert.StartsWith(header, source, StringComparison.Ordinal);
+        Assert.Contains("uniform int uVoidPattern", source, StringComparison.Ordinal);
+        Assert.Contains("uniform vec3 uVoidBase", source, StringComparison.Ordinal);
+        Assert.Contains("uniform vec3 uVoidAccent", source, StringComparison.Ordinal);
+        Assert.Contains("uniform float uVoidTile", source, StringComparison.Ordinal);
+        Assert.Contains("uniform float uVoidScale", source, StringComparison.Ordinal);
+        Assert.Contains("uVoidPattern == 4", source, StringComparison.Ordinal);
+        Assert.Contains("uVoidPattern == 5", source, StringComparison.Ordinal);
+        Assert.Contains("uVoidPattern == 6", source, StringComparison.Ordinal);
+        Assert.Equal(Count(source, '{'), Count(source, '}'));
+        Assert.Equal(Count(source, '('), Count(source, ')'));
+    }
+
+    [Theory]
+    [InlineData(false, "#version 330 core")]
+    [InlineData(true, "#version 300 es")]
+    public void FullscreenVertex_CoversTheWholeTarget(bool es, string header)
+    {
+        var source = Shaders.VertexFullscreen(es);
+
+        Assert.StartsWith(header, source, StringComparison.Ordinal);
+        Assert.Contains("aPosition * 2.0", source, StringComparison.Ordinal);
+        Assert.Contains("gl_Position", source, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false, "#version 330 core")]
+    [InlineData(true, "#version 300 es")]
     public void XbrShader_UsesTheContextVersion(bool es, string header)
     {
         var source = Shaders.FragmentXbr(es);

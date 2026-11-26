@@ -5161,7 +5161,6 @@ public partial class MainWindow : Window, IDisposable
                 || effective.CdromTiming != _machine.Tuning.CdromTiming
                 || effective.CdSpeed != _machine.Tuning.CdSpeed
                 || effective.MemoryConfiguration != _machine.Tuning.MemoryConfiguration
-                || effective.ResolveArmClock() != _machine.Tuning.ArmClock
                 || effective.RandomSeed != _machine.Tuning.RandomSeed
                 || effective.OperaDipir != _machine.Tuning.OperaDipir
                 || effective.OperaSoftReset != _machine.Tuning.OperaSoftReset
@@ -5171,6 +5170,28 @@ public partial class MainWindow : Window, IDisposable
             RecreateMachine();
             ShowOsd("Settings saved; machine restarted.", OsdSeverity.Success);
             return;
+        }
+
+        FiveDoMachine? machine = _machine;
+        if (machine is not null)
+        {
+            int clock = effective.ResolveArmClock();
+            if (clock != machine.Tuning.ArmClock)
+            {
+                if (_runner is not null)
+                {
+                    _runner.Invoke(() => machine.SetArmClock(clock));
+                }
+                else
+                {
+                    machine.SetArmClock(clock);
+                }
+
+                _logger.ForCategory(LogCategory.Host).Information(
+                    "CPU clock changed live to {Clock} Hz ({Multiplier:0.###}x); no machine restart.",
+                    clock,
+                    effective.CpuClockMultiplier);
+            }
         }
 
         if (_machine is null && nvramSettingsChanged)

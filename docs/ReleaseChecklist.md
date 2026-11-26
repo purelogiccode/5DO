@@ -107,6 +107,12 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] `VID-22`: high-refresh interpolation validated on the RTX 4070 / 164 Hz host
       (OpenGL, Vulkan, Direct3D 11; toggle on/off; audio and hash evidence); see
       [Performance.md](Performance.md) §8.9 and [TestCorpus.md](TestCorpus.md) 1.1cv.
+- [x] `UX-33`: patterned GPU void bars verified on OpenGL, Direct3D 11, and Vulkan
+      (Checker on all three, FourDO on OpenGL, Solid base color, shader/SPIR-V tests);
+      see [TestCorpus.md](TestCorpus.md) 1.1cw.
+- [x] `SYS-25`: live CPU-clock changes apply at the next frame boundary; six
+      `LiveClockTests` cover state determinism and unchanged stock runs; see
+      [TestCorpus.md](TestCorpus.md) 1.1cw.
 - [ ] `UX-16`: publish signed Windows/macOS artifacts when the certificate and Apple
       account are available.
 

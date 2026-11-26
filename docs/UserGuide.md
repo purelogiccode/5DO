@@ -492,11 +492,11 @@ crop. **Void border** draws a
 The same color fills the letterbox and pillarbox bars inside the OpenGL, GLES, Vulkan, and
 Direct3D 11 presenters, so a wide or tall window shows the backdrop instead of black. The
 adjacent **pattern** selector draws solid, checkerboard, grid, scanline, a 4DO-style blue
-diagonal gradient, soft bumps, or brushed-metal fills in the same color; the pattern is
-shell-composited behind the video control, so it shows in the border ring and behind the
-software presenter, while the GPU presenters keep the plain void color in their bars.
-Crop, border, and auto-crop options change presentation only, not emulation, input,
-audio, or save states. The renderer falls back
+diagonal gradient, soft bumps, or brushed-metal fills in the same color. The pattern now
+renders inside the GPU letterbox and pillarbox bars on OpenGL, Vulkan, and Direct3D 11 as
+well as in the shell border and behind the software presenter; **Solid** keeps the plain
+configured color. Crop, border, and auto-crop options change presentation only, not
+emulation, input, audio, or save states. The renderer falls back
 to the CPU `WriteableBitmap` presenter
 when OpenGL initialization or context recovery fails; the status line and **Logs** report
 the reason.
@@ -676,7 +676,10 @@ instance. `FIVEDO_ALLOW_MULTIPLE=1` bypasses the lock for automation.
 **Settings > Emulation > Game profile** saves the current timing, CPU clock, region,
 CD-DA, BIOS, fix, filter, high-resolution, input-device, and NVRAM choices for the disc,
 or imports/exports the profile as JSON. A stored profile is applied the next time the
-machine is created; the dialog states when a restart is required. Per-game fix-mode overrides, automatic
+machine is created; the dialog states when a restart is required. Changing the **CPU
+clock** multiplier for the running machine applies at the next frame boundary without
+recreating it; a post-switch save state is deterministic and stock-speed runs are
+unchanged. Per-game fix-mode overrides, automatic
 4DO fixes, audio enable/volume, high-resolution
 mode, the timing profile, ARM/CLIO/CEL/CD timing, CD speed, NVRAM storage/version,
 save/screenshot paths, input bindings, and the current slot are stored there.

@@ -584,6 +584,19 @@ constructed frame deliberately trails the newest completed field by up to one fi
 period, and the status bar shows `interp` while the mode is active. See
 `Performance.md` §8.9 for the measured rates.
 
+### Void patterns
+
+`VoidPattern` is shared by settings, the shell brush, and the GPU renderers. Each backend
+draws a fullscreen pattern in logical 16 px tiles (32 px for FourDO): OpenGL uses
+`Shaders.VertexFullscreen`/`FragmentVoidPattern` in a separate pass before the video draw,
+and `DrawVoidPattern` again when the filtered image lives in an offscreen target;
+Direct3D 11 adds `VoidPattern.frag` and a fullscreen pass before the scale or FSR draw;
+Vulkan adds `VoidPattern.frag` and a push-constant pass before the final scale or FSR
+draw. The renderer's `PatternScale` carries the physical/logical window scale so the bars
+match the shell. Solid is the configured base color; Checker, Grid, Scanline, FourDO,
+Bumps, and Metal use the same geometry, gradients, and 28/255 accent as `CreateVoidBrush`.
+The pass is presentation-only and does not touch frame, state, or audio data.
+
 ---
 
 ## 8. Screenshots

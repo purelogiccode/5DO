@@ -902,6 +902,7 @@
     "ui.tip.freedo_transfers_sectors_immediately_opera_schedules_eac": "FreeDO transfers sectors immediately. Opera schedules each sector at the stock 2x drive speed and reports the drive busy while it is not ready; save states record the mode.",
     "ui.tip.arm60_clock_multiplier_1_0_is_the_stock_12_5_mhz_0_5x_4x": "ARM60 clock multiplier. 1.0 is the stock 12.5 MHz; 0.5x-4x is supported.",
     "ui.tip.enter_a_multiplier_between_0_5_and_4_0_higher_clocks_can": "Enter a multiplier between 0.5 and 4.0. Higher clocks can change timing-sensitive behavior.",
+    "ui.tip.enter_a_multiplier_between_0_5_and_4_0_the_change_appl": "Enter a multiplier between 0.5 and 4.0. The change applies at the next frame boundary without restarting the machine.",
     "ui.tip.initial_dsp_prng_seed_leave_blank_for_the_freedo_default": "Initial DSP PRNG seed. Leave blank for the FreeDO default, or enter a 32-bit value.",
     "ui.tip.a_fixed_seed_makes_fresh_runs_reproducible_the_seed_is_p": "A fixed seed makes fresh runs reproducible. The seed is part of save-state data once the DSP advances.",
     "ui.tip.the_disc_whose_per_game_overrides_are_being_edited": "The disc whose per-game overrides are being edited.",

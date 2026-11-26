@@ -21,6 +21,11 @@ internal static class Direct3D11Shaders
             int Pad0;
             float2 Pad1;
             float4 VoidColor;
+            float4 VoidAccent;
+            int Pattern;
+            float PatternScale;
+            float PatternTile;
+            float Pad2;
         };
 
         struct PSInput
@@ -989,6 +994,108 @@ internal static class Direct3D11Shaders
         }
         """;
 
+    internal const string VoidPattern = Common + """
+
+        float3 Piecewise3(float t, float3 a, float3 b, float3 c, float split)
+        {
+            return t < split ? lerp(a, b, t / split) : lerp(b, c, (t - split) / (1.0 - split));
+        }
+
+        float3 VoidPatternColor(float2 pixel)
+        {
+            float2 logical = pixel / max(PatternScale, 0.001);
+            float2 p = fmod(logical, max(PatternTile, 1.0));
+            float3 color = VoidColor.rgb;
+
+            if (Pattern == 1)
+            {
+                float cell = fmod(floor(p.x / 8.0) + floor(p.y / 8.0), 2.0);
+                if (cell >= 1.0)
+                {
+                    color = VoidAccent.rgb;
+                }
+            }
+            else if (Pattern == 2)
+            {
+                if (p.x < 1.0 || p.y < 1.0)
+                {
+                    color = VoidAccent.rgb;
+                }
+            }
+            else if (Pattern == 3)
+            {
+                if (fmod(floor(p.y), 4.0) < 1.0)
+                {
+                    color = VoidAccent.rgb;
+                }
+            }
+            else if (Pattern == 4)
+            {
+                float t = saturate((p.x + p.y) / (2.0 * PatternTile));
+                float3 gradient = Piecewise3(
+                    t,
+                    float3(0.0, 0.0, 0.0),
+                    float3(0.227, 0.431, 0.647),
+                    float3(0.106, 0.227, 0.361),
+                    0.55);
+                float alpha = t < 0.55
+                    ? lerp(0.0, 96.0 / 255.0, t / 0.55)
+                    : lerp(96.0 / 255.0, 160.0 / 255.0, (t - 0.55) / 0.45);
+                color = lerp(color, gradient, alpha);
+            }
+            else if (Pattern == 5)
+            {
+                bool inside = false;
+                if (distance(p, float2(4.0, 4.0)) <= 3.0) { inside = true; }
+                if (distance(p, float2(12.0, 4.0)) <= 3.0) { inside = true; }
+                if (distance(p, float2(4.0, 12.0)) <= 3.0) { inside = true; }
+                if (distance(p, float2(12.0, 12.0)) <= 3.0) { inside = true; }
+                if (inside)
+                {
+                    float t = saturate((p.x + p.y) / (2.0 * PatternTile));
+                    float alpha = t < 0.5
+                        ? lerp(90.0 / 255.0, 24.0 / 255.0, t * 2.0)
+                        : lerp(24.0 / 255.0, 0.0, (t - 0.5) * 2.0);
+                    color = lerp(color, float3(1.0, 1.0, 1.0), alpha);
+                }
+            }
+            else if (Pattern == 6)
+            {
+                if (fmod(floor(p.y), 2.0) < 1.0)
+                {
+                    float t = saturate(p.y / PatternTile);
+                    float3 streak;
+                    float alpha;
+                    if (t < 0.35)
+                    {
+                        streak = float3(1.0, 1.0, 1.0);
+                        alpha = lerp(70.0 / 255.0, 12.0 / 255.0, t / 0.35);
+                    }
+                    else if (t < 0.7)
+                    {
+                        float k = (t - 0.35) / 0.35;
+                        streak = lerp(float3(1.0, 1.0, 1.0), float3(0.0, 0.0, 0.0), k);
+                        alpha = lerp(12.0 / 255.0, 40.0 / 255.0, k);
+                    }
+                    else
+                    {
+                        streak = float3(0.0, 0.0, 0.0);
+                        alpha = lerp(40.0 / 255.0, 0.0, (t - 0.7) / 0.3);
+                    }
+
+                    color = lerp(color, streak, alpha);
+                }
+            }
+
+            return color;
+        }
+
+        float4 PSMain(PSInput input) : SV_TARGET
+        {
+            return float4(VoidPatternColor(input.position.xy), 1.0);
+        }
+        """;
+
     internal static readonly (string Name, string Profile, string Source)[] All =
     [
         ("Frame.vert", "vs_5_0", Vertex),
@@ -999,6 +1106,7 @@ internal static class Direct3D11Shaders
         ("Xbr.frag", "ps_5_0", Xbr),
         ("FsrEasu.frag", "ps_5_0", FsrEasu),
         ("FsrRcas.frag", "ps_5_0", FsrRcas),
+        ("VoidPattern.frag", "ps_5_0", VoidPattern),
     ];
 }
 

@@ -42,6 +42,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
     private ID3D11VertexShader? _vertexShader;
     private ID3D11PixelShader? _paletteShader;
     private ID3D11PixelShader? _scaleShader;
+    private ID3D11PixelShader? _voidPatternShader;
     private ID3D11PixelShader? _hqxShader;
     private ID3D11PixelShader? _mmpxShader;
     private ID3D11PixelShader? _xbrShader;
@@ -102,6 +103,11 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
 
     /// <summary>Gets the CPU-side frame used by <see cref="CaptureToFrame"/> and callers.</summary>
     public FrameBuffer Frame => _frame;
+
+    /// <summary>
+    /// Gets or sets the physical pixels per logical pixel used to tile the void pattern.
+    /// </summary>
+    public float PatternScale { get; set; } = 1f;
 
     /// <inheritdoc />
     public string Name => "Direct3D 11";
@@ -323,6 +329,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _vertexShader = _device!.CreateVertexShader(Compile("Frame.vert", "VSMain", "vs_5_0").ToArray());
         _paletteShader = _device.CreatePixelShader(Compile("Palette.frag", "PSMain", "ps_5_0").ToArray());
         _scaleShader = _device.CreatePixelShader(Compile("Scale.frag", "PSMain", "ps_5_0").ToArray());
+        _voidPatternShader = _device.CreatePixelShader(Compile("VoidPattern.frag", "PSMain", "ps_5_0").ToArray());
         _hqxShader = _device.CreatePixelShader(Compile("Hqx.frag", "PSMain", "ps_5_0").ToArray());
         _mmpxShader = _device.CreatePixelShader(Compile("Mmpx.frag", "PSMain", "ps_5_0").ToArray());
         _xbrShader = _device.CreatePixelShader(Compile("Xbr.frag", "PSMain", "ps_5_0").ToArray());
@@ -376,6 +383,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             "Xbr.frag" => Direct3D11Shaders.Xbr,
             "FsrEasu.frag" => Direct3D11Shaders.FsrEasu,
             "FsrRcas.frag" => Direct3D11Shaders.FsrRcas,
+            "VoidPattern.frag" => Direct3D11Shaders.VoidPattern,
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown shader."),
         };
 
@@ -677,6 +685,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
 
     private void RecordFsrRcasPass(ViewportRect viewport)
     {
+        RecordVoidPatternPass();
         SetPipeline(_fsrRcasShader!, _outputWidth, _outputHeight);
         UpdateConstants(
             new Vector4(
@@ -690,9 +699,20 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             filterMode: 1,
             sharpness: (1f - _settings.FsrSharpness) * 2f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
-        var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue));
         _context.PSSetShaderResource(0, _fsr!.View);
+        _context.Draw(3, 0);
+    }
+
+    private void RecordVoidPatternPass()
+    {
+        SetPipeline(_voidPatternShader!, _outputWidth, _outputHeight);
+        UpdateConstants(
+            new Vector4(0f, 0f, _outputWidth, _outputHeight),
+            new Vector2(_outputWidth, _outputHeight),
+            _sourceWidth,
+            _sourceHeight,
+            filterMode: 0);
+        _context!.OMSetRenderTargets(_output!.RenderTargetView);
         _context.Draw(3, 0);
     }
 
@@ -705,6 +725,7 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             _outputHeight,
             _settings,
             _sourcePixelAspect);
+        RecordVoidPatternPass();
         SetPipeline(_scaleShader!, _outputWidth, _outputHeight);
         UpdateConstants(
             new Vector4(
@@ -718,8 +739,6 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
             filterMode,
             bloom: _settings.Filter is VideoFilter.Crt or VideoFilter.ArcadeCrt ? _settings.Bloom : 0f);
         _context!.OMSetRenderTargets(_output!.RenderTargetView);
-        var (voidRed, voidGreen, voidBlue) = _settings.VoidAreaColorRgb;
-        _context.ClearRenderTargetView(_output.RenderTargetView, new Color4(voidRed, voidGreen, voidBlue));
         _context.PSSetShaderResource(0, source);
         _context.Draw(3, 0);
     }
@@ -762,6 +781,14 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
                 _settings.VoidAreaColorRgb.Green,
                 _settings.VoidAreaColorRgb.Blue,
                 1f),
+            VoidAccent = new Vector4(
+                Math.Min(1f, _settings.VoidAreaColorRgb.Red + (28f / 255f)),
+                Math.Min(1f, _settings.VoidAreaColorRgb.Green + (28f / 255f)),
+                Math.Min(1f, _settings.VoidAreaColorRgb.Blue + (28f / 255f)),
+                1f),
+            Pattern = (int)_settings.VoidPattern,
+            PatternScale = float.IsFinite(PatternScale) && PatternScale > 0f ? PatternScale : 1f,
+            PatternTile = _settings.VoidPattern == VoidPattern.FourDO ? 32f : 16f,
         };
         _context!.UpdateSubresource(in _constants, _constantBuffer!);
     }
@@ -967,6 +994,8 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         _paletteShader = null;
         _scaleShader?.Dispose();
         _scaleShader = null;
+        _voidPatternShader?.Dispose();
+        _voidPatternShader = null;
         _hqxShader?.Dispose();
         _hqxShader = null;
         _mmpxShader?.Dispose();
@@ -1038,5 +1067,10 @@ public sealed unsafe partial class Direct3D11Renderer : ICpuFrameRenderer, IRend
         public int Pad0;
         public Vector2 Pad1;
         public Vector4 VoidColor;
+        public Vector4 VoidAccent;
+        public int Pattern;
+        public float PatternScale;
+        public float PatternTile;
+        public float Pad2;
     }
 }

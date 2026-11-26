@@ -1119,6 +1119,19 @@ frames use the 15-bit direct-color path, and the visible output lags the newest 
 up to one field period; see [Performance.md](Performance.md) §8.9 and
 [TestCorpus.md](TestCorpus.md) 1.1cv for the full evidence and limits.
 
+### 10.13 Patterned GPU bars and live CPU clock (2026-11-26, Windows x64)
+
+Windows 11, RTX 4070, 1612x986 window. The Settings > Video void pattern now renders in
+the GPU bars: Checker was verified on OpenGL (direct and fixed-output blit paths),
+Direct3D 11, and Vulkan; FourDO was verified on OpenGL; Solid kept the configured
+`#FF101010` base. The pattern is presentation-only and the settings round-trip through
+`RendererSettings.VoidPattern`. The CPU clock multiplier now applies at the next frame
+boundary without recreating the machine; six `LiveClockTests` prove the live switch
+matches a clock override of the same pre-switch state, a post-switch save state is
+deterministic, stock-speed runs are unchanged, and every component clock follows the
+machine. Full suite **2,638/2,638**; build and `dotnet format` clean. See
+[TestCorpus.md](TestCorpus.md) 1.1cw and [Video.md](Video.md) "Void patterns".
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

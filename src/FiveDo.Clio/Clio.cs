@@ -66,6 +66,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     private int _timerValue;
     private int _lineSize;
     private int _flagTime;
+    private int _armClock;
     private bool _timerCarry;
     private bool _fiqWasPending;
     private uint _prng32State = 0xDEADBEEF;
@@ -76,6 +77,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
     {
         _tuning = tuning ?? EmulatorTuning.Default;
         _tuning.Validate();
+        _armClock = _tuning.ArmClock;
         OperaDipirEnabled = _tuning.OperaDipir;
         OperaSoftResetEnabled = _tuning.OperaSoftReset;
         Reset();
@@ -83,6 +85,22 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
 
     /// <summary>Gets the machine tuning.</summary>
     public EmulatorTuning Tuning => _tuning;
+
+    /// <summary>Gets the ARM clock used for flag timing.</summary>
+    public int ArmClock => _armClock;
+
+    /// <summary>Applies a new ARM clock without resetting the chip.</summary>
+    /// <param name="clock">New ARM clock in hertz.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the clock is not positive.</exception>
+    public void SetArmClock(int clock)
+    {
+        if (clock <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(clock), clock, "The ARM clock must be positive.");
+        }
+
+        _armClock = clock;
+    }
 
     /// <summary>Gets or sets whether Opera's DIPIR latches and access aborts are active.</summary>
     public bool OperaDipirEnabled { get; set; }
@@ -498,7 +516,7 @@ public sealed class Clio : IClioBus, IInterruptSink, IClioFifo, IDspHost, IState
                         }
 
                         _lineSize += 0x33;
-                        _flagTime = _tuning.ArmClock / 2_000_000;
+                        _flagTime = _armClock / 2_000_000;
                         break;
                     default:
                         if (_registers[0x304] == 0)

@@ -1,5 +1,15 @@
 # Project Status and Next Steps
 
+**2026-11-26, patterned GPU bars and live CPU clock:** `UX-33` and `SYS-25` are complete.
+The selected void pattern (Solid, Checker, Grid, Scanline, FourDO, Bumps, or Metal) now
+renders in the GPU letterbox/pillarbox bars on OpenGL, Direct3D 11, and Vulkan, and the
+CPU-clock setting applies at the next frame boundary without recreating the machine.
+Checker and FourDO were verified on OpenGL, Checker on Direct3D 11 and Vulkan, and six
+`LiveClockTests` prove the live switch matches a clock override of the same pre-switch
+state, a post-switch state round-trip is deterministic, stock runs are unchanged, and all
+component clocks follow the machine. The active plan now tracks **14 open items**; the
+suite is **2,638/2,638**, with build, `dotnet format`, and `mkdocs build --strict` clean.
+
 **2026-11-26, high-refresh frame interpolation:** `VID-22` is complete. **Settings > Video
 > Frame interpolation** blends the two most recent completed fields at the presentation
 rate; it requires a fixed rate above 60 Hz and is disabled with VRR. Road Rash on the
