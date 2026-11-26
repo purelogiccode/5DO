@@ -58,8 +58,8 @@ short version:
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
-  bounded probe. `VID-22` high-refresh frame interpolation shipped in 1.17.x and is
-  documented in [Performance.md](Performance.md) §8.9.
+  bounded probe. `VID-22` high-refresh frame interpolation is implemented after 1.17.1
+  and is documented in [Performance.md](Performance.md) §8.9.
 
 **Accuracy residuals (not release blockers)**
 

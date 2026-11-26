@@ -10,7 +10,9 @@ clock, frame/state/audio hashes, and save states are unchanged; blended frames u
 15-bit direct-color path and the visible output lags the newest field by up to one field.
 `PLAT-19` native Wayland Vulkan is parked in plan §4 until Avalonia officially supports
 Wayland, so the active plan now tracks **16 open items**. The suite is **2,627/2,627**;
-build, `dotnet format`, and `mkdocs build --strict` are clean.
+build, `dotnet format`, and `mkdocs build --strict` are clean; scoped InspectCode on the
+changed Video, Frontend, and Host projects is clean (the full-solution run still hits the
+environment's JetBrains `FileSystemWatcher` cleanup crash).
 
 **2026-11-26, MDS/CCD readers and post-1.17.1 plan review:** the license review is
 complete. 5DO **retains the FreeDO modified GNU LGPL** as non-commercial donationware;
