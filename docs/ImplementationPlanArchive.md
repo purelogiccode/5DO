@@ -1,9 +1,10 @@
-> **Archived 2026-11-08; merged 2026-11-09; consolidated 2026-11-17.** This file is the
-> evidence and completed-history store. Do not add open tasks here. The active backlog is
-> [ImplementationPlan.md](ImplementationPlan.md), which now carries missing work only.
+> **Archived 2026-11-08; merged 2026-11-09; consolidated 2026-11-17; partial-delivery
+> split 2026-11-25.** This file is the evidence and completed-history store. Do not add
+> open tasks here. The active backlog is [ImplementationPlan.md](ImplementationPlan.md),
+> which now carries only the remaining work for each open ID.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
-> baseline, results, completed backlog rows, stable IDs, platform workstreams, and release
-> history through v1.17.1.
+> baseline, results, completed backlog rows, partial deliveries, stable IDs, platform
+> workstreams, and release history through v1.17.1.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -717,7 +718,7 @@ This is a crosswalk, not a second backlog. "Canonical item" is the only place th
 
 ---
 
-# Part II — Consolidated baseline and completed backlog (2026-11-09 → 2026-11-19)
+# Part II — Consolidated baseline and completed backlog (2026-11-09 → 2026-11-25)
 
 > **Added 2026-11-17.** The active plan was reduced to missing features only. This part
 > receives the completed baseline, results, completed backlog rows, stable-ID index,
@@ -767,13 +768,18 @@ Release history for v1.9.1–v1.12.0 is in §14.
 
 ## 11. Completed stable IDs
 
-**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, REL-07, REL-11, QUAL-01 … QUAL-04,
+**Completed:** COMPAT-01 … COMPAT-16, REL-01 … REL-03, REL-07, REL-11 … REL-13,
+QUAL-01 … QUAL-04,
 QUAL-03A … QUAL-03D, QUAL-05A, ACC-01 … ACC-04, AUD-01, AUD-02, PLAT-01 … PLAT-04,
 PLAT-07 … PLAT-13, PLAT-15, PLAT-16, PLAT-18, TEST-06/07/08, CORE-11/16, FND-05, ECO-04,
-ENG-01/09, SYS-06/07/08/12/17/18/22/24, UX-09, UX-25, UX-26, UX-28 … UX-32, UX-34, UX-35,
+ENG-01/09, SYS-06/07/08/12/17/18/22/24/28, UX-09, UX-25, UX-26, UX-28 … UX-32, UX-34, UX-35,
 VID-04/12/16/17/18, and VID-19.
 
-`SYS-21` and `SYS-23` are code-complete but remain open for their named hardware evidence.
+`REL-13` retained the FreeDO modified GNU LGPL and resolved the 4DO game database as a
+separate GPL-2.0 data component; `REL-12` completed the post-decision documentation and
+claims sweep. `SYS-21` and `SYS-23` are code-complete but remain open for their named
+hardware evidence. `SYS-29` is code-complete for the MDS/MDX and CloneCD readers and
+remains open for representative real-image boot-hash parity.
 `PLAT-08B` closed on 2026-11-17; its native-surface remainder became `PLAT-14`.
 `UX-16` is complete for the unsigned installer/package scaffolding; signing and
 notarization remain blocked.
@@ -787,7 +793,7 @@ quality pass; `QUAL-03A`…`QUAL-03D` and `QUAL-05A` completed the follow-on scr
 aliases, old gates, and dated evidence entries are in Part I. Do not reopen a completed ID
 without new measurement.
 
-## 12. Completed backlog rows (2026-11-09 → 2026-11-21)
+## 12. Completed backlog rows (2026-11-09 → 2026-11-26)
 
 | ID | Priority | Completed result | Evidence |
 |---|---|---|---|
@@ -836,6 +842,9 @@ without new measurement.
 | **UX-36** | P3 | Startup preflight for partial extractions: the desktop frontend verifies that `libSkiaSharp` and `libHarfBuzzSharp` sit beside the apphost before Avalonia initializes, then shows a "5DO cannot start" message naming the missing files and the extraction steps (Windows dialog; stderr for automated runs) and exits 1 at Error level, so no fatal crash or bug report is produced. Issues #69923/#69924 (`SkiaSharp.SKImageInfo`/`Dll was not found` from a bundle run out of `Downloads`) reproduce it and now receive the actionable message. A published win-x64 apphost run alone shows the dialog; the complete folder passes the smoke test. | `NativeRuntimeCheck`, `NativeRuntimeCheckTests` (6), [Troubleshooting.md](Troubleshooting.md) §1, README bundle notes, issues #69923/#69924 |
 | **REL-11** | P1 | Windows bundles ship the app-local MSVC runtime required by OpenAL Soft: `vcruntime140.dll` and `msvcp140.dll` (and `vcruntime140_1.dll` on x64) sit beside `OpenAL32.dll`. `package-bundle.ps1` resolves them through `vswhere` or `-VcRuntimeDirectory` and rejects missing/wrong-architecture files; `build-bundle.yml` verifies the extracted bundle. On a clean Windows 11 ARM64 image with the VC++ redistributable uninstalled, the old bundle reported `OpenAL: not found (OpenAL32.dll)` and the new bundle reported `OpenAL: loaded OpenAL32.dll`; the x64 bundle loaded under x64 emulation. `selftest --json` passed 15/15, a 600-frame Theme Park run matched Windows x64 at `0x110E7DC5` / PC `22892`, and the frontend smoke reported `FRONTEND SMOKE OK 1.14.1`. | [Compatibility.md](Compatibility.md) §10.6, [OpenALSoft.md](OpenALSoft.md) §1, [Troubleshooting.md](Troubleshooting.md) §1, `packaging/package-bundle.ps1`, `.github/workflows/build-bundle.yml` |
 | **REL-07** | P1 | AppImage update metadata now resolves the next release: the 1.14.2 x64 image embeds `gh-releases-zsync`, its `.zsync` URL points at the versioned AppImage, and `build-appimage.sh` validates both. The image runs through FUSE and `--appimage-extract-and-run`, reports 1.14.2, passes the desktop smoke on hardware OpenGL 4.2, and its detached `.asc` verifies. `appimageupdatetool -d` resolved the latest 1.14.2 `.zsync`, `-j` reported no update, and a local 1.14.2-to-test-1.14.3 pass fetched 2,570 bytes and matched the target hash. | [LinuxDistribution.md](LinuxDistribution.md) §5, [Compatibility.md](Compatibility.md) §10.3, `packaging/linux/build-appimage.sh` |
+| **REL-13** | P0 | License-compliance and relicense review: the project retained the FreeDO modified GNU LGPL as non-commercial donationware. Written rights-holder permission has not been obtained and a clean-room replacement has not been performed; the 4DO game database was resolved as a separate GPL-2.0 data component with the complete text in `docs/GPL-2.0.txt`, a copyright/license header in the XML, and a copy in every bundle. Official Debian/Ubuntu/Fedora/openSUSE archives and Flathub remain not eligible. | [ReleaseLegalReview.md](ReleaseLegalReview.md) §3.1/§3.2/§3.5/§5, [Licensing.md](Licensing.md) §1b, [GPL-2.0.txt](GPL-2.0.txt), `LICENSE`, `THIRD-PARTY-NOTICES.md`, `packaging/package-bundle.ps1` |
+| **REL-12** | P1 | Documentation and legal-claim consistency: the post-`REL-13` sweep aligned README, Roadmap, FAQ, Compatibility, KnownIssues, ReleaseLegalReview, THIRD-PARTY-NOTICES, Licensing, GameDatabase, LinuxDistribution, Installation, Installers, BuildAndTest, ReferenceStrategy, UserGuide, Performance, OpenALSoft, ReleaseChecklist, and wiki Legal with the retained-license decision and the separate GPL-2.0 database; `mkdocs build --strict` passes. | [ReleaseChecklist.md](ReleaseChecklist.md) post-1.17.1 gate, [Status.md](Status.md) 2026-11-25 entry, `python -m mkdocs build --strict` |
+| **SYS-28** | P1 | Physical-disc stall verification: the 1.17.0 issue #8 re-burn booted the CD-R, played the FMV through to gameplay, and logged no warnings, read errors, or sector retries over more than 3,000 frames; `disc verify` read 157,996/157,996 sectors with hash `0x84b2bef01d157a9f` and 0 errors. The reporter's Red Book audio CD listed six tracks and extracted track 1 at peak 31659 / RMS 7248.66 without a core stop. Bounded read-ahead is not needed. | [Compatibility.md](Compatibility.md) §10.11, [KnownIssues.md](KnownIssues.md) "Physical optical drives", issue #8 reporter comment 2026-11-25 |
 
 `UX-16` unsigned scaffolding is also complete: the Windows Inno Setup installer with
 `.iso`/`.cue`/`.chd`/`.bin`/`.m3u` associations, the Linux `.deb`/`.rpm` with desktop and
@@ -999,6 +1008,9 @@ The v1.12.0 release page is
 | 2026-11-08 | Feasibility revision | Cut 49 open IDs and eight gates to nine release-blocking entries; replaced the full differential with the 414-title unique corpus. |
 | 2026-11-09 | Merge | Folded the active plan into the consolidated plan; this archive became the evidence and completed-log store. |
 | 2026-11-17 | Missing-features rewrite | The active plan now lists missing work only. The completed baseline, results table, 37 completed backlog rows, stable-ID index, platform workstreams, and release history moved here. Open at rewrite: `PLAT-05`, `PLAT-06`, `PLAT-14`, `PLAT-17`, `REL-04`..`REL-10`, `SYS-21`, `SYS-23`, `UX-33`, `SYS-25`. |
+| 2026-11-25 | Partial-delivery split | Completed sub-features of the still-open IDs moved to §17; the active plan now states only the remaining work. No open ID was closed. |
+| 2026-11-25 | REL-13/REL-12 closure | Retained the FreeDO modified GNU LGPL, resolved the 4DO database as GPL-2.0, and completed the post-decision claims sweep. Open items dropped from 21 to 19. |
+| 2026-11-26 | SYS-28 closure | The issue #8 re-burn and Red Book audio-CD evidence closed the physical-disc stall verification. Open items dropped from 19 to 18. |
 
 ## 16. ARM64 validation workstream (2026-11-19)
 
@@ -1033,3 +1045,27 @@ same day and is recorded in §12; the partial-extraction crash reported in #6992
 was closed by `UX-36` (startup preflight, §12). The NoMac M5 Pro VM reports
 `kern.hv_support=0`, so it cannot host accelerated Linux or Windows guests; the ARM64
 Azure VMs remain the practical targets for those platforms.
+
+## 17. Partial deliveries moved from the active plan (2026-11-25)
+
+> **Added 2026-11-25.** The active plan now lists only the remaining work for each open
+> ID. The completed portions below were moved here so the backlog no longer repeats
+> shipped features. `REL-12` and `SYS-28` were completed and moved to §12; `REL-13` was
+> resolved in §12 without a partial-delivery row. Each remaining ID stays open in
+> [ImplementationPlan.md](ImplementationPlan.md) until its remaining `Done when`
+> condition is satisfied.
+
+| ID | Completed portion moved from the active plan | Evidence |
+|---|---|---|
+| **REL-14** | The RetroAchievements client path, hardcore rules, and approval switch are implemented; external approval, the switch flip, and a live hardcore award remain. | `src/FiveDo.Achievements/RetroAchievementsCompliance.cs`; [RetroAchievementsCompliance.md](RetroAchievementsCompliance.md); [RetroAchievements.md](RetroAchievements.md) |
+| **PLAT-17** | Windowed, live resize, fullscreen, the 320x240 capture, and 4K offscreen output are validated at 1x on the NoMac host (2026-11-18). | [Compatibility.md](Compatibility.md) §10.4; [Performance.md](Performance.md) §8.8; [TestCorpus.md](TestCorpus.md) 1.1ct |
+| **PLAT-05** | `MacOsGamepadSource` (IOKit HID), `MacOsHidGamepadMapper`, and the 21 mapping/profile tests are complete. | `MacOsGamepadSource`, `MacOsHidGamepadMapper`; `MacOsGamepadMapperTests`; [Status.md](Status.md) 2026-11-10 entry |
+| **PLAT-06** | DPI math for 100/125/150/200% (unit tests; live OS-scaling remains best-effort), GLES 3.0 through ANGLE, 4K WGL, and the 2026-11-13 presentation-matrix refresh are recorded. | [Performance.md](Performance.md) §8.8; [Compatibility.md](Compatibility.md) §10.3/§10.6 |
+| **REL-08** | The AUR `5do-bin` PKGBUILD, desktop entry, MIME XML, AppStream metainfo, and both icons ship and are packaged/verified. | `packaging/linux/aur/`; [LinuxDistribution.md](LinuxDistribution.md) §8.1 |
+| **REL-09** | `build-flatpak.sh` and the manifest build x64/arm64 bundles; the arm64 Flatpak installed with its 26.08 runtime and passed the CLI selftest, frontend smoke, and Theme Park at 59.9 fps; CI runs the sandboxed selftest. | [Compatibility.md](Compatibility.md) §10.5; `packaging/linux/build-flatpak.sh`; `.github/workflows/linux-packages.yml` |
+| **REL-10** | The Deck/gamescope first-run layout, BIOS offer, Scan/Open Folder, controller layout, and Desktop Mode/non-Steam documentation are complete (2026-11-21). | `DeckModeTests`; [Installation.md](Installation.md); [Status.md](Status.md) 2026-11-21 entry |
+| **UX-33** | Audio channel swap, 4DO/Bumps/Metal void patterns, the emulation-health badge, and the GPU solid void-color fill shipped in 1.13.0. Patterned fills remain shell-composited. | [ReleaseNotes-1.13.0.md](ReleaseNotes-1.13.0.md); [TestCorpus.md](TestCorpus.md) 1.1cq-1.1cs; `ChannelSwapAudioSinkTests`, `VoidPatternTests` |
+| **VID-20** | The opt-in `--true-2x` path, independent 480-line CEL fields, the host gate removal, and the OpenGL 480-line line-parameter upload fix are complete (VID-19); Jurassic Park Interactive and Family Feud are the validated references. | [TestCorpus.md](TestCorpus.md) 1.1cl; [HighResolutionCelResearch.md](HighResolutionCelResearch.md) §1; [Status.md](Status.md) 2026-11-16 entry |
+| **VID-22** | `DisplayRefreshRate` already re-presents the latest completed frame above 60 Hz (75/90/120/144/165/240 Hz) and is documented as re-presentation, not interpolation. | `AppSettings.DisplayRefreshRate`; [Performance.md](Performance.md) §8.8; [KnownIssues.md](KnownIssues.md) "Display refresh above 60 Hz" |
+| **SYS-23** | `DirectInputGamepadSource`/`WindowsGamepadSource`, duplicate filtering, trigger calibration, the XInput fallback, and axis/POV/trigger tests are complete. | `DirectInputGamepadSource`, `WindowsGamepadSource`; [KnownIssues.md](KnownIssues.md) "Windows gamepads" |
+| **SYS-29** | Read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB readers: `MdsDiscImage`/`CcdDiscImage`, `DiscImageFactory`/library/CLI wiring, per-source prepared-CUE cache, synthetic single-track and mixed-mode data/audio tests, malformed-input cases, and a real MDS v2 compressed-fixture smoke. | `MdsDiscImage.cs`, `CcdDiscImage.cs`, `DiscPreparationCache.cs`, `MdsCcdDiscImageTests`, [TestCorpus.md](TestCorpus.md) 1.1cu, [KnownIssues.md](KnownIssues.md) "Alcohol MDS and CloneCD CCD containers" |

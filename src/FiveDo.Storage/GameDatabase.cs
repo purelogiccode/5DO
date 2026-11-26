@@ -11,11 +11,14 @@ using System.Xml.Linq;
 namespace FiveDo.Storage;
 
 /// <summary>
-/// The 4DO game database, keyed by game ID and by the two-sector MD5 checksum.
+/// The game database, keyed by game ID and by the two-sector MD5 checksum.
 /// </summary>
 /// <remarks>
-/// The XML resource is ported from 4DO's <c>GameDatabase.xml</c> with attribution; it contains
-/// game metadata facts only. Lookups accept either case for the checksum. The optional
+/// The XML resource contains base records derived from 4DO's
+/// <c>GameDatabase.xml</c> (GPL-2.0; the complete text ships in
+/// <c>docs/GPL-2.0.txt</c>) plus 5DO-generated records and extension fields.
+/// The database is a separate data component and is not linked into the
+/// emulator code. Lookups accept either case for the checksum. The optional
 /// <c>revision</c>, <c>discNumber</c>, <c>discTotal</c>, <c>bios</c>, <c>bios2</c>,
 /// <c>fixMode</c>, <c>inputDevices</c>, <c>nvram</c>, and <c>cheats</c> elements extend the
 /// original 4DO schema; older files remain readable.
@@ -24,7 +27,7 @@ public sealed class GameDatabase
 {
     private const string ResourceName = "FiveDo.Storage.Data.GameDatabase.xml";
     private const string HeaderComment =
-        "Ported from 4DO (FourDO) GameDatabase.xml. Game metadata facts only; see THIRD-PARTY-NOTICES.md.";
+        "Game database. Base records derived from 4DO (GPL-2.0; see docs/GPL-2.0.txt); 5DO extensions under the same terms.";
 
     private readonly Dictionary<string, GameRecord> _byChecksum;
     private readonly Dictionary<string, GameRecord> _byId;

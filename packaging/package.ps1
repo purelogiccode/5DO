@@ -53,6 +53,12 @@ try {
         Copy-Item -LiteralPath $openAlLicense -Destination $docsStaging -Force
     }
 
+    $gplLicense = Join-Path $repoRoot 'docs/GPL-2.0.txt'
+    if (Test-Path -LiteralPath $gplLicense) {
+        New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+        Copy-Item -LiteralPath $gplLicense -Destination $docsStaging -Force
+    }
+
     $releaseNotes = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'docs') `
         -Filter 'ReleaseNotes-*.md' -File -ErrorAction SilentlyContinue |
         Sort-Object Name -Descending |
@@ -105,6 +111,7 @@ try {
         'BIOS ROMs and game images are not included.'
         'See README.md, LICENSE, THIRD-PARTY-NOTICES.md, docs/Licensing.md, and docs/OpenALSoft.md.'
         'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/OpenAL-Soft-COPYING.txt.'
+        'The 4DO game database is GPL-2.0; the complete text is in docs/GPL-2.0.txt.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM
 

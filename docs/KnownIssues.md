@@ -50,8 +50,7 @@ checksums are attached, and legal/attribution sign-off is recorded.
 ## Disc containers (1.10.2)
 
 - CDI and NRG are **read-only** container readers. `disc convert` still writes
-  ISO/BIN/CUE/flat CHD; it does not emit CDI or NRG.
-- CDI parsing requires a valid trailing DiscJuggler descriptor. NRG parsing requires a
+  ISO/BIN/CUE/flat CHD; it does not emit CDI or NRG.- CDI parsing requires a valid trailing DiscJuggler descriptor. NRG parsing requires a
   valid NERO/NER5 footer and a known first metadata chunk. Files with the right
   extension but without those signatures fail with a typed `DiscImageException`.
 - The readers normalize 2353/2368/2448/2449-byte raw sectors to 2048-byte user data by
@@ -61,6 +60,25 @@ checksums are attached, and legal/attribution sign-off is recorded.
 - Audio-only CDI/NRG images are rejected for 3DO boot because 3DO software is CD-ROM
   based. Multi-session CDI images are parsed, but 3DO boot still begins at the first
   data track.
+
+## Alcohol MDS and CloneCD CCD containers (2026-11-26)
+
+- MDS/MDF, MDS v2/MDX, and CloneCD CCD/IMG/SUB are **read-only** readers. `disc convert`
+  still writes ISO/BIN/CUE/flat CHD; it does not emit MDS or CCD.
+- MDSSharp parses Alcohol descriptors, split `.i00`/`.001` sets, per-track pregaps,
+  compressed track data, and password-less/TAGES encryption. An image whose track data
+  needs a user password reports the preparation failure; there is no interactive
+  password prompt yet.
+- Plain raw/cooked MDS images are referenced in place. Split, subchannel-bearing,
+  pregap-padded, compressed, encrypted, or MDX images are prepared into a per-source
+  cache under the process temp folder; entries older than 30 days are cleaned up.
+- CloneCD descriptors are parsed by CCDSharp, including TOC-only descriptors, INDEX
+  00/02+, FLAGS, ISRC, and CATALOG. The `.img` is referenced by a generated CUE. The
+  optional `.sub` file is ignored because the 3DO CD-ROM device does not need subcode.
+- CloneCD descriptors with `DataTracksScrambled=1` are rejected with a desramble message;
+  they cannot be read as a standard raw 3DO image.
+- Audio-only MDS/CCD images open at the library layer but are rejected for 3DO boot,
+  matching the CUE/CHD data-track requirement.
 
 ## Localization (2026-11-14)
 
@@ -113,7 +131,7 @@ checksums are attached, and legal/attribution sign-off is recorded.
   without a CUE are ambiguous and are refused rather than guessed.
 - Entries are decompressed **in memory** (1.5 GB per-entry limit) rather than to a
   temporary directory. A larger image should be extracted first.
-- CHD, CDI, and NRG entries are not opened inside an archive; extract them with their
+- CHD, CDI, NRG, MDS, and CloneCD entries are not opened inside an archive; extract them with their
   native layout. ISO, BIN, and CUE+BIN are the supported archive payloads.
 - Encrypted and multi-volume archives are refused with an actionable message and are
   never partially read. A CUE that uses PREGAP, POSTGAP, INDEX 00, or WAVE is also
@@ -151,9 +169,10 @@ checksums are attached, and legal/attribution sign-off is recorded.
   sub-second pause at the same spot, but a repeat 1.17.0 run logged no warnings or read
   errors and the FMV completed without a stall. Physical discs are still read
   synchronously on the emulation thread, so a very slow drive read can stall the core
-  for that one read; that is host read latency, not a read error. `SYS-28` tracks a
-  longer physical-disc verification and will add a bounded read-ahead only if the stall
-  recurs. A CHD/image does not show it.
+  for that one read; that is host read latency, not a read error. The issue #8 re-burn
+  verification closed `SYS-28`: more than 3,000 frames with no warnings, read errors, or
+  core stop, and `disc verify` read 157,996/157,996 sectors with 0 errors. A CHD/image
+  does not show it.
 - **The local collection is clean at the image level.** All 1,366 CHDs opened and every
   track's first/middle/last native sector read; 496 unique-title representatives,
   including all three audio-only discs, were fully sector-verified with 0 errors. The
@@ -420,9 +439,10 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   pause, screenshots, input, display sleep, clean exit). Linux is validated on that
   hardware; GLES 3.1 and the DPI matrix remain best-effort under `PLAT-06`. The Hyper-V `LinuxMint` VM
   (`D:\Hyper-V\VMs\LinuxMint`) remains the headless build/test target.
-- The project is **donationware** (non-commercial, source-available). Legal/attribution
-  sign-off is recorded (2026-11-02); donations do not change the upstream non-commercial
-  restriction.
+- The project is **donationware** (non-commercial, source-available). The 2026-11-25
+  `REL-13` decision retains the FreeDO modified GNU LGPL; donations do not change the
+  upstream non-commercial restriction. The 4DO game database is a separate GPL-2.0 data
+  component.
 
 ## Real-game status
 
@@ -761,7 +781,10 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
 
 - The project is licensed under the FreeDO modified GNU LGPL (see the root `LICENSE`).
   That license includes a prohibition on commercial use without the owners' approval.
-  A distribution/attribution review is still pending before any public build.
+  The 2026-11-25 `REL-13` review retained those terms and recorded the 4DO game database
+  as a separate GPL-2.0 data component; see [`ReleaseLegalReview.md`](ReleaseLegalReview.md)
+  and [`GPL-2.0.txt`](GPL-2.0.txt). Official Debian/Ubuntu/Fedora/openSUSE archives and
+  Flathub are not eligible under the retained terms.
 - The repository does not include BIOS ROMs, game images, or extracted assets.
 - Unsigned-disc support (`--allow-unsigned-discs` / Settings > Paths) is an explicit
   in-memory RSA-check bypass. It does not bundle or distribute a BIOS, a patched BIOS, or

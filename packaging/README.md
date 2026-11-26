@@ -62,6 +62,7 @@ docs/Licensing.md
 docs/ReleaseLegalReview.md
 docs/OpenALSoft.md
 docs/OpenAL-Soft-COPYING.txt
+docs/GPL-2.0.txt
 docs/ReleaseNotes-*.md
 PACKAGE.txt
 ```

@@ -30,16 +30,14 @@ short version:
 
 **Compliance and evidence**
 
-- `REL-13` license-compliance and relicense review, including the FreeDO/4DO/Opera
-  terms and the 4DO game-database provenance. The current release remains under the
-  FreeDO modified GNU LGPL until a new root `LICENSE` is committed.
-- `REL-12` documentation and legal-claim consistency sweep.
+- The 2026-11-25 `REL-13` decision retains the FreeDO modified GNU LGPL as
+  non-commercial donationware; the 4DO game database is a separate GPL-2.0 data
+  component. `REL-12` documentation/claims consistency is complete. Official
+  Debian/Ubuntu/Fedora/openSUSE archives and Flathub are not eligible under those terms.
 - `REL-14` RetroAchievements hardcore client approval (request submitted; awaiting
   external review).
 - `TEST-09` full-library soak: all 1,371 images at 10,000 frames and all 414 unique
   titles at 30,000 frames, with per-title hashes, audio, exit status, and captures.
-- `SYS-28` physical-disc stall verification; add bounded read-ahead only if a real drive
-  still stalls the core.
 
 **Platform and distribution**
 
@@ -56,7 +54,8 @@ short version:
 - `UX-38` video recording with synchronized audio.
 - `SYS-25` live CPU-clock probe; `NET-01` netplay loopback probe (commit only if the
   probe is clean).
-- `SYS-29` MDS/MDF and CloneCD CCD/IMG/SUB image support.
+- `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
+  readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
   bounded probe; `VID-22` high-refresh presentation/interpolation research that keeps
   gameplay at the native 59.94/50 Hz rate.
@@ -77,6 +76,8 @@ Netplay is a candidate (`NET-01`), not a committed feature. The following are ex
 out of scope unless the product scope changes:
 
 - a full debugger UI;
+- official Debian/Ubuntu/Fedora/openSUSE archives and Flathub under the retained
+  non-commercial FreeDO terms;
 - BIOS-less/embedded boot ROM or Opera-style HLE boot (5DO requires a real BIOS);
 - a custom shader pipeline;
 - Discord Rich Presence;

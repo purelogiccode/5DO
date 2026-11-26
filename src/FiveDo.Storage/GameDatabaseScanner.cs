@@ -71,7 +71,7 @@ public sealed record GameDatabaseScanResult(
 /// <summary>Scans disc images and derives database records.</summary>
 public static class GameDatabaseScanner
 {
-    private static readonly string[] Extensions = [".chd", ".cue", ".iso", ".bin", ".cdi", ".nrg"];
+    private static readonly string[] Extensions = [".chd", ".cue", ".iso", ".bin", ".cdi", ".nrg", ".mds", ".mdx", ".ccd"];
 
     private static StringComparer PathComparer => OperatingSystem.IsWindows()
         ? StringComparer.OrdinalIgnoreCase

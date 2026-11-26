@@ -4797,3 +4797,25 @@ way to confirm raw CD-DA on hardware without relying on the inert FZ-10 player t
 
 **Verification.** Full suite **2,579/2,579**, build 0 warnings/0 errors,
 `dotnet format --verify-no-changes`, and `jb inspectcode --severity=WARNING` clean.
+
+### 1.1cu Alcohol MDS and CloneCD CCD readers (2026-11-26)
+
+**Synthetic container tests.** `MdsCcdDiscImageTests` builds a raw 2352-byte
+data+audio image and a matching MDS v1 descriptor and CloneCD descriptor. Both readers
+open a single data track and a mixed-mode data+audio disc, expose the same logical track
+table, read the expected user data and raw audio, and match `GameId.Compute` against the
+equivalent `BinImage`. The factory opens `.mds` and `.ccd` by extension and by header
+when the extension is ambiguous; malformed descriptors, missing data files, and missing
+`.img` files fail with `DiscImageException`.
+
+**MDS v2 fixture smoke.** The MDSSharp `test_compress.mds` + `.mdf` fixture
+(`D:\repos\CSharp_CHDStudio\CHDStudio.Tests\Fixtures\MdsV2`) opens through
+`MdsDiscImage` as one 177-sector data track; compressed track data is decoded by
+MDSSharp and the adapter returns user-data sectors. The password-protected fixture is
+expected to fail without a password, and the encrypted/compressed paths are covered by
+MDSSharp's own suite.
+
+**Limits.** No real 3DO MDS or CCD image is present on the local corpus, so the
+600-frame boot-hash parity check remains pending. CloneCD scrambled data tracks and
+password-protected MDS images without a supplied password are rejected with actionable
+messages.

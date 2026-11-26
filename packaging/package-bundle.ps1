@@ -364,6 +364,12 @@ try {
         Copy-Item -LiteralPath $openAlLicense -Destination $docsStaging -Force
     }
 
+    $gplLicense = Join-Path $repoRoot 'docs/GPL-2.0.txt'
+    if (Test-Path -LiteralPath $gplLicense) {
+        New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
+        Copy-Item -LiteralPath $gplLicense -Destination $docsStaging -Force
+    }
+
     $releaseNotes = Join-Path $repoRoot "docs/ReleaseNotes-$Version.md"
     if (Test-Path -LiteralPath $releaseNotes) {
         New-Item -ItemType Directory -Path $docsStaging -Force | Out-Null
@@ -438,6 +444,7 @@ try {
         'BIOS ROMs and game images are not included.'
         'See README.md, whatsnew.md, LICENSE, THIRD-PARTY-NOTICES.md, docs/Licensing.md, and docs/OpenALSoft.md.'
         'The bundled OpenAL Soft runtime is LGPL-2.0-or-later; the license text is in docs/OpenAL-Soft-COPYING.txt.'
+        'The 4DO game database is GPL-2.0; the complete text is in docs/GPL-2.0.txt.'
         'macOS arm64 bundles include the Vulkan loader and MoltenVK (Apache-2.0); see docs/MoltenVK-LICENSE.txt and docs/Vulkan-Loader-LICENSE.txt.'
     )
     Set-Content -LiteralPath (Join-Path $staging 'PACKAGE.txt') -Value $manifest -Encoding utf8NoBOM

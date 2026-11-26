@@ -1,19 +1,29 @@
 # Project Status and Next Steps
 
-**2026-11-25, post-1.17.1 plan and documentation review:** the active plan now tracks
-**21 open items**, adding `REL-13` license-compliance/relicense review, `REL-12`
-documentation/claims consistency, `REL-14` RetroAchievements hardcore approval (request
-submitted; awaiting external review), `TEST-09` a full-library soak (all 1,371 images at
-10,000 frames; all 414 unique titles at 30,000 frames), `SYS-28` physical-disc stall
-verification, `PLAT-19` native Wayland Vulkan,
-`UX-38` video recording, `SYS-29` MDS/MDF and CCD/IMG/SUB image support, and `VID-22`
-high-refresh presentation/interpolation research that keeps gameplay at the native
-59.94/50 Hz rate. The README, Roadmap, FAQ, Compatibility, KnownIssues,
-ReleaseLegalReview, THIRD-PARTY-NOTICES, Licensing, Installation, Installers,
-BuildAndTest, ReferenceStrategy, UserGuide, Performance, OpenALSoft, and the wiki Legal
-page were corrected to the 1.17.1 state. Build, `dotnet format`,
+**2026-11-26, MDS/CCD readers and post-1.17.1 plan review:** the license review is
+complete. 5DO **retains the FreeDO modified GNU LGPL** as non-commercial donationware;
+the 4DO game database is resolved as a separate **GPL-2.0** data component with its
+complete text in `docs/GPL-2.0.txt`. Official Debian/Ubuntu/Fedora/openSUSE archives and
+Flathub remain **not eligible**. The post-decision documentation sweep is complete, so
+`REL-13` and `REL-12` are closed and the active plan now tracks **18 open items**:
+`REL-14` RetroAchievements hardcore approval (request submitted; awaiting external
+review), `TEST-09` a full-library soak (all 1,371 images at 10,000 frames; all 414 unique
+titles at 30,000 frames), `PLAT-19` native
+Wayland Vulkan, `UX-38` video recording, `SYS-29` representative real 3DO MDS/CCD
+validation,
+and `VID-22` high-refresh presentation/interpolation research that keeps gameplay at the
+native 59.94/50 Hz rate. `SYS-29`'s read-only MDS/MDX and CloneCD readers are implemented
+with synthetic data/audio tests and a real MDS v2 compressed-fixture smoke; only
+representative real 3DO MDS/CCD boot-hash parity remains. `SYS-28` is closed by the issue
+#8 re-burn evidence: the 1.17.0 CD-R boot logged no warnings or read errors over more than
+3,000 frames, `disc verify` read 157,996/157,996 sectors with 0 errors, and the Red Book
+audio CD extracted without a core stop. The README, Roadmap, FAQ,
+Compatibility, KnownIssues, ReleaseLegalReview, THIRD-PARTY-NOTICES, Licensing,
+GameDatabase, LinuxDistribution, Installation, Installers, BuildAndTest,
+ReferenceStrategy, UserGuide, Performance, OpenALSoft, ReleaseChecklist, and the wiki
+Legal page were corrected to the retained-license state. Build, `dotnet format`,
 `jb inspectcode`, and `mkdocs build --strict` are clean; the full suite is
-**2,602/2,602** on a clean run (one load-sensitive latency test failed once under
+**2,610/2,610** on a clean run (one load-sensitive latency test failed once under
 full-suite load and passed on rerun).
 
 **2026-11-25, v1.17.1 bug-fix release:** the release fixes the malformed-ZIP library
@@ -1807,7 +1817,9 @@ distribution model is recorded as **donationware** (non-commercial, source-avail
 
 The project license is recorded in [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE) as the FreeDO modified
 GNU LGPL, so release builds are **donationware**: non-commercial, source-available, and
-funded by voluntary donations rather than sales. The project-owner legal/attribution
+funded by voluntary donations rather than sales. The 2026-11-25 `REL-13` decision retained
+those terms. The 4DO game database is a separate GPL-2.0 data component; its complete
+license text is in [`GPL-2.0.txt`](GPL-2.0.txt). The project-owner legal/attribution
 sign-off is recorded in [`ReleaseLegalReview.md`](ReleaseLegalReview.md). The OpenAL Soft
 LGPL-2.0-or-later binary-distribution obligation is handled: the notice, complete
 license text, three-year source offer, and relinking instructions ship in

@@ -58,6 +58,7 @@ modules:
       - install -m 0644 desktop/io.github.purelogiccode.FiveDO.svg /app/share/icons/hicolor/scalable/apps/
       - install -m 0644 desktop/io.github.purelogiccode.FiveDO.png /app/share/icons/hicolor/256x256/apps/
       - install -m 0644 desktop/README.md desktop/LICENSE desktop/THIRD-PARTY-NOTICES.md /app/share/doc/5do/
+      - install -m 0644 desktop/GPL-2.0.txt /app/share/doc/5do/
     sources:
       - type: dir
         path: source

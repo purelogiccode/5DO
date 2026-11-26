@@ -141,6 +141,9 @@ for document in README.md LICENSE THIRD-PARTY-NOTICES.md; do
         install -m 0644 "$repo_root/$document" "$stage/desktop/$document"
     fi
 done
+if [[ -f "$repo_root/docs/GPL-2.0.txt" ]]; then
+    install -m 0644 "$repo_root/docs/GPL-2.0.txt" "$stage/desktop/GPL-2.0.txt"
+fi
 
 manifest="$work/$app_id.yml"
 sed "s/^runtime-version: .*/runtime-version: '$runtime_version'/" \

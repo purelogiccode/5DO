@@ -128,6 +128,9 @@ jobs:
             'LICENSE',
             'THIRD-PARTY-NOTICES.md',
             'whatsnew.md',
+            'docs/Licensing.md',
+            'docs/ReleaseLegalReview.md',
+            'docs/GPL-2.0.txt',
             "docs/ReleaseNotes-$version.md"
           )
           foreach ($relative in $required) {

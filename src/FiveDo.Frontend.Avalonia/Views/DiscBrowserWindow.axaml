@@ -11,10 +11,10 @@
         <Border Grid.Row="0" Padding="10" Background="#1A1A1A" CornerRadius="4">
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Disc image" Opacity="0.7"
-                           ToolTip.Tip="Path to the ISO, BIN, CUE, CHD, ZIP, or 7z image." />
+                           ToolTip.Tip="Path to the ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD, ZIP, or 7z image." />
                 <TextBlock x:Name="SourceText" Grid.Row="0" Grid.Column="1"
                            TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                           ToolTip.Tip="Path to the ISO, BIN, CUE, CHD, ZIP, or 7z image." />
+                           ToolTip.Tip="Path to the ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD, ZIP, or 7z image." />
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume" Opacity="0.7"
                            ToolTip.Tip="Volume label and comment from the Opera filesystem header." />
                 <TextBlock x:Name="VolumeText" Grid.Row="1" Grid.Column="1"

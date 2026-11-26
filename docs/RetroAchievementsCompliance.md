@@ -21,7 +21,7 @@ against the published [Hardcore Compliance Requirements](https://docs.retroachie
 | Release page | <https://github.com/purelogiccode/5DO/releases> |
 | Supported system | 3DO Interactive Multiplayer (RA console 43) |
 | Lineage | FreeDO/4DO-derived C# emulator; no native emulator DLL or P/Invoke into FreeDOCore |
-| License | FreeDO modified GNU LGPL; non-commercial donationware. See [Licensing.md](Licensing.md). |
+| License | FreeDO modified GNU LGPL; non-commercial donationware. The 4DO game database is GPL-2.0. See [Licensing.md](Licensing.md) and [GPL-2.0.txt](GPL-2.0.txt). |
 | Third-party notices | [THIRD-PARTY-NOTICES.md](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 | Privacy policy | [Privacy.md](Privacy.md) |
 | RA integration | In-tree MIT rcheevos port (`FiveDo.Achievements`) plus a managed Web API client |

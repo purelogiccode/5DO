@@ -7,7 +7,7 @@ using FiveDo.Core;
 namespace FiveDo.Storage;
 
 /// <summary>
-/// Computes the 3DO game identifier used by the 4DO game database.
+/// Computes the 3DO game identifier used by the game database.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Security",

@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--Ported from 4DO (FourDO) GameDatabase.xml. Game metadata facts only; see THIRD-PARTY-NOTICES.md.-->
+<!--
+  Game database.
+  Base records: Copyright (C) 4DO contributors. Derived from the 4DO
+  GameDatabase.xml, distributed under GNU General Public License version 2.
+  The complete GPL-2.0 text is in docs/GPL-2.0.txt.
+  Additional records and fields: Copyright (C) 2026 5DO contributors,
+  contributed under the same GPL-2.0 terms.
+  This file is a data component read at runtime; it is not linked into the
+  emulator code. See THIRD-PARTY-NOTICES.md and docs/Licensing.md.
+-->
 <database>
   <game>
     <id>00256A21</id>

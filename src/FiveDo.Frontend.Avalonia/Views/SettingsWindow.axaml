@@ -520,7 +520,7 @@
                                 ToolTip.Tip="Remove the selected folder from the game library." />
                     </StackPanel>
                     <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,6,0,8">
-                        <TextBlock Text="The library scans these folders recursively (up to four levels) for ISO, BIN, CUE, CHD, CDI, NRG, ZIP, and 7z images. Disc titles and metadata are hashed after the list appears."
+                        <TextBlock Text="The library scans these folders recursively (up to four levels) for ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD, ZIP, and 7z images. Disc titles and metadata are hashed after the list appears."
                                    Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4"
                                    ToolTip.Tip="Add every folder that contains disc images. Unchanged files are reused from the library cache." />
                         <CheckBox x:Name="ShowDuplicateLibraryEntriesCheck"

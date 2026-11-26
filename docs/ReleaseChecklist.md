@@ -78,24 +78,31 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 
 ## Post-1.17.1 compliance, evidence, and documentation gate
 
-- [ ] `REL-13`: record the license/relicense decision, resolve the 4DO game-database
-      permission or replacement, update `LICENSE`/`THIRD-PARTY-NOTICES.md`/bundle copies,
-      and state the Linux-distribution/Flathub position explicitly.
-- [ ] `REL-12`: recheck `README.md`, `docs/FAQ.md`, `docs/Roadmap.md`,
+- [x] `REL-13`: recorded the 2026-11-25 decision to retain the FreeDO modified GNU
+      LGPL as non-commercial donationware; resolved the 4DO game database as a separate
+      GPL-2.0 data component with `docs/GPL-2.0.txt` in every bundle; and stated the
+      Linux-distribution/Flathub position as not eligible. `LICENSE`,
+      `THIRD-PARTY-NOTICES.md`, `docs/Licensing.md`, `docs/ReleaseLegalReview.md`, and
+      the root database header agree.
+- [x] `REL-12`: rechecked `README.md`, `docs/FAQ.md`, `docs/Roadmap.md`,
       `docs/Compatibility.md`, `docs/KnownIssues.md`, `docs/ReleaseLegalReview.md`,
       `docs/Licensing.md`, `docs/Installation.md`, `docs/Installers.md`,
       `docs/BuildAndTest.md`, `docs/UserGuide.md`, `docs/Performance.md`,
       `docs/OpenALSoft.md`, `wiki/Legal.md`, and `THIRD-PARTY-NOTICES.md` for version,
-      platform, license, installer, signing, and feature claims; run
-      `mkdocs build --strict`.
+      platform, license, installer, signing, and feature claims after the `REL-13`
+      decision; `mkdocs build --strict` passes.
 - [ ] `REL-14`: record the RetroAchievements hardcore approval and flip
       `RetroAchievementsCompliance.IsHardcoreApproved()` after the external review.
 - [ ] `TEST-09`: run the full-library soak (all 1,371 images at 10,000 frames; all 414
       unique titles at 30,000 frames) and commit the baseline/results.
-- [ ] `SYS-28`: repeat the physical-drive boot and `disc verify`; add bounded read-ahead
-      only if the stall recurs.
+- [x] `SYS-28`: repeated the physical-drive CD-R boot and `disc verify` (157,996/157,996
+      sectors, hash `0x84b2bef01d157a9f`, 0 errors) with no warnings, read errors, or core
+      stop over more than 3,000 frames; the Red Book audio CD extracted without a core
+      stop. No bounded read-ahead is needed.
 - [ ] `PLAT-19`: validate native Wayland Vulkan on a Wayland-only compositor.
-- [ ] `SYS-29`: add and validate MDS/MDF and CCD/IMG/SUB readers.
+- [ ] `SYS-29`: validate representative real 3DO MDS/MDF and CCD/IMG/SUB images
+      against the equivalent BIN/CUE; the readers, synthetic tests, and malformed-input
+      handling are complete.
 - [ ] `UX-38`: validate synchronized video recording on all three desktop platforms.
 - [ ] `VID-22`: probe high-refresh presentation/interpolation without changing the native
       emulation rate.
@@ -1050,7 +1057,7 @@ been validated.**
 | Disc formats | ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP/7z | Already implemented and tested; MDS/MDF and CCD/IMG/SUB are planned as `SYS-29` |
 | Renderer | OpenGL default, optional Vulkan/Direct3D 11, CPU fallback | Filter family is complete; high-refresh presentation is `VID-22` research |
 | Packages | One bundle per system and architecture | `5do-<version>-win-x64.zip`, `5do-<version>-win-arm64.zip`, `5do-<version>-linux-x64.tar.gz`, `5do-<version>-linux-arm64.tar.gz`, `5do-<version>-osx-arm64.dmg`; each contains the CLI, desktop app, README/license/notices/whatsnew. The .NET 11 runtime is embedded. Linux also ships `.deb`/`.rpm`/AppImage/Flatpak; the Windows installer is built but not published |
-| Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales. `REL-13` is reviewing the licence position |
+| Distribution model | **Donationware** | Non-commercial, source-available; voluntary donations only, no sales. The 2026-11-25 `REL-13` decision retains the FreeDO modified GNU LGPL; the 4DO game database is GPL-2.0 |
 | Version | **`v1.17.1`** | Bump `FiveDoVersion.Version` and `Directory.Build.props`; earlier releases are historical |
 | Release timing | **Published 2026-11-25** | Five bundles, Linux packages, and `SHA256SUMS` are attached to the GitHub release |
 
@@ -1106,13 +1113,19 @@ Recommended title statuses:
       source offer, and relinking instructions; `docs/OpenAL-Soft-COPYING.txt`
       contains the complete LGPL-2.0 text; `packaging/package-bundle.ps1` copies both
       into every bundle, and the win-x64 bundle was inspected after packaging.
+- [x] 4DO game database GPL-2.0 obligations: `docs/GPL-2.0.txt` contains the complete
+      text, the XML carries the copyright/license header, and
+      `packaging/package-bundle.ps1` copies the text into every bundle.
+- [x] MDSSharp 1.3.0 and CCDSharp 1.0.3 are MIT-licensed managed libraries; their
+      notices are recorded in `THIRD-PARTY-NOTICES.md` and no native runtime is bundled.
 - [x] About dialog and CLI `--version`/license output are current.
 - [x] No BIOS ROM, disc image, extracted asset, WAV capture, or copyrighted game
       content is tracked in the repository; packaging uses only publish output plus
       README/notices/licensing.
-- [x] Release owner/legal sign-off recorded in section 6: project owner approved
+- [x] Release owner/legal sign-off recorded in section 6: project owner retained
       distribution under the FreeDO modified GNU LGPL as free, open-source
-      donationware (non-commercial; voluntary donations only), 2026-11-02.
+      donationware (non-commercial; voluntary donations only), and resolved the 4DO
+      game database as GPL-2.0, 2026-11-25.
 
 This is the only item that can block the release independently of engineering. Start
 it first. The engineering audit and the remaining owner/legal decisions are recorded
@@ -1273,7 +1286,8 @@ source-only tag or GitHub release is not a complete release.
 - [x] Each bundle contains both executables, `README.md`, `LICENSE`,
       `THIRD-PARTY-NOTICES.md`, `whatsnew.md`, `docs/Licensing.md`,
       `docs/ReleaseLegalReview.md`, `docs/OpenALSoft.md`,
-      `docs/OpenAL-Soft-COPYING.txt`, the release notes, and `PACKAGE.txt`.
+      `docs/OpenAL-Soft-COPYING.txt`, `docs/GPL-2.0.txt`, the release notes, and
+      `PACKAGE.txt`.
 - [x] Remove PDB and XML documentation files; they are build outputs, not runtime
       dependencies.
 - [x] Keep the native OpenAL Soft/Skia/ANGLE libraries beside the apphosts so the
@@ -1320,6 +1334,7 @@ required distribution model for 1.12.0 and later.
 |---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 |
+| License review | Retained FreeDO modified GNU LGPL; 4DO database GPL-2.0; distro/Flathub not eligible | 2026-11-25 |
 | Compatibility / QA | Documented-compatibility scope: 593/594 render, 12-title matrix; Linux x64 full suite | 2026-11-02 |
 | Packaging / CI | Unified framework-dependent bundles, no bundled runtime, release workflow | 2026-11-02 |
 

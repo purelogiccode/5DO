@@ -9,9 +9,14 @@ additional terms take precedence over the GNU LGPL where they conflict.
 
 Portions of this repository include third-party material under separate terms
 (the Avalonia frontend dependencies, the xBR and FSR shader algorithms, the
-HQx filters, and others). See THIRD-PARTY-NOTICES.md. The 4DO game database is
-included with attribution; its upstream licensing status is unresolved and is
-tracked in THIRD-PARTY-NOTICES.md and docs/ReleaseLegalReview.md.
+HQx filters, and others). See THIRD-PARTY-NOTICES.md. The 4DO game database
+(`src/FiveDo.Storage/Data/GameDatabase.xml`) is a separate GPL-2.0 data
+component derived from the 4DO project (https://fourdo.com), which distributes
+its source under GNU GPL version 2. The complete GPL-2.0 text is in
+docs/GPL-2.0.txt. The 5DO-generated records and extension fields in that file
+are contributed under the same GPL-2.0 terms. The database is read at runtime
+and is not linked into the emulator code; all other project code remains under
+the FreeDO modified GNU LGPL reproduced below.
 
 ================================================================================
 FreeDO notice (verbatim from the FreeDO source headers)

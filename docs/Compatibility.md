@@ -136,10 +136,12 @@ The BIOS manager scans a folder, reports file name, size, MD5, region, video sta
 | **CHD** | **v1** | **MAME CHD via pure C# CHDSharp; CD/GD-ROM track table incl. audio; flat 2048-byte ISO CHDs; parent/child supported** |
 | **DiscJuggler CDI** | **Current (2026-11-15)** | `CDISharp` parses the trailing descriptor, session/track table, and 2048/2336/2352-byte layouts, including 16-byte PQ and 96-byte P-W subchannel strides (2368/2448). The 150-sector lead-in is skipped when present. |
 | **Nero NRG** | **Current (2026-11-15)** | `NRGSharp` parses NERO/NER5 footers, DAOI/DAOX and TINF/ETNF/ETN2 chunks, and per-track sector sizes 2048, 2324, 2336, 2352, 2353, 2368, 2448, and 2449. The extra error byte and subchannel tails are ignored when extracting user data. |
+| **Alcohol MDS/MDF/MDX** | **Current (2026-11-26)** | `MDSSharp` parses the Alcohol descriptor, v2/MDX containers, split volumes, per-track pregaps, and compressed/encrypted track data (password-protected images require the password). The adapter prepares a CUE and opens it through `CueDiscImage`; plain raw/cooked images are referenced in place. |
+| **CloneCD CCD/IMG/SUB** | **Current (2026-11-26)** | `CCDSharp` parses `[CloneCD]`, `[Disc]`, `[Track]`, and TOC-only descriptors, including INDEX 00/02+, FLAGS, ISRC, and catalog data. The raw `.img` is referenced by a generated CUE and opened through `CueDiscImage`; the `.sub` file is optional and ignored because the 3DO CD-ROM device does not need subcode. Scrambled data tracks are rejected. |
 | Multi-track / CD-DA | Partial (2026-11-22) | Track table, raw CD-DA sectors, PLAY_AUDIO position, DSP mixing, persisted volume/mute, READ_DATA subcode/Q packing, M3U multi-disc swap, and physical-drive TOC/raw CDDA (v1.16.0) are implemented; the raw CDDA path is verified on real hardware (v1.16.1), and only the FZ-10 audio-only BIOS transport remains (SYS-01) |
-| **ZIP/7z (ISO, BIN, CUE+BIN)** | **Current (2026-11-21)** | `ArchiveDiscImage` opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry; entries are decompressed in memory (1.5 GB per-entry limit) through SharpCompress. CHD/CDI/NRG must be extracted; encrypted or multi-volume archives are rejected with guidance. |
+| **ZIP/7z (ISO, BIN, CUE+BIN)** | **Current (2026-11-21)** | `ArchiveDiscImage` opens one ISO/BIN or one CUE+BIN set directly from a ZIP or 7z entry; entries are decompressed in memory (1.5 GB per-entry limit) through SharpCompress. CHD/CDI/NRG/MDS/CCD must be extracted; encrypted or multi-volume archives are rejected with guidance. |
 
-Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG track table.
+Sector count is read from the 3DO volume header at sector 0 (big-endian `blockCount` at byte offset 80). If the header is invalid, fall back to `fileSize / sectorSize` for ISO/BIN, the CHD data track's frame count, or the CDI/NRG/MDS/CCD track table.
 
 CHD specifics:
 
@@ -241,7 +243,7 @@ The 4DO game database also maps:
 - `0511D3D2`, `9F7D72BC`, `E843C635` -> `FIX_BIT_TIMING_6`
 - `2AABA5B9`, `BF61BB32` -> `FIX_BIT_GRAPHICS_STEP_Y`
 
-The game database is ported with attribution. Unknown game IDs get the first 8 hex characters of the MD5, with collision avoidance, matching 4DO. `GameCompatibility` applies the mapping automatically when the CLI or desktop shell opens a disc; `--fix-mode`/`--no-game-fixes` and the per-game override in Settings provide explicit control. The 3,000-frame Alone boot hash is unchanged with `FIX_BIT_TIMING_6` applied.
+The game database is derived with attribution from the 4DO project and is distributed as a separate GPL-2.0 data component; the complete text is in [`GPL-2.0.txt`](GPL-2.0.txt). Unknown game IDs get the first 8 hex characters of the MD5, with collision avoidance, matching 4DO. `GameCompatibility` applies the mapping automatically when the CLI or desktop shell opens a disc; `--fix-mode`/`--no-game-fixes` and the per-game override in Settings provide explicit control. The 3,000-frame Alone boot hash is unchanged with `FIX_BIT_TIMING_6` applied.
 
 The database grew from 518 to 653 records in SYS-17. Record-level `fixMode`, `bios`,
 `bios2`, and `inputDevices` fields now feed `GameCompatibility`, `BiosLibrary`, and
@@ -407,9 +409,9 @@ path.
 - The primary renderer requires desktop OpenGL 3.3 or OpenGL ES 3.0/3.1 (see `docs/Performance.md`); systems without either use the CPU fallback.
 - CHD is supported for CD/GD-ROM images and for flat 2048-byte-unit CHDs made from cooked ISOs; DVD/HDD/raw CHDs with other unit sizes are not 3DO discs.
 - CHD decompression is pure managed code and may be slower than ISO on low-end arm64 devices; read-ahead/cache mitigates this.
-- CDI images are accepted only when the trailing descriptor passes the DiscJuggler signature checks; NRG images require a valid NERO/NER5 footer and a known first metadata chunk. Both readers are format parsers, not burners, and do not write CDI/NRG output.
-- MDS/MDF (Alcohol 120%) and CloneCD CCD/IMG/SUB images are not supported yet; they are planned as `SYS-29` and will be read-only.
-- Audio-only CDI/NRG images open at the library layer but are rejected for 3DO boot, matching the CUE/CHD data-track requirement.
+- CDI images are accepted only when the trailing descriptor passes the DiscJuggler signature checks; NRG images require a valid NERO/NER5 footer and a known first metadata chunk. MDS/MDX images are parsed by MDSSharp and CloneCD descriptors by CCDSharp. All four readers are format parsers, not burners, and do not write CDI/NRG/MDS/CCD output.
+- MDS images with encrypted track data need the image password when they were not encrypted password-less; 5DO reports the preparation failure with the MDSSharp reason. CloneCD scrambled data tracks are rejected with a descramble message. The `.sub` subchannel file is optional and ignored.
+- Audio-only CDI/NRG/MDS/CCD images open at the library layer but are rejected for 3DO boot, matching the CUE/CHD data-track requirement.
 
 ---
 
@@ -1147,7 +1149,7 @@ Include:
 
 - Emulator version/commit.
 - BIOS MD5 and region.
-- Disc ID (first 8 hex of the 2-sector MD5) and format (ISO/BIN/CUE/CHD/CDI/NRG).
+- Disc ID (first 8 hex of the 2-sector MD5) and format (ISO/BIN/CUE/CHD/CDI/NRG/MDS/CCD).
 - Fix mode flags and settings.
 - Steps to reproduce.
 - Save state and a short input recording if possible.

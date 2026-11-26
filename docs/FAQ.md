@@ -19,10 +19,12 @@ drop-in replacement for 4DO and does not load 4DO `.state` files.
 The source is publicly available, but the license is the **FreeDO modified GNU LGPL**,
 which is not a standard OSI license and includes additional restrictions. 5DO is
 **donationware**: non-commercial, source-available, and funded by voluntary donations.
-A license-compliance and relicense review is open as `REL-13`; the current terms remain
-in force until a new root `LICENSE` is committed. Relicensing 5DO's original code does
-not by itself remove restrictions on code derived from FreeDO/4DO/Opera, so the review
-must also resolve those upstream terms and the 4DO game-database provenance. Read
+The 2026-11-25 `REL-13` review retained those terms: written rights-holder permission has
+not been obtained and a clean-room replacement has not been performed for this release.
+Relicensing 5DO's original code alone would not remove restrictions on code derived from
+FreeDO/4DO/Opera. The 4DO game database is a separate **GPL-2.0** data component with its
+complete text in [`GPL-2.0.txt`](GPL-2.0.txt). Official Debian/Ubuntu/Fedora/openSUSE
+archives and Flathub are not eligible under the retained terms. Read
 [Licensing](Licensing.md) and the
 [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE).
 
@@ -53,11 +55,14 @@ pull requests.
 - CUE+BIN, including multi-track and CD-DA layouts
 - CHD, including parent/child images
 - DiscJuggler CDI and Nero NRG (read-only)
+- Alcohol MDS/MDF and MDS v2/MDX (read-only)
+- CloneCD CCD/IMG/SUB (read-only; the optional `.sub` is ignored)
 - ISO, BIN, and CUE+BIN inside ZIP and 7z containers
 - M3U/M3U8 playlists for multi-disc games
 
-MDS/MDF and CloneCD CCD/IMG/SUB support is planned as `SYS-29`; it is not available
-yet.
+MDS images with a user password prompt, and CloneCD images with scrambled data tracks,
+are rejected with an actionable message. Real 3DO MDS/CCD boot-hash parity is still
+pending representative images (`SYS-29`).
 
 ### How do I open a game from a launcher?
 

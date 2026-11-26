@@ -505,7 +505,7 @@ internal static class Program
         Console.WriteLine("5DO desktop frontend");
         Console.WriteLine("Usage: FiveDo [disc-path] [options]");
         Console.WriteLine();
-        Console.WriteLine("  <disc-path>             Open and auto-start a disc image (ISO, BIN, CUE, CHD).");
+        Console.WriteLine("  <disc-path>             Open and auto-start a disc image (ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD).");
         Console.WriteLine("  --disc <path>           Same as the positional disc path.");
         Console.WriteLine("  --bios <path>           Use this BIOS image for this launch.");
         Console.WriteLine("  -f, -fullscreen, --fullscreen  Start in fullscreen.");

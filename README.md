@@ -44,8 +44,8 @@
 > Linux release downloads are validated with `SHA256SUMS.txt`/`SHA256SUMS-linux.txt`
 > only; no GPG signatures or keyring are published.
 > No BIOS ROMs, game images, or extracted game assets are included. You must supply
-> legally obtained files. The current release remains under the FreeDO modified GNU LGPL
-> while a license-compliance and relicense review is open as `REL-13`.
+> legally obtained files. The release remains under the FreeDO modified GNU LGPL as
+> non-commercial donationware; the 4DO game database is a separate GPL-2.0 data component.
 
 **5DO** is an accuracy-focused C# port of the FreeDO 3DO emulation core, with
 [Opera/libopera](https://github.com/libretro/opera-libretro) as the primary behavioral
@@ -95,9 +95,9 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.17.1` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,602 tests** in the current test assembly |
+| Automated tests | **2,610 tests** in the current test assembly |
 | Optical media | 1,366 local CHDs opened and track-probed; **496 unique titles fully sector-verified**; 26-case BIOS matrix; 3 audio-only CHDs; `disc audio` exports CD-DA to WAV; physical Red Book CD-DA verified on a real drive |
-| Disc containers | ISO, BIN, CUE+BIN, CHD (parent/child), CDI, NRG, and ISO/BIN/CUE+BIN inside ZIP/7z |
+| Disc containers | ISO, BIN, CUE+BIN, CHD (parent/child), CDI, NRG, Alcohol MDS/MDX, CloneCD CCD/IMG/SUB, and ISO/BIN/CUE+BIN inside ZIP/7z |
 | Save states | Ten numbered slots plus a rolling autosave with validated startup resume; manual slots are never overwritten |
 | macOS GPU runtime | Vulkan/MoltenVK bundled in the macOS arm64 DMG (CPU fallback if the bundled runtime is unavailable) |
 | Differential oracle | 50-title panel: **50/50 frame hashes** at frames 60/120/300; only CD cadence remains |
@@ -168,9 +168,10 @@ app; it now reports the missing files by name instead of crashing inside Skia.
 - SPORT VRAM fill/copy, VDLP display-list parsing, and CPU frame assembly.
 - Mitsumi/MEI CD-ROM state machine with TOC, Sub-Q, CD-DA, READ_DATA subcode/Q
   packing, multi-track CUE/CHD, M3U playlists, and ODE-style disc swapping.
-- ISO, BIN, CUE+BIN, CHD, DiscJuggler CDI, and Nero NRG images, plus ISO/BIN/CUE+BIN
-  inside ZIP and 7z containers, including parent/child CHDs, bounded read-ahead
-  prefetch, and `disc convert` between ISO/BIN/CUE/flat CHD.
+- ISO, BIN, CUE+BIN, CHD, DiscJuggler CDI, Nero NRG, Alcohol MDS/MDX, and CloneCD
+  CCD/IMG/SUB images, plus ISO/BIN/CUE+BIN inside ZIP and 7z containers, including
+  parent/child CHDs, bounded read-ahead prefetch, and `disc convert` between
+  ISO/BIN/CUE/flat CHD.
 
 ### Desktop experience
 
@@ -245,8 +246,8 @@ app; it now reports the missing files by name instead of crashing inside Skia.
 
 - **.NET SDK 11.0.100** (pinned by `global.json`).
 - A legally obtained 3DO BIOS ROM (1 MB; an optional second ROM for BIOS2/Kanji).
-- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, CHD, CDI, NRG, or ZIP/7z
-  (ISO/BIN/CUE+BIN) format.
+- Legally obtained 3DO disc images in ISO, BIN, CUE+BIN, CHD, CDI, NRG, MDS/MDX,
+  CloneCD CCD, or ZIP/7z (ISO/BIN/CUE+BIN) format.
 - For the desktop app: Windows 10+, a current Linux desktop, or macOS 12+.
 - OpenGL 3.3 or OpenGL ES 3.0/3.1 for GPU presentation; the CPU fallback needs no GPU.
 - No system OpenAL installation is required; the build bundles OpenAL Soft 1.23.1.
@@ -470,13 +471,16 @@ the [Developer Guide](https://purelogiccode.github.io/5DO/DeveloperGuide.html),
 
 5DO is **donationware**: non-commercial, source-available software funded by voluntary
 donations rather than sales. It is distributed under the **FreeDO modified GNU LGPL**;
-the FreeDO additional terms take precedence where they conflict with the LGPL. See
+the FreeDO additional terms take precedence where they conflict with the LGPL. The 4DO
+game database is a separate **GPL-2.0** data component; its complete license text is in
+[`docs/GPL-2.0.txt`](docs/GPL-2.0.txt). See
 [`LICENSE`](LICENSE), [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), and
 [`docs/Licensing.md`](docs/Licensing.md).
 
 FreeDO, 4DO, and Opera/libopera are upstream projects with their own copyright notices
 and terms. This repository does not include BIOS ROMs, game images, or extracted game
-assets. Donations do not grant commercial rights.
+assets. Donations do not grant commercial rights. Official Debian/Ubuntu/Fedora/openSUSE
+archives and Flathub are not eligible under the retained non-commercial terms.
 
 "3DO" and "Panasonic" are trademarks of their respective owners. 5DO is not affiliated
 with or endorsed by Panasonic, The 3DO Company, or any rights holder.

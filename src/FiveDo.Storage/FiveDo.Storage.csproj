@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="CHDSharp" />
+    <PackageReference Include="CCDSharp" />
+    <PackageReference Include="MDSSharp" />
     <PackageReference Include="SharpCompress" />
     <PackageReference Include="Meziantou.Analyzer">
       <PrivateAssets>all</PrivateAssets>

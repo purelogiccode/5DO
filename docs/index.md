@@ -92,7 +92,7 @@
 
 **2026-11-25, v1.17.1 bug-fix release (GitHub Releases).**
 
-- **2,602 tests** are present in the current test assembly.
+- **2,610 tests** are present in the current test assembly.
 - **Library and renderer fixes:** a malformed ZIP now appears as an error entry instead
   of faulting the parallel library refresh; Avalonia `OpenGL FBO` failures that arrive
   through an unobserved task now switch to the CPU presenter; the core stop window is
@@ -193,5 +193,6 @@ the remaining work.
 ---
 
 5DO is **donationware**: non-commercial, source-available software distributed under
-the FreeDO modified GNU LGPL. "3DO" and "Panasonic" are trademarks of their respective
-owners. 5DO is not affiliated with or endorsed by them.
+the FreeDO modified GNU LGPL. The 4DO game database is a separate GPL-2.0 data
+component. "3DO" and "Panasonic" are trademarks of their respective owners. 5DO is not
+affiliated with or endorsed by them.

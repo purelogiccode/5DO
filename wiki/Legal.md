@@ -2,10 +2,13 @@
 
 ## License
 
-5DO is currently distributed under the **FreeDO modified GNU LGPL**. The FreeDO
-additional terms take precedence over the GNU LGPL where they conflict. A
-license-compliance and relicense review is open as `REL-13`; the current terms remain
-in force until a new root `LICENSE` is committed. Read the full
+5DO is distributed under the **FreeDO modified GNU LGPL**. The FreeDO additional terms
+take precedence over the GNU LGPL where they conflict. The 2026-11-25 `REL-13` review
+retained those terms as non-commercial donationware; the 4DO game database is a separate
+**GPL-2.0** data component with its complete text in
+[`GPL-2.0.txt`](https://github.com/purelogiccode/5DO/blob/master/docs/GPL-2.0.txt).
+Official Debian/Ubuntu/Fedora/openSUSE archives and Flathub are not eligible under the
+retained terms. Read the full
 [LICENSE](https://github.com/purelogiccode/5DO/blob/master/LICENSE) and
 [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md).
 

@@ -22,9 +22,10 @@ see [`CliReference.md`](CliReference.md); for settings and paths, see
    ```
 
 3. On first run, choose **Open BIOS** and select a 3DO BIOS such as `panafz1.bin`.
-4. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP, or 7z
-   image. A ZIP/7z may contain one ISO/BIN or one CUE+BIN set; CHD/CDI/NRG must be
-   extracted first, and encrypted or multi-volume archives are refused with guidance.
+4. Choose **Open Disc** and select an ISO, BIN, CUE+BIN, CHD, CDI, NRG, MDS/MDX,
+   CloneCD CCD, ZIP/7z, or M3U image. A ZIP/7z may contain one ISO/BIN or one CUE+BIN
+   set; CHD/CDI/NRG/MDS/CCD must be extracted first, and encrypted or multi-volume
+   archives are refused with guidance.
 5. Press **Play**. The status line shows the frame count, PC, cycles, and FPS. While the
    BIOS, disc, and renderer initialize, a **Loading game... / Please wait...** overlay
    covers the video area and disappears as soon as the first visible frame is presented.
@@ -113,7 +114,7 @@ FiveDo.exe "D:\Games\Road Rash (USA).chd" `
 
 | Argument | Meaning |
 |---|---|
-| `"<disc>"` | Positional disc path (ISO, BIN, CUE+BIN, CHD, CDI, NRG, ZIP, or 7z); opens and auto-starts it. |
+| `"<disc>"` | Positional disc path (ISO, BIN, CUE+BIN, CHD, CDI, NRG, MDS/MDX, CloneCD CCD, ZIP, or 7z); opens and auto-starts it. |
 | `--disc <path>` | Explicit disc path; same behavior as the positional form. |
 | `--bios <path>` | BIOS image for this launch; overrides the saved BIOS path. A missing file prints an error and exits with code 1. |
 | `-f`, `-fullscreen`, `--fullscreen` | Start in fullscreen. Works with a disc or with the library view. F11 toggles fullscreen; Escape exits fullscreen and pauses a running game. |
@@ -582,7 +583,7 @@ change it in **Settings > Paths**.
 ## Library and settings
 
 **Library** scans the folders configured in **Settings > Paths > Game folders** for
-ISO/BIN/CUE/CHD/CDI/NRG files plus ZIP/7z containers and resolves titles through the
+ISO/BIN/CUE/CHD/CDI/NRG/MDS/CCD files plus ZIP/7z containers and resolves titles through the
 embedded 4DO game database. A ZIP/7z entry is decompressed in memory (1.5 GB per-entry
 limit); choose one image or a CUE+BIN set per archive. Encrypted and multi-volume
 archives are refused with an actionable message.

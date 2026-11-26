@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using CCDSharp;
 using CDISharp;
 using FiveDo.Core;
 using FiveDo.Storage.Chd;
+using MDSSharp;
 using NRGSharp;
 
 namespace FiveDo.Storage;
@@ -13,7 +15,7 @@ namespace FiveDo.Storage;
 public static class DiscImageFactory
 {
     /// <summary>Opens a disc image by path and detected container format.</summary>
-    /// <param name="path">Path to an ISO, BIN, CUE, CHD, CDI, or NRG image.</param>
+    /// <param name="path">Path to an ISO, BIN, CUE, CHD, CDI, NRG, MDS/MDF, or CloneCD image.</param>
     /// <param name="chdParentPath">Optional parent CHD path for a differential CHD.</param>
     /// <param name="prefetch">
     /// Whether to add a host-side read-ahead cache for uncompressed image readers.
@@ -57,6 +59,8 @@ public static class DiscImageFactory
             ".bin" => OpenBin(path),
             ".cdi" => CdiDiscImage.Open(path),
             ".nrg" => NrgDiscImage.Open(path),
+            ".mds" or ".mdx" => MdsDiscImage.Open(path),
+            ".ccd" => CcdDiscImage.Open(path),
             ".zip" or ".7z" => ArchiveDiscImage.Open(path),
             _ => OpenByHeader(path, chdParentPath, chdReadAheadHunks),
         };
@@ -201,6 +205,16 @@ public static class DiscImageFactory
             return CdiDiscImage.Open(path);
         }
 
+        if (MdsParser.IsMdsFile(path))
+        {
+            return MdsDiscImage.Open(path);
+        }
+
+        if (CcdConverter.IsCcdFile(path))
+        {
+            return CcdDiscImage.Open(path);
+        }
+
         if (HasCdSyncHeader(path))
         {
             return OpenBin(path);
@@ -212,7 +226,7 @@ public static class DiscImageFactory
             return new IsoImage(path);
         }
 
-        throw new DiscImageException($"Cannot determine the disc image format of '{path}'. Supported formats are ISO, BIN, CUE, CHD, CDI, and NRG.");
+        throw new DiscImageException($"Cannot determine the disc image format of '{path}'. Supported formats are ISO, BIN, CUE, CHD, CDI, NRG, MDS/MDF, and CloneCD CCD/IMG.");
     }
 
     private static int ReadModeByte(string path)

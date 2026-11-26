@@ -14,7 +14,7 @@
                            Text="This is a pure C# 3DO emulator. To start, choose a legally obtained BIOS ROM and a disc image. The application does not include BIOS files or games."
                            ToolTip.Tip="5DO does not ship BIOS ROMs or game images; you must provide your own." />
                 <TextBlock x:Name="DiscHelpText" TextWrapping="Wrap" Opacity="0.75"
-                           Text="Supported discs: ISO, BIN, CUE+BIN, CHD, and ZIP/7z. You can change these paths later in Settings."
+                           Text="Supported discs: ISO, BIN, CUE+BIN, CHD, CDI, NRG, MDS, CCD, and ZIP/7z. You can change these paths later in Settings."
                            ToolTip.Tip="Supported disc containers. Paths can be changed later in Settings." />
                 <Border Background="#202020" CornerRadius="3" Padding="10"
                         ToolTip.Tip="Three steps to start a game.">
@@ -24,7 +24,7 @@
                         <TextBlock x:Name="Step1Text" Text="1. Open a 3DO BIOS (panafz1.bin or another compatible 1 MB ROM)." Opacity="0.85"
                                    ToolTip.Tip="Load a 1 MB 3DO BIOS ROM, such as panafz1.bin." />
                         <TextBlock x:Name="Step2Text" Text="2. Open a disc image." Opacity="0.85"
-                                   ToolTip.Tip="Choose an ISO, BIN, CUE, CHD, ZIP, or 7z image." />
+                                   ToolTip.Tip="Choose an ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD, ZIP, or 7z image." />
                         <TextBlock x:Name="Step3Text" Text="3. Press Play, then use the keyboard or a gamepad." Opacity="0.85"
                                    ToolTip.Tip="Start emulation and use the configured input bindings." />
                     </StackPanel>

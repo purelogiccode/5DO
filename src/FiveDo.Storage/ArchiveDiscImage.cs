@@ -157,15 +157,18 @@ public static class ArchiveDiscImage
             List<string> compressed = _entries.Keys
                 .Where(static key => key.EndsWith(".chd", StringComparison.OrdinalIgnoreCase)
                     || key.EndsWith(".cdi", StringComparison.OrdinalIgnoreCase)
-                    || key.EndsWith(".nrg", StringComparison.OrdinalIgnoreCase))
+                    || key.EndsWith(".nrg", StringComparison.OrdinalIgnoreCase)
+                    || key.EndsWith(".mds", StringComparison.OrdinalIgnoreCase)
+                    || key.EndsWith(".mdx", StringComparison.OrdinalIgnoreCase)
+                    || key.EndsWith(".ccd", StringComparison.OrdinalIgnoreCase))
                 .Take(5)
                 .ToList();
             if (compressed.Count > 0)
             {
                 throw new DiscImageException(
                     $"Archive '{_archivePath}' contains {string.Join(", ", compressed)}. "
-                    + "CHD, CDI, and NRG must be extracted before opening; archive support "
-                    + "covers ISO, BIN, and CUE+BIN.");
+                    + "CHD, CDI, NRG, MDS/MDX, and CloneCD images must be extracted before opening; "
+                    + "archive support covers ISO, BIN, and CUE+BIN.");
             }
 
             throw new DiscImageException(

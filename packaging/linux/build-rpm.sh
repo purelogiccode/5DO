@@ -138,6 +138,9 @@ done
 if [ -f "%{_repo_dir}/LICENSE" ]; then
     install -m 0644 "%{_repo_dir}/LICENSE" "%{buildroot}/usr/share/licenses/5do/LICENSE"
 fi
+if [ -f "%{_repo_dir}/docs/GPL-2.0.txt" ]; then
+    install -m 0644 "%{_repo_dir}/docs/GPL-2.0.txt" "%{buildroot}/usr/share/licenses/5do/GPL-2.0.txt"
+fi
 
 %files
 /opt/5do
@@ -150,6 +153,7 @@ fi
 /usr/share/icons/hicolor/256x256/apps/5do.png
 /usr/share/doc/5do
 %license /usr/share/licenses/5do/LICENSE
+%license /usr/share/licenses/5do/GPL-2.0.txt
 
 %post
 if command -v update-desktop-database >/dev/null 2>&1; then

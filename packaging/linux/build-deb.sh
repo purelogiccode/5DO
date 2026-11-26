@@ -121,6 +121,9 @@ done
 if [[ -f "$repo_root/LICENSE" ]]; then
     install -m 0644 "$repo_root/LICENSE" "$stage/usr/share/doc/5do/copyright"
 fi
+if [[ -f "$repo_root/docs/GPL-2.0.txt" ]]; then
+    install -m 0644 "$repo_root/docs/GPL-2.0.txt" "$stage/usr/share/doc/5do/GPL-2.0.txt"
+fi
 
 installed_size="$(du -sk "$stage/opt/5do" "$stage/usr/share" | awk '{ total += $1 } END { print total }')"
 cat >"$stage/DEBIAN/control" <<EOF

@@ -8,7 +8,7 @@ namespace FiveDo.Core;
 /// <remarks>
 /// The 3DO CD-ROM device and the game database only need user-data sectors, not raw
 /// 2352-byte frames or subcode. Implementations translate their container format
-/// (ISO, BIN, CUE+BIN, CHD) to this interface.
+/// (ISO, BIN, CUE+BIN, CHD, CDI, NRG, MDS, CCD) to this interface.
 /// </remarks>
 public interface IDiscSource : IDisposable
 {

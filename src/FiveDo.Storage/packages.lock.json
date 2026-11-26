@@ -2,6 +2,12 @@
   "version": 2,
   "dependencies": {
     "net11.0": {
+      "CCDSharp": {
+        "type": "Direct",
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "mQrrMwtT4XQEjF5wF1r1ZXDiBtdbwdeYdr+C0JnkeLGYHpCE5wsjzvYA3mStKeGSVIYo77Lltm5w1mmYP2K+Kg=="
+      },
       "CHDSharp": {
         "type": "Direct",
         "requested": "[1.7.2, )",
@@ -10,6 +16,12 @@
         "dependencies": {
           "System.IO.Hashing": "11.0.0"
         }
+      },
+      "MDSSharp": {
+        "type": "Direct",
+        "requested": "[1.3.0, )",
+        "resolved": "1.3.0",
+        "contentHash": "9cX4jIw+r8QH8SJoMOosnT8T2A6XCkHamQkvczIGW207nVwfmQ7jHnkhyPkBzorF3jI2yDyHtEM4w+qPf3tnEw=="
       },
       "Meziantou.Analyzer": {
         "type": "Direct",

@@ -19,7 +19,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Format" Opacity="0.65" Margin="0,2"
                            ToolTip.Tip="Container format detected when the image was opened." />
                 <TextBlock x:Name="FormatText" Grid.Row="1" Grid.Column="1" Margin="0,2"
-                           ToolTip.Tip="Container format (ISO, BIN/CUE, CHD, or IMG)." />
+                           ToolTip.Tip="Container format (ISO, BIN/CUE, CHD, CDI, NRG, MDS/MDX, CCD, or IMG)." />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Volume label" Opacity="0.65" Margin="0,2"
                            ToolTip.Tip="Volume label stored in the Opera filesystem header." />

@@ -2,7 +2,7 @@ namespace FiveDo.Storage;
 
 
 /// <summary>
-/// One entry from the 4DO game database.
+/// One entry from the game database.
 /// </summary>
 /// <param name="Id">The 4DO game identifier.</param>
 /// <param name="CheckSum">MD5 of the first two disc sectors, uppercase hex.</param>

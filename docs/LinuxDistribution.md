@@ -448,19 +448,14 @@ A Flatpak is the highest-value Linux channel after AppImage, because it is what 
 Software, KDE Discover, and the Steam Deck's Discover store show. The single-file
 `5do-<version>-linux-<arch>.flatpak` bundles are built in CI from the published apphosts
 (`packaging/linux/build-flatpak.sh` and `io.github.purelogiccode.FiveDO.yml`), so users
-can install 5DO from a file today. Two constraints still gate **Flathub**:
-
-1. Flathub's build system has no network access and expects a source build. A
-   .NET app needs the `org.freedesktop.Sdk.Extension.dotnet11` SDK extension and a
-   `dotnet publish` step, or a vendored NuGet cache. The release `.flatpak` avoids
-   this by packaging the published tree, but that is not how Flathub builds.
-2. The licence must permit redistribution. See §9 before starting.
+can install 5DO from a file today. **Flathub is not eligible** under the 2026-11-25
+`REL-13` decision: Flathub requires a redistribution licence that the retained
+non-commercial FreeDO terms do not provide, in addition to a network-free source build.
 
 For a self-hosted repository (`flatpak build-export`,
 `flatpak build-update-repo --gpg-sign=$KEY`, served from any static host you already
 run), keep the OSTree repository with `build-flatpak.sh --repo-dir` instead of shipping
-only the single-file bundle, then submit to Flathub once the licence position is
-settled.
+only the single-file bundle. Do not submit to Flathub under the retained terms.
 
 Expected permissions: `--share=network` (RetroAchievements, metadata lookup),
 `--socket=pulseaudio`, `--socket=x11`, `--socket=wayland`, `--device=all` (gamepads,
@@ -522,26 +517,21 @@ Consequences:
 |---|---|---|
 | Debian / Ubuntu archives | [DFSG](https://www.debian.org/social_contract#guidelines): free redistribution, including commercial use | **Blocked.** The non-commercial clause is a field-of-use restriction |
 | Fedora / openSUSE repositories | Fedora licensing: redistributable and commercially usable | **Blocked**, same reason |
-| Flathub | Licence must permit redistribution; non-commercial apps need an explicit decision | **Needs review.** Ask Flathub before building the manifest |
-| Snap Store | Proprietary apps allowed; publisher must have distribution rights | **Needs review** of the same clause |
+| Flathub | Licence must permit redistribution; non-commercial apps need an explicit decision | **Not eligible.** The 2026-11-25 `REL-13` decision retains the non-commercial terms |
+| Snap Store | Proprietary apps allowed; publisher must have distribution rights | **Not eligible** under the retained non-commercial terms |
 | AUR | Must be legally redistributable; no charge is made for the package | **Probably fine**, but keep the notice and attribution in the package |
-| Self-hosted APT/RPM/AppImage | The project distributes its own build | **Fine**; attribution and the licence text ship in the package |
+| Self-hosted APT/RPM/AppImage | The project distributes its own build | **Fine**; attribution and the licence text ship in the package. The 4DO game database is a separate GPL-2.0 data component with `docs/GPL-2.0.txt` |
 | itch.io | Free downloads under the project's own terms | **Fine** |
 
-Two paths clean this up:
+The 2026-11-25 `REL-13` review retained the FreeDO modified GNU LGPL and did not obtain
+written commercial-use permission. The Debian/Fedora/Flathub paths therefore remain
+closed. Revisit only if the FreeDO rights holders grant broader permission, a clean-room
+replacement lands, or the project changes its distribution model. The 4DO game database
+is separately licensed under GPL-2.0 and does not change the app's non-commercial status.
 
-1. Ask the FreeDO rights holders for written permission or a licence clarification. If
-   they grant commercial-use rights, the Debian/Fedora/Flathub question mostly
-   disappears (network-free builds and vendored NuGet packages remain the technical
-   work).
-2. Keep the FreeDO-derived core under the current terms and license the 5DO-specific
-   code (frontend, CLI, tooling) separately. That does not help the combined binary,
-   because the core is linked into both apphosts; the archives package the combined
-   binary, so the restriction still applies.
-
-Until one of those happens, treat official distro archives as out of scope and put the
-effort into checksum-verified release downloads, AppImage, AUR, and Steam Deck channels. Record
-the decision in [ReleaseLegalReview.md](ReleaseLegalReview.md).
+Until one of those happens, treat official distro archives and Flathub as out of scope and
+put the effort into checksum-verified release downloads, AppImage, AUR, and Steam Deck
+channels. Record the decision in [ReleaseLegalReview.md](ReleaseLegalReview.md).
 
 > This section is engineering guidance, not legal advice. Get a lawyer's read before
 > submitting to a store that reviews licences.

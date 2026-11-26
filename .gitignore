@@ -46,6 +46,11 @@ bios/
 *.cdi
 *.nrg
 *.img
+*.mds
+*.mdf
+*.mdx
+*.ccd
+*.sub
 *.fstree
 !tests/**/Fixtures/**/*.bin
 

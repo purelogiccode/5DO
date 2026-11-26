@@ -7,11 +7,13 @@ funded by voluntary donations rather than sales. Donations are not a license pur
 and do not grant commercial rights. The upstream FreeDO/4DO terms still control what
 may be distributed.
 
-**2026-11-25:** a license-compliance and relicense review is open as `REL-13`. The
-project owner has authorized changing the project license where that is needed to
-comply with the reference projects; no new license has been selected or committed yet.
-The current release remains under the FreeDO modified GNU LGPL until a new root
-`LICENSE` is published.
+**2026-11-25:** the `REL-13` license-compliance and relicense review is complete. The
+project **retains the FreeDO modified GNU LGPL** and the non-commercial donationware
+model. Written rights-holder permission has not been obtained and a clean-room replacement
+has not been performed for this release. The 4DO game database is a separate **GPL-2.0**
+data component; its complete text ships in [`GPL-2.0.txt`](GPL-2.0.txt). Official Debian,
+Ubuntu, Fedora, openSUSE, and Flathub channels remain **not eligible** under the retained
+terms. The current release is governed by the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE).
 
 ## 1. The FreeDO/4DO source is not under a standard OSI license
 
@@ -23,7 +25,7 @@ The FreeDOCore source headers (`References/4DO-master/FreeDOCore/FreeDO/*.cpp`, 
 - Any **commercial** use is **strictly forbidden** without the owners' approval.
 - These notes take precedence over the GNU LGPL where they conflict.
 
-This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project may also carry GPL obligations for its own code. The project license decision is recorded in the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE): 5DO is distributed under the FreeDO modified GNU LGPL, with the FreeDO notice reproduced verbatim and the GNU LGPL 2.1 text as the base license.
+This is a restrictive license. It is not the same as "LGPL v2.1 or later" and it is not an OSI-approved license. The 4DO project itself is listed as GPLv2 by its distribution page and SourceForge metadata, but its FreeDO-derived core retains the FreeDO modified LGPL. The project license decision is recorded in the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE): 5DO is distributed under the FreeDO modified GNU LGPL, with the FreeDO notice reproduced verbatim and the GNU LGPL 2.1 text as the base license. The 4DO game database is a separate GPL-2.0 data component; see §1b.
 
 ### 1a. Opera/libopera
 
@@ -34,14 +36,25 @@ license position, but it adds Opera to the attribution and review list. If Opera
 or knowledge is used, preserve its headers and credit the Opera/libretro
 contributors in addition to FreeDO and 4DO.
 
+### 1b. 4DO game database (GPL-2.0)
+
+The 4DO project distributes its source under **GNU GPL version 2** according to its
+download page and SourceForge metadata. The embedded
+`src/FiveDo.Storage/Data/GameDatabase.xml` is a separate GPL-2.0 data component derived
+from the 4DO database. The 5DO-generated records and extension fields in that file are
+contributed under the same GPL-2.0 terms. The complete license text ships in
+[`GPL-2.0.txt`](GPL-2.0.txt) and is copied into every bundle. The database is read at
+runtime and is not linked into the emulator code; the emulator code remains under the
+FreeDO modified GNU LGPL.
+
 ## 2. What this means for the project
 
 The project license is the FreeDO modified GNU LGPL recorded in the root
-[`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE). Relicensing
-5DO's original code does not by itself remove the upstream restrictions on
-FreeDO/4DO/Opera-derived code; the `REL-13` review must obtain permission, replace the
-restricted portions, or retain the current non-commercial terms. Until that review is
-complete:
+[`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE). The 2026-11-25
+`REL-13` review retained that license: replacing the upstream restrictions would need
+written rights-holder permission or a clean-room reimplementation, neither of which has
+been secured for this release. The 4DO game database is separately licensed under GPL-2.0
+as described in §1b. The retained terms mean:
 
 - Treat the project as **donationware**: non-commercial, source-available, and funded by voluntary donations rather than sales.
 - Keep **full attribution** to FreeDO and 4DO in the source, README, About box, and release notes.
@@ -51,14 +64,15 @@ complete:
 - Do **not** describe a donation as purchasing a license or commercial rights.
 - Do **not** include BIOS ROMs, game discs, or other copyrighted 3DO material in the repository or release artifacts.
 
-## 3. Recommended actions before the first public release
+## 3. Ongoing compliance actions
 
-1. **Complete the `REL-13` license review.** Contact the FreeDO/4DO/Opera rights holders
-   if permission is needed, or replace any restricted portion. Record the decision and
-   correspondence. Do not describe a new license or a distribution channel as available
-   until the review is signed off and the root `LICENSE` is updated.
+1. **Keep the `REL-13` decision current.** The retained FreeDO modified GNU LGPL and the
+   separate GPL-2.0 database are recorded in the root `LICENSE`,
+   [`ReleaseLegalReview.md`](ReleaseLegalReview.md), and this file. Revisit only if a
+   rights holder grants broader permission, a clean-room replacement lands, or the
+   project changes its distribution model.
 2. Keep the project license aligned with the upstream terms. It cannot be more permissive than the upstream terms allow.
-3. Keep the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE) and [`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) current when dependencies or upstream terms change.
+3. Keep the root [`LICENSE`](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [`GPL-2.0.txt`](GPL-2.0.txt), and [`THIRD-PARTY-NOTICES.md`](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) current when dependencies or upstream terms change.
 4. Add an in-app **About / Licenses** page listing FreeDO, 4DO, Avalonia, and other dependencies.
 5. Have a lawyer review the final distribution model if the project is published commercially or bundled with hardware.
 
@@ -70,6 +84,7 @@ At minimum, preserve:
   Alexander Troosh, Maxim Grishin, Allen Wright, John Sammons, Felix Lazarev.
 - The FreeDO website/project attribution (`www.freedo.org`).
 - The 4DO project attribution and its contributors.
+- The 4DO game database GPL-2.0 notice and the complete text in `GPL-2.0.txt`.
 - The Opera/libopera project attribution and its contributors, including the
   `opera-libretro` and `opera-boot` work where applicable.
 - The original file headers in ported source files.
@@ -117,8 +132,12 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
   release review is tracked in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - CHDSharp 1.7.2 (MIT plus an LGPL-2.1 component; pure C#; package license reviewed for
   the 1.17.1 dependency set)
-- 4DO game database (ported with attribution; permission or replacement is unresolved
-  and tracked as part of `REL-13`)
+- MDSSharp 1.3.0 (MIT; pure managed Alcohol MDS/MDF/MDX reader)
+- CCDSharp 1.0.3 (MIT; pure managed CloneCD CCD/IMG/SUB reader)
+- 4DO game database (GPL-2.0; separate data component derived from the 4DO project;
+  complete text in [`GPL-2.0.txt`](GPL-2.0.txt); the 5DO-generated records and
+  extension fields are under the same terms; read at runtime, not linked into the
+  emulator code)
 
 ## 6. Trademarks
 

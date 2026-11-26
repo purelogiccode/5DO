@@ -76,7 +76,7 @@ public sealed class OperaFileEntry
 }
 
 /// <summary>
-/// Reads the Opera file system from any <see cref="IDiscSource"/> (ISO, BIN, CUE, or CHD).
+/// Reads the Opera file system from any <see cref="IDiscSource"/> (ISO, BIN, CUE, CHD, CDI, NRG, MDS, or CCD).
 /// </summary>
 /// <remarks>
 /// The parser follows the on-disc volume and directory records described by

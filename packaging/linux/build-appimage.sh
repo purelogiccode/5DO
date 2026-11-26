@@ -145,6 +145,9 @@ for document in README.md LICENSE THIRD-PARTY-NOTICES.md; do
         install -m 0644 "$repo_root/$document" "$appdir/usr/share/doc/5do/$document"
     fi
 done
+if [[ -f "$repo_root/docs/GPL-2.0.txt" ]]; then
+    install -m 0644 "$repo_root/docs/GPL-2.0.txt" "$appdir/usr/share/doc/5do/GPL-2.0.txt"
+fi
 
 arguments=(--comp zstd)
 if "$appimagetool" --help 2>&1 | grep -q -- '--no-appstream'; then

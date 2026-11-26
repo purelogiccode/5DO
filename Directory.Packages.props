@@ -30,6 +30,8 @@
     <PackageVersion Include="Vortice.DXGI" Version="3.8.3" />
     <PackageVersion Include="XenoAtom.ShaderCompiler.Build" Version="1.2.2" />
     <PackageVersion Include="CHDSharp" Version="1.7.2" />
+    <PackageVersion Include="CCDSharp" Version="1.0.3" />
+    <PackageVersion Include="MDSSharp" Version="1.3.0" />
     <PackageVersion Include="SharpCompress" Version="1.0.0" />
     <PackageVersion Include="MoonSharp" Version="2.0.0" />
     <!-- Cover packager (build-time tool) -->

@@ -14,7 +14,16 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 ### 4DO
 
 - Source: `References/4DO-master`
-- License: see the 4DO project. The C# host code, game database, input mapping, and save-state helpers are used as behavioral references.
+- Web: <https://fourdo.com>
+- Project license: GNU General Public License version 2.0 (GPLv2), as stated on
+  the 4DO download page and its SourceForge project metadata. The FreeDO-derived
+  core retains the FreeDO modified GNU LGPL upstream terms.
+- The embedded game database (`src/FiveDo.Storage/Data/GameDatabase.xml`) is a
+  separate GPL-2.0 data component derived from the 4DO project. The complete
+  GPL-2.0 text ships in [`docs/GPL-2.0.txt`](docs/GPL-2.0.txt). The 5DO-generated
+  records and extension fields in that file are contributed under the same
+  GPL-2.0 terms. The database is read at runtime and is not linked into the
+  emulator code.
 - This project is a C# port/derivative of the FreeDO/4DO emulation core and preserves attribution.
 
 ### Opera (opera-libretro)
@@ -158,6 +167,25 @@ This file records the projects and licenses that influence or ship with 5DO. It 
   The filters are opt-in and can be removed from a distribution that cannot
   comply with the LGPL.
 
+## Disc-image libraries
+
+### MDSSharp
+
+- Package: `MDSSharp` 1.3.0 (<https://www.nuget.org/packages/MDSSharp>).
+- License: MIT.
+- Use: parses Alcohol 120% `.mds` descriptors and prepares the `.mdf`/split/MDX data
+  for the shared CUE reader in `FiveDo.Storage/MdsDiscImage.cs`. The package is pure
+  managed code with no native dependency.
+
+### CCDSharp
+
+- Package: `CCDSharp` 1.0.3 (<https://www.nuget.org/packages/CCDSharp>).
+- License: MIT.
+- Use: parses CloneCD `.ccd` descriptors and generates the CUE used by
+  `FiveDo.Storage/CcdDiscImage.cs`. The optional `.sub` file is ignored because the
+  3DO CD-ROM device does not need subcode. The package is pure managed code with no
+  native dependency.
+
 ## Runtime and build dependencies
 
 | Dependency | Purpose | License / status |
@@ -183,26 +211,35 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
 | CHDSharp 1.7.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Package license reviewed for the 1.17.1 dependency set. |
+| MDSSharp 1.3.0 | Alcohol MDS/MDF and MDS v2/MDX disc images | MIT; pure managed, no native dependency. |
+| CCDSharp 1.0.3 | CloneCD CCD/IMG/SUB disc images | MIT; pure managed, no native dependency. |
 | SharpCompress 1.0.0 | ZIP/7z disc containers (ISO/BIN/CUE+BIN) | MIT; pure C#, no native dependency. |
-| 4DO game database | Game IDs and fix flags | Ported with attribution from `References/4DO-master`. The 4DO tree has no LICENSE file or source headers, so permission or replacement remains unresolved. It is tracked in the active plan as part of `REL-13` and must be resolved before the next license/compliance release. |
+| 4DO game database | Game IDs and fix flags | **GPL-2.0.** Separate data component derived from the 4DO project's `GameDatabase.xml`; complete text in [`docs/GPL-2.0.txt`](docs/GPL-2.0.txt). The 5DO-generated records and extension fields are under the same terms. Read at runtime, not linked into the emulator code. |
 
 ## Project license
 
-5DO is currently distributed under the FreeDO modified GNU LGPL. The root
+5DO is distributed under the **FreeDO modified GNU LGPL**. The root
 [`LICENSE`](LICENSE) reproduces the FreeDO notice verbatim, includes the GNU LGPL 2.1
 text, and records the additional project terms. The FreeDO additional terms take
 precedence where they conflict with the LGPL.
 
-A license-compliance and relicense review is open as `REL-13`. It must reconcile the
-project-original code with the FreeDO/4DO/Opera terms, the 4DO game-database provenance,
-and any target distribution channel. The current terms remain in force until a new root
-`LICENSE` is committed.
+The 2026-11-25 `REL-13` review retained those terms. The emulator core is a
+derivative of FreeDO/4DO/Opera, and the project is non-commercial donationware,
+so replacing the upstream restrictions would require written rights-holder
+permission or a clean-room reimplementation. Neither has been secured for this
+release. The 4DO game database is a separate GPL-2.0 data component with its
+complete license text in [`docs/GPL-2.0.txt`](docs/GPL-2.0.txt); it is not
+linked into the emulator code.
 
 Release builds are **donationware**: non-commercial, source-available, and funded by
 voluntary donations rather than sales. Commercial use requires prior written approval
 from the FreeDO rights holders; the owner/legal sign-off is tracked in
 [`docs/ReleaseLegalReview.md`](docs/ReleaseLegalReview.md). Donations do not grant a
 license or commercial rights. Keep the FreeDO/4DO/Opera attribution intact.
+
+Official Debian/Ubuntu/Fedora/openSUSE archives and Flathub remain **not eligible**
+under the retained non-commercial terms. Direct downloads and the optional
+self-hosted mirror tooling are the supported Linux paths.
 
 ## Assets and content
 

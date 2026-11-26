@@ -51,6 +51,18 @@ public sealed class GameDatabaseTests
     }
 
     [Fact]
+    public void EmbeddedDatabase_CarriesGplNotice()
+    {
+        using Stream stream = typeof(GameDatabase).Assembly
+            .GetManifestResourceStream("FiveDo.Storage.Data.GameDatabase.xml")!;
+        using var reader = new StreamReader(stream);
+        string xml = reader.ReadToEnd();
+
+        Assert.Contains("GNU General Public License version 2", xml, StringComparison.Ordinal);
+        Assert.Contains("docs/GPL-2.0.txt", xml, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void UnknownChecksum_ReturnsNull()
     {
         Assert.Null(GameDatabase.Default.FindByChecksum("00000000000000000000000000000000"));

@@ -1019,7 +1019,7 @@ public partial class MainWindow : Window, IDisposable
             [
                 new FilePickerFileType("3DO disc")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.zip", "*.7z", "*.m3u", "*.m3u8"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.mds", "*.mdx", "*.ccd", "*.zip", "*.7z", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);
@@ -1347,6 +1347,9 @@ public partial class MainWindow : Window, IDisposable
             || extension.Equals(".chd", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".cdi", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".nrg", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".mds", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".mdx", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".ccd", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".7z", StringComparison.OrdinalIgnoreCase)
             || extension.Equals(".m3u", StringComparison.OrdinalIgnoreCase)
@@ -1382,7 +1385,7 @@ public partial class MainWindow : Window, IDisposable
             [
                 new FilePickerFileType("3DO disc or playlist")
                 {
-                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.zip", "*.7z", "*.m3u", "*.m3u8"],
+                    Patterns = ["*.iso", "*.bin", "*.cue", "*.chd", "*.cdi", "*.nrg", "*.mds", "*.mdx", "*.ccd", "*.zip", "*.7z", "*.m3u", "*.m3u8"],
                 },
             ],
         }).ConfigureAwait(true);
@@ -4347,7 +4350,7 @@ public partial class MainWindow : Window, IDisposable
         {
             EmptyLibraryTitle.Text = "No games found";
             EmptyLibraryText.Text = _settings.LibraryFolders.Count == 0
-                ? "Add a folder that contains ISO, BIN, CUE, CHD, ZIP, or 7z images."
+                ? "Add a folder that contains ISO, BIN, CUE, CHD, CDI, NRG, MDS, CCD, ZIP, or 7z images."
                 : "No supported disc images were found in the configured folders.";
         }
         else if (!hasVisible)
