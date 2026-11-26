@@ -111,6 +111,8 @@ published.
 
 ## Links
 
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.18.0>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/45855166556>.
 - [Installation](https://purelogiccode.github.io/5DO/Installation.html)
 - [What's new](https://purelogiccode.github.io/5DO/WhatsNew.html)
 - [Known issues](https://purelogiccode.github.io/5DO/KnownIssues.html)

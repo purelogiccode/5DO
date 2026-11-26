@@ -899,7 +899,9 @@ remains unsigned.
   the GPL-2.0 4DO database record. The pre-release review fixed MDS/CCD relative
   paths/pregaps/split volumes/cache identity, MP4 frame-skip/cleanup/atomic mux/aspect
   handling, the Vulkan void flip, the OpenGL program leak, interpolation invalidation,
-  and live-clock rewind/accumulator scaling; suite 2,644/2,644.
+  and live-clock rewind/accumulator scaling; suite 2,644/2,644. Published 17 assets in
+  run <https://github.com/purelogiccode/5DO/actions/runs/45855166556>; both checksum
+  manifests verify with 0 mismatches.
 - **v1.17.1 (2026-11-25):** bug-fix release - malformed ZIP central-directory failures
   are translated to `DiscImageException` and listed as library errors (#70180);
   unobserved `OpenGL FBO` compositor failures fall back to the CPU presenter without a

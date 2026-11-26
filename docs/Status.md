@@ -1,12 +1,16 @@
 # Project Status and Next Steps
 
-**2026-11-26, v1.18.0 feature release (GitHub Releases):** the release adds read-only
+**2026-11-26, v1.18.0 feature release (published):** the release adds read-only
 Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through
 an external FFmpeg with Low/Medium/High quality, high-refresh frame interpolation,
 patterned GPU void bars on OpenGL/Direct3D 11/Vulkan, and live CPU-clock changes that
 apply at the next frame boundary. Windows desktop/CLI, Linux x64 CLI, and macOS arm64 CLI
 validated the MP4 path; the full suite is **2,644/2,644**. The active plan tracks
-**13 open items**. Release bundles and checksums are produced by the tag workflow; see
+**13 open items**. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45855166556> published 17 assets; both
+checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.18.0,
+`selftest` 15/15, the 600-frame hash `0x110E7DC5` / PC `0x00059960`, a 10.010 s MP4 with
+DAR 4:3, and `FRONTEND SMOKE OK 1.18.0`. See
 [ReleaseNotes-1.18.0.md](ReleaseNotes-1.18.0.md).
 
 **2026-11-26, MP4 video recording:** `UX-38` is complete. The desktop **File > Record

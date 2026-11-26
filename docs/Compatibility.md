@@ -1173,10 +1173,13 @@ WAV. Interpolation resets after pause/step/rewind/state load/disc change; the Vu
 pattern is no longer vertically mirrored; the OpenGL void program is released; and a live
 clock change clears rewind history and rescales the Quartz/Clio accumulators.
 
-The Windows x64 bundle runs the CLI `selftest`, the 600-frame hash/PC check, an MP4
-recording with non-silent AAC, and the frontend smoke. The tag workflow builds the five
-bundles and Linux packages; the published asset list and checksum verification are
-recorded with the release run after publication.
+The published Windows x64 bundle reports 1.18.0, passes `selftest` 15/15, reproduces the
+600-frame Wolfenstein 3D hash `0x110E7DC5` / PC `0x00059960`, writes a 10.010 s H.264/AAC
+MP4 with DAR 4:3, and reports `FRONTEND SMOKE OK 1.18.0`. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45855166556> built all five bundles and
+the Linux packages and published 17 assets. Both `SHA256SUMS.txt` and
+`SHA256SUMS-linux.txt` verified with **0 mismatches**. The local copy is
+`src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.18.0-win-x64.zip`.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
