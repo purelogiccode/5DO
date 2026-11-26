@@ -4942,3 +4942,33 @@ gap; fast-forward and rewind stop the recording before the timeline diverges. FF
 not bundled. The desktop menu was exercised on Windows; the Linux/macOS frontend smokes
 pass and both use the same validated `Mp4Recorder` path. Full suite **2,644/2,644**;
 build 0 warnings/0 errors; `dotnet format --verify-no-changes` clean.
+
+### 1.1cy Automatic FFmpeg installation (2026-11-26)
+
+**Downloader.** `FfmpegProvisioner` pins FFmpeg 6.1.1 Windows, 7.0.2 Linux, and 6.0
+macOS static builds from the `eugeneware/ffmpeg-static` `b6.1.1` GitHub release. The
+Windows x64 and arm64 entries use the x64 build (arm64 through Windows x64 emulation);
+Linux x64/arm64 and macOS arm64 use their native builds. Each entry carries an HTTPS URL,
+byte size, and SHA-256. The installer streams the file to a temporary name, hashes while
+writing, rejects a size or hash mismatch, marks the Unix file executable, runs `-version`
+and `-encoders`, and only then moves it beside 5DO. Read-only app folders and macOS app
+bundles fall back to the user data `tools/` directory. The desktop dialog is behind
+**Configuration > Install FFmpeg** and the missing-FFmpeg MP4 prompt; the CLI command is
+`5do ffmpeg install`.
+
+**Tests.** `FfmpegProvisionerTests` (7) cover the five pinned platform entries, rejects
+x86 and Intel macOS, and confirms a checksum mismatch leaves no executable or temporary
+file. The CLI install was run on Windows x64: 82,797,568 bytes, SHA-256
+`04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00`, version
+`6.1.1-essentials_build-www.gyan.dev`; `ffmpeg status --json` reported the installed path
+and encoders, and the installed binary produced a 600-frame H.264/AAC MP4 with DAR 4:3.
+Linux x64 installed 7.0.2 (`e7e7fb30477f717e6f55f9180a70386c62677ef8a4d4d1a5d948f4098aa3eb99`)
+beside the CLI and marked it executable. macOS arm64 installed 6.0
+(`a90e3db6a3fd35f6074b013f948b1aa45b31c6375489d39e572bea3f18336584`) into
+`~/Library/Application Support/5DO/tools/ffmpeg`, exercising the read-only app-bundle
+fallback.
+
+**Limits.** The download needs network access and is explicit, not automatic at startup.
+FFmpeg is not bundled or redistributed. The Windows arm64 entry uses x64 emulation; a
+native arm64 build can be supplied with `FIVEDO_FFMPEG`. The pinned version is updated
+only by a 5DO release. Full suite **2,651/2,651**.

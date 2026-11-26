@@ -31,6 +31,8 @@
 > MDS/MDX and CloneCD CCD/IMG/SUB images, H.264/AAC MP4 recording through an optional
 > external FFmpeg with Low/Medium/High quality, high-refresh frame interpolation,
 > patterned GPU void bars, and live CPU-clock changes without restarting the machine.
+> **Configuration > Install FFmpeg** downloads a pinned, SHA-256-verified build when
+> FFmpeg is missing; the CLI equivalent is `5do ffmpeg install`.
 > The desktop keeps a rolling autosave written on pause, clean exit, and a configurable
 > interval, and restores it at startup only when the disc game ID and effective BIOS MD5
 > match. ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z
@@ -96,7 +98,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.18.0` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,644 tests** in the current test assembly |
+| Automated tests | **2,651 tests** in the current test assembly |
 | Optical media | 1,366 local CHDs opened and track-probed; **496 unique titles fully sector-verified**; 26-case BIOS matrix; 3 audio-only CHDs; `disc audio` exports CD-DA to WAV; physical Red Book CD-DA verified on a real drive |
 | Disc containers | ISO, BIN, CUE+BIN, CHD (parent/child), CDI, NRG, Alcohol MDS/MDX, CloneCD CCD/IMG/SUB, and ISO/BIN/CUE+BIN inside ZIP/7z |
 | Save states | Ten numbered slots plus a rolling autosave with validated startup resume; manual slots are never overwritten |

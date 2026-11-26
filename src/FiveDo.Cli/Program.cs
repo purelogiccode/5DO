@@ -135,6 +135,7 @@ internal static class Program
                     "selftest" => SelfTest(args),
                     "disasm" => Disassemble(args),
                     "update" => UpdateCommand(args),
+                    "ffmpeg" => FfmpegCommand(args),
                     _ => Unknown(args[0], json),
                 };
             }
@@ -219,7 +220,7 @@ internal static class Program
 
     private static bool IsDiagnosticCommand(string command)
     {
-        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "gamedb" or "metadata" or "doctor";
+        return command is "--version" or "-v" or "--help" or "-h" or "help" or "bench" or "selftest" or "update" or "ffmpeg" or "gamedb" or "metadata" or "doctor";
     }
 
     private sealed record BiosLoadResult(
@@ -393,6 +394,115 @@ internal static class Program
         return 0;
     }
 
+    private static int FfmpegCommand(string[] args)
+    {
+        var json = HasFlag(args, "--json");
+        var force = HasFlag(args, "--force");
+        string action = args.Length > 1 && !args[1].StartsWith("--", StringComparison.Ordinal)
+            ? args[1].ToLowerInvariant()
+            : "status";
+        FfmpegDownloadSource? source = FfmpegProvisioner.CurrentSource;
+        if (string.Equals(action, "status", StringComparison.Ordinal))
+        {
+            string? path = FfmpegProvisioner.FindInstalled();
+            bool ok = path is not null && FfmpegProvisioner.VerifyExecutable(path, expectedVersion: null);
+            var result = new CliFfmpegResult(
+                ok,
+                path,
+                path is null ? null : FfmpegProvisioner.GetVersion(path),
+                source?.Platform,
+                source?.Url,
+                source?.Sha256,
+                path is null ? null : new FileInfo(path).Length,
+                ok ? null : "FFmpeg is not installed or is not usable.");
+            if (json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(result, CliJsonContext.Default.CliFfmpegResult));
+            }
+            else if (ok)
+            {
+                Console.WriteLine($"FFmpeg is ready: {path}");
+            }
+            else
+            {
+                Console.Error.WriteLine("FFmpeg is not installed. Run '5do ffmpeg install'.");
+            }
+
+            return ok ? 0 : 1;
+        }
+
+        if (!string.Equals(action, "install", StringComparison.Ordinal))
+        {
+            throw new ArgumentException("ffmpeg expects 'status' or 'install'.", nameof(args));
+        }
+
+        try
+        {
+            IProgress<FfmpegInstallProgress>? progress = json
+                ? null
+                : new Progress<FfmpegInstallProgress>(value =>
+                {
+                    if (value.TotalBytes > 0)
+                    {
+                        Console.Error.Write(
+                            $"\r{value.Stage}: {value.Percent:F0}% ({value.BytesReceived / (1024.0 * 1024.0):F1} MiB)");
+                    }
+                    else
+                    {
+                        Console.Error.Write($"\r{value.Stage}");
+                    }
+                });
+            FfmpegInstallResult installed = FfmpegProvisioner
+                .InstallAsync(progress, force, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            if (json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliFfmpegResult(
+                        true,
+                        installed.Path,
+                        installed.Version,
+                        source?.Platform,
+                        installed.SourceUrl,
+                        installed.Sha256,
+                        installed.Bytes,
+                        null),
+                    CliJsonContext.Default.CliFfmpegResult));
+            }
+            else
+            {
+                Console.Error.WriteLine();
+                Console.WriteLine($"FFmpeg {installed.Version} installed: {installed.Path}");
+            }
+
+            return 0;
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            if (json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(
+                    new CliFfmpegResult(
+                        false,
+                        null,
+                        null,
+                        source?.Platform,
+                        source?.Url,
+                        source?.Sha256,
+                        null,
+                        exception.Message),
+                    CliJsonContext.Default.CliFfmpegResult));
+            }
+            else
+            {
+                Console.Error.WriteLine($"error: FFmpeg installation failed: {exception.Message}");
+            }
+
+            return 1;
+        }
+    }
+
     private static int Unknown(string command, bool json)
     {
         if (json)
@@ -501,7 +611,7 @@ internal static class Program
         if (recordMp4Path is not null && Mp4Recorder.FindFfmpeg() is null)
         {
             throw new ArgumentException(
-                "FFmpeg was not found. Install FFmpeg, place ffmpeg beside 5DO, or set FIVEDO_FFMPEG to its executable path.",
+                "FFmpeg was not found. Run '5do ffmpeg install', install it from Configuration > Install FFmpeg, place ffmpeg beside 5DO, or set FIVEDO_FFMPEG to its executable path.",
                 nameof(args));
         }
 
@@ -6814,6 +6924,8 @@ internal static class Program
         Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
+        Console.WriteLine("  ffmpeg status|install [--force] [--json]");
+        Console.WriteLine("                                       Download and verify FFmpeg for MP4 recording.");
         Console.WriteLine();
         Console.WriteLine(Localizer.Translate("cli.options"));
         Console.WriteLine(Localizer.Translate("cli.locale_option"));

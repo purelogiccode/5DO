@@ -91,6 +91,14 @@
 
 ## Current snapshot
 
+**2026-11-26, post-1.18.0 FFmpeg installer.** MP4 recording no longer requires a manual
+FFmpeg setup. **Configuration > Install FFmpeg**, the missing-FFmpeg MP4 prompt, and
+`5do ffmpeg install` download a pinned FFmpeg build (6.1.1 Windows, 7.0.2 Linux, 6.0
+macOS), verify its SHA-256, test H.264/AAC support, and install it beside 5DO when
+writable (otherwise in the user data `tools/` folder). FFmpeg is still not bundled. The
+installer was validated on Windows x64, Linux x64, and macOS arm64. The test assembly now
+has **2,651 tests**.
+
 **2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and
 CloneCD CCD/IMG/SUB images are now supported, and optional H.264/AAC MP4 recording uses
 an external FFmpeg (`FIVEDO_FFMPEG`, apphost, or `PATH`) with Low/Medium/High quality.

@@ -118,35 +118,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
     /// <returns>The full path, or <see langword="null"/> when FFmpeg is not available.</returns>
     public static string? FindFfmpeg()
     {
-        var explicitPath = Environment.GetEnvironmentVariable("FIVEDO_FFMPEG");
-        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
-        {
-            return explicitPath;
-        }
-
-        var executable = OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg";
-        var local = Path.Combine(AppContext.BaseDirectory, executable);
-        if (File.Exists(local))
-        {
-            return local;
-        }
-
-        var path = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        foreach (var directory in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            var candidate = Path.Combine(directory.Trim('"'), executable);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
-
-        return null;
+        return FfmpegProvisioner.FindUsable();
     }
 
     /// <summary>
@@ -182,7 +154,8 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         if (string.IsNullOrWhiteSpace(ffmpeg) || !File.Exists(ffmpeg))
         {
             throw new InvalidOperationException(
-                "FFmpeg was not found. Install FFmpeg, place ffmpeg beside 5DO, or set FIVEDO_FFMPEG to its executable path.");
+                "FFmpeg was not found. Install it from Configuration > Install FFmpeg, "
+                + "run '5do ffmpeg install', place ffmpeg beside 5DO, or set FIVEDO_FFMPEG to its executable path.");
         }
 
         var fullOutput = Path.GetFullPath(outputPath);

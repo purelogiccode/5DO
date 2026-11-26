@@ -282,6 +282,7 @@
     "ui.vsync_where_supported": "VSync (지원되는 경우)",
     "ui.display_refresh": "디스플레이 주사율",
     "ui.mp4_quality": "MP4 화질",
+    "ui.install_ffmpeg": "FFmpeg 설치...",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "3DO는 초당 60필드를 출력합니다(PAL은 50). 60을 초과하는 주사율은 최신 프레임을 다시 표시할 뿐 추가 움직임을 만들지 않습니다.",
     "ui.frame_interpolation": "프레임 보간(60Hz 초과 필요)",
     "ui.frame_interpolation_note": "3DO는 초당 60필드(PAL은 50)를 출력합니다. 60Hz를 초과하는 주사율에서는 최신 프레임을 다시 표시합니다. 프레임 보간은 완료된 최근 두 프레임을 혼합하여 더 부드러운 움직임을 만듭니다. 60Hz를 초과하는 고정 주사율이 필요하며 VRR에서는 비활성화됩니다.",

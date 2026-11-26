@@ -1181,6 +1181,26 @@ the Linux packages and published 17 assets. Both `SHA256SUMS.txt` and
 `SHA256SUMS-linux.txt` verified with **0 mismatches**. The local copy is
 `src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.18.0-win-x64.zip`.
 
+### 10.16 Automatic FFmpeg installation (2026-11-26)
+
+`FfmpegProvisioner` pins FFmpeg 6.1.1 Windows, 7.0.2 Linux, and 6.0 macOS builds for
+Windows x64/arm64, Linux x64/arm64, and macOS arm64. A download is explicit
+(**Configuration > Install FFmpeg**, the MP4 prompt,
+or `5do ffmpeg install`), HTTPS-only, size-limited, streamed to a temporary file, and
+verified against the pinned SHA-256 before it is moved into place. The installer then
+runs `-version` and `-encoders` and requires libx264 (or a platform H.264 encoder) plus
+AAC.
+
+On Windows x64 the CLI installed 82,797,568 bytes with SHA-256
+`04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00`, version
+`6.1.1-essentials_build-www.gyan.dev`, beside `FiveDo.Cli.exe`; `ffmpeg status --json`
+reported it ready, and a 600-frame run produced a 10.010 s H.264/AAC MP4 with DAR 4:3.
+Linux x64 installed the 7.0.2 build (`e7e7fb…3eb99`) beside the CLI and marked it
+executable. macOS arm64 installed the 6.0 build (`a90e3d…6584`) into
+`~/Library/Application Support/5DO/tools/ffmpeg`, the intended read-only-app-bundle
+fallback. `FfmpegProvisionerTests` covers the five platform entries and checksum
+rejection.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

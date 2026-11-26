@@ -135,9 +135,11 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
 - MDSSharp 1.3.0 (MIT; pure managed Alcohol MDS/MDF/MDX reader)
 - CCDSharp 1.0.3 (MIT; pure managed CloneCD CCD/IMG/SUB reader)
 - FFmpeg (optional, **not bundled or redistributed**): MP4 recording invokes a
-  user-supplied FFmpeg executable as a separate process. 5DO ships no FFmpeg binary or
-  codec; users are responsible for the licence and codec-patent terms of the build they
-  install.
+  user-supplied FFmpeg executable as a separate process. The desktop and
+  `5do ffmpeg install` can download a pinned upstream build at the user's request,
+  verify its SHA-256, and save it locally; 5DO ships no FFmpeg binary or codec. The
+  pinned Windows/Linux/macOS builds include libx264 and are therefore GPL-2.0-or-later;
+  users are responsible for the licence and codec-patent terms of the build they install.
 - 4DO game database (GPL-2.0; separate data component derived from the 4DO project;
   complete text in [`GPL-2.0.txt`](GPL-2.0.txt); the 5DO-generated records and
   extension fields are under the same terms; read at runtime, not linked into the

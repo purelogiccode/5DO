@@ -2858,6 +2858,15 @@ public partial class MainWindow : Window, IDisposable
             return;
         }
 
+        if (Mp4Recorder.FindFfmpeg() is null)
+        {
+            string? installed = await FfmpegInstallWindow.ShowAsync(this).ConfigureAwait(true);
+            if (string.IsNullOrWhiteSpace(installed))
+            {
+                return;
+            }
+        }
+
         var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
@@ -5222,6 +5231,28 @@ public partial class MainWindow : Window, IDisposable
     private void OnSettingsAsync(object? sender, RoutedEventArgs e)
     {
         AsyncEvent.Run(ShowSettingsAsync, "showing settings");
+    }
+
+    private void OnInstallFfmpegAsync(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(InstallFfmpegAsync, "installing FFmpeg");
+    }
+
+    private async Task InstallFfmpegAsync()
+    {
+        if (FfmpegProvisioner.FindUsable() is { } installed)
+        {
+            StatusText.Text = $"FFmpeg is ready: {installed}";
+            ShowOsd("FFmpeg is ready.", OsdSeverity.Success);
+            return;
+        }
+
+        string? path = await FfmpegInstallWindow.ShowAsync(this).ConfigureAwait(true);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            StatusText.Text = $"FFmpeg installed: {path}";
+            ShowOsd("FFmpeg installed. MP4 recording is ready.", OsdSeverity.Success);
+        }
     }
 
     private async Task ShowSettingsAsync()

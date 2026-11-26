@@ -4,6 +4,17 @@ All notable changes are recorded here. The project is at v1.18.0, the feature re
 MDS/CCD images, MP4 recording, high-refresh interpolation, patterned GPU bars, and live
 CPU-clock changes.
 
+## [Unreleased]
+
+### Added
+
+- **Automatic FFmpeg installation.** **Configuration > Install FFmpeg** and
+  `5do ffmpeg install` download pinned FFmpeg builds (6.1.1 Windows, 7.0.2 Linux, 6.0
+  macOS), verify their SHA-256, mark them executable, test H.264/AAC support, and save
+  them beside 5DO when writable (otherwise in the user data `tools/` folder). The MP4
+  dialog offers the same download when FFmpeg is missing. FFmpeg is still not bundled or
+  redistributed.
+
 ## [1.18.0] - 2026-11-26
 
 ### Added

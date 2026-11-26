@@ -282,6 +282,7 @@
     "ui.vsync_where_supported": "VSync（如支持）",
     "ui.display_refresh": "显示刷新率",
     "ui.mp4_quality": "MP4 画质",
+    "ui.install_ffmpeg": "安装 FFmpeg...",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "3DO 每秒输出 60 场（PAL 为 50）。高于此的速率会重复显示最新帧，不会产生额外运动。",
     "ui.frame_interpolation": "帧插值（需要 >60 Hz）",
     "ui.frame_interpolation_note": "3DO 每秒输出 60 场（PAL 为 50）。高于 60 的刷新率会重新呈现最新帧；帧插值会混合最近两个已完成帧，使运动更平滑。它需要高于 60 Hz 的固定刷新率，并在启用 VRR 时禁用。",

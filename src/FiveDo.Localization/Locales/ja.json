@@ -282,6 +282,7 @@
     "ui.vsync_where_supported": "VSync (対応環境のみ)",
     "ui.display_refresh": "ディスプレイリフレッシュレート",
     "ui.mp4_quality": "MP4 画質",
+    "ui.install_ffmpeg": "FFmpeg をインストール...",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "3DO は毎秒 60 フィールドを出力します (PAL は 50)。60 を超えるレートでは最新フレームを再表示するだけで、動きは増えません。",
     "ui.frame_interpolation": "フレーム補間（60 Hz 超が必要）",
     "ui.frame_interpolation_note": "3DO は毎秒 60 フィールド（PAL では 50）を出力します。60 Hz を超えるレートでは最新フレームを再表示します。フレーム補間は完了した直近 2 フレームを合成し、より滑らかな動きにします。60 Hz を超える固定レートが必要で、VRR では無効になります。",

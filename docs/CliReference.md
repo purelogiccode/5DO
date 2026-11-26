@@ -107,6 +107,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `bench` | Synthetic-ROM frame benchmark (or real content with options); `--profile` selects the timing bundle. |
 | `selftest` | Determinism and state roundtrip checks for every named timing profile. |
 | `update` | Check GitHub for a newer 5DO release. |
+| `ffmpeg` | Install or inspect the pinned FFmpeg used for MP4 recording. |
 | `--version`, `--help` | Identity/help. |
 
 ---
@@ -232,7 +233,8 @@ the BIOS file.
 `--audio wav` writes 44.1 kHz, 16-bit stereo PCM and reports capture statistics.
 `--audio openal` opens the default OpenAL Soft device; if no device is available it
 prints a warning and runs silently. `--realtime` only affects pacing, not the backend.
-`--record-mp4` requires FFmpeg on `PATH`, `FIVEDO_FFMPEG`, or beside the apphost. It
+`--record-mp4` requires FFmpeg on `PATH`, `FIVEDO_FFMPEG`, or beside the apphost. Use
+`5do ffmpeg install` to download the pinned, verified build. It
 prefers `libx264`, then a platform H.264 encoder, then FFmpeg's `mpeg4`; audio is AAC at
 192 kb/s. `--record-quality` selects Low/Medium/High (CRF 30/23/18 for libx264). Pause
 compresses the gap, and fast-forward/rewind are not captured. A failed MP4 finalize sets
@@ -1127,6 +1129,31 @@ JSON fields: `ok`, `error`, `currentVersion`, `latestVersion`, `updateAvailable`
 The interactive startup check prints a one-line notice, asks `Open the download page now?
 [y/N]`, and uses the system browser only after confirmation. `--json`, redirected
 output, CI, `--no-update-check`, and `FIVEDO_UPDATE_CHECK=0` skip the prompt.
+
+---
+
+## 12b. `ffmpeg`
+
+```powershell
+5do ffmpeg status
+5do ffmpeg status --json
+5do ffmpeg install
+5do ffmpeg install --force
+5do ffmpeg install --json
+```
+
+`status` prints the FFmpeg path and exits 0 when the executable reports a version,
+libx264 (or a platform H.264 encoder), and AAC. `install` downloads the pinned FFmpeg
+build for the current platform (6.1.1 Windows, 7.0.2 Linux, 6.0 macOS) from GitHub,
+verifies its SHA-256, marks it executable on Linux/macOS, tests it, and places it beside
+`5do` when that folder is writable. Read-only installs and macOS app bundles use the user
+data `tools/` folder.
+`--force` replaces an existing installed copy. The download is explicit; a missing
+FFmpeg for `--record-mp4` produces a clean user error and does not start a download.
+
+JSON fields: `ok`, `path`, `version`, `platform`, `sourceUrl`, `sha256`, `bytes`, `error`.
+The Windows arm64 build uses the x64 FFmpeg binary under Windows' x64 emulation. FFmpeg
+is not bundled or redistributed by 5DO.
 
 ---
 

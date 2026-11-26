@@ -214,6 +214,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | MDSSharp 1.3.0 | Alcohol MDS/MDF and MDS v2/MDX disc images | MIT; pure managed, no native dependency. |
 | CCDSharp 1.0.3 | CloneCD CCD/IMG/SUB disc images | MIT; pure managed, no native dependency. |
 | SharpCompress 1.0.0 | ZIP/7z disc containers (ISO/BIN/CUE+BIN) | MIT; pure C#, no native dependency. |
+| FFmpeg (optional, not bundled) | H.264/AAC MP4 recording through a separate executable; the desktop and `5do ffmpeg install` can download a pinned build on request | GPL-2.0-or-later for the pinned builds because they include libx264 (FFmpeg is LGPL-2.1-or-later without GPL components). Downloaded from the `eugeneware/ffmpeg-static` `b6.1.1` release: gyan.dev Windows, johnvansickle Linux, eugeneware macOS. 5DO does not redistribute it. |
 | 4DO game database | Game IDs and fix flags | **GPL-2.0.** Separate data component derived from the 4DO project's `GameDatabase.xml`; complete text in [`docs/GPL-2.0.txt`](docs/GPL-2.0.txt). The 5DO-generated records and extension fields are under the same terms. Read at runtime, not linked into the emulator code. |
 
 ## Project license

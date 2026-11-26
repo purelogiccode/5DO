@@ -588,9 +588,13 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 ## MP4 video recording (2026-11-26)
 
 - MP4 recording uses an **external FFmpeg**. 5DO does not bundle or redistribute FFmpeg
-  or its codecs. Install FFmpeg on `PATH`, set `FIVEDO_FFMPEG`, or place
-  `ffmpeg`/`ffmpeg.exe` beside the apphost. Without it, the MP4 option reports a clear
-  error and GIF/WAV recording still works.
+  or its codecs. When FFmpeg is missing, the desktop offers to download a pinned FFmpeg
+  build (6.1.1 Windows, 7.0.2 Linux, 6.0 macOS) and **Configuration > Install FFmpeg**
+  does the same; the CLI uses
+  `5do ffmpeg install`. Downloads are SHA-256-verified and saved beside 5DO when that
+  folder is writable (otherwise the user data `tools/` folder). The download needs a
+  network connection; `PATH`, `FIVEDO_FFMPEG`, or a manually placed executable still
+  work offline. The Windows arm64 build uses the x64 FFmpeg under emulation.
 - Encoder selection is automatic: `libx264`, then a platform H.264 encoder, then FFmpeg's
   native `mpeg4`. The available encoders depend on the FFmpeg build and the machine; a
   hardware encoder can fail on a driver that is present but unusable.

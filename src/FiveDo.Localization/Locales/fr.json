@@ -282,6 +282,7 @@
     "ui.vsync_where_supported": "VSync (si pris en charge)",
     "ui.display_refresh": "Fréquence d'actualisation",
     "ui.mp4_quality": "Qualité MP4",
+    "ui.install_ffmpeg": "Installer FFmpeg...",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "La 3DO produit 60 trames par seconde (50 en PAL). Les fréquences supérieures à 60 réaffichent la dernière image ; elles n'ajoutent aucun mouvement.",
     "ui.frame_interpolation": "Interpolation d'images (nécessite >60 Hz)",
     "ui.frame_interpolation_note": "La 3DO produit 60 champs par seconde (50 en PAL). Les fréquences supérieures à 60 réaffichent la dernière image ; l'interpolation mélange les deux dernières images complètes pour un mouvement plus fluide. Elle nécessite une fréquence fixe supérieure à 60 Hz et est désactivée avec le VRR.",

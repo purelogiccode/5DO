@@ -579,8 +579,11 @@ The selected capture's sidecar summary appears in the status line. **File > Reco
 emulated frames to an animated GIF at 30 fps and asks for a destination; click it again
 (or stop emulation) to finish the file. **File > Record MP4...** records the presented
 frame and the DSP/CD audio mix as H.264/AAC MP4 at the native 59.94/50 Hz rate; click it
-again to stop and finalize. MP4 recording uses an external FFmpeg: install it on `PATH`,
-set `FIVEDO_FFMPEG` to the executable, or place `ffmpeg`/`ffmpeg.exe` beside 5DO. The
+again to stop and finalize. MP4 recording uses an external FFmpeg: when it is missing,
+5DO offers to download a pinned, SHA-256-verified FFmpeg build and save it beside
+5DO (or in the user data `tools/` folder when the app folder is read-only). You can also
+run **Configuration > Install FFmpeg**, install it on `PATH`, set `FIVEDO_FFMPEG`, or
+place `ffmpeg`/`ffmpeg.exe` beside 5DO. The
 recorder prefers `libx264`, then a platform H.264 encoder, and falls back to FFmpeg's
 `mpeg4` encoder; audio is 44.1 kHz stereo AAC. Choose **Low**, **Medium**, or **High**
 under **Settings > Video > MP4 quality** (the default is Medium); the CLI equivalent is

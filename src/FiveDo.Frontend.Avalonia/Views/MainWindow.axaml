@@ -122,6 +122,8 @@
             <MenuItem Header="Configuration" ToolTip.Tip="Video, audio, emulation, path, and input settings.">
                 <MenuItem Header="Settings..." Click="OnSettingsAsync"
                           ToolTip.Tip="Open video, audio, emulation, and path settings." />
+                <MenuItem Header="Install FFmpeg..." Click="OnInstallFfmpegAsync"
+                          ToolTip.Tip="Download and verify FFmpeg for MP4 recording." />
                 <MenuItem Header="RetroAchievements..." Click="OnRetroAchievementsAsync"
                           ToolTip.Tip="Sign in, choose hardcore mode, and view achievements for the current disc." />
                 <MenuItem Header="Input Bindings..." Click="OnInputBindingsAsync"

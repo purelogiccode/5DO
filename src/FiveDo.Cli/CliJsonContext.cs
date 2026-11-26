@@ -59,6 +59,7 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliMovieActionResult))]
 [JsonSerializable(typeof(CliFourDoStateResult))]
 [JsonSerializable(typeof(CliUpdateResult))]
+[JsonSerializable(typeof(CliFfmpegResult))]
 [JsonSerializable(typeof(CliCoverUpdateResult))]
 [JsonSerializable(typeof(CliCoverMatchResult))]
 [JsonSerializable(typeof(CliCoverMatchEntry))]

@@ -1027,6 +1027,7 @@ The v1.12.0 release page is
 | 2026-11-26 | VID-22 completion and PLAT-19 upstream block | High-refresh frame interpolation shipped with a >60 Hz/VRR-gated toggle, three-backend presentation evidence, and unchanged core hashes; the active plan now tracks 16 items. Native Wayland Vulkan moved to §4 because Avalonia has no officially supported Wayland backend yet. |
 | 2026-11-26 | UX-33/SYS-25 completion | Patterned void bars now render on OpenGL, Direct3D 11, and Vulkan; live CPU-clock changes apply at the next frame boundary after the six-test determinism probe. The active plan now tracks 14 items. |
 | 2026-11-26 | UX-38 completion | MP4 recording with Low/Medium/High quality is validated on Windows desktop/CLI, Linux CLI, and macOS CLI with 60.06 s H.264/AAC files and non-silent audio. The active plan now tracks 13 items. |
+| 2026-11-26 | FFmpeg installer | Added the pinned, SHA-256-verified FFmpeg downloader, desktop prompt/menu, and `5do ffmpeg install`; the suite now has 2,651 tests. |
 
 ## 16. ARM64 validation workstream (2026-11-19)
 
