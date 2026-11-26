@@ -587,13 +587,16 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
   hardware encoder can fail on a driver that is present but unusable.
 - The recorder captures the presented frame at its native size (320x240 or 640x480) and
   the emulated 59.94/50 Hz rate. Odd dimensions are trimmed to even values, and a
-  mid-recording 240/480-line change is scaled to the initial size. Video quality is fixed
-  at CRF 23 in this slice; there is no quality selector yet.
+  mid-recording 240/480-line change is scaled to the initial size. Quality is
+  Low/Medium/High (`--record-quality` or Settings > Video > MP4 quality); libx264 maps
+  them to CRF 30/23/18, and hardware encoders use the nearest equivalent.
 - Pause suspends capture, so the paused wall-clock gap is omitted from the MP4.
   Fast-forward and rewind stop the recording before the frame/audio timeline diverges.
   Disc swap continues recording; the audio buffer keeps running.
-- Windows x64 and the CLI were validated with H.264/AAC; Linux/macOS validation remains
-  pending. See [TestCorpus.md](TestCorpus.md) 1.1cx.
+- Windows desktop/CLI, Linux x64 CLI, and macOS arm64 CLI were validated with H.264/AAC
+  and non-silent audio. The desktop menu itself was exercised on Windows; Linux and macOS
+  ran the frontend smoke and the same recorder path through the CLI. See
+  [TestCorpus.md](TestCorpus.md) 1.1cx.
 
 ## Linux arm64 headless VM (2026-11-19)
 

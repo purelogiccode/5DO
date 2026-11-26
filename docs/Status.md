@@ -1,13 +1,13 @@
 # Project Status and Next Steps
 
-**2026-11-26, MP4 video recording:** `UX-38` now has a working H.264/AAC MP4 path. The
-desktop **File > Record MP4...** menu and CLI `--record-mp4` use an external FFmpeg
-(`FIVEDO_FFMPEG`, apphost folder, or `PATH`), record the presented frame and DSP/CD audio
-mix, and mux with AAC. Windows x64 validated a 3,000-frame 320x240 CLI recording and a
-1,056-frame 640x480 desktop recording with non-silent audio; Linux/macOS validation and a
-configurable quality selector remain, so `UX-38` stays Partial. FFmpeg is not bundled.
-The suite is **2,640/2,640**; build, `dotnet format`, and `mkdocs build --strict` are
-clean.
+**2026-11-26, MP4 video recording:** `UX-38` is complete. The desktop **File > Record
+MP4...** menu and CLI `--record-mp4` use an external FFmpeg (`FIVEDO_FFMPEG`, apphost
+folder, or `PATH`), record the presented frame and DSP/CD audio mix, and mux H.264/AAC
+with Low/Medium/High quality (`--record-quality` / Settings > Video > MP4 quality).
+Windows desktop (17.601 s) and CLI, Linux CLI, and macOS CLI (60.06 s) produced H.264/AAC
+files at 60000/1001 with non-silent audio; Linux Low/Medium/High sizes were 1.72/2.97/5.19 MB.
+FFmpeg is not bundled. The active plan now tracks **13 open items**; the suite is
+**2,641/2,641**; build, `dotnet format`, and `mkdocs build --strict` are clean.
 
 **2026-11-26, patterned GPU bars and live CPU clock:** `UX-33` and `SYS-25` are complete.
 The selected void pattern (Solid, Checker, Grid, Scanline, FourDO, Bumps, or Metal) now
@@ -16,8 +16,9 @@ CPU-clock setting applies at the next frame boundary without recreating the mach
 Checker and FourDO were verified on OpenGL, Checker on Direct3D 11 and Vulkan, and six
 `LiveClockTests` prove the live switch matches a clock override of the same pre-switch
 state, a post-switch state round-trip is deterministic, stock runs are unchanged, and all
-component clocks follow the machine. The active plan now tracks **14 open items**; the
-suite is **2,638/2,638**, with build, `dotnet format`, and `mkdocs build --strict` clean.
+component clocks follow the machine. At that point the active plan tracked **14 open
+items**; the suite was **2,638/2,638**, with build, `dotnet format`, and `mkdocs build
+--strict` clean.
 
 **2026-11-26, high-refresh frame interpolation:** `VID-22` is complete. **Settings > Video
 > Frame interpolation** blends the two most recent completed fields at the presentation

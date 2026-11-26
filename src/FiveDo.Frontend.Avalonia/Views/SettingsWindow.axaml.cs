@@ -101,6 +101,13 @@ public partial class SettingsWindow : Window
         new(0, "Match display (unlimited)"),
     ];
 
+    private static readonly RecordingQualityOption[] _recordingQualityOptions =
+    [
+        new(VideoRecordingQuality.Low, "Low"),
+        new(VideoRecordingQuality.Medium, "Medium"),
+        new(VideoRecordingQuality.High, "High"),
+    ];
+
     private static readonly PointerPortOption[] _pointerPortOptions =
     [
         new(0, "All pointer devices"),
@@ -315,6 +322,10 @@ public partial class SettingsWindow : Window
         DisplayRefreshRateCombo.SelectionChanged += (_, _) => UpdateFrameInterpolationAvailability();
         VrrCheck.IsCheckedChanged += (_, _) => UpdateFrameInterpolationAvailability();
         UpdateFrameInterpolationAvailability();
+        RecordingQualityCombo.ItemsSource = _recordingQualityOptions;
+        RecordingQualityCombo.SelectedItem = _recordingQualityOptions.FirstOrDefault(
+                option => option.Value == settings.ResolveMp4Quality())
+            ?? _recordingQualityOptions[1];
         CropInsets overscan = settings.ResolveOverscan();
         OverscanLeftBox.Text = overscan.Left.ToString(CultureInfo.InvariantCulture);
         OverscanTopBox.Text = overscan.Top.ToString(CultureInfo.InvariantCulture);
@@ -1217,6 +1228,9 @@ public partial class SettingsWindow : Window
             ? refreshRate.Value
             : AppSettings.DefaultDisplayRefreshRate;
         settings.FrameInterpolation = FrameInterpolationCheck.IsChecked == true;
+        settings.Mp4Quality = RecordingQualityCombo.SelectedItem is RecordingQualityOption quality
+            ? quality.Value.ToString()
+            : AppSettings.DefaultMp4Quality;
         settings.SetOverscan(new CropInsets(
             ParseCrop(OverscanLeftBox, "Left overscan"),
             ParseCrop(OverscanTopBox, "Top overscan"),
@@ -2304,6 +2318,14 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record DeinterlaceOption(DeinterlaceMode Value, string Label)
+    {
+        public override string ToString()
+        {
+            return Label;
+        }
+    }
+
+    private sealed record RecordingQualityOption(VideoRecordingQuality Value, string Label)
     {
         public override string ToString()
         {

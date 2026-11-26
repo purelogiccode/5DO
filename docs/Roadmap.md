@@ -51,8 +51,8 @@ short version:
 
 **Product and rendering**
 
-- `UX-38` MP4 video recording: the FFmpeg H.264/AAC recorder, desktop/CLI controls, and
-  Windows evidence are complete; Linux/macOS validation and a quality selector remain.
+- `UX-38` MP4 video recording with Low/Medium/High quality is complete: Windows
+  desktop/CLI, Linux CLI, and macOS CLI use external FFmpeg; see [Video.md](Video.md).
 - `NET-01` netplay loopback probe (commit only if the probe is clean).
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.

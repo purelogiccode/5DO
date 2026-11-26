@@ -4899,20 +4899,36 @@ or `PATH`. The file is not bundled. `Mp4RecorderTests` (2) cover a real 10-frame
 video+audio file and the no-frames error; they skip when FFmpeg is unavailable.
 
 **CLI evidence.** FFmpeg 8.1.1 (libx264, h264_nvenc, AAC) on Windows 11 / RTX 4070.
-`run "Road Rash..." --frames 3000 --record-mp4 rr-test3k.mp4` produced a 2,964,718-byte
-MP4: H.264 320x240 at 60000/1001, AAC 44.1 kHz stereo, 50.050 s; decoding the audio gave
-peak 15,551, RMS 1,788.2, 663,778 silent samples (the boot/logo), 0 clipped. The JSON
-reported `mp4Path` and `mp4Frames: 3000`. A frame extracted at 25 s shows the Road Rash
-intro artwork, and the muxed audio is non-silent.
+`run "Road Rash..." --frames 3600 --record-mp4 win-rr-3600.mp4 --record-quality medium`
+produced a 3,724,569-byte MP4: H.264 320x240 at 60000/1001, AAC 44.1 kHz stereo,
+60.060 s; decoded audio peak 15,551, RMS 1,860.2, 663,778 silent samples (boot/logo),
+0 clipped. The JSON reported `mp4Path` and `mp4Frames: 3600`. A 3,000-frame high-quality
+run was 2,964,718 bytes at 50.050 s with peak 15,551 / RMS 1,788.2.
 
 **Desktop evidence.** Invoking **File > Record MP4...** through UI Automation, choosing
 `desktop-test.mp4`, recording for ~17.6 s, and invoking **Stop MP4 Recording** produced a
 2,492,692-byte MP4: H.264 640x480 at 60000/1001, AAC 44.1 kHz stereo, 17.601 s, 1,056
 frames; the decoded audio had peak 29,702, RMS 4,267.8, 28,745 silent samples, 0 clipped.
-The start, save, and stop paths logged normally.
+The start, save, and stop paths logged normally. A UI-automation pass opened Settings > Video,
+selected MP4 quality **High**, pressed OK, and wrote `"Mp4Quality": "High"` to the isolated
+settings file; `Mp4Quality_RoundtripsAndFallsBackToMedium` covers the Low/Medium/High JSON
+round-trip and the Medium fallback for invalid values.
 
-**Limits.** Video quality is fixed at CRF 23; there is no quality selector yet. Pause
-omits the wall-clock gap; fast-forward and rewind stop the recording before the timeline
-diverges. Windows x64 is validated; Linux and macOS use the same FFmpeg path but remain
-unvalidated. Full suite **2,640/2,640**; build 0 warnings/0 errors; `dotnet format
---verify-no-changes` clean.
+**Linux x64 evidence.** Ubuntu 24.04, FFmpeg 6.1.1 (libx264, h264_nvenc, AAC).
+`Mp4RecorderTests` passed 2/2. A 3,600-frame Road Rash medium run produced a
+3,728,689-byte 60.060 s H.264/AAC MP4; a 3,000-frame high run was 5,190,590 bytes with
+decoded audio peak 15,491 / RMS 1,787.9. Quality sizes on the same 3,000-frame source
+were **Low 1,720,357 / Medium 2,967,726 / High 5,190,590 bytes**. The frontend
+`--smoke-test` passed with OpenGL 4.2.
+
+**macOS arm64 evidence.** macOS 26.6.2 (Apple M5 Pro virtual), FFmpeg 9.0.2
+(libx264, h264_videotoolbox, AAC). `Mp4RecorderTests` passed 2/2. A 3,600-frame
+Wolfenstein 3D high run produced a 4,123,123-byte 60.060 s H.264/AAC MP4; decoded audio
+peak 32,400, RMS 5,066.3, 0 clipped. The frontend `--smoke-test` reported
+`FRONTEND SMOKE OK 1.17.1`.
+
+**Limits.** Quality is Low/Medium/High (libx264 CRF 30/23/18). Pause omits the wall-clock
+gap; fast-forward and rewind stop the recording before the timeline diverges. FFmpeg is
+not bundled. The desktop menu was exercised on Windows; the Linux/macOS frontend smokes
+pass and both use the same validated `Mp4Recorder` path. Full suite **2,641/2,641**;
+build 0 warnings/0 errors; `dotnet format --verify-no-changes` clean.

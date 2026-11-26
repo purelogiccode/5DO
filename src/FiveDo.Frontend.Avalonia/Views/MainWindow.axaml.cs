@@ -2871,7 +2871,8 @@ public partial class MainWindow : Window, IDisposable
                 path,
                 _machine.FramesPerSecond,
                 _machine.RegionProfile.FieldRateNumerator,
-                _machine.RegionProfile.FieldRateDenominator);
+                _machine.RegionProfile.FieldRateDenominator,
+                quality: _settings.ResolveMp4Quality());
             _mp4Recorder = recorder;
             _mp4Path = path;
             _mp4PreviousFrameSkip = _settings.FrameSkip;

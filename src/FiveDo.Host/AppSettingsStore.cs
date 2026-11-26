@@ -403,6 +403,10 @@ public static class AppSettingsStore
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             settings.VoidAreaPattern ??= AppSettings.DefaultVoidAreaPattern;
             settings.VoidAreaPattern = settings.ResolveVoidAreaPattern().ToString();
+            // JSON can deserialize null despite the non-nullable annotation.
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            settings.Mp4Quality ??= AppSettings.DefaultMp4Quality;
+            settings.Mp4Quality = settings.ResolveMp4Quality().ToString();
 
             // JSON can deserialize null despite the non-nullable annotation.
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract

@@ -281,6 +281,7 @@
     "ui.integer_scaling": "Escalado entero",
     "ui.vsync_where_supported": "VSync (si se admite)",
     "ui.display_refresh": "Frecuencia de actualización",
+    "ui.mp4_quality": "Calidad de MP4",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "La 3DO emite 60 campos por segundo (50 en PAL). Las frecuencias superiores a 60 vuelven a mostrar el último fotograma; no generan movimiento adicional.",
     "ui.frame_interpolation": "Interpolación de fotogramas (requiere >60 Hz)",
     "ui.frame_interpolation_note": "El 3DO emite 60 campos por segundo (50 en PAL). Las frecuencias superiores a 60 vuelven a presentar el último fotograma; la interpolación mezcla los dos últimos fotogramas completados para un movimiento más fluido. Requiere una frecuencia fija superior a 60 Hz y se desactiva con VRR.",

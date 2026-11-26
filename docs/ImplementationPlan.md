@@ -6,8 +6,8 @@
 only**; completed items, their evidence, the full stable-ID history, and the completed
 portions of partially open IDs are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) Part II and §17.
-**Open items:** 14 - 2 P0 compliance/evidence, 3 platform/presentation, 3 release/packaging,
-2 product, 2 rendering, 2 hardware/media.
+**Open items:** 13 - 2 P0 compliance/evidence, 3 platform/presentation, 3 release/packaging,
+1 product, 2 rendering, 2 hardware/media.
 
 > **Filter rule.** An item belongs in §3 only when it can be completed and evidenced with
 > the current 378-title corpus, the current codebase, and obtainable hardware or CI. Items
@@ -24,7 +24,7 @@ portions of partially open IDs are in
 ## 1. Completed baseline
 
 No remaining §3 item is fully implemented; every open ID still has a remaining `Done when`
-condition. The completed `REL-13`/`REL-12`/`SYS-28`/`VID-22`/`UX-33`/`SYS-25` rows are in
+condition. The completed `REL-13`/`REL-12`/`SYS-28`/`VID-22`/`UX-33`/`SYS-25`/`UX-38` rows are in
 [ImplementationPlanArchive.md](ImplementationPlanArchive.md) §12, completed sub-features of
 the still-partial IDs are in §17, and the completed baseline, results, stable-ID history,
 and release history are in §10–§16. Do not reopen a completed ID without new measurement.
@@ -95,7 +95,6 @@ and channel files: [Installers.md](Installers.md),
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
 | **NET-01** | Candidate | XL | **Netplay**: add a two-player deterministic network mode. Choose delay-based lockstep or rollback after a loopback probe, synchronize the initial BIOS/disc/state, exchange per-frame PBUS packets, detect and recover from desync, and expose host/join, port, input delay, and reconnect settings. Start with direct IP/LAN; a lobby and NAT traversal are out of scope for the first increment. | The machine is already single-threaded, fixed-timestep, and deterministic; TAS movie playback and `MachineStateSnapshot` provide the input/state plumbing. RetroArch's frontend netplay is the only peer reference, so this starts as a bounded probe rather than a committed release feature. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
-| **UX-38** | Partial | M | **Video recording validation and quality**: the FFmpeg H.264/AAC recorder, desktop **File > Record MP4...**, CLI `--record-mp4`, audio tee, pause/fast-forward/rewind handling, and Windows/CLI evidence are complete (archive §17). Remaining: validate the same path on Linux and macOS, and add a configurable quality/preset selector (fixed CRF 23 today). | The recorder is presentation-only and reuses the existing frame sink and DSP audio tee; FFmpeg is an external optional executable, so the remaining work is validation and a small settings/CLI surface. | A 60-second recording on Windows/Linux/macOS plays back with video and audio in sync, the frame count matches the emulated span, pause/fast-forward behavior is documented, CLI and desktop controls round-trip, the quality selector changes the output file, and the output is excluded from save states and deterministic hashes. |
 
 ### 3.5 P2/P3 — Rendering completeness
 
@@ -165,18 +164,16 @@ was measured and closed with a documented limitation, not that it is unachievabl
 3. **macOS platform:** `PLAT-17` keeps only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller. Nothing on macOS is
    runnable until one of those devices is attached.
-4. **Product:** `UX-38` video recording. The `UX-33` patterned GPU bars and the `SYS-25`
-   live-clock probe are complete (archive §12).
-5. **Network:** `NET-01` starts with a two-instance loopback probe; commit to a netplay
-   implementation only if the probe is clean.
-6. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
+4. **Product/network:** `NET-01` starts with a two-instance loopback probe; commit to a
+   netplay implementation only if the probe is clean.
+5. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
    keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation
    rate.
-7. **Hardware/media evidence:** `SYS-23` as soon as a DirectInput-only pad is available;
+6. **Hardware/media evidence:** `SYS-23` as soon as a DirectInput-only pad is available;
    `SYS-29` when representative real MDS/MDF and CCD/IMG/SUB images are available for
    boot-hash parity.
-8. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
+7. **Presentation matrix:** `PLAT-06` when real GLES 3.1 and Tier B hardware is reachable.
    `PLAT-19` is blocked on official Avalonia Wayland support (§4).
 
 **Stop rule:** do not start P3 product work while a P0 compliance item, P1 platform smoke,

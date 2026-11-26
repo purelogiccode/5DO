@@ -52,6 +52,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
     private readonly int _frameRateNumerator;
     private readonly int _frameRateDenominator;
     private readonly int _maxFrames;
+    private readonly VideoRecordingQuality _quality;
     private readonly WavAudioSink _audio;
     private readonly ConcurrentQueue<string> _videoErrors = new();
     private readonly ConcurrentQueue<string> _muxErrors = new();
@@ -71,7 +72,8 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         string tempDirectory,
         int frameRateNumerator,
         int frameRateDenominator,
-        int maxFrames)
+        int maxFrames,
+        VideoRecordingQuality quality)
     {
         _outputPath = outputPath;
         _ffmpegPath = ffmpegPath;
@@ -81,6 +83,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         _frameRateNumerator = frameRateNumerator;
         _frameRateDenominator = frameRateDenominator;
         _maxFrames = maxFrames;
+        _quality = quality;
         _audio = new WavAudioSink(_audioPath);
     }
 
@@ -147,6 +150,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
     /// <param name="frameRateNumerator">Exact frame-rate numerator (for example 60000).</param>
     /// <param name="frameRateDenominator">Exact frame-rate denominator (for example 1001).</param>
     /// <param name="maxFrames">Maximum frames to capture, or zero for unlimited.</param>
+    /// <param name="quality">Encoder quality preset.</param>
     /// <param name="ffmpegPath">Optional explicit FFmpeg path; otherwise auto-detected.</param>
     /// <returns>A recorder ready to receive frames and audio.</returns>
     /// <exception cref="ArgumentException">The output path is missing.</exception>
@@ -158,6 +162,7 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         int frameRateNumerator,
         int frameRateDenominator,
         int maxFrames = 0,
+        VideoRecordingQuality quality = VideoRecordingQuality.Medium,
         string? ffmpegPath = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
@@ -190,7 +195,8 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
             tempDirectory,
             frameRateNumerator,
             frameRateDenominator,
-            maxFrames);
+            maxFrames,
+            quality);
     }
 
     /// <inheritdoc />
@@ -511,27 +517,50 @@ public sealed class Mp4Recorder : IFrameSink, IDisposable
         return output + error;
     }
 
-    private static void AddQualityArguments(ProcessStartInfo startInfo, string encoder)
+    private void AddQualityArguments(ProcessStartInfo startInfo, string encoder)
     {
+        var crf = _quality switch
+        {
+            VideoRecordingQuality.Low => 30,
+            VideoRecordingQuality.High => 18,
+            _ => 23,
+        };
+        var value = crf.ToString(CultureInfo.InvariantCulture);
         switch (encoder)
         {
             case "libx264":
-                AddArguments(startInfo, "-preset", "veryfast", "-crf", "23");
+                AddArguments(startInfo, "-preset", "veryfast", "-crf", value);
                 break;
             case "h264_nvenc":
-                AddArguments(startInfo, "-preset", "p4", "-cq", "23", "-b:v", "0");
+                AddArguments(startInfo, "-preset", "p4", "-cq", value, "-b:v", "0");
                 break;
             case "h264_qsv":
-                AddArguments(startInfo, "-global_quality", "23");
+                AddArguments(startInfo, "-global_quality", value);
                 break;
             case "h264_amf":
-                AddArguments(startInfo, "-quality", "balanced", "-qp_i", "23", "-qp_p", "23");
+                AddArguments(startInfo, "-quality", "balanced", "-qp_i", value, "-qp_p", value);
                 break;
             case "h264_videotoolbox":
-                AddArguments(startInfo, "-b:v", "8M");
+                AddArguments(
+                    startInfo,
+                    "-b:v",
+                    _quality switch
+                    {
+                        VideoRecordingQuality.Low => "4M",
+                        VideoRecordingQuality.High => "16M",
+                        _ => "8M",
+                    });
                 break;
             default:
-                AddArguments(startInfo, "-q:v", "3");
+                AddArguments(
+                    startInfo,
+                    "-q:v",
+                    _quality switch
+                    {
+                        VideoRecordingQuality.Low => "6",
+                        VideoRecordingQuality.High => "2",
+                        _ => "3",
+                    });
                 break;
         }
     }

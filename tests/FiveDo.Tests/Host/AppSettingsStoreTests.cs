@@ -1041,6 +1041,20 @@ public sealed class AppSettingsStoreTests
     }
 
     [Fact]
+    public void Mp4Quality_RoundtripsAndFallsBackToMedium()
+    {
+        using var temp = new TemporaryDirectory();
+        var path = Path.Combine(temp.Path, "settings.json");
+        var settings = new AppSettings { Mp4Quality = "High" };
+
+        AppSettingsStore.Save(settings, path);
+        Assert.Equal(VideoRecordingQuality.High, AppSettingsStore.Load(path).ResolveMp4Quality());
+
+        settings.Mp4Quality = "bogus";
+        Assert.Equal(VideoRecordingQuality.Medium, settings.ResolveMp4Quality());
+    }
+
+    [Fact]
     public void VoidPattern_FlowsToRendererSettings()
     {
         var settings = new AppSettings { VoidAreaPattern = "Checker" };

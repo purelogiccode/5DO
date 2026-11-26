@@ -498,6 +498,7 @@ internal static class Program
             throw new ArgumentException("--record-fps must be between 1 and 60.", nameof(args));
         }
         var recordMp4Path = options.Get("--record-mp4");
+        var recordQuality = ParseVideoRecordingQuality(options.Get("--record-quality"));
         var clioTrace = options.Get("--clio-trace");
         var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
@@ -1175,7 +1176,8 @@ internal static class Program
                 machine.FramesPerSecond,
                 machine.RegionProfile.FieldRateNumerator,
                 machine.RegionProfile.FieldRateDenominator,
-                options.GetInt("--record-frames", 0));
+                options.GetInt("--record-frames", 0),
+                recordQuality);
             machine.AudioSink = machine.AudioSink is null
                 ? mp4Recorder.AudioSink
                 : new TeeAudioSink(machine.AudioSink, mp4Recorder.AudioSink);
@@ -6481,6 +6483,24 @@ internal static class Program
         return clock;
     }
 
+    private static VideoRecordingQuality ParseVideoRecordingQuality(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return VideoRecordingQuality.Medium;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "low" => VideoRecordingQuality.Low,
+            "medium" => VideoRecordingQuality.Medium,
+            "high" => VideoRecordingQuality.High,
+            _ => throw new ArgumentException(
+                "--record-quality must be low, medium, or high.",
+                nameof(value)),
+        };
+    }
+
     private static uint? ParseRandomSeed(string? value, uint? fallback = null)
     {
         if (value is null)
@@ -6660,7 +6680,7 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--input-lua path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--true-2x] [--deinterlace auto|bob|weave|blend] [--prefetch]");
-        Console.WriteLine("             [--record-gif path] [--record-fps 1..60] [--record-frames N] [--record-mp4 path]");
+        Console.WriteLine("             [--record-gif path] [--record-fps 1..60] [--record-frames N] [--record-mp4 path] [--record-quality low|medium|high]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");

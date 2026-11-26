@@ -103,9 +103,9 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [ ] `SYS-29`: validate representative real 3DO MDS/MDF and CCD/IMG/SUB images
       against the equivalent BIN/CUE; the readers, synthetic tests, and malformed-input
       handling are complete.
-- [ ] `UX-38`: validate synchronized MP4 recording on Linux and macOS; Windows desktop
-      and CLI H.264/AAC recording works with an external FFmpeg. A configurable quality
-      selector remains; see [TestCorpus.md](TestCorpus.md) 1.1cx.
+- [x] `UX-38`: MP4 recording with Low/Medium/High quality is validated on Windows
+      desktop/CLI, Linux CLI, and macOS CLI using an external FFmpeg; see
+      [TestCorpus.md](TestCorpus.md) 1.1cx.
 - [x] `VID-22`: high-refresh interpolation validated on the RTX 4070 / 164 Hz host
       (OpenGL, Vulkan, Direct3D 11; toggle on/off; audio and hash evidence); see
       [Performance.md](Performance.md) §8.9 and [TestCorpus.md](TestCorpus.md) 1.1cv.

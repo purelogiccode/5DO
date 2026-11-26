@@ -582,9 +582,10 @@ frame and the DSP/CD audio mix as H.264/AAC MP4 at the native 59.94/50 Hz rate; 
 again to stop and finalize. MP4 recording uses an external FFmpeg: install it on `PATH`,
 set `FIVEDO_FFMPEG` to the executable, or place `ffmpeg`/`ffmpeg.exe` beside 5DO. The
 recorder prefers `libx264`, then a platform H.264 encoder, and falls back to FFmpeg's
-`mpeg4` encoder; audio is 44.1 kHz stereo AAC and the default quality is CRF 23. Pause
-suspends capture (the gap is omitted), while fast-forward and rewind stop the recording
-so audio and video never desynchronize. MKV output is not exposed yet. The gallery writes from the OpenGL
+`mpeg4` encoder; audio is 44.1 kHz stereo AAC. Choose **Low**, **Medium**, or **High**
+under **Settings > Video > MP4 quality** (the default is Medium); the CLI equivalent is
+`--record-quality`. Pause suspends capture (the gap is omitted), while fast-forward and
+rewind stop the recording so audio and video never desynchronize. MKV output is not exposed yet. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
 frame with screenshots** in **Settings > Video** to write a second `-native.png`
 image from the CPU frame assembler. The default directory is your Pictures folder;

@@ -1132,16 +1132,30 @@ deterministic, stock-speed runs are unchanged, and every component clock follows
 machine. Full suite **2,638/2,638**; build and `dotnet format` clean. See
 [TestCorpus.md](TestCorpus.md) 1.1cw and [Video.md](Video.md) "Void patterns".
 
-### 10.14 MP4 video recording (2026-11-26, Windows x64)
+### 10.14 MP4 video recording (2026-11-26, Windows x64 / Linux x64 / macOS arm64)
 
 Windows 11, RTX 4070, FFmpeg 8.1.1 with libx264/h264_nvenc/AAC. `--record-mp4` on a
-3,000-frame Road Rash run produced a 50.050 s MP4 (H.264 320x240 at 60000/1001, AAC
-44.1 kHz stereo, 2,964,718 bytes; decoded audio peak 15,551 / RMS 1,788.2). The desktop
-**File > Record MP4...** path produced a 17.601 s 640x480 MP4 with 1,056 frames and
-non-silent AAC (peak 29,702 / RMS 4,267.8). Both used the external FFmpeg; 5DO does not
-bundle an encoder. Fast-forward and rewind stop the recording, pause omits the gap, and
-the Windows/CLI path is validated. Linux and macOS use the same FFmpeg pipeline but
-remain unvalidated. See [TestCorpus.md](TestCorpus.md) 1.1cx.
+3,600-frame Road Rash run produced a 3,724,569-byte 60.060 s MP4 (H.264 320x240 at
+60000/1001, AAC 44.1 kHz stereo; decoded audio peak 15,551 / RMS 1,860.2, 0 clipped).
+The desktop **File > Record MP4...** path produced a 17.601 s 640x480 MP4 with 1,056
+frames and non-silent AAC (peak 29,702 / RMS 4,267.8). A UI-automation pass selected High
+in Settings > Video > MP4 quality, pressed OK, and persisted `"Mp4Quality": "High"` to an
+isolated settings file.
+
+Linux x64 (Ubuntu 24.04, FFmpeg 6.1.1) ran the same Road Rash source at 3,600 frames:
+a 3,728,689-byte 60.060 s H.264/AAC MP4, and decoded audio peak 15,491 / RMS 1,787.9 on
+the 3,000-frame high test. Three 3,000-frame runs measured **Low 1,720,357 / Medium
+2,967,726 / High 5,190,590 bytes**. The frontend `--smoke-test` passed with OpenGL 4.2.
+
+macOS arm64 (macOS 26.6.2, FFmpeg 9.0.2 with libx264/h264_videotoolbox/AAC) recorded
+Wolfenstein 3D at 3,600 frames: a 4,123,123-byte 60.060 s H.264/AAC MP4 with decoded
+audio peak 32,400 / RMS 5,066.3 and 0 clipped. `Mp4RecorderTests` passed on both hosts,
+and the macOS `--smoke-test` reported `FRONTEND SMOKE OK 1.17.1`.
+
+All runs used an external FFmpeg; 5DO does not bundle an encoder. Fast-forward and rewind
+stop the recording and pause omits the gap. The desktop menu was exercised on Windows;
+Linux and macOS ran the frontend smoke and the same validated `Mp4Recorder` CLI path.
+See [TestCorpus.md](TestCorpus.md) 1.1cx.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

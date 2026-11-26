@@ -281,6 +281,7 @@
     "ui.integer_scaling": "Escala inteira",
     "ui.vsync_where_supported": "VSync (quando compatível)",
     "ui.display_refresh": "Taxa de atualização da tela",
+    "ui.mp4_quality": "Qualidade do MP4",
     "ui.the_3do_outputs_60_fields_per_second_50_for_pal_rates_ab": "O 3DO gera 60 campos por segundo (50 em PAL). Taxas acima de 60 reapresentam o último quadro; elas não criam movimento extra.",
     "ui.frame_interpolation": "Interpolação de quadros (requer >60 Hz)",
     "ui.frame_interpolation_note": "O 3DO gera 60 campos por segundo (50 no PAL). Taxas acima de 60 reapresentam o quadro mais recente; a interpolação mistura os dois últimos quadros concluídos para um movimento mais suave. Requer uma taxa fixa acima de 60 Hz e é desativada com VRR.",

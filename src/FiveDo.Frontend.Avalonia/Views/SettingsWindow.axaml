@@ -82,6 +82,14 @@
                             <TextBlock Text="The 3DO outputs 60 fields per second (50 for PAL). Rates above 60 re-present the latest frame; interpolation blends the last two completed frames for smoother motion. It needs a fixed rate above 60 Hz and is disabled with VRR."
                                        Opacity="0.7" FontSize="11" TextWrapping="Wrap"
                                        ToolTip.Tip="Presentation-only. Emulation speed, audio, frame hashes, and save states are unchanged." />
+                            <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
+                                <TextBlock Grid.Column="0" Text="MP4 quality" VerticalAlignment="Center"
+                                           Margin="0,0,8,0"
+                                           ToolTip.Tip="Quality preset for MP4 recording." />
+                                <ComboBox x:Name="RecordingQualityCombo" Grid.Column="1" Width="160"
+                                          HorizontalAlignment="Left"
+                                          ToolTip.Tip="Low is smaller, Medium is balanced, High is larger." />
+                            </Grid>
                         </StackPanel>
                         <TextBlock Grid.Row="13" Grid.Column="0" Text="Frame skip" VerticalAlignment="Center"
                                    ToolTip.Tip="Skip presentation frames when the emulator falls behind. Emulation and audio keep full speed." />

@@ -224,6 +224,7 @@ the BIOS file.
 | `--record-gif <path>` | off | Record emulated frames as an animated GIF. |
 | `--record-fps 1..60` | 30 | GIF capture rate; sources above 50 fps are decimated. |
 | `--record-mp4 <path>` | off | Record the presented frames and DSP/CD audio as H.264/AAC MP4 through an external FFmpeg. |
+| `--record-quality low|medium|high` | `medium` | MP4 quality preset (libx264 CRF 30/23/18; hardware encoders use the nearest equivalent). |
 | `--record-frames N` | 0 | Stop GIF/MP4 capture after N frames (0 = unlimited). |
 | `--cd-volume 0..1` | 0.8 | CD-DA mix level. Invalid values fail. |
 | `--mute-cd` | off | Keep CD-DA playback running but remove it from the mixed output. |
@@ -233,8 +234,8 @@ the BIOS file.
 prints a warning and runs silently. `--realtime` only affects pacing, not the backend.
 `--record-mp4` requires FFmpeg on `PATH`, `FIVEDO_FFMPEG`, or beside the apphost. It
 prefers `libx264`, then a platform H.264 encoder, then FFmpeg's `mpeg4`; audio is AAC at
-192 kb/s and video uses CRF 23. Pause compresses the gap, and fast-forward/rewind are not
-captured.
+192 kb/s. `--record-quality` selects Low/Medium/High (CRF 30/23/18 for libx264). Pause
+compresses the gap, and fast-forward/rewind are not captured.
 
 ### Input and automation options
 

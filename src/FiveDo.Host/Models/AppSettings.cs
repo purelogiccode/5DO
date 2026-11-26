@@ -395,6 +395,22 @@ public sealed class AppSettings
             : VoidPattern.Solid;
     }
 
+    /// <summary>Gets or sets the MP4 recording quality: <c>Low</c>, <c>Medium</c>, or <c>High</c>.</summary>
+    public string Mp4Quality { get; set; } = DefaultMp4Quality;
+
+    /// <summary>Gets the default MP4 recording quality.</summary>
+    public const string DefaultMp4Quality = nameof(VideoRecordingQuality.Medium);
+
+    /// <summary>Gets the validated MP4 recording quality.</summary>
+    /// <returns>The parsed preset, or <see cref="VideoRecordingQuality.Medium"/> when invalid.</returns>
+    public VideoRecordingQuality ResolveMp4Quality()
+    {
+        return Enum.TryParse(Mp4Quality, ignoreCase: true, out VideoRecordingQuality quality)
+            && Enum.IsDefined(quality)
+            ? quality
+            : VideoRecordingQuality.Medium;
+    }
+
     /// <summary>Gets the effective per-edge crop, honoring the legacy uniform value.</summary>
     /// <returns>A clamped crop.</returns>
     public CropInsets ResolveOverscan()
