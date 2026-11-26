@@ -46,6 +46,8 @@
                           ToolTip.Tip="Browse, open, copy, and delete captured screenshots." />
                 <MenuItem x:Name="RecordGifMenuItem" Header="Record GIF..." Click="OnRecordGifAsync"
                           ToolTip.Tip="Record emulated frames as an animated GIF. Click again to stop and save." />
+                <MenuItem x:Name="RecordMp4MenuItem" Header="Record MP4..." Click="OnRecordMp4Async"
+                          ToolTip.Tip="Record H.264/AAC MP4 video with synchronized emulated audio. Requires FFmpeg on PATH or FIVEDO_FFMPEG. Click again to stop and save." />
                 <MenuItem x:Name="RecordAudioMenuItem" Header="Record Audio..." Click="OnRecordAudioAsync"
                           ToolTip.Tip="Record the 44.1 kHz DSP and CD-DA mix to a WAV file. Click again to stop and save." />
                 <MenuItem Header="Movie Editor..." Click="OnMovieEditorAsync"

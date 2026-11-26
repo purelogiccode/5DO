@@ -1,5 +1,14 @@
 # Project Status and Next Steps
 
+**2026-11-26, MP4 video recording:** `UX-38` now has a working H.264/AAC MP4 path. The
+desktop **File > Record MP4...** menu and CLI `--record-mp4` use an external FFmpeg
+(`FIVEDO_FFMPEG`, apphost folder, or `PATH`), record the presented frame and DSP/CD audio
+mix, and mux with AAC. Windows x64 validated a 3,000-frame 320x240 CLI recording and a
+1,056-frame 640x480 desktop recording with non-silent audio; Linux/macOS validation and a
+configurable quality selector remain, so `UX-38` stays Partial. FFmpeg is not bundled.
+The suite is **2,640/2,640**; build, `dotnet format`, and `mkdocs build --strict` are
+clean.
+
 **2026-11-26, patterned GPU bars and live CPU clock:** `UX-33` and `SYS-25` are complete.
 The selected void pattern (Solid, Checker, Grid, Scanline, FourDO, Bumps, or Metal) now
 renders in the GPU letterbox/pillarbox bars on OpenGL, Direct3D 11, and Vulkan, and the

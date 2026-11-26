@@ -101,6 +101,9 @@ public partial class MainWindow : Window, IDisposable
     private FileStream? _gifStream;
     private string? _gifPath;
     private FrameSkipMode _gifPreviousFrameSkip;
+    private Mp4Recorder? _mp4Recorder;
+    private string? _mp4Path;
+    private FrameSkipMode _mp4PreviousFrameSkip;
     private VdlFrame? _overscanFrame;
     private readonly AutoCropTracker _autoCrop = new();
     private CropInsets _manualOverscan;
@@ -1933,6 +1936,7 @@ public partial class MainWindow : Window, IDisposable
         HideLoadingOverlay();
         StopAudioRecording();
         StopGifRecording();
+        StopMp4Recording();
         StopMovie(save: true);
         StopInputRecording(save: true);
         CancelFastForward();
@@ -2680,9 +2684,17 @@ public partial class MainWindow : Window, IDisposable
             live = new ChannelSwapAudioSink(live);
         }
 
-        _machine.AudioSink = _audioRecorder is null
+        IAudioSink? capture = _audioRecorder;
+        if (_mp4Recorder is not null)
+        {
+            capture = capture is null
+                ? _mp4Recorder.AudioSink
+                : new TeeAudioSink(capture, _mp4Recorder.AudioSink);
+        }
+
+        _machine.AudioSink = capture is null
             ? live
-            : new TeeAudioSink(live, _audioRecorder);
+            : new TeeAudioSink(live, capture);
     }
 
     private void OnRecordGifAsync(object? sender, RoutedEventArgs e)
@@ -2695,6 +2707,12 @@ public partial class MainWindow : Window, IDisposable
         if (_gifRecorder is not null)
         {
             StopGifRecording();
+            return;
+        }
+
+        if (_mp4Recorder is not null)
+        {
+            ShowOsd("Stop MP4 recording first.", OsdSeverity.Warning);
             return;
         }
 
@@ -2801,6 +2819,185 @@ public partial class MainWindow : Window, IDisposable
                 "GIF recording saved: {Path} ({Frames} frames).",
                 path,
                 recorder.CapturedFrames);
+        }
+    }
+
+    private void OnRecordMp4Async(object? sender, RoutedEventArgs e)
+    {
+        AsyncEvent.Run(ToggleMp4RecordingAsync, "recording an MP4");
+    }
+
+    private async Task ToggleMp4RecordingAsync()
+    {
+        if (_mp4Recorder is not null)
+        {
+            StopMp4Recording();
+            return;
+        }
+
+        if (_gifRecorder is not null)
+        {
+            ShowOsd("Stop GIF recording first.", OsdSeverity.Warning);
+            return;
+        }
+
+        if (_machine is null)
+        {
+            ShowOsd("Boot a disc before recording.", OsdSeverity.Warning);
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(_gameName) ? "5do" : SanitizeFileName(_gameName);
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Record MP4",
+            SuggestedFileName = $"{name}-{DateTime.Now:yyyyMMdd-HHmmss}.mp4",
+            DefaultExtension = "mp4",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("MP4 video") { Patterns = ["*.mp4"] },
+            ],
+        }).ConfigureAwait(true);
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        Mp4Recorder? recorder = null;
+        try
+        {
+            recorder = Mp4Recorder.Start(
+                path,
+                _machine.FramesPerSecond,
+                _machine.RegionProfile.FieldRateNumerator,
+                _machine.RegionProfile.FieldRateDenominator);
+            _mp4Recorder = recorder;
+            _mp4Path = path;
+            _mp4PreviousFrameSkip = _settings.FrameSkip;
+            if (_runner is not null)
+            {
+                _runner.FrameSkip = FrameSkipMode.Off;
+                _runner.Invoke(() => _machine.FrameSink = _mp4Recorder);
+            }
+            else
+            {
+                _machine.FrameSink = recorder;
+            }
+
+            UpdateAudioSink();
+            RecordMp4MenuItem.Header = "Stop MP4 Recording";
+            ShowOsd($"Recording MP4: {Path.GetFileName(path)}", OsdSeverity.Success);
+            StatusText.Text = $"Recording MP4: {path}.";
+            _logger.ForCategory(LogCategory.Video).Information("MP4 recording started: {Path}.", path);
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or InvalidOperationException
+            or System.ComponentModel.Win32Exception)
+        {
+            _mp4Recorder = null;
+            _mp4Path = null;
+            if (_machine is not null)
+            {
+                if (_runner is not null)
+                {
+                    _runner.Invoke(() =>
+                    {
+                        if (_machine.FrameSink is Mp4Recorder)
+                        {
+                            _machine.FrameSink = null;
+                        }
+                    });
+                    _runner.FrameSkip = _mp4PreviousFrameSkip;
+                }
+                else if (_machine.FrameSink is Mp4Recorder)
+                {
+                    _machine.FrameSink = null;
+                }
+            }
+
+            recorder?.Dispose();
+            RecordMp4MenuItem.Header = "Record MP4...";
+            ShowError("MP4 recording", exception.Message);
+            _logger.ForCategory(LogCategory.Video).Error(exception, "MP4 recording failed to start.");
+        }
+    }
+
+    private void StopMp4Recording()
+    {
+        Mp4Recorder? recorder = _mp4Recorder;
+        var path = _mp4Path;
+        _mp4Recorder = null;
+        _mp4Path = null;
+        if (recorder is null)
+        {
+            return;
+        }
+
+        if (_machine is not null)
+        {
+            if (_runner is not null)
+            {
+                _runner.Invoke(() =>
+                {
+                    if (_machine.FrameSink is Mp4Recorder)
+                    {
+                        _machine.FrameSink = null;
+                    }
+                });
+            }
+            else if (_machine.FrameSink is Mp4Recorder)
+            {
+                _machine.FrameSink = null;
+            }
+        }
+
+        if (_runner is not null)
+        {
+            _runner.FrameSkip = _mp4PreviousFrameSkip;
+        }
+
+        try
+        {
+            UpdateAudioSink();
+        }
+        catch (InvalidOperationException exception)
+        {
+            _mp4Recorder = recorder;
+            _mp4Path = path;
+            _logger.ForCategory(LogCategory.Video).Warning(
+                exception,
+                "MP4 recording could not be detached from the stopping core thread.");
+            return;
+        }
+
+        RecordMp4MenuItem.Header = "Record MP4...";
+        try
+        {
+            recorder.Complete();
+            if (path is not null)
+            {
+                StatusText.Text =
+                    $"MP4 saved: {path} ({recorder.CapturedFrames} frames, {recorder.Width}x{recorder.Height}).";
+                ShowOsd($"MP4 saved: {Path.GetFileName(path)}", OsdSeverity.Success);
+                _logger.ForCategory(LogCategory.Video).Information(
+                    "MP4 recording saved: {Path} ({Frames} frames, {Width}x{Height}).",
+                    path,
+                    recorder.CapturedFrames,
+                    recorder.Width,
+                    recorder.Height);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        {
+            ShowError("MP4 recording", exception.Message);
+            _logger.ForCategory(LogCategory.Video).Error(exception, "MP4 recording failed to finish.");
+        }
+        finally
+        {
+            recorder.Dispose();
         }
     }
 
@@ -7629,6 +7826,7 @@ public partial class MainWindow : Window, IDisposable
         _movieTimer = null;
         StopAudioRecording();
         StopGifRecording();
+        StopMp4Recording();
         StopMovie(save: true);
         _coverCts?.Cancel();
         _coverCts?.Dispose();
@@ -8115,6 +8313,12 @@ public partial class MainWindow : Window, IDisposable
         }
 
         CancelFastForward();
+        if (_mp4Recorder is not null)
+        {
+            StopMp4Recording();
+            ShowOsd("MP4 recording stopped for rewind.", OsdSeverity.Warning);
+        }
+
         if (_runner.RunAhead > 0)
         {
             StatusText.Text = "Rewind is unavailable while run-ahead is active.";
@@ -8150,6 +8354,12 @@ public partial class MainWindow : Window, IDisposable
         }
 
         _fastForwardHeld = true;
+        if (_mp4Recorder is not null)
+        {
+            StopMp4Recording();
+            ShowOsd("MP4 recording stopped for fast-forward.", OsdSeverity.Warning);
+        }
+
         try
         {
             _runner.SpeedMultiplier = _settings.ResolveFastForwardMultiplier();

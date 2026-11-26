@@ -576,6 +576,25 @@ tracked in `ImplementationPlan.md` CORE-04/CORE-07/CORE-13.
 - Some code comments are stale (for example `EmulatorTuning.HighResolution` says the
   mode is reserved even though it is implemented). Treat behavior/tests as authoritative.
 
+## MP4 video recording (2026-11-26)
+
+- MP4 recording uses an **external FFmpeg**. 5DO does not bundle or redistribute FFmpeg
+  or its codecs. Install FFmpeg on `PATH`, set `FIVEDO_FFMPEG`, or place
+  `ffmpeg`/`ffmpeg.exe` beside the apphost. Without it, the MP4 option reports a clear
+  error and GIF/WAV recording still works.
+- Encoder selection is automatic: `libx264`, then a platform H.264 encoder, then FFmpeg's
+  native `mpeg4`. The available encoders depend on the FFmpeg build and the machine; a
+  hardware encoder can fail on a driver that is present but unusable.
+- The recorder captures the presented frame at its native size (320x240 or 640x480) and
+  the emulated 59.94/50 Hz rate. Odd dimensions are trimmed to even values, and a
+  mid-recording 240/480-line change is scaled to the initial size. Video quality is fixed
+  at CRF 23 in this slice; there is no quality selector yet.
+- Pause suspends capture, so the paused wall-clock gap is omitted from the MP4.
+  Fast-forward and rewind stop the recording before the frame/audio timeline diverges.
+  Disc swap continues recording; the audio buffer keeps running.
+- Windows x64 and the CLI were validated with H.264/AAC; Linux/macOS validation remains
+  pending. See [TestCorpus.md](TestCorpus.md) 1.1cx.
+
 ## Linux arm64 headless VM (2026-11-19)
 
 The full pass is recorded in [Compatibility.md](Compatibility.md) §10.5. The remaining

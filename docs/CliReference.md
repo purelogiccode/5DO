@@ -223,13 +223,18 @@ the BIOS file.
 | `--audio-swap` | off | Swap left/right on the live `openal` output. The audio hash and WAV captures keep the emulated channel order. |
 | `--record-gif <path>` | off | Record emulated frames as an animated GIF. |
 | `--record-fps 1..60` | 30 | GIF capture rate; sources above 50 fps are decimated. |
-| `--record-frames N` | 0 | Stop the GIF after N captured frames (0 = unlimited). |
+| `--record-mp4 <path>` | off | Record the presented frames and DSP/CD audio as H.264/AAC MP4 through an external FFmpeg. |
+| `--record-frames N` | 0 | Stop GIF/MP4 capture after N frames (0 = unlimited). |
 | `--cd-volume 0..1` | 0.8 | CD-DA mix level. Invalid values fail. |
 | `--mute-cd` | off | Keep CD-DA playback running but remove it from the mixed output. |
 
 `--audio wav` writes 44.1 kHz, 16-bit stereo PCM and reports capture statistics.
 `--audio openal` opens the default OpenAL Soft device; if no device is available it
 prints a warning and runs silently. `--realtime` only affects pacing, not the backend.
+`--record-mp4` requires FFmpeg on `PATH`, `FIVEDO_FFMPEG`, or beside the apphost. It
+prefers `libx264`, then a platform H.264 encoder, then FFmpeg's `mpeg4`; audio is AAC at
+192 kb/s and video uses CRF 23. Pause compresses the gap, and fast-forward/rewind are not
+captured.
 
 ### Input and automation options
 
@@ -377,6 +382,7 @@ All fields are camelCase. Nullable fields are omitted or `null` when not applica
 | `sourceWidth`, `sourceHeight` | int | Visible source dimensions (640x480 in high-res; 320x288 or 384x288 in PAL). |
 | `region` | string | `Ntsc`, `Pal1`, or `Pal2`. |
 | `gifPath`, `gifFrames` | string?, int? | GIF output path and captured frame count when `--record-gif` is used. |
+| `mp4Path`, `mp4Frames` | string?, int? | MP4 output path and captured frame count when `--record-mp4` is used. |
 | `fieldRate` | int | `60` for NTSC or `50` for PAL. |
 | `vdlModulo` | uint | VDLP line width. |
 | `pc` | uint | CPU program counter at the end. |

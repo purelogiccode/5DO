@@ -577,8 +577,14 @@ filters by game text and date, and supports open, copy path, export, side-by-sid
 (select exactly two), refresh, and delete (the first Delete click asks for confirmation).
 The selected capture's sidecar summary appears in the status line. **File > Record GIF...** records
 emulated frames to an animated GIF at 30 fps and asks for a destination; click it again
-(or stop emulation) to finish the file. Synchronized MP4/MKV video recording is planned
-as `UX-38`; it is not implemented yet. The gallery writes from the OpenGL
+(or stop emulation) to finish the file. **File > Record MP4...** records the presented
+frame and the DSP/CD audio mix as H.264/AAC MP4 at the native 59.94/50 Hz rate; click it
+again to stop and finalize. MP4 recording uses an external FFmpeg: install it on `PATH`,
+set `FIVEDO_FFMPEG` to the executable, or place `ffmpeg`/`ffmpeg.exe` beside 5DO. The
+recorder prefers `libx264`, then a platform H.264 encoder, and falls back to FFmpeg's
+`mpeg4` encoder; audio is 44.1 kHz stereo AAC and the default quality is CRF 23. Pause
+suspends capture (the gap is omitted), while fast-forward and rewind stop the recording
+so audio and video never desynchronize. MKV output is not exposed yet. The gallery writes from the OpenGL
 output (or the CPU frame when GL is unavailable). Enable **Also save the native CPU
 frame with screenshots** in **Settings > Video** to write a second `-native.png`
 image from the CPU frame assembler. The default directory is your Pictures folder;

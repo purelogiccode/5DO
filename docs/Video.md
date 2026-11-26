@@ -622,6 +622,15 @@ Both paths capture the presented frame, including the active field handling: a w
 `interlaced`. GIF recording receives the same presented frame and rescales a mid-recording
 240↔480 size change to the initial canvas instead of dropping those frames.
 
+**MP4 recording** uses `Mp4Recorder` in `FiveDo.Host`: the machine's `FrameSink` supplies
+the presented frame and a `WavAudioSink` receives the DSP/CD mix through the host audio
+tee. Frames stream to an external FFmpeg raw-BGRA encoder; audio is written to a temporary
+44.1 kHz stereo WAV. On stop, a second FFmpeg muxes the encoded video with AAC audio into
+the requested MP4 (`-c:v copy`, `-movflags +faststart`). The recorder prefers `libx264`,
+then a platform H.264 encoder, then FFmpeg's `mpeg4`. Fast-forward and rewind stop the
+recording before the frame/audio timelines diverge; pause omits the wall-clock gap. FFmpeg
+is not bundled. See [`KnownIssues.md`](KnownIssues.md) "MP4 video recording".
+
 ---
 
 ## 9. GPU probes

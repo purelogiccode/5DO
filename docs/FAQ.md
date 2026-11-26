@@ -182,8 +182,8 @@ See [Configuration](Configuration.md) for the full layout.
 Yes. 5DO records deterministic `.5domovie` files with per-frame PBUS packets, an
 optional starting state, replay/verify/branch commands, and a desktop movie editor.
 See [TAS movies](Tas.md). For video capture, the current release supports screenshots,
-GIF recording, and WAV audio capture; synchronized MP4/MKV recording is planned as
-`UX-38`.
+GIF recording, WAV audio capture, and H.264/AAC MP4 recording through an external FFmpeg
+(`FIVEDO_FFMPEG` or `PATH`). MKV output is not exposed yet.
 
 ### Does 5DO support cheats?
 

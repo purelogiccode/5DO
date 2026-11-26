@@ -51,7 +51,8 @@ short version:
 
 **Product and rendering**
 
-- `UX-38` video recording with synchronized audio.
+- `UX-38` MP4 video recording: the FFmpeg H.264/AAC recorder, desktop/CLI controls, and
+  Windows evidence are complete; Linux/macOS validation and a quality selector remain.
 - `NET-01` netplay loopback probe (commit only if the probe is clean).
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.

@@ -1132,6 +1132,17 @@ deterministic, stock-speed runs are unchanged, and every component clock follows
 machine. Full suite **2,638/2,638**; build and `dotnet format` clean. See
 [TestCorpus.md](TestCorpus.md) 1.1cw and [Video.md](Video.md) "Void patterns".
 
+### 10.14 MP4 video recording (2026-11-26, Windows x64)
+
+Windows 11, RTX 4070, FFmpeg 8.1.1 with libx264/h264_nvenc/AAC. `--record-mp4` on a
+3,000-frame Road Rash run produced a 50.050 s MP4 (H.264 320x240 at 60000/1001, AAC
+44.1 kHz stereo, 2,964,718 bytes; decoded audio peak 15,551 / RMS 1,788.2). The desktop
+**File > Record MP4...** path produced a 17.601 s 640x480 MP4 with 1,056 frames and
+non-silent AAC (peak 29,702 / RMS 4,267.8). Both used the external FFmpeg; 5DO does not
+bundle an encoder. Fast-forward and rewind stop the recording, pause omits the gap, and
+the Windows/CLI path is validated. Linux and macOS use the same FFmpeg pipeline but
+remain unvalidated. See [TestCorpus.md](TestCorpus.md) 1.1cx.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

@@ -4887,3 +4887,32 @@ warnings/0 errors; `dotnet format --verify-no-changes` clean.
 and the shared pattern math; Checker and FourDO were the visual captures. The D3D/Vulkan
 native child surfaces continue to use the existing child-window presentation path; the
 pattern pass does not change their bounds or swapchain behavior.
+
+### 1.1cx MP4 video recording (2026-11-26)
+
+**Recorder.** `Mp4Recorder` streams presented BGRA frames to an external FFmpeg H.264
+encoder and writes 44.1 kHz stereo PCM to a temporary WAV. On stop it muxes the encoded
+video and AAC audio into the requested MP4 with `-movflags +faststart`. The recorder
+prefers `libx264`, then `h264_nvenc`/`h264_qsv`/`h264_amf`/`h264_videotoolbox`, and falls
+back to FFmpeg's `mpeg4`; FFmpeg is auto-detected from `FIVEDO_FFMPEG`, the apphost folder,
+or `PATH`. The file is not bundled. `Mp4RecorderTests` (2) cover a real 10-frame
+video+audio file and the no-frames error; they skip when FFmpeg is unavailable.
+
+**CLI evidence.** FFmpeg 8.1.1 (libx264, h264_nvenc, AAC) on Windows 11 / RTX 4070.
+`run "Road Rash..." --frames 3000 --record-mp4 rr-test3k.mp4` produced a 2,964,718-byte
+MP4: H.264 320x240 at 60000/1001, AAC 44.1 kHz stereo, 50.050 s; decoding the audio gave
+peak 15,551, RMS 1,788.2, 663,778 silent samples (the boot/logo), 0 clipped. The JSON
+reported `mp4Path` and `mp4Frames: 3000`. A frame extracted at 25 s shows the Road Rash
+intro artwork, and the muxed audio is non-silent.
+
+**Desktop evidence.** Invoking **File > Record MP4...** through UI Automation, choosing
+`desktop-test.mp4`, recording for ~17.6 s, and invoking **Stop MP4 Recording** produced a
+2,492,692-byte MP4: H.264 640x480 at 60000/1001, AAC 44.1 kHz stereo, 17.601 s, 1,056
+frames; the decoded audio had peak 29,702, RMS 4,267.8, 28,745 silent samples, 0 clipped.
+The start, save, and stop paths logged normally.
+
+**Limits.** Video quality is fixed at CRF 23; there is no quality selector yet. Pause
+omits the wall-clock gap; fast-forward and rewind stop the recording before the timeline
+diverges. Windows x64 is validated; Linux and macOS use the same FFmpeg path but remain
+unvalidated. Full suite **2,640/2,640**; build 0 warnings/0 errors; `dotnet format
+--verify-no-changes` clean.

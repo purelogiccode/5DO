@@ -497,6 +497,7 @@ internal static class Program
         {
             throw new ArgumentException("--record-fps must be between 1 and 60.", nameof(args));
         }
+        var recordMp4Path = options.Get("--record-mp4");
         var clioTrace = options.Get("--clio-trace");
         var fiqTrace = options.Get("--fiq-trace");
         var kprintPath = options.Get("--kprint");
@@ -1166,6 +1167,20 @@ internal static class Program
                 options.GetInt("--record-frames", 0));
         }
 
+        Mp4Recorder? mp4Recorder = null;
+        if (recordMp4Path is not null)
+        {
+            mp4Recorder = Mp4Recorder.Start(
+                recordMp4Path,
+                machine.FramesPerSecond,
+                machine.RegionProfile.FieldRateNumerator,
+                machine.RegionProfile.FieldRateDenominator,
+                options.GetInt("--record-frames", 0));
+            machine.AudioSink = machine.AudioSink is null
+                ? mp4Recorder.AudioSink
+                : new TeeAudioSink(machine.AudioSink, mp4Recorder.AudioSink);
+        }
+
         AudioFramePacer? realtimePacer = realtime ? new AudioFramePacer() : null;
         var realtimeClock = realtime ? Stopwatch.StartNew() : null;
         var realtimeNext = realtimeClock?.ElapsedTicks ?? 0.0;
@@ -1189,7 +1204,8 @@ internal static class Program
                 && captureFrames.Length == 0
                 && !realtime
                 && swapDiscPath is null
-                && gifRecorder is null)
+                && gifRecorder is null
+                && mp4Recorder is null)
             {
                 machine.RunFrames(frames);
             }
@@ -1219,6 +1235,7 @@ internal static class Program
                     scriptedInput?.AdvanceTo(machine.FramesExecuted);
                     machine.RunFrame();
                     gifRecorder?.OnFrame(machine.Frame);
+                    mp4Recorder?.OnFrame(machine.Frame);
                     if (realtimePacer is not null && realtimeClock is not null)
                     {
                         realtimePacer.FrameCompleted(machine.AudioSamplesProduced);
@@ -1323,7 +1340,17 @@ internal static class Program
                 Serilog.Log.Debug(exception, "The GIF recorder could not be finalized after a failed run.");
             }
 
+            try
+            {
+                mp4Recorder?.Complete();
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException)
+            {
+                Serilog.Log.Debug(exception, "The MP4 recorder could not be finalized after a failed run.");
+            }
+
             gifStream?.Dispose();
+            mp4Recorder?.Dispose();
             fiqTraceWriter?.Dispose();
             clioTraceWriter?.Dispose();
             cdTraceWriter?.Dispose();
@@ -1359,6 +1386,27 @@ internal static class Program
 
         gifRecorder?.Complete();
         gifStream?.Dispose();
+
+        string? completedMp4Path = null;
+        int? completedMp4Frames = null;
+        if (mp4Recorder is not null)
+        {
+            try
+            {
+                mp4Recorder.Complete();
+                completedMp4Path = Path.GetFullPath(recordMp4Path!);
+                completedMp4Frames = mp4Recorder.CapturedFrames;
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"mp4: {exception.Message}");
+            }
+            finally
+            {
+                mp4Recorder.Dispose();
+                mp4Recorder = null;
+            }
+        }
 
         if (dumpRamPath is not null)
         {
@@ -1582,6 +1630,8 @@ internal static class Program
             InputDevices: FormatInputDevices(inputDevices),
             GifPath: gifRecorder is null ? null : Path.GetFullPath(recordGifPath!),
             GifFrames: gifRecorder?.CapturedFrames,
+            Mp4Path: completedMp4Path,
+            Mp4Frames: completedMp4Frames,
             Deinterlace: machine.Deinterlace.ToString(),
             Interlaced: machine.IsWovenFrame,
             InterlaceDetected: machine.IsInterlacedFieldContent,
@@ -5710,6 +5760,10 @@ internal static class Program
         {
             Console.WriteLine($"gif:         {result.GifPath} ({result.GifFrames} frames)");
         }
+        if (result.Mp4Path is not null)
+        {
+            Console.WriteLine($"mp4:         {result.Mp4Path} ({result.Mp4Frames} frames)");
+        }
         if (result.AudioHash is { } audioHash)
         {
             Console.WriteLine($"audio hash:  0x{audioHash:x8}");
@@ -6606,6 +6660,7 @@ internal static class Program
         Console.WriteLine("             [--dump-ram path] [--dump-ram-offset N] [--dump-ram-length N]");
         Console.WriteLine("             [--dump-dsp prefix] [--input-script path] [--input-lua path] [--script-base absolute|state] [--autopilot road] [--progress N] [--cel-trace path] [--clio-timer-trace path] [--clio-read-trace path] [--pbus-trace path]");
         Console.WriteLine("             [--capture-dir path] [--capture-every N] [--nvram path] [--high-res] [--true-2x] [--deinterlace auto|bob|weave|blend] [--prefetch]");
+        Console.WriteLine("             [--record-gif path] [--record-fps 1..60] [--record-frames N] [--record-mp4 path]");
         Console.WriteLine("             [--nvram-mode global|per-game] [--nvram-version 0-9] [--nvram-dir path]");
         Console.WriteLine("             [--profile compatible|accuracy|performance|custom]");
         Console.WriteLine("             [--game-profile path] [--region auto|ntsc|pal1|pal2] [--arm-timing freedo|arm60] [--clio-timers freedo|opera] [--cel-timing freedo|opera]");

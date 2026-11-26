@@ -91,6 +91,10 @@ internal sealed record CliRunResult(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     int? GifFrames = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Mp4Path = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    int? Mp4Frames = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     CliFiqResult? Fiq = null,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     CliDspResult? DspStats = null,
