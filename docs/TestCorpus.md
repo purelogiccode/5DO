@@ -4994,7 +4994,7 @@ audio hashes at 60/600/1,800/3,600 without input (`0x110E7DC5`, `0x110E7DC5`,
 **Loopback evidence.** The `FiveDo.NetplayProbe` 36,000-frame run (10 minutes emulated,
 delay 4) completed both peers at **240.7 fps** with **0 desyncs**, **0 host/join
 checkpoint mismatches**, and **0 netplay/reference mismatches**; each peer exchanged
-72,003 packets / 10,080,066 bytes (about **1.17 KB/s**), with a 27.73 ms maximum wait and
+72,003 packets / 10,080,066 bytes (about **16.8 KB/s**), with a 27.73 ms maximum wait and
 no explicit resends. The reference final frame at 35,999 was `0xBA80C0E9`. A 600-frame run
 with 50 ms one-way latency and delay 8 completed at 128.3 fps with 0 mismatches; a
 600-frame run dropping every third input packet completed at 389 fps with 0 mismatches.
@@ -5029,7 +5029,7 @@ resume from a transferred state. Full suite **2,677/2,677**.
 `tierb-panzer-start.txt`). Both completed in about 154 s with final hash `0x342EA767` and
 audio `0xB6AB50D0`, matching the single-machine reference from the probe. The host sent
 the compressed state at frame 0 over TCP; the UDP peers exchanged 10,080,066 bytes each
-(about 1.17 KB/s). A 1,200-frame reconnect test dropped the first join after 300 frames;
+(about 16.8 KB/s). A 1,200-frame reconnect test dropped the first join after 300 frames;
 the host resumed at frame 304, the second join ran 896 frames, and both finished with hash
 `0xA328CCCC` and audio `0x8B40B3CB`. Raw reports:
 [host](data/netplay-cli-36000-host.json),

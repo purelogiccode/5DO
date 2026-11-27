@@ -22,7 +22,7 @@ input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`. 
 36,000-frame two-process run with different P1/P2 scripts matched the single-machine
 reference (`0x342EA767`, audio `0xB6AB50D0`) in about 154 s; reconnect resumed at frame
 304 and finished with matching host/join hashes and audio. The probe measured about
-**1.17 KB/s**, 240.7 fps, and a 650 KB state (38 ms save / 24 ms load); 50 ms one-way
+**16.8 KB/s**, 240.7 fps, and a 650 KB state (38 ms save / 24 ms load); 50 ms one-way
 latency and every-third-input-packet loss passed. The suite is **2,677/2,677**. Live
 two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
 authentication, encryption, more than two players, and pointer devices are out of scope.

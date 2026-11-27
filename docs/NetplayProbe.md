@@ -68,7 +68,7 @@ hashes at 60/600/1,200/1,800/3,600. The script changes the trajectory (`f=3,600`
   checkpoint mismatches**.
 - Throughput: **240.7 fps** per peer (149.53 s), 254.4 fps reference; wall 149.56 s.
 - Traffic: 72,003 input/hash/request packets per peer, **10,080,066 bytes** sent and
-  received per peer over 10 minutes, about **1.17 KB/s**.
+  received per peer over 10 minutes, about **16.8 KB/s**.
 - Waits: max 27.73 ms, total 2.77 s (host); max 16.51 ms, total 0.48 s (join).
 - Redundancy: 208,479/167,026 historical entries and 43,515/84,968 duplicates ignored;
   0 explicit resends needed.
