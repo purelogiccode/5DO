@@ -94,7 +94,7 @@ and channel files: [Installers.md](Installers.md),
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **NET-01** | Open | XL | **Netplay**: the loopback probe is complete and clean (see [NetplayProbe.md](NetplayProbe.md)): delay-based lockstep kept two machine instances in sync for 36,000 frames with 0 desyncs, 0 host/join/reference checkpoint mismatches, about 1.17 KB/s, and 240.7 fps. Remaining: direct-IP host/join CLI and desktop surface, initial state transfer/validation over a reliable stream (the peer reference uses TCP for state and UDP for input), reconnect from the last confirmed state, port/input-delay settings, audio/video integration, a desync recovery policy, user documentation, and the no-lobby/no-NAT scope. | The deterministic machine, `MachineStateSnapshot`, TAS input, and the committed protocol/session are in place; the probe measured the compressed state at 650 KB with 38 ms save / 24 ms load. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
+| **NET-01** | Partial | XL | **Netplay**: direct-IP host/join, TCP handshake and compressed state transfer, UDP delay-based lockstep, reconnect, CLI, and the desktop dialog are implemented (see [NetplayProbe.md](NetplayProbe.md)). A 36,000-frame two-process run and the probe matched the single-machine reference (`0x342EA767`); reconnect resumed at frame 304 with matching final hashes/audio. Remaining: live two-window desktop acceptance (menus, dialog, gamepad mapping), an optional session token/authentication layer, and a final user-documentation polish pass. Lobby, NAT traversal, more than two players, and pointer devices remain out of scope. | The deterministic machine, compressed state, input/hash protocol, and probe harness are in place; the state is 650 KB with 38 ms save / 24 ms load, and the CLI/desktop share the same core. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
 
 ### 3.5 P2/P3 — Rendering completeness
 
@@ -164,9 +164,10 @@ was measured and closed with a documented limitation, not that it is unachievabl
 3. **macOS platform:** `PLAT-17` keeps only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller. Nothing on macOS is
    runnable until one of those devices is attached.
-4. **Product/network:** the `NET-01` loopback probe passed (36,000 frames, 0 desync,
-   matching host/join/reference checkpoints). Continue with direct-IP host/join, initial
-   state transfer, and reconnect before adding presentation settings.
+4. **Product/network:** `NET-01` direct-IP host/join, TCP state sync, reconnect, CLI, and
+   desktop dialog are implemented; the 36,000-frame two-process and probe runs match the
+   reference. Finish live two-window desktop acceptance and the optional session token.
+   Lobby/NAT/>2 players stay out of scope.
 5. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
    keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation

@@ -47,6 +47,7 @@ namespace FiveDo.Cli;
 [JsonSerializable(typeof(CliDiagnosticsBundleResult))]
 [JsonSerializable(typeof(CliAudioDevicesResult))]
 [JsonSerializable(typeof(CliBenchResult))]
+[JsonSerializable(typeof(CliNetplayResult))]
 [JsonSerializable(typeof(CliSelfTestResult))]
 [JsonSerializable(typeof(CliFsListResult))]
 [JsonSerializable(typeof(CliFsExtractResult))]

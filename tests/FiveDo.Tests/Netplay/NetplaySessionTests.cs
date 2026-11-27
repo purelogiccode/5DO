@@ -161,6 +161,32 @@ public sealed class NetplaySessionTests
     }
 
     [Fact]
+    public async Task Session_StartNegotiatedBeginsAtConfiguredFrame()
+    {
+        var hostTransport = new InMemoryNetplayTransport();
+        var joinTransport = new InMemoryNetplayTransport();
+        hostTransport.Peer = joinTransport;
+        joinTransport.Peer = hostTransport;
+        LockstepSession host = CreateSession(hostTransport, NetplayRole.Host, P1Script, firstFrame: 500);
+        LockstepSession join = CreateSession(joinTransport, NetplayRole.Join, P2Script, firstFrame: 500);
+        Assert.True(host.StartNegotiated());
+        Assert.True(join.StartNegotiated());
+
+        var hostTask = Task.Run(() => RunNegotiated(host));
+        var joinTask = Task.Run(() => RunNegotiated(join));
+        bool[] results = await Task.WhenAll(hostTask, joinTask).WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.True(results[0], host.FailureMessage);
+        Assert.True(results[1], join.FailureMessage);
+        Assert.Null(host.Desync);
+        Assert.Null(join.Desync);
+        Assert.Equal(600, host.Frame);
+        Assert.Equal(600, join.Frame);
+        Assert.Equal(NetplaySessionState.Completed, host.State);
+        Assert.Equal(NetplaySessionState.Completed, join.State);
+    }
+
+    [Fact]
     public async Task Session_ReportsDesyncWhenCheckpointHashesDiffer()
     {
         (LockstepSession host, LockstepSession join) = CreatePair();
@@ -210,7 +236,8 @@ public sealed class NetplaySessionTests
     private static LockstepSession CreateSession(
         InMemoryNetplayTransport transport,
         NetplayRole role,
-        Func<long, ControllerState> script)
+        Func<long, ControllerState> script,
+        long firstFrame = 0)
     {
         return new LockstepSession(
             transport,
@@ -220,7 +247,7 @@ public sealed class NetplaySessionTests
                 InputDelayFrames = 2,
                 SessionId = SessionId,
                 ContentHash = ContentHash,
-                FirstFrame = 0,
+                FirstFrame = firstFrame,
                 StepTimeout = TimeSpan.FromSeconds(5),
             },
             script);
@@ -249,6 +276,25 @@ public sealed class NetplaySessionTests
             ControllerState player2 = session.LocalPlayerIndex == 0 ? session.RemoteInput : session.LocalInput;
             var hash = frame == corruptFrame ? 0xDEADBEEF : HashFrame(frame, player1, player2);
             session.PublishHash(frame, hash, 0, 0);
+        }
+
+        session.Complete();
+        return true;
+    }
+
+    private static bool RunNegotiated(LockstepSession session)
+    {
+        for (var i = 0; i < 100; i++)
+        {
+            if (!session.Step())
+            {
+                return false;
+            }
+
+            var frame = session.Frame - 1;
+            ControllerState player1 = session.LocalPlayerIndex == 0 ? session.LocalInput : session.RemoteInput;
+            ControllerState player2 = session.LocalPlayerIndex == 0 ? session.RemoteInput : session.LocalInput;
+            session.PublishHash(frame, HashFrame(frame, player1, player2), 0, 0);
         }
 
         session.Complete();

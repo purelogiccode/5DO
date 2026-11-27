@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "role": "host",
+  "host": "",
+  "port": 5604,
+  "frames": 36000,
+  "startFrame": 0,
+  "sessionId": "0x55A27BDF606F852C",
+  "contentHash": "0x616E42DCA010DB5E",
+  "finalFrameHash": 875472743,
+  "finalAudioHash": 3064680656,
+  "reconnects": 0,
+  "bytesSent": 5666550,
+  "bytesReceived": 5040012,
+  "seconds": 154.3710897,
+  "failure": null
+}

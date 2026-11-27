@@ -1,9 +1,10 @@
 # Netplay Loopback Probe (NET-01)
 
-**Status:** probe complete (2026-11-26); implementation remains open for host/join,
-initial state sync, reconnect, and the desktop/CLI surface. This page records the design,
-measurements, and the decision to use delay-based lockstep for the first direct-IP
-increment.
+**Status:** probe and first implementation complete (2026-11-26). The desktop
+**Netplay > Host/Join Session** dialog and `5do netplay host|join` use a TCP control
+channel for state transfer and a UDP lockstep channel for input/hashes. Live two-window
+desktop acceptance and an optional session token remain; lobby/NAT/>2 players are out of
+scope.
 
 ## Scope
 
@@ -87,11 +88,31 @@ an explicit request.
 | Metric | Value |
 |---|---|
 | Uncompressed snapshot | 9,348,653 bytes |
-| Snapshot capture | 5.06 ms |
-| Snapshot restore | 2.31 ms |
+| Snapshot capture | 1.90 ms |
+| Snapshot restore | 2.11 ms |
 | Compressed state | 649,639 bytes |
 | Compressed save | 38 ms |
-| Compressed load | 24 ms |
+| Compressed load | 23 ms |
+
+## State sync and reconnect
+
+The first implementation adds a reliable TCP control channel (`NetplayControlCodec`,
+`NetplayControlChannel`, `NetplayStateTransfer`) for the join request, content/tuning
+validation, compressed state, frame hash, acknowledgement, and close. The UDP lockstep
+channel starts at the state frame with `LockstepSession.StartNegotiated`; the TCP channel
+closes after the acknowledgement and the host keeps its listener open for reconnects.
+
+- A 36,000-frame CLI host/join run with different P1/P2 scripts (`tierb-10min.txt` and
+  `tierb-panzer-start.txt`) completed in about 154 s. Both peers finished at
+  `0x342EA767` with audio `0xB6AB50D0`, matching the single-machine reference.
+- A 1,200-frame reconnect test dropped the first join after 300 frames. The host resumed
+  at frame 304, the second join loaded that state and ran 896 frames, and both finished at
+  `0xA328CCCC` with audio `0x8B40B3CB`. The join sends its last confirmed frame/hash in the
+  reconnect request; the host sends its current state, so the join may move forward past
+  its last local frame.
+- The desktop dialog performs the same handshake, then `NetplaySessionPbusSource` drives
+  the session from the normal core thread. Run-ahead, frame skip, pause, rewind, and state
+  load are disabled while a session is active.
 
 ## Peer reference comparison
 
@@ -99,12 +120,12 @@ The mupen64plus netplay source in `References/RMG-master` was reviewed as the cl
 available peer implementation:
 
 - It uses **TCP for registration, settings, and save-state sync** and **UDP for per-frame
-  input and sync checks**. The probe uses UDP for everything to keep the bounded test
-  small; the next increment should move the handshake and the 650 KB initial state to a
-  reliable stream instead of fragmenting it over UDP.
+  input and sync checks**. The probe originally used UDP for everything to keep the
+  bounded test small; the implementation now follows this split, with a TCP handshake and
+  650 KB state transfer and UDP input/hashes.
 - It relays input through a server and identifies events by a monotonic input count. The
-  first 5DO increment is two-player direct IP, so the probe exchanges input peer-to-peer
-  by frame number; a relay or full mesh would be needed for more than two players.
+  first 5DO increment is two-player direct IP, so 5DO exchanges input peer-to-peer by
+  frame number; a relay or full mesh would be needed for more than two players.
 - It reports a server-assigned buffer target and per-player lag, and temporarily removes
   the speed limiter when the local buffer exceeds the target to catch up. 5DO's frame is
   far below the 16.67 ms budget (the probe runs at roughly 250 fps with two peers), so the
@@ -138,16 +159,16 @@ lockstep from the confirmed frame.
 
 ## Remaining work
 
-- Direct-IP **host/join** CLI and desktop surface, with port, input-delay, and reconnect
-  settings.
-- Initial state transfer and validation at join; reconnect from the last confirmed state.
-- Joypad input only in this probe; pointer devices and more than two players are out of
-  scope for the first increment.
-- Audio/video integration and latency display in the desktop shell.
+- Live two-window desktop acceptance on a machine with two physical input devices; the
+  dialog, menu, and attach path are built and the frontend smoke passes.
+- An optional session token/password or authenticated channel. The current protocol has
+  no authentication or encryption and is intended for a trusted LAN or direct connection.
+- A final user-documentation pass for firewall rules and the direct-IP-only scope (the
+  [User Guide](UserGuide.md#netplay-direct-ip) now covers host/join, ports, delay,
+  reconnect, and controls).
+- Pointer devices, more than two players, a lobby, matchmaking, and NAT traversal remain
+  out of scope for this increment.
 - Desync recovery policy beyond reporting and stopping.
-- User documentation for direct IP, ports, firewall rules, and the no-lobby/no-NAT scope.
-- Security note: the probe protocol has no authentication or encryption. Do not expose the
-  port to an untrusted network.
 
 ## How to run
 

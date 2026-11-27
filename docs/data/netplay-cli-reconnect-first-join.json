@@ -1,0 +1,17 @@
+{
+  "ok": false,
+  "role": "join",
+  "host": "127.0.0.1",
+  "port": 5602,
+  "frames": 300,
+  "startFrame": 0,
+  "sessionId": "0x9C8B1B6A0793AD5B",
+  "contentHash": "0x616E42DCA010DB5E",
+  "finalFrameHash": 1981242821,
+  "finalAudioHash": 3574949061,
+  "reconnects": 0,
+  "bytesSent": 42077,
+  "bytesReceived": 668941,
+  "seconds": 3.1004515,
+  "failure": "Simulated join exit for reconnect testing."
+}

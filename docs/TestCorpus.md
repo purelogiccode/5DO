@@ -5006,3 +5006,44 @@ lockstep for the first direct-IP increment; see [NetplayProbe.md](NetplayProbe.m
 authentication or encryption, no initial state transfer, no reconnect, and no desktop or
 CLI host/join surface. The first increment remains joypad-only for two players. Full suite
 **2,666/2,666**.
+
+### 1.1da Direct-IP netplay host/join and reconnect (2026-11-26)
+
+**Core and tests.** `NetplayControlCodec`/`NetplayControlChannel` add a versioned TCP
+control channel for hello, join response, compressed state, state acknowledgement, and
+close; `NetplayStateTransfer` captures and applies the compressed save-state and validates
+the announced frame/hash/tuning warnings; `LockstepSession.StartNegotiated` starts the UDP
+session after the TCP handshake without repeating the UDP hello, and `RequestStop` makes
+the stop flag thread-safe. `NetplaySessionPbusSource` drives the session from the machine's
+VBI PBUS read so the desktop shell can use the normal core thread; `CoreRunner.ReplacePbusSource`
+swaps the source while preserving its latency wrapper. `NetplayWindow` performs host/join
+handshakes and state transfer; `MainWindow.Netplay` attaches the session, publishes
+frame/audio hashes from `FrameCompleted`, disables run-ahead/frame-skip/rewind/pause, and
+offers reconnect. Twenty-five netplay tests now cover the codec, malformed input, content
+fingerprint, scripted determinism, packet loss, burst loss recovered by input requests,
+desync, timeout, state transfer, negotiated start, PBUS packing, machine equality, and
+resume from a transferred state. Full suite **2,676/2,676**.
+
+**Two-process CLI evidence.** `5do netplay host` and `5do netplay join` on Wolfenstein 3D
+(USA) ran **36,000 frames** each with different P1/P2 scripts (`tierb-10min.txt` and
+`tierb-panzer-start.txt`). Both completed in about 154 s with final hash `0x342EA767` and
+audio `0xB6AB50D0`, matching the single-machine reference from the probe. The host sent
+the compressed state at frame 0 over TCP; the UDP peers exchanged 10,080,066 bytes each
+(about 1.17 KB/s). A 1,200-frame reconnect test dropped the first join after 300 frames;
+the host resumed at frame 304, the second join ran 896 frames, and both finished with hash
+`0xA328CCCC` and audio `0x8B40B3CB`. Raw reports:
+[host](data/netplay-cli-36000-host.json),
+[join](data/netplay-cli-36000-join.json),
+[reconnect host](data/netplay-cli-reconnect-host.json),
+[reconnect join](data/netplay-cli-reconnect-join.json), and the
+[first dropped join](data/netplay-cli-reconnect-first-join.json).
+
+**Desktop.** The frontend adds **Netplay > Host Session.../Join Session.../Stop Session**,
+a host/join dialog with port/input-delay/wait-timeout fields, automatic reconnect prompts,
+and session status. The frontend `--smoke-test` passes. Live two-window acceptance on a
+desktop with two physical input devices is the remaining evidence item.
+
+**Limits.** No lobby, matchmaking, NAT traversal, authentication, or encryption; two
+players and joypads only. Pause, rewind, fast-forward, state load, frame skip, and run-ahead
+are disabled during a session. See [UserGuide.md](UserGuide.md#netplay-direct-ip) and
+[CliReference.md](CliReference.md#12c-netplay).

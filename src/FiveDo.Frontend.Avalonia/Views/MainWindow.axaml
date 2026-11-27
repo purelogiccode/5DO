@@ -119,6 +119,15 @@
                           ToolTip.Tip="Toggle fullscreen presentation." />
             </MenuItem>
 
+            <MenuItem Header="Netplay" ToolTip.Tip="Host or join a direct-IP two-player session.">
+                <MenuItem x:Name="NetplayHostMenuItem" Header="Host Session..." Click="OnNetplayHostAsync"
+                          ToolTip.Tip="Open a TCP/UDP port and wait for player 2. The current machine state is transferred when they connect." />
+                <MenuItem x:Name="NetplayJoinMenuItem" Header="Join Session..." Click="OnNetplayJoinAsync"
+                          ToolTip.Tip="Connect to a hosting peer, receive the current state, and play as player 2." />
+                <MenuItem x:Name="NetplayStopMenuItem" Header="Stop Session" Click="OnNetplayStopAsync" IsEnabled="False"
+                          ToolTip.Tip="End the direct-IP netplay session." />
+            </MenuItem>
+
             <MenuItem Header="Configuration" ToolTip.Tip="Video, audio, emulation, path, and input settings.">
                 <MenuItem Header="Settings..." Click="OnSettingsAsync"
                           ToolTip.Tip="Open video, audio, emulation, and path settings." />

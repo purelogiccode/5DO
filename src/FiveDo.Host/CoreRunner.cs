@@ -509,6 +509,32 @@ public sealed class CoreRunner : IDisposable
         }
     }
 
+    /// <summary>Replaces the input source while preserving the core's latency timestamp wrapper.</summary>
+    /// <param name="source">New source, or <see langword="null"/> to detach input.</param>
+    public void ReplacePbusSource(IPbusSource? source)
+    {
+        Invoke(() =>
+        {
+            if (_timestampedPbusSource is null)
+            {
+                _machine.PbusSource = source;
+                return;
+            }
+
+            if (source is null)
+            {
+                _machine.PbusSource = null;
+                _timestampedPbusSource = null;
+                _originalPbusSource = null;
+                return;
+            }
+
+            _originalPbusSource = source;
+            _timestampedPbusSource = new TimestampedPbusSource(source, this);
+            _machine.PbusSource = _timestampedPbusSource;
+        });
+    }
+
     /// <summary>
     /// Runs exactly one emulated frame on the caller's thread.
     /// </summary>

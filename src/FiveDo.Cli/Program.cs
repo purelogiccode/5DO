@@ -132,6 +132,7 @@ internal static class Program
                     "doctor" => DoctorCommand.Run(args),
                     "state" => State(args),
                     "bench" => Bench(args),
+                    "netplay" => NetplayCommand.Run(args),
                     "selftest" => SelfTest(args),
                     "disasm" => Disassemble(args),
                     "update" => UpdateCommand(args),
@@ -6923,6 +6924,9 @@ internal static class Program
         Console.WriteLine("  bench [--frames N] [--profile P] [--cpu-clock C] [--memory M] [--swi-hle] [--latency] [--json]");
         Console.WriteLine("                                       Synthetic-ROM frame benchmark.");
         Console.WriteLine("  selftest [--json]                    Determinism and state roundtrip checks for every named profile.");
+        Console.WriteLine("  netplay host <disc> --bios <path> [--port N] [--delay N] [--frames N]");
+        Console.WriteLine("  netplay join <host> <disc> --bios <path> [--port N] [--delay N] [--frames N]");
+        Console.WriteLine("                                       Direct-IP two-player netplay over TCP control and UDP input.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
         Console.WriteLine("  ffmpeg status|install [--force] [--json]");
         Console.WriteLine("                                       Download and verify FFmpeg for MP4 recording.");

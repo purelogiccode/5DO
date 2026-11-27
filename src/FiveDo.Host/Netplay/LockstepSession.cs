@@ -139,6 +139,8 @@ public sealed class LockstepSession : IDisposable
     private readonly Stopwatch _waitClock = new();
     private readonly Stopwatch _resendClock = new();
     private bool _lastInputPacketValid;
+    private bool _stopRequested;
+    private NetplayByeReason _stopReason = NetplayByeReason.PeerStopped;
     private long _nextLocalFrame;
     private long _lastHandshakeSend;
     private NetplayHello? _pendingHandshake;
@@ -224,9 +226,43 @@ public sealed class LockstepSession : IDisposable
             return false;
         }
 
+        _handshakeClock.Stop();
+        return BeginRunning();
+    }
+
+    /// <summary>Starts a session whose handshake and state sync completed on the control channel.</summary>
+    /// <remarks>
+    /// The caller must already have validated the content hash and loaded the transferred
+    /// machine state. Use <see cref="Start"/> for the standalone UDP handshake.
+    /// </remarks>
+    /// <returns><see langword="true"/> when the input queue was primed.</returns>
+    public bool StartNegotiated()
+    {
+        ThrowIfDisposed();
+        if (State != NetplaySessionState.Created)
+        {
+            throw new InvalidOperationException("The session has already been started.");
+        }
+
+        State = NetplaySessionState.Running;
+        return BeginRunning();
+    }
+
+    /// <summary>Requests a thread-safe stop from another thread.</summary>
+    /// <remarks>
+    /// The session thread observes the request, sends a close packet, and returns from
+    /// <see cref="Step"/>. This method does not touch the transport or session buffers.
+    /// </remarks>
+    public void RequestStop(NetplayByeReason reason = NetplayByeReason.PeerStopped)
+    {
+        _stopReason = reason;
+        Volatile.Write(ref _stopRequested, true);
+    }
+
+    private bool BeginRunning()
+    {
         State = NetplaySessionState.Running;
         Frame = _options.FirstFrame;
-        _handshakeClock.Stop();
         while (_nextLocalFrame < _options.FirstFrame + _options.InputDelayFrames)
         {
             _localInputs[_nextLocalFrame] = _localInput(_nextLocalFrame).Buttons;
@@ -247,6 +283,12 @@ public sealed class LockstepSession : IDisposable
     public bool Step()
     {
         ThrowIfDisposed();
+        if (Volatile.Read(ref _stopRequested))
+        {
+            Fail(NetplaySessionState.Failed, _stopReason, "The local peer requested a stop.");
+            return false;
+        }
+
         if (State == NetplaySessionState.Completed && !_remoteInputs.ContainsKey(Frame))
         {
             return false;
@@ -274,6 +316,13 @@ public sealed class LockstepSession : IDisposable
             if (_remoteInputs.ContainsKey(frame))
             {
                 break;
+            }
+
+            if (Volatile.Read(ref _stopRequested))
+            {
+                RecordWait();
+                Fail(NetplaySessionState.Failed, _stopReason, "The local peer requested a stop.");
+                return false;
             }
 
             if (State != NetplaySessionState.Running)

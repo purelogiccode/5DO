@@ -29,6 +29,60 @@ public sealed class NetplayPbusSource : IPbusSource
 }
 
 /// <summary>
+/// A PBUS source that advances a lockstep session when the machine samples input.
+/// </summary>
+/// <remarks>
+/// The desktop shell installs this source on a running <see cref="FiveDoMachine"/>. The
+/// core thread blocks in <see cref="LockstepSession.Step"/> until the remote input for
+/// the current frame arrives, then the machine runs the frame with both controllers.
+/// </remarks>
+public sealed class NetplaySessionPbusSource : IPbusSource
+{
+    private readonly NetplayPbusSource _pbus = new();
+
+    /// <summary>Initializes a new session-driven PBUS source.</summary>
+    /// <param name="session">Session to advance.</param>
+    public NetplaySessionPbusSource(LockstepSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        Session = session;
+    }
+
+    /// <summary>Gets the session being driven.</summary>
+    public LockstepSession Session { get; }
+
+    /// <summary>Gets whether the most recent frame collected both inputs.</summary>
+    public bool LastStepSucceeded { get; private set; }
+
+    /// <inheritdoc />
+    public int GetPbusData(Span<byte> destination)
+    {
+        LastStepSucceeded = Session.Step();
+        if (!LastStepSucceeded)
+        {
+            _pbus.SetControllers(ControllerState.Empty, ControllerState.Empty);
+            return _pbus.GetPbusData(destination);
+        }
+
+        ControllerState player1;
+        ControllerState player2;
+        if (Session.LocalPlayerIndex == 0)
+        {
+            player1 = Session.LocalInput;
+            player2 = Session.RemoteInput;
+        }
+        else
+        {
+            player1 = Session.RemoteInput;
+            player2 = Session.LocalInput;
+        }
+
+        _pbus.SetControllers(player1, player2);
+        return _pbus.GetPbusData(destination);
+    }
+}
+
+/// <summary>
 /// Hashes every PCM sample the machine produces and optionally forwards it to a live sink.
 /// </summary>
 public sealed class NetplayAudioSink : IAudioSink
@@ -117,6 +171,15 @@ public sealed class NetplayMachinePeer : IDisposable
     /// <summary>Gets the hashing audio sink.</summary>
     public NetplayAudioSink Audio => _audio;
 
+    /// <summary>Gets the last frame whose hashes were published, or -1.</summary>
+    public long LastPublishedFrame { get; private set; } = -1;
+
+    /// <summary>Gets the last published frame hash.</summary>
+    public uint LastPublishedFrameHash { get; private set; }
+
+    /// <summary>Resets the cumulative audio hash after a state sync.</summary>
+    public void ResetAudioHash() => _audio.Reset();
+
     /// <summary>Collects both inputs and executes one emulated frame.</summary>
     /// <returns>The frame result, or an unadvanced result when the session stopped.</returns>
     public NetplayFrameResult RunFrame()
@@ -144,6 +207,8 @@ public sealed class NetplayMachinePeer : IDisposable
         _machine.RunFrame();
         var frameHash = HashFrame(_machine.Frame);
         _session.PublishHash(frame, frameHash, _audio.Hash, _audio.SampleCount);
+        LastPublishedFrame = frame;
+        LastPublishedFrameHash = frameHash;
         return new NetplayFrameResult(true, frame, frameHash, _audio.Hash, _audio.SampleCount);
     }
 

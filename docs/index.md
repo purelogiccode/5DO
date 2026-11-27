@@ -102,13 +102,15 @@ writable (otherwise in the user data `tools/` folder). FFmpeg is still not bundl
 installer was validated on Windows x64, Linux x64, and macOS arm64. The 1.18.1 test
 assembly had **2,651 tests**.
 
-**2026-11-26, NET-01 loopback probe (unreleased).** Delay-based lockstep kept two
-independent machines in sync for **36,000 frames** with 0 desyncs, 0 host/join/reference
-checkpoint mismatches, about 1.17 KB/s, and 240.7 fps. A 50 ms one-way latency run and an
-every-third-packet loss run also matched. The test assembly now has **2,666 tests**. The
-probe selected delay-based lockstep and measured a 650 KB compressed state; host/join,
-initial state sync, reconnect, and the desktop/CLI surface remain. See
-[NetplayProbe.md](NetplayProbe.md).
+**2026-11-26, NET-01 direct-IP netplay (unreleased).** **Netplay > Host Session** and
+**Join Session** transfer a compressed machine state over TCP, then exchange per-frame
+input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`; reconnect
+resumes from the host's current state. A 36,000-frame two-process run with different P1/P2
+scripts matched the single-machine reference at `0x342EA767`; reconnect resumed at frame
+304 with matching final hashes and audio. The test assembly now has **2,676 tests**. Live
+two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
+authentication, encryption, more than two players, and pointer devices are out of scope.
+See [NetplayProbe.md](NetplayProbe.md) and the [User Guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and
 CloneCD CCD/IMG/SUB images are now supported, and optional H.264/AAC MP4 recording uses

@@ -146,6 +146,8 @@ public partial class MainWindow : Window, IDisposable
     private bool _shuttingDown;
     private bool _disposed;
     private bool _biosLoaded;
+    private byte[]? _biosBytes;
+    private byte[]? _biosBytes2;
     private string _biosMd5 = string.Empty;
     private string _bios2Md5 = string.Empty;
     private string _biosSelectionReason = string.Empty;
@@ -1124,6 +1126,8 @@ public partial class MainWindow : Window, IDisposable
                 machine.LoadNvram(nvram.Data.Span);
             });
             _biosLoaded = true;
+            _biosBytes = bios.Bios1.ToArray();
+            _biosBytes2 = bios.Bios2.ToArray();
             _biosMd5 = bios.Md5;
             _bios2Md5 = bios.Md5Bios2;
             _biosSelectionReason = reason ?? string.Empty;
@@ -1774,6 +1778,12 @@ public partial class MainWindow : Window, IDisposable
     private void TogglePlayPause()
     {
         _focusPause.Clear();
+        if (_netplay is not null)
+        {
+            ShowOsd("Stop the netplay session before pausing.", OsdSeverity.Warning);
+            return;
+        }
+
         if (_running)
         {
             PauseEmulation(showLibrary: false);
@@ -1941,6 +1951,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void StopEmulation()
     {
+        if (_netplay is not null)
+        {
+            StopNetplayAsync().GetAwaiter().GetResult();
+        }
+
         _focusPause.Clear();
         _escapeQuit.Disarm();
         HideLoadingOverlay();
@@ -1993,21 +2008,46 @@ public partial class MainWindow : Window, IDisposable
 
     private void OnReset(object? sender, RoutedEventArgs e)
     {
+        if (_netplay is not null)
+        {
+            ShowOsd("Stop the netplay session before resetting.", OsdSeverity.Warning);
+            return;
+        }
+
         ResetMachine();
     }
 
     private void OnRewind(object? sender, RoutedEventArgs e)
     {
+        if (_netplay is not null)
+        {
+            ShowOsd("Rewind is disabled during netplay.", OsdSeverity.Warning);
+            return;
+        }
+
         RewindSeconds(1);
     }
 
     private void OnRewindFrame(object? sender, RoutedEventArgs e)
     {
+        if (_netplay is not null)
+        {
+            ShowOsd("Rewind is disabled during netplay.", OsdSeverity.Warning);
+            return;
+        }
+
         RewindFrames(1);
     }
 
     private void OnFastForward(object? sender, RoutedEventArgs e)
     {
+        if (_netplay is not null)
+        {
+            FastForwardMenuItem.IsChecked = false;
+            ShowOsd("Fast-forward is disabled during netplay.", OsdSeverity.Warning);
+            return;
+        }
+
         if (FastForwardMenuItem.IsChecked)
         {
             StartFastForward();
@@ -2112,6 +2152,12 @@ public partial class MainWindow : Window, IDisposable
 
     private void LoadStateFromCurrentSlot()
     {
+        if (_netplay is not null)
+        {
+            ShowOsd("Stop the netplay session before loading a state.", OsdSeverity.Warning);
+            return;
+        }
+
         if (IsRetroAchievementsHardcore)
         {
             StatusText.Text = "Save states are disabled in RetroAchievements hardcore mode.";
@@ -4071,7 +4117,7 @@ public partial class MainWindow : Window, IDisposable
         // pad state from the live gamepad.
         _input.Reset();
 
-        if (_focusPause.OnDeactivated(_settings.PauseOnFocusLoss, _running))
+        if (_netplay is null && _focusPause.OnDeactivated(_settings.PauseOnFocusLoss, _running))
         {
             PauseEmulation(showLibrary: false);
         }
@@ -5874,11 +5920,6 @@ public partial class MainWindow : Window, IDisposable
             pendingUnlockPath: Path.Combine(
                 AppSettingsStore.DefaultDirectory,
                 "retroachievements-pending.json"));
-
-    private void OnFrameCompleted(object? sender, EventArgs e)
-    {
-        _achievements?.Tick();
-    }
 
     private void OnRetroAchievementsLogin()
     {
@@ -7916,7 +7957,12 @@ public partial class MainWindow : Window, IDisposable
         _coverCts = null;
         _coverService.Dispose();
         WriteAutoSave("exit");
+        _netplay?.Session.RequestStop();
         _runner?.Dispose();
+        _netplay?.Session.Dispose();
+        _netplay = null;
+        _netplayListener?.Dispose();
+        _netplayListener = null;
         _runner = null;
         _achievements?.Dispose();
         _achievements = null;

@@ -398,6 +398,62 @@ or a flat CHD and verifies the game ID; see
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 
+## Netplay (direct IP)
+
+> **Status:** unreleased on `master`; the desktop menu, CLI, and direct-IP core are
+> implemented and the two-process path is validated. There is no lobby, matchmaking, or
+> NAT traversal.
+
+Netplay connects two 5DO instances directly. The host is player 1 and owns the listening
+port; the join is player 2. Both players must use the same 5DO build, BIOS, disc, and
+behavior-affecting emulation settings. The host transfers a compressed machine state to
+the join, so both start from the exact same frame and deterministic state.
+
+**Host**
+
+1. Open the disc and BIOS, then start the game.
+2. Choose **Netplay > Host Session...**.
+3. Set the TCP/UDP port (default `5600`), input delay (default 4 frames), and wait timeout.
+4. Select **Start hosting** and share the host address and port with player 2.
+5. The session starts when player 2 connects and validates the transferred state.
+
+**Join**
+
+1. Open the same disc and BIOS. Do not start a different game.
+2. Choose **Netplay > Join Session...**.
+3. Enter the host address and port, then select **Join session**.
+4. The host state is loaded and validated before the first input is applied.
+
+The host sets the input delay; the join uses the host's value. Use 2-4 frames on a LAN
+and 6-10 frames when one-way latency is around 50-100 ms. **Netplay > Stop Session** ends
+the session and restores local input. If the link drops, 5DO offers a reconnect: the host
+sends its current state, and the join resumes from that state (the join's last confirmed
+frame is included in the request).
+
+**During a session**
+
+- Pause, reset, load state, rewind, and fast-forward are disabled; frame skip and run-ahead
+  are forced off so every peer executes every frame.
+- P1 and P2 use the existing player 1/player 2 keyboard and gamepad bindings.
+- The menu shows **Stop Session**; the status bar shows the role.
+- The protocol has no authentication or encryption. Use it on a trusted LAN or a direct
+  connection, and do not expose the port to the public Internet without a VPN or
+  firewall rules you understand.
+- Two players and joypads are supported. Pointer devices, more than two players, a lobby,
+  matchmaking, and NAT traversal are out of scope for this increment.
+
+The CLI exposes the same core for automation and evidence:
+
+```powershell
+5do netplay host game.chd --bios bios/panafz1.bin --port 5600 --frames 3600
+5do netplay join 192.168.1.20 game.chd --bios bios/panafz1.bin --port 5600 --frames 3600
+```
+
+Both commands accept `--input-script <path>` for the local player, `--delay <frames>`,
+`--reconnect-timeout <seconds>`, and `--json`. See
+[CliReference.md](CliReference.md#12c-netplay) and [NetplayProbe.md](NetplayProbe.md) for the
+protocol and measured evidence.
+
 ## Display
 
 The desktop renderer expands the 3DO palette at native resolution and scales on the

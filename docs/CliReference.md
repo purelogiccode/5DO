@@ -108,6 +108,7 @@ CI, frame/state/audio capture, and debugging. The desktop app is documented in
 | `selftest` | Determinism and state roundtrip checks for every named timing profile. |
 | `update` | Check GitHub for a newer 5DO release. |
 | `ffmpeg` | Install or inspect the pinned FFmpeg used for MP4 recording. |
+| `netplay host\|join` | Run a direct-IP two-player session over TCP control and UDP input. |
 | `--version`, `--help` | Identity/help. |
 
 ---
@@ -1154,6 +1155,49 @@ FFmpeg for `--record-mp4` produces a clean user error and does not start a downl
 JSON fields: `ok`, `path`, `version`, `platform`, `sourceUrl`, `sha256`, `bytes`, `error`.
 The Windows arm64 build uses the x64 FFmpeg binary under Windows' x64 emulation. FFmpeg
 is not bundled or redistributed by 5DO.
+
+---
+
+## 12c. `netplay`
+
+```powershell
+5do netplay host game.chd --bios bios/panafz1.bin --port 5600 --frames 3600
+5do netplay join 192.168.1.20 game.chd --bios bios/panafz1.bin --port 5600 --frames 3600
+```
+
+`netplay host` listens on TCP and UDP for one player-2 peer. It sends a compressed
+save-state (about 650 KB for a stock machine) and the frame hash over TCP, then exchanges
+per-frame PBUS input and frame/audio hashes over UDP. `netplay join` connects, receives
+the state, validates the frame hash, and applies it before running. The host is player 1;
+the join is player 2. Both sides must use the same BIOS, disc, and behavior-affecting
+tuning.
+
+Options:
+
+- `--bios <path>` (required), `--bios2 <path>`.
+- `--port <n>`: TCP and UDP port (default 5600; host prints the actual port).
+- `--delay <n>`: input lead in frames (default 4; the host sets the join's value).
+- `--frames <n>`: frames to execute (default 3600).
+- `--input-script <path>`: local player's deterministic input script.
+- `--reconnect-timeout <seconds>`: reconnect/listen deadline (default 30; 0 disables the
+  wait).
+- `--profile compatible|accuracy|performance`: timing bundle (default compatible).
+- `--json`: emit `CliNetplayResult`.
+
+If the UDP link drops, the host keeps the TCP listener open and the join reconnects.
+The host sends its current state and both resume at that frame, so the join may move
+forward past its last confirmed frame. The join includes its last frame and hash in the
+reconnect request. A deliberate packet loss of every third input datagram is recovered by
+the eight-entry redundant input window; longer gaps use an explicit input request.
+
+JSON fields: `ok`, `role`, `host`, `port`, `frames`, `startFrame`, `sessionId`,
+`contentHash`, `finalFrameHash`, `finalAudioHash`, `reconnects`, `bytesSent`,
+`bytesReceived`, `seconds`, `failure`.
+
+The protocol has no authentication or encryption and is intended for a trusted LAN or a
+direct connection. There is no lobby, NAT traversal, or more than two players. Pause,
+rewind, fast-forward, state load, and frame skip are disabled while a desktop session is
+active.
 
 ---
 

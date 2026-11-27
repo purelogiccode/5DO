@@ -8,13 +8,19 @@ and live-clock features.
 
 ### Added
 
-- **Netplay loopback probe (NET-01).** A versioned input/hash protocol, UDP transport,
-  delay-based lockstep session, and machine peer keep two independent 5DO instances in
-  sync. The 36,000-frame (10-minute emulated) probe completed with 0 desyncs, 0
-  host/join/reference checkpoint mismatches, about 1.17 KB/s, and 240.7 fps; 50 ms
-  one-way latency and every-third-packet loss also passed. The compressed state is about
-  650 KB (38 ms save / 24 ms load). Host/join, initial state sync, reconnect, and the
-  desktop/CLI surface remain. See `docs/NetplayProbe.md`.
+- **Direct-IP two-player netplay (NET-01).** **Netplay > Host Session...** and **Join
+  Session...** connect two instances without a lobby. The host sends a compressed machine
+  state (about 650 KB) and frame hash over TCP; both peers then exchange per-frame PBUS
+  input, frame hashes, and cumulative audio hashes over UDP with an eight-entry redundant
+  input window and explicit input requests. Reconnect resumes from the host's current
+  state. The CLI exposes `5do netplay host|join` with `--port`, `--delay`,
+  `--input-script`, `--reconnect-timeout`, and `--json`. A 36,000-frame two-process run
+  with different P1/P2 scripts matched the single-machine reference at `0x342EA767`; a
+  1,200-frame reconnect test finished with matching `0xA328CCCC` host/join hashes. Pause,
+  rewind, fast-forward, state load, frame skip, and run-ahead are disabled during a
+  session. There is no authentication, encryption, NAT traversal, or more than two
+  players. See `docs/NetplayProbe.md`, `docs/UserGuide.md` §Netplay, and
+  `docs/CliReference.md` §12c.
 
 ## [1.18.1] - 2026-11-26
 

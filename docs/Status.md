@@ -16,16 +16,18 @@ checksum manifests verify with 0 mismatches. The published win-x64 bundle report
 installed FFmpeg 6.1.1 beside the CLI; its 600-frame MP4 is 10.010 s H.264/AAC with DAR
 4:3. See [ReleaseNotes-1.18.1.md](ReleaseNotes-1.18.1.md).
 
-**2026-11-26, NET-01 loopback probe (unreleased):** the delay-based lockstep probe kept
-two independent machines in sync for **36,000 frames** with 0 desyncs, 0 host/join and 0
-netplay/reference checkpoint mismatches, about **1.17 KB/s**, and **240.7 fps**. A 600-frame
-run with 50 ms one-way latency (delay 8) passed at 128.3 fps, and every-third-input-packet
-loss passed at 389 fps. The compressed state is 649,639 bytes (38 ms save / 24 ms load),
-so initial sync and reconnect are practical. The probe committed the versioned protocol,
-UDP transport, lockstep session, machine peer, 15 tests, and the developer
-`FiveDo.NetplayProbe` tool. Host/join, initial state transfer, reconnect, and the
-desktop/CLI surface remain. Full suite **2,666/2,666**; see
-[NetplayProbe.md](NetplayProbe.md) and [TestCorpus.md](TestCorpus.md) 1.1cz.
+**2026-11-26, NET-01 direct-IP netplay (unreleased):** **Netplay > Host Session** and
+**Join Session** transfer a compressed machine state over TCP, then exchange per-frame
+input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`. A
+36,000-frame two-process run with different P1/P2 scripts matched the single-machine
+reference (`0x342EA767`, audio `0xB6AB50D0`) in about 154 s; reconnect resumed at frame
+304 and finished with matching host/join hashes and audio. The probe measured about
+**1.17 KB/s**, 240.7 fps, and a 650 KB state (38 ms save / 24 ms load); 50 ms one-way
+latency and every-third-input-packet loss passed. The suite is **2,676/2,676**. Live
+two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
+authentication, encryption, more than two players, and pointer devices are out of scope.
+See [NetplayProbe.md](NetplayProbe.md), the [User Guide](UserGuide.md#netplay-direct-ip),
+and [TestCorpus.md](TestCorpus.md) 1.1da.
 
 **2026-11-26, v1.18.0 feature release (published):** the release adds read-only
 Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through
