@@ -51,13 +51,20 @@ public sealed class NetplaySessionPbusSource : IPbusSource
     /// <summary>Gets the session being driven.</summary>
     public LockstepSession Session { get; }
 
-    /// <summary>Gets whether the most recent frame collected both inputs.</summary>
+    /// <summary>Gets whether the most recent <see cref="Advance"/> collected both inputs.</summary>
     public bool LastStepSucceeded { get; private set; }
+
+    /// <summary>Advances the session once for the frame about to run.</summary>
+    /// <returns><see langword="true"/> when both inputs were collected.</returns>
+    public bool Advance()
+    {
+        LastStepSucceeded = Session.Step();
+        return LastStepSucceeded;
+    }
 
     /// <inheritdoc />
     public int GetPbusData(Span<byte> destination)
     {
-        LastStepSucceeded = Session.Step();
         if (!LastStepSucceeded)
         {
             _pbus.SetControllers(ControllerState.Empty, ControllerState.Empty);

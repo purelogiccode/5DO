@@ -92,11 +92,12 @@ and channel files: [Installers.md](Installers.md),
 
 ### 3.4 P3 — Product features
 
-| ID | Status | Effort | Missing work | Why it is achievable | Done when |
-|---|---|---|---|---|---|
-| **NET-01** | Partial | XL | **Netplay**: direct-IP host/join, TCP handshake and compressed state transfer, UDP delay-based lockstep, reconnect, CLI, and the desktop dialog are implemented (see [NetplayProbe.md](NetplayProbe.md)). A 36,000-frame two-process run and the probe matched the single-machine reference (`0x342EA767`); reconnect resumed at frame 304 with matching final hashes/audio. Remaining: live two-window desktop acceptance (menus, dialog, gamepad mapping), an optional session token/authentication layer, and a final user-documentation polish pass. Lobby, NAT traversal, more than two players, and pointer devices remain out of scope. | The deterministic machine, compressed state, input/hash protocol, and probe harness are in place; the state is 650 KB with 38 ms save / 24 ms load, and the CLI/desktop share the same core. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
+The former P3 product item, **direct-IP netplay (`NET-01`)**, is complete and moved to
+archive §17. An optional session token/authentication layer and a two-window physical
+controller smoke are post-release hardening; lobby, NAT traversal, more than two players,
+and pointer devices remain out of scope.
 
-### 3.5 P2/P3 — Rendering completeness
+### 3.5 P2/P3 - Rendering completeness
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
@@ -164,10 +165,10 @@ was measured and closed with a documented limitation, not that it is unachievabl
 3. **macOS platform:** `PLAT-17` keeps only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller. Nothing on macOS is
    runnable until one of those devices is attached.
-4. **Product/network:** `NET-01` direct-IP host/join, TCP state sync, reconnect, CLI, and
-   desktop dialog are implemented; the 36,000-frame two-process and probe runs match the
-   reference. Finish live two-window desktop acceptance and the optional session token.
-   Lobby/NAT/>2 players stay out of scope.
+4. **Product/network:** `NET-01` is complete (archive §17): direct-IP host/join, TCP state
+   sync, UDP lockstep, reconnect, CLI, and desktop dialog, with the 36,000-frame run and
+   probe matching the reference. Optional session-token and two-window physical-controller
+   hardening are post-release; lobby/NAT/>2 players remain out of scope.
 5. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
    keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation

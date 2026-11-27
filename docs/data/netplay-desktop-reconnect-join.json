@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "role": "join",
+  "host": "127.0.0.1",
+  "port": 5635,
+  "frames": 446,
+  "startFrame": 7367,
+  "sessionId": "0xC5175F643F73451A",
+  "contentHash": "0x6A5268A4E5533B7F",
+  "finalFrameHash": 820256197,
+  "finalAudioHash": 1304768837,
+  "reconnects": 0,
+  "bytesSent": 62605,
+  "bytesReceived": 1036768,
+  "seconds": 9.5503092,
+  "failure": null
+}

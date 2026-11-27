@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -36,6 +37,18 @@ internal static class Program
     /// provide the BIOS without changing the saved desktop configuration.
     /// </summary>
     internal static string? StartupBiosPath { get; private set; }
+
+    /// <summary>Gets whether this launch should automatically host a netplay session.</summary>
+    internal static bool NetplayHostMode { get; private set; }
+
+    /// <summary>Gets the host address for an automatic netplay join, if any.</summary>
+    internal static string? NetplayJoinAddress { get; private set; }
+
+    /// <summary>Gets the automatic netplay TCP/UDP port.</summary>
+    internal static int NetplayPort { get; private set; } = 5600;
+
+    /// <summary>Gets the automatic netplay input delay in frames.</summary>
+    internal static byte NetplayDelay { get; private set; } = 4;
 
     /// <summary>
     /// Gets a value indicating whether `--fullscreen`, `-fullscreen`, or `-f` requested
@@ -318,6 +331,24 @@ internal static class Program
 
             StartupDiscPath = FindDiscPath(args);
             StartupBiosPath = FindBiosPath(args);
+            NetplayHostMode = HasFlag(args, "--netplay-host");
+            NetplayJoinAddress = FindOptionValue(args, "--netplay-join");
+            var netplayPort = FindOptionValue(args, "--netplay-port");
+            if (netplayPort is not null
+                && int.TryParse(netplayPort, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPort)
+                && parsedPort is >= 1 and <= 65535)
+            {
+                NetplayPort = parsedPort;
+            }
+
+            var netplayDelay = FindOptionValue(args, "--netplay-delay");
+            if (netplayDelay is not null
+                && byte.TryParse(netplayDelay, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedDelay)
+                && parsedDelay <= 30)
+            {
+                NetplayDelay = parsedDelay;
+            }
+
             StartFullscreen = IsFullscreenRequested(args);
             var biosOption = FindOptionValue(args, "--bios");
             if (biosOption is not null && StartupBiosPath is null)
@@ -530,6 +561,8 @@ internal static class Program
         Console.WriteLine("  --gamepad-probe         List the active gamepad source and sample raw input for two seconds.");
         Console.WriteLine("  --audio-soak <seconds> [--audio-soak-output <json>] [--audio-device <name>]");
         Console.WriteLine("                         [--audio-buffer 20..500] [--audio-sync -250..250] [--region auto|ntsc|pal1|pal2]");
+        Console.WriteLine("  --netplay-host | --netplay-join <host> [--netplay-port N] [--netplay-delay N]");
+        Console.WriteLine("                         Start the desktop host/join flow automatically for acceptance runs.");
     }
 
     internal static bool HasFlag(string[] args, string flag)
@@ -560,7 +593,9 @@ internal static class Program
                || HasFlag(args, "--vk-probe")
                || HasFlag(args, "--vk-window-probe")
                || HasFlag(args, "--d3d-probe")
-               || HasFlag(args, "--d3d-window-probe");
+               || HasFlag(args, "--d3d-window-probe")
+               || HasFlag(args, "--netplay-host")
+               || FindOptionValue(args, "--netplay-join") is not null;
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

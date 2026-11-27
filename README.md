@@ -494,14 +494,58 @@ archives and Flathub are not eligible under the retained non-commercial terms.
 "3DO" and "Panasonic" are trademarks of their respective owners. 5DO is not affiliated
 with or endorsed by Panasonic, The 3DO Company, or any rights holder.
 
-## Acknowledgements
+## Credits and acknowledgements
 
-- **FreeDO** and **4DO** for the original emulation core and game database.
-- **Opera/libopera** for the behavioral reference used by modern compatibility work.
-- **Avalonia**, **Silk.NET**, **CHDSharp**, **SharpCompress**, **Serilog**, and **OpenAL Soft** for the
-  platform, presentation, storage, diagnostics, and audio foundations.
-- Every contributor who has recorded a frame hash, a save-state roundtrip, or a
-  compatibility result.
+5DO is a C# port of the FreeDO 3DO emulation core. 4DO carried that core forward and is
+the source of the game database, and Opera/libopera is the behavioral reference for newer
+compatibility work. Thank you to everyone who built and maintained those projects.
+
+### FreeDO
+
+The original 3DO emulator and the project authors listed in its source headers:
+
+- Alexander Troosh
+- Maxim Grishin
+- Allen Wright
+- John Sammons
+- Felix Lazarev
+
+### 4DO
+
+The Windows 3DO emulator that continued FreeDO and produced the game database:
+
+- **JohnnyDude** — founder and lead developer
+- **Viktor** — 3DOPlay founder; core compatibility fixes and the 3DOPlay merge
+- **hankystyles** — original HLE work
+- **Blake** — HLE approach
+- **instazx2** — 4DO source contributor
+- **BryWI** — testing, feedback, and community support
+- **Enio Marconcini**, **Benjamin Siskoo**, **"money"**,
+  **Antonio "Bloodbat" Ramirez**, and **Sedabi** — translations
+
+### Opera / libopera
+
+The maintained 4DO fork used as 5DO's behavioral reference. The core is credited to
+**trapexit** (maintainer), **JohnnyDude**, and the **FreeDO team**. The broader
+`opera-libretro` commit history also includes:
+
+inactive123, LibretroAdmin, heuripedes, Brad Parker, clobber, fcatrin, pstef,
+kwyxz, natinusala, jdgleaver, alegag, GregorR, yoshisuga, StormedBubbles, rtissera,
+MrHuu, warmenhoven, Emery Hemingway, webgeek1234, tokumeiwokiboushimasu, paradadf,
+orbea, liberodark, geysonazevedo27, gameblabla, Zarh, T. Joseph Carter, BananaRama203,
+rtomasa, lubosz, cscd98, and Sir-Walrus.
+
+These lists are compiled from the FreeDO source headers, 4DO's About box and public
+contributor page, and the `opera-libretro` commit history in the `References/` snapshots.
+If someone is missing, please open an issue or pull request so we can add them.
+
+### Libraries and community
+
+- **Avalonia**, **Silk.NET**, **CHDSharp**, **SharpCompress**, **Serilog**, and **OpenAL Soft**
+  for the platform, presentation, storage, diagnostics, and audio foundations. The complete
+  dependency and license list is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+- Every contributor who has recorded a frame hash, a save-state roundtrip,
+  compatibility result, translation, or bug report for 5DO.
 
 ---
 

@@ -35,7 +35,11 @@ internal static class NetplayCommand
             "performance" => EmulationProfile.Performance,
             _ => EmulationProfile.Compatible,
         };
-        EmulatorTuning tuning = EmulationProfiles.Apply(profile);
+        EmulatorTuning tuning = EmulationProfiles.Apply(profile) with
+        {
+            HighResolution = options.HighResolution || options.TrueHighResolution,
+            TrueHighResolution = options.TrueHighResolution,
+        };
         string discId;
         using (IDiscSource disc = DiscImageFactory.Open(options.DiscPath))
         {
@@ -229,6 +233,7 @@ internal static class NetplayCommand
                     SessionId = sessionId,
                     ContentHash = contentHash,
                     FirstFrame = lastFrame,
+                    CompareAudioHashes = !options.NoAudioHash,
                     StepTimeout = TimeSpan.FromSeconds(5),
                 },
                 localInput);
@@ -410,6 +415,7 @@ internal static class NetplayCommand
                     SessionId = sessionId,
                     ContentHash = contentHash,
                     FirstFrame = lastFrame,
+                    CompareAudioHashes = !options.NoAudioHash,
                     StepTimeout = TimeSpan.FromSeconds(5),
                 },
                 localInput);
@@ -429,7 +435,7 @@ internal static class NetplayCommand
                 remaining = options.ExitAfterFrames;
             }
 
-            var run = RunPeer(peer, remaining);
+            var run = RunPeer(peer, remaining, complete: !simulatedExit);
             totalFrames += run.Frames;
             lastFrame = run.LastFrame >= 0 ? run.LastFrame : machine.FramesExecuted;
             lastHash = run.LastFrameHash;
@@ -545,7 +551,7 @@ internal static class NetplayCommand
         return System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(bytes);
     }
 
-    private static PeerRun RunPeer(NetplayMachinePeer peer, long frames)
+    private static PeerRun RunPeer(NetplayMachinePeer peer, long frames, bool complete = true)
     {
         var count = 0L;
         var completed = false;
@@ -560,7 +566,7 @@ internal static class NetplayCommand
             count++;
         }
 
-        if (peer.Session.State == NetplaySessionState.Running)
+        if (complete && peer.Session.State == NetplaySessionState.Running)
         {
             peer.Session.Complete();
             completed = true;
@@ -626,6 +632,12 @@ internal static class NetplayCommand
 
         public bool Json { get; init; }
 
+        public bool HighResolution { get; init; }
+
+        public bool TrueHighResolution { get; init; }
+
+        public bool NoAudioHash { get; init; }
+
         public static NetplayCliOptions Parse(string[] args)
         {
             if (args.Length < 2
@@ -649,6 +661,9 @@ internal static class NetplayCommand
             var exitAfter = 0;
             var profile = "compatible";
             var json = false;
+            var highResolution = false;
+            var trueHighResolution = false;
+            var noAudioHash = false;
 
             for (var i = 2; i < args.Length; i++)
             {
@@ -683,6 +698,16 @@ internal static class NetplayCommand
                         break;
                     case "--json":
                         json = true;
+                        break;
+                    case "--high-res":
+                        highResolution = true;
+                        break;
+                    case "--true-2x":
+                        trueHighResolution = true;
+                        highResolution = true;
+                        break;
+                    case "--no-audio-hash":
+                        noAudioHash = true;
                         break;
                     default:
                         if (args[i].StartsWith("--", StringComparison.Ordinal))
@@ -773,6 +798,9 @@ internal static class NetplayCommand
                 ExitAfterFrames = exitAfter,
                 Profile = profile,
                 Json = json,
+                HighResolution = highResolution,
+                TrueHighResolution = trueHighResolution,
+                NoAudioHash = noAudioHash,
             };
         }
 

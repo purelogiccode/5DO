@@ -1182,6 +1182,8 @@ Options:
 - `--reconnect-timeout <seconds>`: reconnect/listen deadline (default 30; 0 disables the
   wait).
 - `--profile compatible|accuracy|performance`: timing bundle (default compatible).
+- `--high-res` / `--true-2x`: match a desktop high-resolution/true-2x tuning.
+- `--no-audio-hash`: compare frame hashes only (diagnostic).
 - `--json`: emit `CliNetplayResult`.
 
 If the UDP link drops, the host keeps the TCP listener open and the join reconnects.

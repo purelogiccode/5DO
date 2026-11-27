@@ -141,11 +141,12 @@ public sealed class NetplayMachineTests
     {
         for (var i = 0; i < 300; i++)
         {
-            machine.RunFrame();
-            if (!source.LastStepSucceeded)
+            if (!source.Advance())
             {
                 return false;
             }
+
+            machine.RunFrame();
 
             var frame = session.Frame - 1;
             var hash = FrameHasher.Hash(machine.Frame);

@@ -97,7 +97,7 @@ internal sealed class NetplayWindow : Window
     private NetplayControlListener? _ownedListener;
     private bool _transferOwnsListener;
 
-    private NetplayWindow(NetplayWindowOptions options)
+    private NetplayWindow(NetplayWindowOptions options, bool autoStart)
     {
         _options = options;
         bool reconnect = options.Mode is NetplayDialogMode.ReconnectHost or NetplayDialogMode.ReconnectJoin;
@@ -229,13 +229,20 @@ internal sealed class NetplayWindow : Window
                 _ownedListener = null;
             }
         };
+        if (autoStart)
+        {
+            Opened += (_, _) => AsyncEvent.Run(StartAsync, "starting automated netplay");
+        }
     }
 
-    public static Task<NetplaySetup?> ShowAsync(Window owner, NetplayWindowOptions options)
+    public static Task<NetplaySetup?> ShowAsync(
+        Window owner,
+        NetplayWindowOptions options,
+        bool autoStart = false)
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(options);
-        var dialog = new NetplayWindow(options);
+        var dialog = new NetplayWindow(options, autoStart);
         return dialog.ShowDialog<NetplaySetup?>(owner);
     }
 

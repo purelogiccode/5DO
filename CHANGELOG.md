@@ -16,7 +16,10 @@ and live-clock features.
   state. The CLI exposes `5do netplay host|join` with `--port`, `--delay`,
   `--input-script`, `--reconnect-timeout`, and `--json`. A 36,000-frame two-process run
   with different P1/P2 scripts matched the single-machine reference at `0x342EA767`; a
-  1,200-frame reconnect test finished with matching `0xA328CCCC` host/join hashes. Pause,
+  1,200-frame reconnect test finished with matching `0xA328CCCC` host/join hashes.
+  Desktop host and join were each validated against a CLI peer, including a desktop-host
+  reconnect at frame 7367; the desktop session step runs from `BeforeFrame` so a skipped
+  V1 PBUS read cannot leave the session one frame behind. Pause,
   rewind, fast-forward, state load, frame skip, and run-ahead are disabled during a
   session. There is no authentication, encryption, NAT traversal, or more than two
   players. See `docs/NetplayProbe.md`, `docs/UserGuide.md` §Netplay, and

@@ -34,6 +34,13 @@ public sealed record NetplayOptions
     /// <summary>Gets the first emulated frame in the session.</summary>
     public long FirstFrame { get; init; }
 
+    /// <summary>
+    /// Gets whether cumulative audio hashes are part of desync detection. Frame hashes
+    /// are always compared. Desktop sessions disable audio comparison when the live
+    /// audio sink cannot guarantee a frame-aligned sample baseline.
+    /// </summary>
+    public bool CompareAudioHashes { get; init; } = true;
+
     /// <summary>Gets how long a peer waits for a required datagram before giving up.</summary>
     public TimeSpan StepTimeout { get; init; } = TimeSpan.FromSeconds(5);
 
@@ -201,6 +208,9 @@ public sealed class LockstepSession : IDisposable
 
     /// <summary>Gets the failure or timeout explanation, when the session did not complete.</summary>
     public string? FailureMessage { get; private set; }
+
+    /// <summary>Gets the negotiated session options.</summary>
+    public NetplayOptions Options => _options;
 
     /// <summary>Gets the session counters.</summary>
     public NetplayMetrics Metrics { get; } = new();
@@ -715,8 +725,9 @@ public sealed class LockstepSession : IDisposable
         }
 
         var framesMatch = local.FrameHash == remote.FrameHash;
-        var audioMatches = local.AudioHash == remote.AudioHash
-            && local.AudioSamples == remote.AudioSamples;
+        var audioMatches = !_options.CompareAudioHashes
+            || (local.AudioHash == remote.AudioHash
+                && local.AudioSamples == remote.AudioSamples);
         if (framesMatch && audioMatches)
         {
             return;
@@ -734,7 +745,7 @@ public sealed class LockstepSession : IDisposable
         State = NetplaySessionState.Desynchronized;
         FailureMessage =
             $"Frame {local.Frame} diverged (frame {local.FrameHash:X8} vs {remote.FrameHash:X8}, "
-            + $"audio {local.AudioHash:X8} vs {remote.AudioHash:X8}).";
+            + $"audio {local.AudioHash:X8}/{local.AudioSamples} vs {remote.AudioHash:X8}/{remote.AudioSamples}).";
     }
 
     private void SendInputPacket() => SendInputHistory(_nextLocalFrame - 1);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FiveDo.Core;
+using FiveDo.Diagnostics.Logging;
 using FiveDo.Host;
 using FiveDo.Host.Netplay;
 using FiveDo.Host.Osd;
@@ -31,6 +32,7 @@ public partial class MainWindow
     private long _netplayLastFrame;
     private uint _netplayLastHash;
     private FrameBuffer? _netplayHashBuffer;
+    private ControllerState _lastNetplayLocalInput;
 
     private sealed class NetplayRuntime
     {
@@ -39,6 +41,8 @@ public partial class MainWindow
         public required NetplaySessionPbusSource Source { get; init; }
 
         public required NetplayAudioSink Audio { get; init; }
+
+        public Action? PreviousBeforeFrame { get; init; }
     }
 
 
@@ -48,6 +52,31 @@ public partial class MainWindow
         _ = sender;
         _ = e;
         AsyncEvent.Run(() => StartNetplayAsync(host: true, reconnect: false), "hosting netplay");
+    }
+
+    private void TryStartAutomatedNetplay()
+    {
+        if (!Program.NetplayHostMode && string.IsNullOrWhiteSpace(Program.NetplayJoinAddress))
+        {
+            return;
+        }
+
+        if (!Program.NetplayHostMode)
+        {
+            _netplayHost = Program.NetplayJoinAddress!;
+        }
+
+        _netplayPort = Program.NetplayPort;
+        _netplayInputDelay = Program.NetplayDelay;
+        _logger.ForCategory(LogCategory.Host).Information(
+            "Automated netplay requested: host={Host}, address={Address}, port={Port}, delay={Delay}.",
+            Program.NetplayHostMode,
+            Program.NetplayJoinAddress,
+            Program.NetplayPort,
+            Program.NetplayDelay);
+        AsyncEvent.Run(
+            () => StartNetplayAsync(Program.NetplayHostMode, reconnect: false, autoStart: true),
+            "starting automated netplay");
     }
 
     [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Wired by MainWindow.axaml.")]
@@ -66,8 +95,13 @@ public partial class MainWindow
         AsyncEvent.Run(() => StopNetplayAsync(), "stopping netplay");
     }
 
-    private async Task StartNetplayAsync(bool host, bool reconnect)
+    private async Task StartNetplayAsync(bool host, bool reconnect, bool autoStart = false)
     {
+        _logger.ForCategory(LogCategory.Host).Information(
+            "Netplay start requested: host={Host}, reconnect={Reconnect}, auto={Auto}.",
+            host,
+            reconnect,
+            autoStart);
         if (_netplay is not null && !reconnect)
         {
             ShowError("Netplay", "A netplay session is already active.");
@@ -129,7 +163,7 @@ public partial class MainWindow
         NetplaySetup? setup;
         try
         {
-            setup = await NetplayWindow.ShowAsync(this, options).ConfigureAwait(true);
+            setup = await NetplayWindow.ShowAsync(this, options, autoStart).ConfigureAwait(true);
         }
         catch (Exception exception) when (exception is IOException
             or InvalidDataException
@@ -252,6 +286,7 @@ public partial class MainWindow
                 SessionId = setup.SessionId,
                 ContentHash = setup.ContentHash,
                 FirstFrame = setup.StartFrame,
+                CompareAudioHashes = true,
                 StepTimeout = TimeSpan.FromSeconds(5),
             },
             _ => ReadLocalNetplayInput(localPlayer));
@@ -266,7 +301,16 @@ public partial class MainWindow
         var source = new NetplaySessionPbusSource(session);
         var audio = new NetplayAudioSink(_audio);
         _runner.ReplacePbusSource(source);
-        _runner.Invoke(() => _machine.AudioSink = audio);
+        Action? previousBeforeFrame = _machine.BeforeFrame;
+        _runner.Invoke(() =>
+        {
+            _machine.AudioSink = audio;
+            _machine.BeforeFrame = () =>
+            {
+                previousBeforeFrame?.Invoke();
+                source.Advance();
+            };
+        });
         _runner.RunAhead = 0;
         _runner.FrameDelay = 0;
         _runner.FrameSkip = FrameSkipMode.Off;
@@ -276,6 +320,7 @@ public partial class MainWindow
             Session = session,
             Source = source,
             Audio = audio,
+            PreviousBeforeFrame = previousBeforeFrame,
         };
         _netplayLastFrame = setup.StartFrame;
         _netplayLastHash = setup.StartFrame == 0 ? 0 : _netplayLastHash;
@@ -303,6 +348,15 @@ public partial class MainWindow
         _input.Update();
         ControllerState state = _input.Devices.GetJoypad(player);
         _input.Devices.ClearTransientMotion();
+        if (state != _lastNetplayLocalInput)
+        {
+            _lastNetplayLocalInput = state;
+            _logger.ForCategory(LogCategory.Host).Information(
+                "Netplay local player {Player} input: {Buttons}.",
+                player + 1,
+                state.Buttons);
+        }
+
         return state;
     }
 
@@ -341,7 +395,9 @@ public partial class MainWindow
             await StopNetplayAsync(keepListener: true).ConfigureAwait(true);
             if (_netplayHostMode ? _netplayListener is not null : !string.IsNullOrEmpty(_netplayHost))
             {
-                await StartNetplayAsync(_netplayHostMode, reconnect: true).ConfigureAwait(true);
+                bool autoStart = Program.NetplayHostMode
+                    || !string.IsNullOrWhiteSpace(Program.NetplayJoinAddress);
+                await StartNetplayAsync(_netplayHostMode, reconnect: true, autoStart).ConfigureAwait(true);
             }
         }
         finally
@@ -360,7 +416,11 @@ public partial class MainWindow
             _runner?.ReplacePbusSource(_input);
             if (_machine is not null)
             {
-                _runner?.Invoke(() => _machine.AudioSink = _audio);
+                _runner?.Invoke(() =>
+                {
+                    _machine.AudioSink = _audio;
+                    _machine.BeforeFrame = netplay.PreviousBeforeFrame;
+                });
             }
 
             netplay.Session.Dispose();
@@ -413,6 +473,15 @@ public partial class MainWindow
             netplay.Session.PublishHash(frame, hash, netplay.Audio.Hash, netplay.Audio.SampleCount);
             _netplayLastFrame = frame;
             _netplayLastHash = hash;
+            if (frame % 60 == 0)
+            {
+                _logger.ForCategory(LogCategory.Host).Debug(
+                    "Netplay frame {Frame}: hash=0x{Hash:X8}, audio=0x{Audio:X8}/{Samples}.",
+                    frame,
+                    hash,
+                    netplay.Audio.Hash,
+                    netplay.Audio.SampleCount);
+            }
             if (netplay.Session.State != NetplaySessionState.Running)
             {
                 bool completed = netplay.Session.State == NetplaySessionState.Completed;

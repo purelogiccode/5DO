@@ -646,6 +646,7 @@ public partial class MainWindow : Window, IDisposable
                 if (resumed || startupDisc is not null)
                 {
                     StartEmulation(showGameView: true);
+                    TryStartAutomatedNetplay();
                 }
                 else if (!_settings.AutoResumeEnabled && _autoSave.Exists)
                 {

@@ -23,9 +23,11 @@ input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`. 
 reference (`0x342EA767`, audio `0xB6AB50D0`) in about 154 s; reconnect resumed at frame
 304 and finished with matching host/join hashes and audio. The probe measured about
 **16.8 KB/s**, 240.7 fps, and a 650 KB state (38 ms save / 24 ms load); 50 ms one-way
-latency and every-third-input-packet loss passed. The suite is **2,677/2,677**. Live
-two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
-authentication, encryption, more than two players, and pointer devices are out of scope.
+latency and every-third-input-packet loss passed. The suite is **2,677/2,677**. Desktop
+host and join were each validated against a CLI peer with matching frame/audio hashes; an
+optional session token and a two-window physical-controller smoke remain post-release
+hardening. The active plan tracks **12 open items**. Lobby, NAT traversal, authentication,
+encryption, more than two players, and pointer devices are out of scope.
 See [NetplayProbe.md](NetplayProbe.md), the [User Guide](UserGuide.md#netplay-direct-ip),
 and [TestCorpus.md](TestCorpus.md) 1.1da.
 

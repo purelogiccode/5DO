@@ -5040,8 +5040,19 @@ the host resumed at frame 304, the second join ran 896 frames, and both finished
 
 **Desktop.** The frontend adds **Netplay > Host Session.../Join Session.../Stop Session**,
 a host/join dialog with port/input-delay/wait-timeout fields, automatic reconnect prompts,
-and session status. The frontend `--smoke-test` passes. Live two-window acceptance on a
-desktop with two physical input devices is the remaining evidence item.
+and session status. Startup automation (`--netplay-host` / `--netplay-join <host>`) drives
+the same dialog for acceptance. Desktop host + CLI join and desktop join + CLI host both
+completed 600 frames with matching frame/audio hashes:
+`0x820256197` with audio `0x4248562501` and `0x56582933` respectively (the state frame and
+sink timing differ between the two roles). Desktop host reconnect dropped the CLI join
+after 150 frames, resumed at state frame 7367, and the second join ran 446 frames to
+`0x820256197` / audio `0x1304768837`. The desktop session step now runs in
+`BeforeFrame` rather than the V1 PBUS read, because one emulated frame can skip the V1 PBUS
+read and leave the session one frame behind. The frontend `--smoke-test` passes. Raw
+reports: [desktop host](data/netplay-desktop-host-600.json),
+[desktop join](data/netplay-desktop-join-600.json), and
+[desktop reconnect join](data/netplay-desktop-reconnect-join.json). A two-window
+physical-controller smoke remains post-release hardening.
 
 **Limits.** No lobby, matchmaking, NAT traversal, authentication, or encryption; two
 players and joypads only. Pause, rewind, fast-forward, state load, frame skip, and run-ahead

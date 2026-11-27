@@ -107,9 +107,11 @@ assembly had **2,651 tests**.
 input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`; reconnect
 resumes from the host's current state. A 36,000-frame two-process run with different P1/P2
 scripts matched the single-machine reference at `0x342EA767`; reconnect resumed at frame
-304 with matching final hashes and audio. The test assembly now has **2,677 tests**. Live
-two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
-authentication, encryption, more than two players, and pointer devices are out of scope.
+304 with matching final hashes and audio. The test assembly now has **2,677 tests**. Desktop
+host and join were each validated against a CLI peer; an optional session token and a
+two-window physical-controller smoke remain post-release hardening. The active plan tracks
+**12 open items**. Lobby, NAT traversal, authentication, encryption, more than two players,
+and pointer devices are out of scope.
 See [NetplayProbe.md](NetplayProbe.md) and the [User Guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and
