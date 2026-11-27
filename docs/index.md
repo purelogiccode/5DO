@@ -16,20 +16,21 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.18.1 patch release"
-    5DO is at v1.18.1. It adds one-click FFmpeg installation for MP4 recording:
-    **Configuration > Install FFmpeg**, the missing-FFmpeg recording prompt, and
-    `5do ffmpeg install` fetch a pinned, SHA-256-verified build and place it beside 5DO.
-    The 1.18.0 feature set remains: read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc
+!!! important "v1.19.0 feature release"
+    5DO is at v1.19.0. It adds **direct-IP two-player netplay**: **Netplay > Host
+    Session** and **Join Session** transfer a compressed machine state over TCP, then
+    exchange per-frame input and frame/audio hashes over UDP; `5do netplay host|join`
+    exposes the same core, and reconnect resumes from the host's current state. The
+    1.18.x feature set remains: read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc
     images, optional FFmpeg-based H.264/AAC MP4 recording with Low/Medium/High quality,
-    high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock
-    changes without restarting the machine. The desktop keeps a rolling autosave under
-    `states/autosave/`, written on pause, clean exit, and a configurable interval and
-    restored at startup only when the disc game ID and effective BIOS MD5 match.
-    ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and 7z archives.
-    `--high-res` remains a presentation-only 2x upscale, and retail Gamegun titles keep
-    a joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1** connects the
-    Gamegun, and **Alt+Enter** toggles fullscreen.
+    one-click FFmpeg installation, high-refresh frame interpolation, patterned GPU void
+    bars, and live CPU-clock changes without restarting the machine. The desktop keeps a
+    rolling autosave under `states/autosave/`, written on pause, clean exit, and a
+    configurable interval and restored at startup only when the disc game ID and effective
+    BIOS MD5 match. ISO, BIN, and CUE+BIN images can also be opened directly from ZIP and
+    7z archives. `--high-res` remains a presentation-only 2x upscale, and retail Gamegun
+    titles keep a joypad on port 1. **P** pauses, **Space** toggles fast-forward, **F1**
+    connects the Gamegun, and **Alt+Enter** toggles fullscreen.
     **Windows x64, Linux x64, and macOS arm64** are validated targets: macOS presents
     through a native `CAMetalLayer` surface at 60 fps, with all filters and a packaged
     DMG. The macOS arm64 bundle includes MoltenVK and the Vulkan loader; the CPU
@@ -89,10 +90,16 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.18.1.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.19.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
+
+**2026-11-27, v1.19.0 feature release (GitHub Releases).** Direct-IP two-player netplay
+is available in the desktop and CLI: host/join, TCP state transfer, UDP delay-based
+lockstep, reconnect, and port/input-delay settings. A 36,000-frame two-process run with
+different P1/P2 scripts matched the single-machine reference; desktop host and join were
+each validated against a CLI peer. The suite is **2,677/2,677**.
 
 **2026-11-26, v1.18.1 patch release (GitHub Releases).** MP4 recording no longer requires
 a manual FFmpeg setup. **Configuration > Install FFmpeg**, the missing-FFmpeg MP4 prompt,

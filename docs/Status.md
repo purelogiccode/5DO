@@ -1,5 +1,15 @@
 # Project Status and Next Steps
 
+**2026-11-27, v1.19.0 feature release:** direct-IP two-player netplay ships in the
+desktop and CLI. **Netplay > Host Session** and **Join Session** transfer a compressed
+machine state over TCP, then exchange per-frame PBUS input, frame hashes, and cumulative
+audio hashes over UDP; `5do netplay host|join` exposes the same core. Reconnect resumes
+from the host's current state. A 36,000-frame two-process run with different P1/P2 scripts
+matched the single-machine reference (`0x342EA767`), and desktop host and join were each
+validated against a CLI peer with matching hashes. The suite is **2,677/2,677**. See
+[ReleaseNotes-1.19.0.md](ReleaseNotes-1.19.0.md), [NetplayProbe.md](NetplayProbe.md), and
+[UserGuide.md](UserGuide.md#netplay-direct-ip).
+
 **2026-11-26, v1.18.1 patch release:** MP4 recording no longer requires a manual
 FFmpeg setup. **Configuration > Install FFmpeg**, the MP4 prompt, and
 `5do ffmpeg install` download a pinned FFmpeg build (6.1.1 Windows, 7.0.2 Linux, 6.0

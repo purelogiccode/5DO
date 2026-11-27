@@ -131,7 +131,7 @@ The planned dependencies have their own licenses. Record them in `THIRD-PARTY-NO
   [`OpenAL-Soft-COPYING.txt`](OpenAL-Soft-COPYING.txt); the
   release review is tracked in [`ReleaseLegalReview.md`](ReleaseLegalReview.md).
 - CHDSharp 1.7.2 (MIT plus an LGPL-2.1 component; pure C#; package license reviewed for
-  the 1.18.1 dependency set)
+  the 1.19.0 dependency set)
 - MDSSharp 1.3.0 (MIT; pure managed Alcohol MDS/MDF/MDX reader)
 - CCDSharp 1.0.3 (MIT; pure managed CloneCD CCD/IMG/SUB reader)
 - FFmpeg (optional, **not bundled or redistributed**): MP4 recording invokes a

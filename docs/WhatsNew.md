@@ -1,77 +1,93 @@
-# What's new in 5DO 1.18.1
+# What's new in 5DO 1.19.0
 
-**Released:** 2026-11-26
+**Released:** 2026-11-27
 
-5DO 1.18.1 is a patch release that makes MP4 recording work on a clean install. When
-FFmpeg is missing, 5DO now offers to download a pinned, SHA-256-verified build instead of
-failing with a setup error. The 1.18.0 MDS/CCD, recording, interpolation, void-bar, and
-live-clock features are unchanged.
+5DO 1.19.0 adds **direct-IP two-player netplay**. One player hosts from the desktop or
+CLI, the other joins, and the host transfers a compressed machine state before both
+instances exchange per-frame controller input. The same core checks frame and audio hashes
+so a divergence stops the session instead of silently drifting.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.18.1-win-x64.zip` |
-| Windows on ARM | `5do-1.18.1-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.18.1-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.18.1_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.18.1-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.18.1-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.18.1-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable | `5do-1.18.1-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.19.0-win-x64.zip` |
+| Windows on ARM | `5do-1.19.0-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.19.0-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.19.0_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.19.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.19.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.19.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable folder | `5do-1.19.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
-Extract the archive before running it: the apphosts load `libSkiaSharp`,
-`libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder. The `.zsync`
-files feed `AppImageUpdate`.
+Each bundle contains both the desktop app and the CLI, and the .NET 11 runtime is embedded
+in the self-contained single-file apphosts. Extract the archive before running it.
+`SHA256SUMS.txt` covers all five bundles and the Linux packages;
+`SHA256SUMS-linux.txt` covers the Linux installers. No `.asc` signatures or keyring are
+published.
 
-`SHA256SUMS.txt` and `SHA256SUMS-linux.txt` are the only validation files. There are no
-`.asc` signatures and no keyring; run `sha256sum -c` after downloading.
+## Netplay
 
-## FFmpeg installation
+- Host from **Netplay > Host Session...** or `5do netplay host <disc> --bios <bios>`.
+- Join from **Netplay > Join Session...** or `5do netplay join <host> <disc> --bios <bios>`.
+- The host transfers a compressed state over TCP (about 650 KB), validates the frame hash
+  on the join, then both peers exchange input and hashes over UDP.
+- Input delay is configurable (2-4 frames on a LAN, 6-10 for 50-100 ms latency). The host
+  sets the delay and the join uses it.
+- Lost input packets are recovered by an eight-entry redundant window and explicit input
+  requests. Reconnect resumes from the host's current state; the join sends its last
+  confirmed frame/hash in the request.
+- The desktop and CLI both support host/join. A 36,000-frame two-process run with different
+  P1/P2 scripts matched the single-machine reference; desktop host and join were each
+  validated against a CLI peer with matching frame/audio hashes.
 
-- **Desktop.** Open **Configuration > Install FFmpeg**, or click **File > Record MP4...**
-  when FFmpeg is not installed. The dialog shows the pinned version, size, source, and
-  target folder, then downloads with progress and a cancel button.
-- **CLI.** Run `5do ffmpeg install` or `5do ffmpeg install --json`. Use
-  `5do ffmpeg status --json` to check the current executable.
-- **Verification.** 5DO downloads over HTTPS, enforces a size limit, hashes while
-  writing, and installs only after the pinned SHA-256 matches. It then runs `-version`
-  and `-encoders` and requires H.264 and AAC. A failed check leaves no executable.
-- **Location.** On Windows and portable Linux folders the executable is saved beside
-  5DO. Read-only installs and macOS app bundles use the user data `tools/` folder
-  (`~/Library/Application Support/5DO/tools` on macOS).
-- **Platforms.** Windows 6.1.1, Linux 7.0.2, and macOS 6.0 pinned static builds. Windows
-  arm64 uses the x64 build under Windows x64 emulation.
+There is **no lobby, matchmaking, NAT traversal, authentication, or encryption**. Use
+netplay on a trusted LAN or a direct connection, and do not expose the port to the public
+Internet without a VPN or firewall rules you understand. Two players and joypads are
+supported; pointer devices and more than two players are out of scope.
 
-FFmpeg is still not bundled or redistributed. The download needs network access;
-`PATH`, `FIVEDO_FFMPEG`, or a manually placed executable still work offline.
+## Other changes
 
-## Still included from 1.18.0
-
-- Read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images.
-- H.264/AAC MP4 recording with Low/Medium/High quality and DAR 4:3 output.
-- High-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
-- Rolling autosave with startup resume, direct ZIP/7z ISO/BIN/CUE+BIN containers, CD-DA
-  extraction, physical CD-DA/read-error recovery, and the five bundles plus Linux
-  packages.
+- The desktop locks out pause, reset, rewind, fast-forward, state load, frame skip, and
+  run-ahead while a netplay session is active, so both peers execute every frame.
+- The session step runs at the start of each emulated frame (`BeforeFrame`) rather than the
+  V1 PBUS read, so a frame that skips V1 cannot leave the session behind.
+- `--netplay-host` / `--netplay-join <host>` automate the desktop dialog for acceptance
+  runs; `5do netplay` accepts `--high-res`, `--true-2x`, and `--no-audio-hash` diagnostics.
+- The 1.18.x MDS/MDX, CCD/IMG/SUB, MP4, interpolation, void-bar, live-clock, and FFmpeg
+  installer features are unchanged.
 
 ## Verification
 
-- Full Release suite **2,651/2,651**; build, `dotnet format`, `jb inspectcode`,
-  and `mkdocs build --strict` are clean.
-- The CLI installed FFmpeg on Windows x64, Linux x64, and macOS arm64. Windows installed
-  beside the CLI; Linux marked the 7.0.2 binary executable; macOS used the
-  `~/Library/Application Support/5DO/tools` fallback. A Windows MP4 recording with the
-  installed binary produced a 10.010 s H.264/AAC file with DAR 4:3.
-- Checksum-mismatch tests leave no executable or temporary file.
+- Full Release suite **2,677/2,677**; build 0 warnings, `dotnet format`,
+  `jb inspectcode --severity=WARNING` (0 results), `mkdocs build --strict`, and frontend
+  smoke clean.
+- 36,000-frame CLI host/join with different P1/P2 scripts: final frame `0x342EA767`, audio
+  `0xB6AB50D0`, matching the single-machine reference.
+- Reconnect: host resumed at frame 304; both peers finished `0xA328CCCC` / audio
+  `0x8B40B3CB`.
+- Desktop host + CLI join and desktop join + CLI host both completed 600 frames with
+  matching frame/audio hashes; desktop-host reconnect resumed at frame 7367.
+- CI builds the five bundles and Linux packages and runs the Windows/Linux CLI and
+  frontend smokes.
 
 ## Known issues
 
-- The download needs network access and is explicit, not automatic at startup.
-- The Windows arm64 entry uses x64 emulation. Supply a native arm64 build with
-  `FIVEDO_FFMPEG` if required.
-- MP4 still needs FFmpeg; pause omits the gap, and fast-forward/rewind stop the recording.
-- Frame interpolation needs a fixed presentation rate above 60 Hz and is disabled with
-  VRR.
-- MDS/CCD real-image parity remains `SYS-29`; large prepared images can pause the desktop
-  while they are joined or decoded.
+- Netplay has no authentication or encryption; use a trusted network.
+- Pause, rewind, fast-forward, state load, frame skip, and run-ahead are disabled during a
+  session. Lobby, NAT traversal, more than two players, and pointer devices are not
+  included.
+- A two-window desktop smoke with two physical controllers remains recommended
+  post-release hardening.
+- MDS/CCD real-image parity remains `SYS-29`; preparing a large split/MDX image can pause
+  the desktop while it is joined or decoded.
+
+## Links
+
+- [Installation](https://purelogiccode.github.io/5DO/Installation.html)
+- [User guide](https://purelogiccode.github.io/5DO/UserGuide.html#netplay-direct-ip)
+- [Netplay probe and evidence](https://purelogiccode.github.io/5DO/NetplayProbe.html)
+- [Known issues](https://purelogiccode.github.io/5DO/KnownIssues.html)
+- [Full changelog](https://github.com/purelogiccode/5DO/blob/master/CHANGELOG.md)
+- [License](https://github.com/purelogiccode/5DO/blob/master/LICENSE) and
+  [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md)

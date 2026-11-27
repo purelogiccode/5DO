@@ -210,7 +210,7 @@ This file records the projects and licenses that influence or ship with 5DO. It 
 | Silk.NET.OpenAL 2.23.0 | Desktop audio bindings | MIT |
 | Silk.NET.OpenAL.Soft.Native 1.23.1 | Native OpenAL Soft runtime bundled beside the CLI/frontend (win-x64/win-arm64/win-x86, linux-x64/linux-arm64, osx-x64/osx-arm64); `soft_oal.dll` is copied as `OpenAL32.dll` on Windows | MIT wrapper for OpenAL Soft; OpenAL Soft itself is LGPL-2.0-or-later. The notice, source offer, relinking rights, and license text ship in [`docs/OpenALSoft.md`](docs/OpenALSoft.md) and [`docs/OpenAL-Soft-COPYING.txt`](docs/OpenAL-Soft-COPYING.txt). |
 | OS XInput / Linux evdev | Gamepad input (optional, no bundled native library) | OS API; no third-party runtime dependency |
-| CHDSharp 1.7.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Package license reviewed for the 1.18.1 dependency set. |
+| CHDSharp 1.7.2 | CHD disc images (v1) | MIT + LGPL-2.1 component; pure C#, no native dependency. Package license reviewed for the 1.19.0 dependency set. |
 | MDSSharp 1.3.0 | Alcohol MDS/MDF and MDS v2/MDX disc images | MIT; pure managed, no native dependency. |
 | CCDSharp 1.0.3 | CloneCD CCD/IMG/SUB disc images | MIT; pure managed, no native dependency. |
 | SharpCompress 1.0.0 | ZIP/7z disc containers (ISO/BIN/CUE+BIN) | MIT; pure C#, no native dependency. |

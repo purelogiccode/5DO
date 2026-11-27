@@ -77,6 +77,14 @@
   </languages>
 
   <releases>
+    <release version="1.19.0" date="2026-11-27">
+      <description>
+        <p>
+          Adds direct-IP two-player netplay with TCP state transfer, UDP lockstep,
+          reconnect, a desktop host/join dialog, and the 5do netplay CLI.
+        </p>
+      </description>
+    </release>
     <release version="1.18.1" date="2026-11-26">
       <description>
         <p>

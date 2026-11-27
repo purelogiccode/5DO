@@ -1,10 +1,11 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.18.1 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.19.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.18.1 adds one-click FFmpeg installation for MP4
-recording. v1.18.0 added Alcohol MDS/MDX and CloneCD
+v1.2.x. macOS is published as a DMG. v1.19.0 adds direct-IP two-player netplay with TCP
+state transfer, UDP lockstep, reconnect, the desktop dialog, and the 5do netplay CLI.
+v1.18.1 added one-click FFmpeg installation for MP4 recording. v1.18.0 added Alcohol MDS/MDX and CloneCD
 CCD/IMG/SUB images, optional FFmpeg H.264/AAC MP4 recording with quality presets,
 high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
 v1.17.1 fixed the malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback,
@@ -103,6 +104,28 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       [Status.md](Status.md).
 - [x] Keep local bundle copies under `src/FiveDo.Frontend.Avalonia/bin/Release`
       (`5do-1.18.0-win-x64.zip`).
+
+## 1.19.0 feature gate
+
+- [x] Bump FiveDoVersion.Version, Directory.Build.props, README, docs status,
+      MkDocs navigation, AppStream <release>, AUR PKGBUILD, changelog, what's new,
+      and ReleaseNotes-1.19.0.md to 1.19.0.
+- [x] Add direct-IP netplay: TCP state sync, UDP lockstep, reconnect, CLI host/join,
+      desktop dialog, startup acceptance automation, and the BeforeFrame session step.
+- [x] Full Release suite **2,677/2,677**, dotnet build, dotnet format,
+      jb inspectcode --severity=WARNING (**0 results**), mkdocs build --strict, and
+      frontend --smoke-test clean.
+- [x] Windows x64 bundle: `--version` reports 1.19.0, `selftest` 15/15, the 600-frame run
+      reproduces hash `0x110E7DC5` / PC `0x00059960`, the bundle netplay host/join
+      completes 600 frames with matching frame/audio hashes
+      (`0x110E7DC5` / `0x035F6315`), the 600-frame MP4 is 10.010 s H.264/AAC with DAR
+      4:3, and `FRONTEND SMOKE OK 1.19.0` passes.
+- [ ] Push master, tag `v1.19.0`, and verify the release workflow publishes the five
+      bundles, Linux packages, and both checksum manifests.
+- [ ] Download the published assets, verify both manifests, and record the release run
+      and validation result in [Compatibility.md](Compatibility.md) and
+      [Status.md](Status.md).
+- [ ] Keep the local bundle copy under src/FiveDo.Frontend.Avalonia/bin/Release.
 
 ## 1.18.1 patch gate
 

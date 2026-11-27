@@ -5,7 +5,7 @@ else can move Linux adoption. It is the working reference for
 [Installers.md](Installers.md) and the Linux rows in
 [ImplementationPlan.md](ImplementationPlan.md) §3.3.
 
-**Snapshot:** 2026-11-26, v1.18.1. Linux x64 is a validated target (hardware
+**Snapshot:** 2026-11-27, v1.19.0. Linux x64 is a validated target (hardware
 OpenGL/Vulkan, real-device audio, evdev gamepads, display-sleep inhibit, full
 acceptance pass); Linux arm64 passes native runtime smoke. Release downloads are
 validated with `SHA256SUMS` only; the project does not publish GPG signatures or a
@@ -271,7 +271,7 @@ bash packaging/linux/build-flatpak.sh --bundle artifacts/bundle/linux-x64 --rid 
 ( cd artifacts/installers && find . -maxdepth 1 -type f \
     \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.flatpak' \) \
     -printf '%f\n' | sort | xargs -r sha256sum > SHA256SUMS-linux.txt )
-sudo apt install ./artifacts/installers/5do_1.18.1_amd64.deb
+sudo apt install ./artifacts/installers/5do_1.19.0_amd64.deb
 ```
 
 CI (`linux-packages.yml`, called by `release.yml`) already:
@@ -376,7 +376,7 @@ steps, is `packaging/linux/aur/` in this repository.
 # PKGBUILD sketch for 5do-bin. Fill in both checksums from the release.
 # The maintained copy is packaging/linux/aur/PKGBUILD.
 pkgname=5do-bin
-pkgver=1.18.1
+pkgver=1.19.0
 pkgrel=1
 pkgdesc="3DO Interactive Multiplayer emulator"
 arch=('x86_64' 'aarch64')

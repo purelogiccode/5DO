@@ -1,13 +1,15 @@
 # Known Issues
 
-**Snapshot:** 2026-11-26, v1.18.1. The 1.18.1 patch adds one-click FFmpeg installation
-for MP4 recording. The 1.18.0 release added read-only Alcohol MDS/MDX
-and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through an external
-FFmpeg, high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock
-changes. It retains the 1.17.x rolling autosave with validated startup resume and ZIP/7z
-ISO/BIN/CUE+BIN containers, the `disc audio`/`disc verify` diagnostics, physical CD-DA
-and read-error recovery, the Steam Deck first-run setup, Arcade CRT filter, Windows
-physical optical-drive discovery, JIT soft-reset, and single-pad PBUS fixes.
+**Snapshot:** 2026-11-27, v1.19.0. The 1.19.0 feature release adds direct-IP
+two-player netplay with TCP state transfer, UDP lockstep, reconnect, a desktop host/join
+dialog, and the `5do netplay host|join` CLI. The 1.18.x releases added read-only Alcohol
+MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through an
+external FFmpeg, one-click FFmpeg installation, high-refresh frame interpolation,
+patterned GPU void bars, and live CPU-clock changes. It retains the 1.17.x rolling autosave
+with validated startup resume and ZIP/7z ISO/BIN/CUE+BIN containers, the `disc audio`/`disc
+verify` diagnostics, physical CD-DA and read-error recovery, the Steam Deck first-run
+setup, Arcade CRT filter, Windows physical optical-drive discovery, JIT soft-reset, and
+single-pad PBUS fixes.
 
 The 1.17.1 release fixed the malformed-ZIP library refresh, unobserved OpenGL framebuffer
 fallback, and slow stop reporting, and removed Linux GPG signing/keyring publication in

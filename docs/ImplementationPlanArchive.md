@@ -4,7 +4,7 @@
 > which now carries only the remaining work for each open ID.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, partial deliveries, stable IDs, platform
-> workstreams, and release history through v1.18.1.
+> workstreams, and release history through v1.19.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -891,8 +891,12 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.18.1)
+## 14. Release history (v1.9.1 - v1.19.0)
 
+- **v1.19.0 (2026-11-27):** feature release - direct-IP two-player netplay with TCP
+  compressed-state transfer, UDP delay-based lockstep, reconnect from the host's current
+  state, desktop **Netplay > Host/Join Session**, the `5do netplay host|join` CLI, and the
+  `BeforeFrame` session step. Suite 2,677/2,677.
 - **v1.18.1 (2026-11-26):** patch release - one-click FFmpeg installation for MP4
   recording (Configuration > Install FFmpeg, missing-FFmpeg prompt, and
   `5do ffmpeg install`) with pinned SHA-256 verification. Suite 2,651/2,651. Published

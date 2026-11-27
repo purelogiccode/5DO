@@ -4,7 +4,7 @@ All notable changes are recorded here. The project is at v1.18.1, the patch rele
 one-click FFmpeg installation on top of the 1.18.0 MDS/CCD, MP4, interpolation, void-bar,
 and live-clock features.
 
-## [Unreleased]
+## [1.19.0] - 2026-11-27
 
 ### Added
 
