@@ -127,8 +127,9 @@ public sealed class NetplayControlTests
         Assert.Equal(request, decoded);
 
         var state = new NetplayStateMessage(120, 0xCAFEBABE, new byte[650_000]);
-        await server.SendAsync(NetplayControlCodec.Encode(state), cts.Token);
+        Task sendState = server.SendAsync(NetplayControlCodec.Encode(state), cts.Token);
         byte[]? receivedState = await client.ReceiveAsync(cts.Token);
+        await sendState;
         Assert.NotNull(receivedState);
         Assert.True(NetplayControlCodec.TryDecodeState(receivedState, out NetplayStateMessage? decodedState));
         Assert.NotNull(decodedState);
