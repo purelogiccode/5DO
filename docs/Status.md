@@ -1,6 +1,6 @@
 # Project Status and Next Steps
 
-**2026-11-26, automatic FFmpeg installation:** MP4 recording no longer requires a manual
+**2026-11-26, v1.18.1 patch release:** MP4 recording no longer requires a manual
 FFmpeg setup. **Configuration > Install FFmpeg**, the MP4 prompt, and
 `5do ffmpeg install` download a pinned FFmpeg build (6.1.1 Windows, 7.0.2 Linux, 6.0
 macOS), verify its SHA-256, test H.264/AAC support, and install it beside 5DO when

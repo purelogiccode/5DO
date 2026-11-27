@@ -591,7 +591,7 @@ Key properties in `Directory.Build.props`:
 | `ImplicitUsings` | `disable` |
 | `TreatWarningsAsErrors` | `true` |
 | `Deterministic` | `true` |
-| `Version` | `1.18.0` |
+| `Version` | `1.18.1` |
 | `InvariantGlobalization` | `true` |
 | `EnableNETAnalyzers` | `true` |
 | `AnalysisLevel` | `latest-recommended` |

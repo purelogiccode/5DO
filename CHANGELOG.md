@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.18.0, the feature release for
-MDS/CCD images, MP4 recording, high-refresh interpolation, patterned GPU bars, and live
-CPU-clock changes.
+All notable changes are recorded here. The project is at v1.18.1, the patch release adding
+one-click FFmpeg installation on top of the 1.18.0 MDS/CCD, MP4, interpolation, void-bar,
+and live-clock features.
 
-## [Unreleased]
+## [1.18.1] - 2026-11-26
 
 ### Added
 

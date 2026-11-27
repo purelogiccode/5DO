@@ -77,6 +77,14 @@
   </languages>
 
   <releases>
+    <release version="1.18.1" date="2026-11-26">
+      <description>
+        <p>
+          Adds one-click FFmpeg installation for MP4 recording through the desktop
+          and CLI, with SHA-256 verification and H.264/AAC checks.
+        </p>
+      </description>
+    </release>
     <release version="1.18.0" date="2026-11-26">
       <description>
         <p>

@@ -1,6 +1,7 @@
 # Known Issues
 
-**Snapshot:** 2026-11-26, v1.18.0. The 1.18.0 release adds read-only Alcohol MDS/MDX
+**Snapshot:** 2026-11-26, v1.18.1. The 1.18.1 patch adds one-click FFmpeg installation
+for MP4 recording. The 1.18.0 release added read-only Alcohol MDS/MDX
 and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through an external
 FFmpeg, high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock
 changes. It retains the 1.17.x rolling autosave with validated startup resume and ZIP/7z

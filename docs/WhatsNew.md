@@ -1,25 +1,24 @@
-# What's new in 5DO 1.18.0
+# What's new in 5DO 1.18.1
 
 **Released:** 2026-11-26
 
-5DO 1.18.0 adds more disc formats and desktop features while keeping the documented
-320x240 compatibility path unchanged. It opens read-only Alcohol MDS/MDX and CloneCD
-CCD/IMG/SUB images, records H.264/AAC MP4 through an optional external FFmpeg, blends
-high-refresh presentation frames, draws patterned GPU void bars, and applies CPU-clock
-changes without restarting the machine.
+5DO 1.18.1 is a patch release that makes MP4 recording work on a clean install. When
+FFmpeg is missing, 5DO now offers to download a pinned, SHA-256-verified build instead of
+failing with a setup error. The 1.18.0 MDS/CCD, recording, interpolation, void-bar, and
+live-clock features are unchanged.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.18.0-win-x64.zip` |
-| Windows on ARM | `5do-1.18.0-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.18.0-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.18.0_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.18.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.18.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.18.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable | `5do-1.18.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.18.1-win-x64.zip` |
+| Windows on ARM | `5do-1.18.1-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.18.1-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.18.1_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.18.1-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.18.1-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.18.1-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable | `5do-1.18.1-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
 Extract the archive before running it: the apphosts load `libSkiaSharp`,
 `libHarfBuzzSharp`, OpenAL, and (on Windows) ANGLE from the same folder. The `.zsync`
@@ -28,76 +27,51 @@ files feed `AppImageUpdate`.
 `SHA256SUMS.txt` and `SHA256SUMS-linux.txt` are the only validation files. There are no
 `.asc` signatures and no keyring; run `sha256sum -c` after downloading.
 
-## New features
+## FFmpeg installation
 
-- **Alcohol and CloneCD images.** The desktop, CLI, library, and game database now open
-  read-only Alcohol MDS/MDF/MDX and CloneCD CCD/IMG/SUB images. Prepared CUE sheets are
-  cached, malformed inputs fail with typed errors, and encrypted, compressed, or
-  subchannel-padded MDS images are prepared in the temp cache. Representative real-image
-  parity is still tracked as `SYS-29`.
-- **MP4 recording.** **File > Record MP4...** and CLI `--record-mp4` capture the presented
-  frame and DSP/CD audio mix as H.264/AAC through an optional external FFmpeg.
-  Low/Medium/High quality is available in **Settings > Video > MP4 quality** or
-  `--record-quality`. FFmpeg is not bundled; install it on `PATH`, set `FIVEDO_FFMPEG`,
-  or place `ffmpeg`/`ffmpeg.exe` beside 5DO.
-- **High-refresh frame interpolation.** **Settings > Video > Frame interpolation** blends
-  the two most recent completed fields when the display runs above 60 Hz. It needs a
-  fixed rate and is disabled with VRR. Endpoint frames stay at full precision; gameplay,
-  audio, save states, and frame hashes are unchanged.
-- **Patterned GPU void bars.** The letterbox/pillarbox area can draw Solid, Checker, Grid,
-  Scanline, FourDO, Bumps, or Metal patterns on OpenGL, Direct3D 11, and Vulkan.
-- **Live CPU clock.** Changing the CPU-clock setting applies at the next frame boundary
-  without recreating the machine or reloading the disc. Save states record the clock in
-  use.
+- **Desktop.** Open **Configuration > Install FFmpeg**, or click **File > Record MP4...**
+  when FFmpeg is not installed. The dialog shows the pinned version, size, source, and
+  target folder, then downloads with progress and a cancel button.
+- **CLI.** Run `5do ffmpeg install` or `5do ffmpeg install --json`. Use
+  `5do ffmpeg status --json` to check the current executable.
+- **Verification.** 5DO downloads over HTTPS, enforces a size limit, hashes while
+  writing, and installs only after the pinned SHA-256 matches. It then runs `-version`
+  and `-encoders` and requires H.264 and AAC. A failed check leaves no executable.
+- **Location.** On Windows and portable Linux folders the executable is saved beside
+  5DO. Read-only installs and macOS app bundles use the user data `tools/` folder
+  (`~/Library/Application Support/5DO/tools` on macOS).
+- **Platforms.** Windows 6.1.1, Linux 7.0.2, and macOS 6.0 pinned static builds. Windows
+  arm64 uses the x64 build under Windows x64 emulation.
 
-## Licensing
+FFmpeg is still not bundled or redistributed. The download needs network access;
+`PATH`, `FIVEDO_FFMPEG`, or a manually placed executable still work offline.
 
-The 2026-11-25 `REL-13` decision is retained: the project remains under the FreeDO
-modified GNU LGPL as non-commercial donationware. The 4DO game database is a separate
-**GPL-2.0** data component; its complete text ships in `docs/GPL-2.0.txt`. Official
-Debian/Ubuntu/Fedora/openSUSE archives and Flathub are not eligible under those terms.
+## Still included from 1.18.0
 
-## Still included from 1.17.x
-
-- Rolling autosave with startup resume, written on pause, clean exit, and a configurable
-  interval and restored only when the disc game ID and BIOS MD5 match.
-- Direct ZIP/7z ISO, BIN, and CUE+BIN containers, with in-memory decompression and
-  extraction guidance for CHD/CDI/NRG, encrypted, and multi-volume archives.
-- CD-DA extraction via `disc audio`, `disc verify` progress and mixed-mode totals, and
-  guest-visible disc read-error reporting.
-- The five self-contained bundles (Windows/Linux x64+arm64 and macOS arm64), Linux
-  `.deb`/`.rpm`/AppImage/Flatpak packages, ROM-free packaging, and `SHA256SUMS`
-  verification.
+- Read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images.
+- H.264/AAC MP4 recording with Low/Medium/High quality and DAR 4:3 output.
+- High-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
+- Rolling autosave with startup resume, direct ZIP/7z ISO/BIN/CUE+BIN containers, CD-DA
+  extraction, physical CD-DA/read-error recovery, and the five bundles plus Linux
+  packages.
 
 ## Verification
 
-- The full test suite passes in Release; build, `dotnet format`, `jb inspectcode`, and
-  `mkdocs build --strict` are clean.
-- MP4 recording produced 60.06 s H.264/AAC files at 60000/1001 with non-silent audio on
-  Windows x64, Linux x64, and macOS arm64. Linux Low/Medium/High sizes were
-  1.72/2.97/5.19 MB, and the desktop selector round-tripped High through `settings.json`.
-- High-refresh interpolation held emulation at 59.4-60.4 fps while presentation measured
-  148-167 Hz on OpenGL, 132 Hz on Vulkan, and 83 Hz on Direct3D 11, with no audio
-  underruns.
-- MDS/CCD readers pass synthetic data/audio, malformed-input, and library/database tests;
-  real-image boot-hash parity remains `SYS-29`.
-- The release workflow builds all five bundles, the Linux packages, and both checksum
-  manifests. The Windows and Linux bundles run CLI `selftest` and the frontend smoke;
-  the macOS arm64 bundle verifies its Mach-O apphosts and bundled MoltenVK runtime.
+- Full Release suite **2,651/2,651**; build, `dotnet format`, `jb inspectcode`,
+  and `mkdocs build --strict` are clean.
+- The CLI installed FFmpeg on Windows x64, Linux x64, and macOS arm64. Windows installed
+  beside the CLI; Linux marked the 7.0.2 binary executable; macOS used the
+  `~/Library/Application Support/5DO/tools` fallback. A Windows MP4 recording with the
+  installed binary produced a 10.010 s H.264/AAC file with DAR 4:3.
+- Checksum-mismatch tests leave no executable or temporary file.
 
 ## Known issues
 
-- MDS/MDX and CCD/IMG/SUB are read-only and synthetically tested; representative real
-  images have not yet been compared with the equivalent BIN/CUE (`SYS-29`).
-- MP4 recording requires an external FFmpeg and is not available without it. Pause omits
-  the gap; fast-forward and rewind stop the recording before audio/video diverge.
+- The download needs network access and is explicit, not automatic at startup.
+- The Windows arm64 entry uses x64 emulation. Supply a native arm64 build with
+  `FIVEDO_FFMPEG` if required.
+- MP4 still needs FFmpeg; pause omits the gap, and fast-forward/rewind stop the recording.
 - Frame interpolation needs a fixed presentation rate above 60 Hz and is disabled with
-  VRR. It adds up to one field of display latency by design.
-- `--high-res` remains a presentation-only 2x upscale; true 2x CEL completeness is
-  `VID-20`.
-- A ZIP/7z holds one image or CUE+BIN set. CHD/CDI/NRG/MDS/CCD, encrypted, and
-  multi-volume archives must be extracted first.
-- The FZ-10 audio-only BIOS player transport remains at STOP (`SYS-01`). Use `disc audio`
-  to verify CD-DA.
-- `--opera-soft-reset` remains opt-in/experimental; `--opera-dipir` still blocks the
-  reporter's boot and needs a CSTAT/DIPIR transcript.
+  VRR.
+- MDS/CCD real-image parity remains `SYS-29`; large prepared images can pause the desktop
+  while they are joined or decoded.

@@ -2,14 +2,16 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-26):** v1.18.0 is the feature release after v1.17.1. It adds
-read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc images, optional H.264/AAC MP4
-recording through an external FFmpeg with Low/Medium/High quality, high-refresh frame
-interpolation, patterned GPU void bars, and live CPU-clock changes. It retains the 1.17.x
-rolling autosave with validated startup resume (UX-37), direct ZIP/7z ISO, BIN, and
-CUE+BIN containers (SYS-27), the `disc audio`/`disc verify` diagnostics, physical CD-DA
-and read-error recovery, and the Steam Deck first-run setup. The default 320x240
-compatibility path and the documented title matrix are unchanged.
+**Current release (2026-11-26):** v1.18.1 is a patch release adding one-click FFmpeg
+installation for MP4 recording on top of the 1.18.0 feature set. **Configuration >
+Install FFmpeg**, the missing-FFmpeg MP4 prompt, and `5do ffmpeg install` fetch a pinned,
+SHA-256-verified FFmpeg build. The 1.18.0 features remain: read-only Alcohol MDS/MDX and
+CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording with Low/Medium/High quality,
+high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes. It
+retains the 1.17.x rolling autosave with validated startup resume (UX-37), direct ZIP/7z
+ISO, BIN, and CUE+BIN containers (SYS-27), the `disc audio`/`disc verify` diagnostics,
+physical CD-DA and read-error recovery, and the Steam Deck first-run setup. The default
+320x240 compatibility path and the documented title matrix are unchanged.
 
 **Earlier position (2026-10-29, twenty-first pass):** all five golden-corpus titles boot,
 load their own OS, render real frames, and produce non-silent DSP audio. Seven
