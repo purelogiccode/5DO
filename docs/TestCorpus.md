@@ -5019,10 +5019,10 @@ VBI PBUS read so the desktop shell can use the normal core thread; `CoreRunner.R
 swaps the source while preserving its latency wrapper. `NetplayWindow` performs host/join
 handshakes and state transfer; `MainWindow.Netplay` attaches the session, publishes
 frame/audio hashes from `FrameCompleted`, disables run-ahead/frame-skip/rewind/pause, and
-offers reconnect. Twenty-five netplay tests now cover the codec, malformed input, content
+offers reconnect. Twenty-six netplay tests now cover the codec, malformed input, content
 fingerprint, scripted determinism, packet loss, burst loss recovered by input requests,
 desync, timeout, state transfer, negotiated start, PBUS packing, machine equality, and
-resume from a transferred state. Full suite **2,676/2,676**.
+resume from a transferred state. Full suite **2,677/2,677**.
 
 **Two-process CLI evidence.** `5do netplay host` and `5do netplay join` on Wolfenstein 3D
 (USA) ran **36,000 frames** each with different P1/P2 scripts (`tierb-10min.txt` and

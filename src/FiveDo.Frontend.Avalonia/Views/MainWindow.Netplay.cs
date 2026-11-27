@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using FiveDo.Core;
 using FiveDo.Host;
 using FiveDo.Host.Netplay;
 using FiveDo.Host.Osd;
@@ -29,6 +30,7 @@ public partial class MainWindow
     private int _netplayReconnectTimeout = 30;
     private long _netplayLastFrame;
     private uint _netplayLastHash;
+    private FrameBuffer? _netplayHashBuffer;
 
     private sealed class NetplayRuntime
     {
@@ -304,6 +306,24 @@ public partial class MainWindow
         return state;
     }
 
+    private uint HashNetplayFrame()
+    {
+        VdlFrame frame = _machine!.Frame;
+        if (_netplayHashBuffer is null
+            || _netplayHashBuffer.Width != frame.SourceWidth
+            || _netplayHashBuffer.Height != frame.SourceHeight)
+        {
+            _netplayHashBuffer = new FrameBuffer(frame.SourceWidth, frame.SourceHeight);
+        }
+
+        FrameAssembler.Assemble(
+            frame,
+            _netplayHashBuffer,
+            _netplayHashBuffer.Width,
+            _netplayHashBuffer.Height);
+        return FrameHasher.HashBgra(_netplayHashBuffer.PixelSpan);
+    }
+
     private async Task HandleNetplayFailureAsync(string? reason)
     {
         if (_netplayEnding || _netplay is null)
@@ -389,7 +409,7 @@ public partial class MainWindow
             }
 
             var frame = netplay.Session.Frame - 1;
-            var hash = FrameHasher.Hash(_machine.Frame);
+            var hash = HashNetplayFrame();
             netplay.Session.PublishHash(frame, hash, netplay.Audio.Hash, netplay.Audio.SampleCount);
             _netplayLastFrame = frame;
             _netplayLastHash = hash;

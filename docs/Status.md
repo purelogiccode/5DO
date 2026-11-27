@@ -23,7 +23,7 @@ input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`. 
 reference (`0x342EA767`, audio `0xB6AB50D0`) in about 154 s; reconnect resumed at frame
 304 and finished with matching host/join hashes and audio. The probe measured about
 **1.17 KB/s**, 240.7 fps, and a 650 KB state (38 ms save / 24 ms load); 50 ms one-way
-latency and every-third-input-packet loss passed. The suite is **2,676/2,676**. Live
+latency and every-third-input-packet loss passed. The suite is **2,677/2,677**. Live
 two-window desktop acceptance and an optional session token remain; lobby, NAT traversal,
 authentication, encryption, more than two players, and pointer devices are out of scope.
 See [NetplayProbe.md](NetplayProbe.md), the [User Guide](UserGuide.md#netplay-direct-ip),
@@ -854,7 +854,7 @@ read-ahead. CHD images now use the CHDSharp reader directly, and the remaining s
 prefetcher runs below normal priority and yields between read-ahead sectors. The
 release also updates Avalonia to 12.1.6, System.CommandLine to 3.0.0, and
 Microsoft.NET.Test.Sdk to 18.11.1. A 20-second desktop Road Rash run reports **0 audio
-underruns** and no skipped frames. The suite is **2,125 tests**; build, format, and
+underruns** and no skipped frames. The suite is **2,126 tests**; build, format, and
 InspectCode are clean. Fresh Windows/Linux/macOS x64/arm64 bundles are built from the
 `v1.7.1` tag. The release run
 <https://github.com/purelogiccode/5DO/actions/runs/42898378598> built and published all

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FiveDo.Host.Netplay;
 using FiveDo.Input;
 using FiveDo.Machine;
+using FiveDo.Video;
 
 namespace FiveDo.Tests.Netplay;
 
@@ -98,6 +99,62 @@ public sealed class NetplayMachineTests
             Assert.Equal(hostHashes.ToArray(), joinHashes.ToArray());
             Assert.Equal(180, hostHashes.ToArray()[0].Frame);
         }
+    }
+
+    [Fact]
+    public async Task SessionPbusSource_DrivesPairedMachines()
+    {
+        FiveDoMachine hostMachine = NetplayTestMachines.CreateSyntheticMachine();
+        FiveDoMachine joinMachine = NetplayTestMachines.CreateSyntheticMachine();
+        var hostTransport = new InMemoryNetplayTransport();
+        var joinTransport = new InMemoryNetplayTransport();
+        hostTransport.Peer = joinTransport;
+        joinTransport.Peer = hostTransport;
+        LockstepSession hostSession = CreateSession(hostTransport, NetplayRole.Host, 0);
+        LockstepSession joinSession = CreateSession(joinTransport, NetplayRole.Join, 0);
+        Assert.True(hostSession.StartNegotiated());
+        Assert.True(joinSession.StartNegotiated());
+        var hostSource = new NetplaySessionPbusSource(hostSession);
+        var joinSource = new NetplaySessionPbusSource(joinSession);
+        hostMachine.PbusSource = hostSource;
+        joinMachine.PbusSource = joinSource;
+        var hostHashes = new ConcurrentQueue<(long Frame, uint FrameHash)>();
+        var joinHashes = new ConcurrentQueue<(long Frame, uint FrameHash)>();
+
+        var hostTask = Task.Run(() => RunMachine(hostMachine, hostSession, hostSource, hostHashes));
+        var joinTask = Task.Run(() => RunMachine(joinMachine, joinSession, joinSource, joinHashes));
+        bool[] results = await Task.WhenAll(hostTask, joinTask)
+            .WaitAsync(TimeSpan.FromSeconds(60));
+
+        Assert.True(results[0], hostSession.FailureMessage);
+        Assert.True(results[1], joinSession.FailureMessage);
+        Assert.Equal(300, hostHashes.Count);
+        Assert.Equal(300, joinHashes.Count);
+        Assert.Equal(hostHashes.ToArray(), joinHashes.ToArray());
+    }
+
+    private static bool RunMachine(
+        FiveDoMachine machine,
+        LockstepSession session,
+        NetplaySessionPbusSource source,
+        ConcurrentQueue<(long Frame, uint FrameHash)> hashes)
+    {
+        for (var i = 0; i < 300; i++)
+        {
+            machine.RunFrame();
+            if (!source.LastStepSucceeded)
+            {
+                return false;
+            }
+
+            var frame = session.Frame - 1;
+            var hash = FrameHasher.Hash(machine.Frame);
+            session.PublishHash(frame, hash, 0, 0);
+            hashes.Enqueue((frame, hash));
+        }
+
+        session.Complete();
+        return true;
     }
 
     private static (NetplayMachinePeer Host, NetplayMachinePeer Join) CreatePair(
