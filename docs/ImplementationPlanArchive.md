@@ -895,7 +895,9 @@ remains unsigned.
 
 - **v1.18.1 (2026-11-26):** patch release - one-click FFmpeg installation for MP4
   recording (Configuration > Install FFmpeg, missing-FFmpeg prompt, and
-  `5do ffmpeg install`) with pinned SHA-256 verification. Suite 2,651/2,651.
+  `5do ffmpeg install`) with pinned SHA-256 verification. Suite 2,651/2,651. Published
+  17 assets in run <https://github.com/purelogiccode/5DO/actions/runs/45916148140>;
+  both checksum manifests verify with 0 mismatches.
 - **v1.18.0 (2026-11-26):** feature release - read-only Alcohol MDS/MDX and CloneCD
   CCD/IMG/SUB images, optional FFmpeg H.264/AAC MP4 recording with quality presets,
   high-refresh frame interpolation, patterned GPU void bars, live CPU-clock changes, and

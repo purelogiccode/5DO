@@ -9,7 +9,12 @@ HTTPS-only; FFmpeg is still not bundled. The Windows arm64 build uses the x64 bi
 Windows emulation. New tests cover the pinned source table and checksum rejection. The
 CLI install was validated on Windows x64, Linux x64, and macOS arm64; Windows MP4
 recording used the installed binary. The suite is now **2,651/2,651** (see
-[TestCorpus.md](TestCorpus.md) 1.1cy).
+[TestCorpus.md](TestCorpus.md) 1.1cy). The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45916148140> published 17 assets; both
+checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.18.1,
+`selftest` 15/15, hash `0x110E7DC5` / PC `0x00059960`, `FRONTEND SMOKE OK 1.18.1`, and
+installed FFmpeg 6.1.1 beside the CLI; its 600-frame MP4 is 10.010 s H.264/AAC with DAR
+4:3. See [ReleaseNotes-1.18.1.md](ReleaseNotes-1.18.1.md).
 
 **2026-11-26, v1.18.0 feature release (published):** the release adds read-only
 Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through

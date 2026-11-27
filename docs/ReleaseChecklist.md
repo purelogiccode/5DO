@@ -114,14 +114,19 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Full Release suite **2,651/2,651**, `dotnet build`, `dotnet format`,
       `jb inspectcode --severity=WARNING` (**0 results**), and `mkdocs build --strict`
       clean.
-- [ ] Windows x64 bundle: `--version`, `selftest`, 600-frame hash/PC, MP4, and frontend
-      smoke.
-- [ ] Push `master`, tag `v1.18.1`, and verify the release workflow publishes the five
-      bundles, Linux packages, and both checksum manifests.
-- [ ] Download the published assets, verify both manifests, and record the release run
-      and validation result in [Compatibility.md](Compatibility.md) and
+- [x] Windows x64 bundle: `--version`, `selftest`, 600-frame hash/PC, MP4, and frontend
+      smoke. Published bundle reports 1.18.1, `selftest` 15/15, hash `0x110E7DC5` / PC
+      `0x00059960`, `FRONTEND SMOKE OK 1.18.1`, and installed FFmpeg 6.1.1 beside the
+      CLI; its 600-frame MP4 is 10.010 s H.264/AAC with DAR 4:3.
+- [x] Push `master`, tag `v1.18.1`, and verify the release workflow publishes the five
+      bundles, Linux packages, and both checksum manifests. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/45916148140> succeeded with all
+      17 assets.
+- [x] Download the published assets, verify both manifests (0 mismatches), and record the
+      release run and validation result in [Compatibility.md](Compatibility.md) and
       [Status.md](Status.md).
-- [ ] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`.
+- [x] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
+      (`5do-1.18.1-win-x64.zip`).
 
 ## Post-1.17.1 compliance, evidence, and documentation gate
 

@@ -1203,6 +1203,15 @@ executable. macOS arm64 installed the 6.0 build (`a90e3d…6584`) into
 fallback. `FfmpegProvisionerTests` covers the five platform entries and checksum
 rejection.
 
+The v1.18.1 tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45916148140> built all five bundles and
+the Linux packages and published 17 assets. Both `SHA256SUMS.txt` and
+`SHA256SUMS-linux.txt` verified with **0 mismatches**. The published win-x64 bundle
+reports 1.18.1, passes `selftest`, reproduces hash `0x110E7DC5` / PC `0x00059960`,
+reports `FRONTEND SMOKE OK 1.18.1`, and installed FFmpeg 6.1.1 beside the CLI; its
+600-frame MP4 is 10.010 s H.264/AAC with DAR 4:3. The local copy is
+`src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.18.1-win-x64.zip`.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
