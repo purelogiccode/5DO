@@ -116,6 +116,9 @@ available peer implementation:
 - RetroArch's libretro netplay can provide frontend rollback, but 5DO is a standalone
   emulator; the core would still need a state-transfer and hash policy. That is why the
   probe measures the existing snapshot cost rather than adopting the libretro interface.
+- `References/CPP_SimpleGui` is the same RMG-style UI shell and delegates to the mupen
+  core; `opera-libretro` only exposes libretro's frontend netplay hooks. Neither adds a
+  5DO-specific protocol or state-sync design.
 
 ## Decision
 
