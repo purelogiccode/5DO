@@ -119,13 +119,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       reproduces hash `0x110E7DC5` / PC `0x00059960`, the bundle netplay host/join
       completes 600 frames with matching frame/audio hashes
       (`0x110E7DC5` / `0x035F6315`), the 600-frame MP4 is 10.010 s H.264/AAC with DAR
-      4:3, and `FRONTEND SMOKE OK 1.19.0` passes.
-- [ ] Push master, tag `v1.19.0`, and verify the release workflow publishes the five
-      bundles, Linux packages, and both checksum manifests.
-- [ ] Download the published assets, verify both manifests, and record the release run
-      and validation result in [Compatibility.md](Compatibility.md) and
+      4:3, and `FRONTEND SMOKE OK 1.19.0` passes. The published bundle repeats the same
+      checks.
+- [x] Push `master`, tag `v1.19.0`, and verify the release workflow publishes the five
+      bundles, Linux packages, and both checksum manifests. Release run
+      <https://github.com/purelogiccode/5DO/actions/runs/45960321450> succeeded with all
+      17 assets.
+- [x] Download the published assets, verify both manifests (0 mismatches), and record the
+      release run and validation result in [Compatibility.md](Compatibility.md) and
       [Status.md](Status.md).
-- [ ] Keep the local bundle copy under src/FiveDo.Frontend.Avalonia/bin/Release.
+- [x] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
+      (`5do-1.19.0-win-x64.zip`).
 
 ## 1.18.1 patch gate
 

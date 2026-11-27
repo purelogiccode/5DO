@@ -896,7 +896,10 @@ remains unsigned.
 - **v1.19.0 (2026-11-27):** feature release - direct-IP two-player netplay with TCP
   compressed-state transfer, UDP delay-based lockstep, reconnect from the host's current
   state, desktop **Netplay > Host/Join Session**, the `5do netplay host|join` CLI, and the
-  `BeforeFrame` session step. Suite 2,677/2,677.
+  `BeforeFrame` session step. Suite 2,677/2,677. Published 17 assets in run
+  <https://github.com/purelogiccode/5DO/actions/runs/45960321450>; both checksum manifests
+  verify with 0 mismatches, and the published win-x64 bundle reproduces the netplay and
+  frontend smokes.
 - **v1.18.1 (2026-11-26):** patch release - one-click FFmpeg installation for MP4
   recording (Configuration > Install FFmpeg, missing-FFmpeg prompt, and
   `5do ffmpeg install`) with pinned SHA-256 verification. Suite 2,651/2,651. Published

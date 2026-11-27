@@ -81,7 +81,8 @@ pointer devices and more than two players are out of scope.
 
 ## Links
 
-- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.19.0>.
+- Published at <https://github.com/purelogiccode/5DO/releases/tag/v1.19.0>; release run
+  <https://github.com/purelogiccode/5DO/actions/runs/45960321450>.
 - [Installation](https://purelogiccode.github.io/5DO/Installation.html)
 - [User guide](https://purelogiccode.github.io/5DO/UserGuide.html#netplay-direct-ip)
 - [Netplay probe](https://purelogiccode.github.io/5DO/NetplayProbe.html)

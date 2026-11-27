@@ -1215,6 +1215,17 @@ reports `FRONTEND SMOKE OK 1.18.1`, and installed FFmpeg 6.1.1 beside the CLI; i
 600-frame MP4 is 10.010 s H.264/AAC with DAR 4:3. The local copy is
 `src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.18.1-win-x64.zip`.
 
+The v1.19.0 tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45960321450> built all five bundles and
+the Linux packages and published 17 assets. Both `SHA256SUMS.txt` and
+`SHA256SUMS-linux.txt` verified with **0 mismatches**. The published win-x64 bundle
+reports 1.19.0, passes `selftest` 15/15, reproduces hash `0x110E7DC5` / PC `0x00059960`,
+reports `FRONTEND SMOKE OK 1.19.0`, and completes a 600-frame netplay host/join with
+matching frame/audio hashes (`0x110E7DC5` / `0x035F6315`); its 600-frame MP4 is 10.010 s
+H.264/AAC with DAR 4:3. The local copy is
+`src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.19.0-win-x64.zip`. Raw reports:
+[host](data/netplay-release-host-600.json), [join](data/netplay-release-join-600.json).
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

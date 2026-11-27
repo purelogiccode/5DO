@@ -6,9 +6,13 @@ machine state over TCP, then exchange per-frame PBUS input, frame hashes, and cu
 audio hashes over UDP; `5do netplay host|join` exposes the same core. Reconnect resumes
 from the host's current state. A 36,000-frame two-process run with different P1/P2 scripts
 matched the single-machine reference (`0x342EA767`), and desktop host and join were each
-validated against a CLI peer with matching hashes. The suite is **2,677/2,677**. See
-[ReleaseNotes-1.19.0.md](ReleaseNotes-1.19.0.md), [NetplayProbe.md](NetplayProbe.md), and
-[UserGuide.md](UserGuide.md#netplay-direct-ip).
+validated against a CLI peer with matching hashes. The suite is **2,677/2,677**. The tag
+workflow <https://github.com/purelogiccode/5DO/actions/runs/45960321450> published 17
+assets; both checksum manifests verify with 0 mismatches. The published win-x64 bundle
+reports 1.19.0, `selftest` 15/15, hash `0x110E7DC5` / PC `0x00059960`, netplay hashes
+`0x110E7DC5` / `0x035F6315`, and `FRONTEND SMOKE OK 1.19.0`; its 600-frame MP4 is
+10.010 s H.264/AAC with DAR 4:3. See [ReleaseNotes-1.19.0.md](ReleaseNotes-1.19.0.md),
+[NetplayProbe.md](NetplayProbe.md), and [UserGuide.md](UserGuide.md#netplay-direct-ip).
 
 **2026-11-26, v1.18.1 patch release:** MP4 recording no longer requires a manual
 FFmpeg setup. **Configuration > Install FFmpeg**, the MP4 prompt, and

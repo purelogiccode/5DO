@@ -99,7 +99,10 @@
 is available in the desktop and CLI: host/join, TCP state transfer, UDP delay-based
 lockstep, reconnect, and port/input-delay settings. A 36,000-frame two-process run with
 different P1/P2 scripts matched the single-machine reference; desktop host and join were
-each validated against a CLI peer. The suite is **2,677/2,677**.
+each validated against a CLI peer. The suite is **2,677/2,677**. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/45960321450> published 17 assets; both
+checksum manifests verify with 0 mismatches, and the published win-x64 bundle reproduces
+`0x110E7DC5` / PC `0x00059960` with `FRONTEND SMOKE OK 1.19.0`.
 
 **2026-11-26, v1.18.1 patch release (GitHub Releases).** MP4 recording no longer requires
 a manual FFmpeg setup. **Configuration > Install FFmpeg**, the missing-FFmpeg MP4 prompt,
