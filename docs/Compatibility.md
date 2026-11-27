@@ -384,7 +384,8 @@ path.
 
 ## 9. Known limitations / out of scope for v1
 
-- Netplay is a candidate (`NET-01`); no network mode ships yet.
+- Netplay is in progress (`NET-01`): the loopback probe passed, but no network mode
+  ships yet.
 - Rewind, fast-forward, cheats, TAS movies, OSD/quick menu, multi-track/CD-DA
   sectors, CD-DA volume/mute, READ_DATA subcode/Q packing, and multi-disc playlists
   are implemented; audio-only BIOS playback, guest ODE prompts, and known-title disc

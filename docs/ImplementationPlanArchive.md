@@ -1033,6 +1033,7 @@ The v1.12.0 release page is
 | 2026-11-26 | UX-33/SYS-25 completion | Patterned void bars now render on OpenGL, Direct3D 11, and Vulkan; live CPU-clock changes apply at the next frame boundary after the six-test determinism probe. The active plan now tracks 14 items. |
 | 2026-11-26 | UX-38 completion | MP4 recording with Low/Medium/High quality is validated on Windows desktop/CLI, Linux CLI, and macOS CLI with 60.06 s H.264/AAC files and non-silent audio. The active plan now tracks 13 items. |
 | 2026-11-26 | FFmpeg installer | Added the pinned, SHA-256-verified FFmpeg downloader, desktop prompt/menu, and `5do ffmpeg install`; the suite now has 2,651 tests. |
+| 2026-11-26 | NET-01 loopback probe | Delay-based lockstep over UDP loopback kept two independent machines in sync for 36,000 frames with 0 desyncs, 0 host/join/reference checkpoint mismatches, and about 1.17 KB/s; 50 ms one-way latency and every-third-packet loss also passed. The protocol, session, machine peer, 15 tests, and `FiveDo.NetplayProbe` tool are committed; NET-01 remains open for host/join, initial state sync, reconnect, and the desktop/CLI surface. |
 
 ## 16. ARM64 validation workstream (2026-11-19)
 

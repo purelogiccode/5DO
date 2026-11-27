@@ -143,8 +143,8 @@ field by up to one field period, so turn it off if you prefer the lowest possibl
 
 Achievements are implemented, including per-frame evaluation, hardcore rules, a durable
 offline unlock queue, leaderboards, and rich presence. Hardcore credit is awaiting
-RetroAchievements client approval (`REL-14`). Netplay is not implemented; it is a
-candidate tracked as `NET-01` and starts with a loopback determinism probe. A full
+RetroAchievements client approval (`REL-14`). Netplay is in progress (`NET-01`): the
+loopback probe passed, but host/join is not yet available. A full
 debugger UI, BIOS-less HLE boot, custom shaders, Discord Rich Presence, and cloud saves
 are out of scope for 1.x. Linux packages and an unsigned Windows installer scaffold
 exist; the Windows installer is not a published release asset.

@@ -8,13 +8,24 @@ writable (otherwise in the user data `tools/` folder). The downloader is explici
 HTTPS-only; FFmpeg is still not bundled. The Windows arm64 build uses the x64 binary under
 Windows emulation. New tests cover the pinned source table and checksum rejection. The
 CLI install was validated on Windows x64, Linux x64, and macOS arm64; Windows MP4
-recording used the installed binary. The suite is now **2,651/2,651** (see
+recording used the installed binary. The 1.18.1 suite was **2,651/2,651** (see
 [TestCorpus.md](TestCorpus.md) 1.1cy). The tag workflow
 <https://github.com/purelogiccode/5DO/actions/runs/45916148140> published 17 assets; both
 checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.18.1,
 `selftest` 15/15, hash `0x110E7DC5` / PC `0x00059960`, `FRONTEND SMOKE OK 1.18.1`, and
 installed FFmpeg 6.1.1 beside the CLI; its 600-frame MP4 is 10.010 s H.264/AAC with DAR
 4:3. See [ReleaseNotes-1.18.1.md](ReleaseNotes-1.18.1.md).
+
+**2026-11-26, NET-01 loopback probe (unreleased):** the delay-based lockstep probe kept
+two independent machines in sync for **36,000 frames** with 0 desyncs, 0 host/join and 0
+netplay/reference checkpoint mismatches, about **1.17 KB/s**, and **240.7 fps**. A 600-frame
+run with 50 ms one-way latency (delay 8) passed at 128.3 fps, and every-third-input-packet
+loss passed at 389 fps. The compressed state is 649,639 bytes (38 ms save / 24 ms load),
+so initial sync and reconnect are practical. The probe committed the versioned protocol,
+UDP transport, lockstep session, machine peer, 15 tests, and the developer
+`FiveDo.NetplayProbe` tool. Host/join, initial state transfer, reconnect, and the
+desktop/CLI surface remain. Full suite **2,666/2,666**; see
+[NetplayProbe.md](NetplayProbe.md) and [TestCorpus.md](TestCorpus.md) 1.1cz.
 
 **2026-11-26, v1.18.0 feature release (published):** the release adds read-only
 Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through

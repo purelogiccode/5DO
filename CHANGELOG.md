@@ -4,6 +4,18 @@ All notable changes are recorded here. The project is at v1.18.1, the patch rele
 one-click FFmpeg installation on top of the 1.18.0 MDS/CCD, MP4, interpolation, void-bar,
 and live-clock features.
 
+## [Unreleased]
+
+### Added
+
+- **Netplay loopback probe (NET-01).** A versioned input/hash protocol, UDP transport,
+  delay-based lockstep session, and machine peer keep two independent 5DO instances in
+  sync. The 36,000-frame (10-minute emulated) probe completed with 0 desyncs, 0
+  host/join/reference checkpoint mismatches, about 1.17 KB/s, and 240.7 fps; 50 ms
+  one-way latency and every-third-packet loss also passed. The compressed state is about
+  650 KB (38 ms save / 24 ms load). Host/join, initial state sync, reconnect, and the
+  desktop/CLI surface remain. See `docs/NetplayProbe.md`.
+
 ## [1.18.1] - 2026-11-26
 
 ### Added

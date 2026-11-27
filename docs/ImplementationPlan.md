@@ -94,7 +94,7 @@ and channel files: [Installers.md](Installers.md),
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **NET-01** | Candidate | XL | **Netplay**: add a two-player deterministic network mode. Choose delay-based lockstep or rollback after a loopback probe, synchronize the initial BIOS/disc/state, exchange per-frame PBUS packets, detect and recover from desync, and expose host/join, port, input delay, and reconnect settings. Start with direct IP/LAN; a lobby and NAT traversal are out of scope for the first increment. | The machine is already single-threaded, fixed-timestep, and deterministic; TAS movie playback and `MachineStateSnapshot` provide the input/state plumbing. RetroArch's frontend netplay is the only peer reference, so this starts as a bounded probe rather than a committed release feature. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
+| **NET-01** | Open | XL | **Netplay**: the loopback probe is complete and clean (see [NetplayProbe.md](NetplayProbe.md)): delay-based lockstep kept two machine instances in sync for 36,000 frames with 0 desyncs, 0 host/join/reference checkpoint mismatches, about 1.17 KB/s, and 240.7 fps. Remaining: direct-IP host/join CLI and desktop surface, initial state transfer/validation over a reliable stream (the peer reference uses TCP for state and UDP for input), reconnect from the last confirmed state, port/input-delay settings, audio/video integration, a desync recovery policy, user documentation, and the no-lobby/no-NAT scope. | The deterministic machine, `MachineStateSnapshot`, TAS input, and the committed protocol/session are in place; the probe measured the compressed state at 650 KB with 38 ms save / 24 ms load. | Two local instances complete a 10-minute two-player session with no desync and matching frame/audio hashes; reconnect restores from the last confirmed state; a deliberate packet loss/delay test recovers or reports a clear desync; latency and bandwidth are recorded; [UserGuide.md](UserGuide.md) documents host/join, ports, and the direct-IP-only scope. |
 
 ### 3.5 P2/P3 — Rendering completeness
 
@@ -164,8 +164,9 @@ was measured and closed with a documented limitation, not that it is unachievabl
 3. **macOS platform:** `PLAT-17` keeps only its Retina 2x row, which needs a HiDPI
    display (§4), and `PLAT-05` needs a physical controller. Nothing on macOS is
    runnable until one of those devices is attached.
-4. **Product/network:** `NET-01` starts with a two-instance loopback probe; commit to a
-   netplay implementation only if the probe is clean.
+4. **Product/network:** the `NET-01` loopback probe passed (36,000 frames, 0 desync,
+   matching host/join/reference checkpoints). Continue with direct-IP host/join, initial
+   state transfer, and reconnect before adding presentation settings.
 5. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
    keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation

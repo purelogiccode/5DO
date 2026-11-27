@@ -1,0 +1,631 @@
+{
+  "disc": "Wolfenstein 3D (1994)(Interplay)(US)[!].chd",
+  "bios": "panafz1.bin",
+  "profile": "compatible",
+  "frames": 36000,
+  "inputDelay": 4,
+  "latencyMilliseconds": 0,
+  "dropInputEvery": 0,
+  "contentHash": "0x616E42DCA010DB5E",
+  "ok": true,
+  "wallSeconds": 149.555851,
+  "framesPerSecond": 240.71274884457716,
+  "host": {
+    "role": "host",
+    "started": true,
+    "completed": true,
+    "state": "Completed",
+    "frames": 36000,
+    "seconds": 149.5293349,
+    "framesPerSecond": 240.7554345378152,
+    "packetsSent": 72003,
+    "packetsReceived": 72003,
+    "bytesSent": 5040033,
+    "bytesReceived": 5040033,
+    "inputResends": 0,
+    "redundantInputs": 208479,
+    "duplicateInputs": 43515,
+    "maxWaitMilliseconds": 27.7254,
+    "totalWaitMilliseconds": 2765.98220000007,
+    "checkpoints": [
+      {
+        "frame": 0,
+        "frameHash": "0x110E7DC5",
+        "audioHash": "0x63959175",
+        "audioSamples": 735
+      },
+      {
+        "frame": 1200,
+        "frameHash": "0x949D1B21",
+        "audioHash": "0x88D78A04",
+        "audioSamples": 883617
+      },
+      {
+        "frame": 2400,
+        "frameHash": "0x7D72F877",
+        "audioHash": "0x47BE42AE",
+        "audioSamples": 1766499
+      },
+      {
+        "frame": 3600,
+        "frameHash": "0xF5D013D6",
+        "audioHash": "0x32FB480D",
+        "audioSamples": 2649381
+      },
+      {
+        "frame": 4800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x65F2D0A0",
+        "audioSamples": 3532263
+      },
+      {
+        "frame": 6000,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x065D927F",
+        "audioSamples": 4415145
+      },
+      {
+        "frame": 7200,
+        "frameHash": "0x8EB09DDE",
+        "audioHash": "0xF977F209",
+        "audioSamples": 5298027
+      },
+      {
+        "frame": 8400,
+        "frameHash": "0x86CC8D16",
+        "audioHash": "0x906A15ED",
+        "audioSamples": 6180909
+      },
+      {
+        "frame": 9600,
+        "frameHash": "0xA2DFCF6C",
+        "audioHash": "0x8C5B2C95",
+        "audioSamples": 7063791
+      },
+      {
+        "frame": 10800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x4FA90478",
+        "audioSamples": 7946673
+      },
+      {
+        "frame": 12000,
+        "frameHash": "0x4546C4D7",
+        "audioHash": "0x4356D29D",
+        "audioSamples": 8829555
+      },
+      {
+        "frame": 13200,
+        "frameHash": "0x130CE58D",
+        "audioHash": "0x0B7D107C",
+        "audioSamples": 9712437
+      },
+      {
+        "frame": 14400,
+        "frameHash": "0xBB1091AD",
+        "audioHash": "0x0F19DC90",
+        "audioSamples": 10595319
+      },
+      {
+        "frame": 15600,
+        "frameHash": "0x0C2A231E",
+        "audioHash": "0xA411BB8F",
+        "audioSamples": 11478201
+      },
+      {
+        "frame": 16800,
+        "frameHash": "0xC3FA9CBA",
+        "audioHash": "0xFA5311EE",
+        "audioSamples": 12361083
+      },
+      {
+        "frame": 18000,
+        "frameHash": "0x3FF1FCC5",
+        "audioHash": "0xC48A7C7B",
+        "audioSamples": 13243965
+      },
+      {
+        "frame": 19200,
+        "frameHash": "0xC25501E0",
+        "audioHash": "0xA0BE3F4A",
+        "audioSamples": 14126847
+      },
+      {
+        "frame": 20400,
+        "frameHash": "0x41886EF7",
+        "audioHash": "0x41135D33",
+        "audioSamples": 15009729
+      },
+      {
+        "frame": 21600,
+        "frameHash": "0xAA4382F7",
+        "audioHash": "0xA8DE4625",
+        "audioSamples": 15892611
+      },
+      {
+        "frame": 22800,
+        "frameHash": "0xFA289DEE",
+        "audioHash": "0x0E742E09",
+        "audioSamples": 16775493
+      },
+      {
+        "frame": 24000,
+        "frameHash": "0x182D9D70",
+        "audioHash": "0xA8BF7A50",
+        "audioSamples": 17658375
+      },
+      {
+        "frame": 25200,
+        "frameHash": "0xCC2D2E09",
+        "audioHash": "0x2BEFA162",
+        "audioSamples": 18541257
+      },
+      {
+        "frame": 26400,
+        "frameHash": "0x06480764",
+        "audioHash": "0xFD286FDA",
+        "audioSamples": 19424139
+      },
+      {
+        "frame": 27600,
+        "frameHash": "0xD102DBF5",
+        "audioHash": "0x7E07C127",
+        "audioSamples": 20307021
+      },
+      {
+        "frame": 28800,
+        "frameHash": "0x8161D405",
+        "audioHash": "0xA35734EE",
+        "audioSamples": 21189903
+      },
+      {
+        "frame": 30000,
+        "frameHash": "0xF6D1D7EF",
+        "audioHash": "0xEDA60D38",
+        "audioSamples": 22072785
+      },
+      {
+        "frame": 31200,
+        "frameHash": "0x5F119727",
+        "audioHash": "0xF0DFC736",
+        "audioSamples": 22955667
+      },
+      {
+        "frame": 32400,
+        "frameHash": "0x3D90D221",
+        "audioHash": "0xAF922442",
+        "audioSamples": 23838549
+      },
+      {
+        "frame": 33600,
+        "frameHash": "0x029E89A1",
+        "audioHash": "0x5393DD55",
+        "audioSamples": 24721431
+      },
+      {
+        "frame": 34800,
+        "frameHash": "0xD7F8C38F",
+        "audioHash": "0x9406DCC2",
+        "audioSamples": 25604313
+      },
+      {
+        "frame": 35999,
+        "frameHash": "0xBA80C0E9",
+        "audioHash": "0x94BD0B3B",
+        "audioSamples": 26486460
+      }
+    ]
+  },
+  "join": {
+    "role": "join",
+    "started": true,
+    "completed": true,
+    "state": "Completed",
+    "frames": 36000,
+    "seconds": 149.5399984,
+    "framesPerSecond": 240.7382665854034,
+    "packetsSent": 72003,
+    "packetsReceived": 72003,
+    "bytesSent": 5040033,
+    "bytesReceived": 5040033,
+    "inputResends": 0,
+    "redundantInputs": 167026,
+    "duplicateInputs": 84968,
+    "maxWaitMilliseconds": 16.5116,
+    "totalWaitMilliseconds": 481.9087999998537,
+    "checkpoints": [
+      {
+        "frame": 0,
+        "frameHash": "0x110E7DC5",
+        "audioHash": "0x63959175",
+        "audioSamples": 735
+      },
+      {
+        "frame": 1200,
+        "frameHash": "0x949D1B21",
+        "audioHash": "0x88D78A04",
+        "audioSamples": 883617
+      },
+      {
+        "frame": 2400,
+        "frameHash": "0x7D72F877",
+        "audioHash": "0x47BE42AE",
+        "audioSamples": 1766499
+      },
+      {
+        "frame": 3600,
+        "frameHash": "0xF5D013D6",
+        "audioHash": "0x32FB480D",
+        "audioSamples": 2649381
+      },
+      {
+        "frame": 4800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x65F2D0A0",
+        "audioSamples": 3532263
+      },
+      {
+        "frame": 6000,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x065D927F",
+        "audioSamples": 4415145
+      },
+      {
+        "frame": 7200,
+        "frameHash": "0x8EB09DDE",
+        "audioHash": "0xF977F209",
+        "audioSamples": 5298027
+      },
+      {
+        "frame": 8400,
+        "frameHash": "0x86CC8D16",
+        "audioHash": "0x906A15ED",
+        "audioSamples": 6180909
+      },
+      {
+        "frame": 9600,
+        "frameHash": "0xA2DFCF6C",
+        "audioHash": "0x8C5B2C95",
+        "audioSamples": 7063791
+      },
+      {
+        "frame": 10800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x4FA90478",
+        "audioSamples": 7946673
+      },
+      {
+        "frame": 12000,
+        "frameHash": "0x4546C4D7",
+        "audioHash": "0x4356D29D",
+        "audioSamples": 8829555
+      },
+      {
+        "frame": 13200,
+        "frameHash": "0x130CE58D",
+        "audioHash": "0x0B7D107C",
+        "audioSamples": 9712437
+      },
+      {
+        "frame": 14400,
+        "frameHash": "0xBB1091AD",
+        "audioHash": "0x0F19DC90",
+        "audioSamples": 10595319
+      },
+      {
+        "frame": 15600,
+        "frameHash": "0x0C2A231E",
+        "audioHash": "0xA411BB8F",
+        "audioSamples": 11478201
+      },
+      {
+        "frame": 16800,
+        "frameHash": "0xC3FA9CBA",
+        "audioHash": "0xFA5311EE",
+        "audioSamples": 12361083
+      },
+      {
+        "frame": 18000,
+        "frameHash": "0x3FF1FCC5",
+        "audioHash": "0xC48A7C7B",
+        "audioSamples": 13243965
+      },
+      {
+        "frame": 19200,
+        "frameHash": "0xC25501E0",
+        "audioHash": "0xA0BE3F4A",
+        "audioSamples": 14126847
+      },
+      {
+        "frame": 20400,
+        "frameHash": "0x41886EF7",
+        "audioHash": "0x41135D33",
+        "audioSamples": 15009729
+      },
+      {
+        "frame": 21600,
+        "frameHash": "0xAA4382F7",
+        "audioHash": "0xA8DE4625",
+        "audioSamples": 15892611
+      },
+      {
+        "frame": 22800,
+        "frameHash": "0xFA289DEE",
+        "audioHash": "0x0E742E09",
+        "audioSamples": 16775493
+      },
+      {
+        "frame": 24000,
+        "frameHash": "0x182D9D70",
+        "audioHash": "0xA8BF7A50",
+        "audioSamples": 17658375
+      },
+      {
+        "frame": 25200,
+        "frameHash": "0xCC2D2E09",
+        "audioHash": "0x2BEFA162",
+        "audioSamples": 18541257
+      },
+      {
+        "frame": 26400,
+        "frameHash": "0x06480764",
+        "audioHash": "0xFD286FDA",
+        "audioSamples": 19424139
+      },
+      {
+        "frame": 27600,
+        "frameHash": "0xD102DBF5",
+        "audioHash": "0x7E07C127",
+        "audioSamples": 20307021
+      },
+      {
+        "frame": 28800,
+        "frameHash": "0x8161D405",
+        "audioHash": "0xA35734EE",
+        "audioSamples": 21189903
+      },
+      {
+        "frame": 30000,
+        "frameHash": "0xF6D1D7EF",
+        "audioHash": "0xEDA60D38",
+        "audioSamples": 22072785
+      },
+      {
+        "frame": 31200,
+        "frameHash": "0x5F119727",
+        "audioHash": "0xF0DFC736",
+        "audioSamples": 22955667
+      },
+      {
+        "frame": 32400,
+        "frameHash": "0x3D90D221",
+        "audioHash": "0xAF922442",
+        "audioSamples": 23838549
+      },
+      {
+        "frame": 33600,
+        "frameHash": "0x029E89A1",
+        "audioHash": "0x5393DD55",
+        "audioSamples": 24721431
+      },
+      {
+        "frame": 34800,
+        "frameHash": "0xD7F8C38F",
+        "audioHash": "0x9406DCC2",
+        "audioSamples": 25604313
+      },
+      {
+        "frame": 35999,
+        "frameHash": "0xBA80C0E9",
+        "audioHash": "0x94BD0B3B",
+        "audioSamples": 26486460
+      }
+    ]
+  },
+  "reference": {
+    "ran": true,
+    "frames": 36000,
+    "seconds": 141.5273481,
+    "framesPerSecond": 254.36779875620377,
+    "finalFrameHash": "0xBA80C0E9",
+    "checkpoints": [
+      {
+        "frame": 0,
+        "frameHash": "0x110E7DC5",
+        "audioHash": "0x63959175",
+        "audioSamples": 735
+      },
+      {
+        "frame": 1200,
+        "frameHash": "0x949D1B21",
+        "audioHash": "0x88D78A04",
+        "audioSamples": 883617
+      },
+      {
+        "frame": 2400,
+        "frameHash": "0x7D72F877",
+        "audioHash": "0x47BE42AE",
+        "audioSamples": 1766499
+      },
+      {
+        "frame": 3600,
+        "frameHash": "0xF5D013D6",
+        "audioHash": "0x32FB480D",
+        "audioSamples": 2649381
+      },
+      {
+        "frame": 4800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x65F2D0A0",
+        "audioSamples": 3532263
+      },
+      {
+        "frame": 6000,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x065D927F",
+        "audioSamples": 4415145
+      },
+      {
+        "frame": 7200,
+        "frameHash": "0x8EB09DDE",
+        "audioHash": "0xF977F209",
+        "audioSamples": 5298027
+      },
+      {
+        "frame": 8400,
+        "frameHash": "0x86CC8D16",
+        "audioHash": "0x906A15ED",
+        "audioSamples": 6180909
+      },
+      {
+        "frame": 9600,
+        "frameHash": "0xA2DFCF6C",
+        "audioHash": "0x8C5B2C95",
+        "audioSamples": 7063791
+      },
+      {
+        "frame": 10800,
+        "frameHash": "0xA3C35C91",
+        "audioHash": "0x4FA90478",
+        "audioSamples": 7946673
+      },
+      {
+        "frame": 12000,
+        "frameHash": "0x4546C4D7",
+        "audioHash": "0x4356D29D",
+        "audioSamples": 8829555
+      },
+      {
+        "frame": 13200,
+        "frameHash": "0x130CE58D",
+        "audioHash": "0x0B7D107C",
+        "audioSamples": 9712437
+      },
+      {
+        "frame": 14400,
+        "frameHash": "0xBB1091AD",
+        "audioHash": "0x0F19DC90",
+        "audioSamples": 10595319
+      },
+      {
+        "frame": 15600,
+        "frameHash": "0x0C2A231E",
+        "audioHash": "0xA411BB8F",
+        "audioSamples": 11478201
+      },
+      {
+        "frame": 16800,
+        "frameHash": "0xC3FA9CBA",
+        "audioHash": "0xFA5311EE",
+        "audioSamples": 12361083
+      },
+      {
+        "frame": 18000,
+        "frameHash": "0x3FF1FCC5",
+        "audioHash": "0xC48A7C7B",
+        "audioSamples": 13243965
+      },
+      {
+        "frame": 19200,
+        "frameHash": "0xC25501E0",
+        "audioHash": "0xA0BE3F4A",
+        "audioSamples": 14126847
+      },
+      {
+        "frame": 20400,
+        "frameHash": "0x41886EF7",
+        "audioHash": "0x41135D33",
+        "audioSamples": 15009729
+      },
+      {
+        "frame": 21600,
+        "frameHash": "0xAA4382F7",
+        "audioHash": "0xA8DE4625",
+        "audioSamples": 15892611
+      },
+      {
+        "frame": 22800,
+        "frameHash": "0xFA289DEE",
+        "audioHash": "0x0E742E09",
+        "audioSamples": 16775493
+      },
+      {
+        "frame": 24000,
+        "frameHash": "0x182D9D70",
+        "audioHash": "0xA8BF7A50",
+        "audioSamples": 17658375
+      },
+      {
+        "frame": 25200,
+        "frameHash": "0xCC2D2E09",
+        "audioHash": "0x2BEFA162",
+        "audioSamples": 18541257
+      },
+      {
+        "frame": 26400,
+        "frameHash": "0x06480764",
+        "audioHash": "0xFD286FDA",
+        "audioSamples": 19424139
+      },
+      {
+        "frame": 27600,
+        "frameHash": "0xD102DBF5",
+        "audioHash": "0x7E07C127",
+        "audioSamples": 20307021
+      },
+      {
+        "frame": 28800,
+        "frameHash": "0x8161D405",
+        "audioHash": "0xA35734EE",
+        "audioSamples": 21189903
+      },
+      {
+        "frame": 30000,
+        "frameHash": "0xF6D1D7EF",
+        "audioHash": "0xEDA60D38",
+        "audioSamples": 22072785
+      },
+      {
+        "frame": 31200,
+        "frameHash": "0x5F119727",
+        "audioHash": "0xF0DFC736",
+        "audioSamples": 22955667
+      },
+      {
+        "frame": 32400,
+        "frameHash": "0x3D90D221",
+        "audioHash": "0xAF922442",
+        "audioSamples": 23838549
+      },
+      {
+        "frame": 33600,
+        "frameHash": "0x029E89A1",
+        "audioHash": "0x5393DD55",
+        "audioSamples": 24721431
+      },
+      {
+        "frame": 34800,
+        "frameHash": "0xD7F8C38F",
+        "audioHash": "0x9406DCC2",
+        "audioSamples": 25604313
+      },
+      {
+        "frame": 35999,
+        "frameHash": "0xBA80C0E9",
+        "audioHash": "0x94BD0B3B",
+        "audioSamples": 26486460
+      }
+    ]
+  },
+  "stateCost": {
+    "snapshotBytes": 9348653,
+    "snapshotCaptureMilliseconds": 5.056620000000001,
+    "snapshotRestoreMilliseconds": 2.30752,
+    "compressedBytes": 649639,
+    "compressedSaveMilliseconds": 38.3165,
+    "compressedLoadMilliseconds": 23.5412
+  },
+  "checkpointMismatches": 0,
+  "referenceMismatches": 0,
+  "problems": []
+}

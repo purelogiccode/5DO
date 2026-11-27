@@ -55,7 +55,9 @@ short version:
 
 **Product and rendering**
 
-- `NET-01` netplay loopback probe (commit only if the probe is clean).
+- `NET-01` netplay: the loopback probe passed (36,000 frames, 0 desync, matching
+  host/join/reference checkpoints); next is direct-IP host/join, initial state sync, and
+  reconnect.
 - `SYS-29` representative real 3DO MDS/MDF and CloneCD CCD/IMG/SUB validation; the
   readers and synthetic data/audio tests are complete.
 - `VID-20` true-2x CEL production completeness; `VID-21` GPU CEL rasterization as a
@@ -73,8 +75,9 @@ short version:
 
 ## Out of scope for 1.x
 
-Netplay is a candidate (`NET-01`), not a committed feature. The following are explicitly
-out of scope unless the product scope changes:
+Netplay is in progress (`NET-01`): the loopback probe passed, but no user-facing
+host/join ships yet. The following are explicitly out of scope unless the product scope
+changes:
 
 - a full debugger UI;
 - official Debian/Ubuntu/Fedora/openSUSE archives and Flathub under the retained

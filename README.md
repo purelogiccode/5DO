@@ -99,7 +99,7 @@ test harness designed for reproducible compatibility evidence.
 | Version | `1.18.1` release (GitHub Releases) |
 | Validated platform | **Windows x64, Linux x64, and macOS arm64 GPU**; Linux arm64 and Windows arm64 pass runtime smoke |
 | Build/publish targets | Windows/Linux x64+arm64 and macOS arm64 (DMG); Intel macOS is unsupported |
-| Automated tests | **2,651 tests** in the current test assembly |
+| Automated tests | **2,666 tests** in the current test assembly |
 | Optical media | 1,366 local CHDs opened and track-probed; **496 unique titles fully sector-verified**; 26-case BIOS matrix; 3 audio-only CHDs; `disc audio` exports CD-DA to WAV; physical Red Book CD-DA verified on a real drive |
 | Disc containers | ISO, BIN, CUE+BIN, CHD (parent/child), CDI, NRG, Alcohol MDS/MDX, CloneCD CCD/IMG/SUB, and ISO/BIN/CUE+BIN inside ZIP/7z |
 | Save states | Ten numbered slots plus a rolling autosave with validated startup resume; manual slots are never overwritten |

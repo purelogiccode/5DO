@@ -166,6 +166,7 @@ nav:
       - Roadmap: Roadmap.md
       - Implementation plan: ImplementationPlan.md
       - Implementation plan archive: ImplementationPlanArchive.md
+      - Netplay loopback probe: NetplayProbe.md
       - Compatibility sweep: CompatibilitySweep.md
       - High-resolution CEL research: HighResolutionCelResearch.md
       - Release notes 1.18.1: ReleaseNotes-1.18.1.md

@@ -4972,3 +4972,37 @@ fallback.
 FFmpeg is not bundled or redistributed. The Windows arm64 entry uses x64 emulation; a
 native arm64 build can be supplied with `FIVEDO_FFMPEG`. The pinned version is updated
 only by a 5DO release. Full suite **2,651/2,651**.
+
+### 1.1cz Netplay loopback probe (2026-11-26)
+
+**Protocol and tests.** `NetplayCodec` defines a versioned little-endian datagram format
+for hello/hello-ack, redundant input history, frame/audio hashes, input requests, and
+close. `LockstepSession` samples local input ahead, sends the newest eight samples in every
+packet, waits for the peer's current-frame input, and publishes a frame plus cumulative PCM
+hash after every frame. `NetplayContentHash` covers both BIOS images, the disc identity,
+and every behavior-affecting tuning value. `NetplayMachinePeer` combines both controller
+states into one PBUS packet and hashes a reusable `FrameBuffer`. Fifteen tests cover the
+message round-trips and malformed input, content-hash sensitivity, two-peer scripted
+determinism, every-third-packet loss, burst loss recovered by input requests, desync
+reporting, timeout reporting, PBUS packing, and two-machine frame/audio equality.
+
+**Determinism baseline.** Two CLI runs of Wolfenstein 3D (USA) matched frame, PC, and
+audio hashes at 60/600/1,800/3,600 without input (`0x110E7DC5`, `0x110E7DC5`,
+`0x66068F5C`, `0x2460BF33`) and with `tierb-10min.txt` (`0x110E7DC5`, `0x110E7DC5`,
+`0x949D1B21`, `0xDE34C159`, `0xF5D013D6` including frame 1,200).
+
+**Loopback evidence.** The `FiveDo.NetplayProbe` 36,000-frame run (10 minutes emulated,
+delay 4) completed both peers at **240.7 fps** with **0 desyncs**, **0 host/join
+checkpoint mismatches**, and **0 netplay/reference mismatches**; each peer exchanged
+72,003 packets / 10,080,066 bytes (about **1.17 KB/s**), with a 27.73 ms maximum wait and
+no explicit resends. The reference final frame at 35,999 was `0xBA80C0E9`. A 600-frame run
+with 50 ms one-way latency and delay 8 completed at 128.3 fps with 0 mismatches; a
+600-frame run dropping every third input packet completed at 389 fps with 0 mismatches.
+The uncompressed snapshot is 9,348,653 bytes (5.06 ms capture, 2.31 ms restore); the
+compressed state is 649,639 bytes (38 ms save, 24 ms load). The probe selected delay-based
+lockstep for the first direct-IP increment; see [NetplayProbe.md](NetplayProbe.md).
+
+**Limits.** The probe is developer-only: scripted input, no lobby/NAT traversal, no
+authentication or encryption, no initial state transfer, no reconnect, and no desktop or
+CLI host/join surface. The first increment remains joypad-only for two players. Full suite
+**2,666/2,666**.
