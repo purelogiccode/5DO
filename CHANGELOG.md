@@ -4,6 +4,22 @@ All notable changes are recorded here. The project is at v1.18.1, the patch rele
 one-click FFmpeg installation on top of the 1.18.0 MDS/CCD, MP4, interpolation, void-bar,
 and live-clock features.
 
+## [Unreleased]
+
+### Added
+
+- **Emulator-agnostic VPS lobby prototype (NET-02).** `src/FiveDo.Lobby` is an
+  ASP.NET Core 11 service with room/join codes, WebSocket signaling, per-room TCP control
+  relays, UDP rendezvous and NAT punch coordination, and opaque UDP relay fallback.
+  `src/FiveDo.Lobby.Protocol` defines the shared contract; `tools/FiveDo.LobbyProbe`
+  exercises rooms without an emulator. The 5DO CLI adds `netplay host|join --lobby
+  <url>`, `--lobby-relay`, `--lobby-direct`, and `--lobby-timeout`. Windows VPS service
+  install/uninstall scripts and the protocol/deployment guide are in `packaging/windows`
+  and `docs/Lobby.md`. The public service adds per-IP HTTP rate limits, live-room quotas,
+  UDP/TCP relay resource caps, Cloudflare client-IP support and origin-secret locking,
+  security headers, request size limits, and a health probe. XGrid integration is documented but intentionally not
+  edited in this repository.
+
 ## [1.19.0] - 2026-11-27
 
 ### Added

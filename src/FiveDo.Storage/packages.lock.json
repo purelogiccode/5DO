@@ -10,9 +10,9 @@
       },
       "CHDSharp": {
         "type": "Direct",
-        "requested": "[1.7.2, )",
-        "resolved": "1.7.2",
-        "contentHash": "vm1DuVLq79YqGrtW3imP57lElFshnmp3UB2aCnyWlFFqvC93L9tlONLQJ8wusBg86taULwB5Z9AJZzjdfeOWqg==",
+        "requested": "[1.7.3, )",
+        "resolved": "1.7.3",
+        "contentHash": "XgltXoMi+NUHfnnufQC5xVX+r3x+fcP5Rs8jYUvUoEuYwFKayXpEu2y+CgbfoP7GoPqwAC5Scunwrzsr1nSEUA==",
         "dependencies": {
           "System.IO.Hashing": "11.0.0"
         }

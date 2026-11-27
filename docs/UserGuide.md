@@ -400,9 +400,9 @@ or a flat CHD and verifies the game ID; see
 
 ## Netplay (direct IP)
 
-> **Status:** unreleased on `master`; the desktop menu, CLI, and direct-IP core are
-> implemented and the two-process path is validated. There is no lobby, matchmaking, or
-> NAT traversal.
+> **Status:** the desktop direct-IP menu and the CLI core are implemented and validated.
+> A lobby/NAT-traversal prototype is available from the CLI with `--lobby`; the desktop
+> lobby UI and matchmaking are not implemented yet.
 
 Netplay connects two 5DO instances directly. The host is player 1 and owns the listening
 port; the join is player 2. Both players must use the same 5DO build, BIOS, disc, and
@@ -436,11 +436,12 @@ frame is included in the request).
   are forced off so every peer executes every frame.
 - P1 and P2 use the existing player 1/player 2 keyboard and gamepad bindings.
 - The menu shows **Stop Session**; the status bar shows the role.
-- The protocol has no authentication or encryption. Use it on a trusted LAN or a direct
-  connection, and do not expose the port to the public Internet without a VPN or
+- The direct-IP protocol has no authentication or encryption. Use it on a trusted LAN or a
+  direct connection, and do not expose the port to the public Internet without a VPN or
   firewall rules you understand.
-- Two players and joypads are supported. Pointer devices, more than two players, a lobby,
-  matchmaking, and NAT traversal are out of scope for this increment.
+- Two players and joypads are supported. Pointer devices, more than two players,
+  matchmaking, and a desktop lobby UI are out of scope for this increment. The CLI
+  `--lobby` path provides room codes and NAT traversal for testing.
 
 The CLI exposes the same core for automation and evidence:
 
@@ -453,6 +454,19 @@ Both commands accept `--input-script <path>` for the local player, `--delay <fra
 `--reconnect-timeout <seconds>`, and `--json`. See
 [CliReference.md](CliReference.md#12c-netplay) and [NetplayProbe.md](NetplayProbe.md) for the
 protocol and measured evidence.
+
+**Lobby-assisted (CLI)**
+
+```powershell
+5do netplay host game.chd --bios bios/panafz1.bin --lobby http://lobby.example.com:8080
+5do netplay join X7JTX4 game.chd --bios bios/panafz1.bin --lobby http://lobby.example.com:8080
+```
+
+The host creates a room and prints a join code. The lobby coordinates UDP NAT punching
+and falls back to an opaque relay when direct traffic is blocked. `--lobby-relay` forces
+the relay, `--lobby-direct` requires punching, and `--lobby-timeout` sets the fallback
+deadline. See [Lobby.md](Lobby.md) for the service, Windows VPS install, and the shared
+XGrid contract.
 
 ## Display
 

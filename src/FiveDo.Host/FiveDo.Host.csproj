@@ -18,6 +18,7 @@
     <ProjectReference Include="..\FiveDo.Storage\FiveDo.Storage.csproj" />
     <ProjectReference Include="..\FiveDo.Audio\FiveDo.Audio.csproj" />
     <ProjectReference Include="..\FiveDo.Input\FiveDo.Input.csproj" />
+    <ProjectReference Include="..\FiveDo.Lobby.Protocol\FiveDo.Lobby.Protocol.csproj" />
     <ProjectReference Include="..\FiveDo.Video\FiveDo.Video.csproj" />
     <ProjectReference Include="..\FiveDo.Diagnostics\FiveDo.Diagnostics.csproj" />
   </ItemGroup>

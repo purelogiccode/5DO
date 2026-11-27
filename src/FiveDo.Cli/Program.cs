@@ -6927,6 +6927,9 @@ internal static class Program
         Console.WriteLine("  netplay host <disc> --bios <path> [--port N] [--delay N] [--frames N]");
         Console.WriteLine("  netplay join <host> <disc> --bios <path> [--port N] [--delay N] [--frames N]");
         Console.WriteLine("                                       Direct-IP two-player netplay over TCP control and UDP input.");
+        Console.WriteLine("  netplay host <disc> --bios <path> --lobby <url> [--lobby-name N]");
+        Console.WriteLine("  netplay join <code> <disc> --bios <path> --lobby <url> [--lobby-name N]");
+        Console.WriteLine("                                       Lobby-assisted netplay with UDP punch and relay fallback.");
         Console.WriteLine("  update [--force] [--json]            Check GitHub for a newer 5DO release.");
         Console.WriteLine("  ffmpeg status|install [--force] [--json]");
         Console.WriteLine("                                       Download and verify FFmpeg for MP4 recording.");

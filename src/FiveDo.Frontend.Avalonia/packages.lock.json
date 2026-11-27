@@ -336,6 +336,7 @@
           "FiveDo.Core": "[1.19.0, )",
           "FiveDo.Diagnostics": "[1.19.0, )",
           "FiveDo.Input": "[1.19.0, )",
+          "FiveDo.Lobby.Protocol": "[1.19.0, )",
           "FiveDo.Machine": "[1.19.0, )",
           "FiveDo.Storage": "[1.19.0, )",
           "FiveDo.Video": "[1.19.0, )",
@@ -347,6 +348,9 @@
         "dependencies": {
           "FiveDo.Core": "[1.19.0, )"
         }
+      },
+      "fivedo.lobby.protocol": {
+        "type": "Project"
       },
       "fivedo.localization": {
         "type": "Project"
@@ -390,7 +394,7 @@
         "dependencies": {
           "CCDSharp": "[1.0.3, )",
           "CDISharp": "[1.19.0, )",
-          "CHDSharp": "[1.7.2, )",
+          "CHDSharp": "[1.7.3, )",
           "FiveDo.Core": "[1.19.0, )",
           "MDSSharp": "[1.3.0, )",
           "NRGSharp": "[1.19.0, )",
@@ -458,9 +462,9 @@
       },
       "CHDSharp": {
         "type": "CentralTransitive",
-        "requested": "[1.7.2, )",
-        "resolved": "1.7.2",
-        "contentHash": "vm1DuVLq79YqGrtW3imP57lElFshnmp3UB2aCnyWlFFqvC93L9tlONLQJ8wusBg86taULwB5Z9AJZzjdfeOWqg==",
+        "requested": "[1.7.3, )",
+        "resolved": "1.7.3",
+        "contentHash": "XgltXoMi+NUHfnnufQC5xVX+r3x+fcP5Rs8jYUvUoEuYwFKayXpEu2y+CgbfoP7GoPqwAC5Scunwrzsr1nSEUA==",
         "dependencies": {
           "System.IO.Hashing": "11.0.0"
         }
@@ -551,7 +555,7 @@
       },
       "SkiaSharp": {
         "type": "CentralTransitive",
-        "requested": "[4.157.0, )",
+        "requested": "[4.158.0, )",
         "resolved": "3.119.4",
         "contentHash": "53NOSUZ1Us+91Sm0uCkIivh/k7jOowRErZT2sIWwPFN9mLUvdxnE6rS4sWo4255+Rd2MWUSF+j0NMZHD6Cke+Q==",
         "dependencies": {
@@ -561,13 +565,13 @@
       },
       "SkiaSharp.NativeAssets.macOS": {
         "type": "CentralTransitive",
-        "requested": "[4.157.0, )",
+        "requested": "[4.158.0, )",
         "resolved": "3.119.4",
         "contentHash": "fgBOWEqbY012x7gMfJU4ezgz6dfhJb30Z6YdW35h85Zoe39+a8YNbAAwL29ihPfWoppg5AjvyKNzD1oCvlqWwA=="
       },
       "SkiaSharp.NativeAssets.Win32": {
         "type": "CentralTransitive",
-        "requested": "[4.157.0, )",
+        "requested": "[4.158.0, )",
         "resolved": "3.119.4",
         "contentHash": "XOpbx/4CReO2wYsq2s6rbvdauc6dntG4Zv499sHGTJ87bwZaFXszFkwql3+FIZMc8kUPeaj3Mx2ezIJmo8a1Kg=="
       },

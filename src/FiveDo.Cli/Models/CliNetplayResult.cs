@@ -16,4 +16,7 @@ internal sealed record CliNetplayResult(
     long BytesSent,
     long BytesReceived,
     double Seconds,
-    string? Failure);
+    string? Failure,
+    string Lobby = "",
+    string RoomCode = "",
+    string Transport = "");

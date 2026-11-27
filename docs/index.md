@@ -95,6 +95,12 @@
 
 ## Current snapshot
 
+**2026-11-27, lobby prototype (unreleased).** An emulator-agnostic ASP.NET Core 11
+service now provides room codes, WebSocket signaling, TCP control relay, UDP NAT
+punching, and UDP relay fallback for 5DO and XGrid. The 5DO CLI uses it with `--lobby`;
+`FiveDo.LobbyProbe` exercises the same control plane without a disc. See
+[Lobby service](Lobby.md).
+
 **2026-11-27, v1.19.0 feature release (GitHub Releases).** Direct-IP two-player netplay
 is available in the desktop and CLI: host/join, TCP state transfer, UDP delay-based
 lockstep, reconnect, and port/input-delay settings. A 36,000-frame two-process run with
@@ -120,8 +126,9 @@ scripts matched the single-machine reference at `0x342EA767`; reconnect resumed 
 304 with matching final hashes and audio. The test assembly now has **2,677 tests**. Desktop
 host and join were each validated against a CLI peer; an optional session token and a
 two-window physical-controller smoke remain post-release hardening. The active plan tracks
-**12 open items**. Lobby, NAT traversal, authentication, encryption, more than two players,
-and pointer devices are out of scope.
+**13 open items**. A lobby/NAT prototype (`NET-02`) is available from the CLI;
+matchmaking, the desktop lobby UI, authentication/encryption, more than two players, and
+pointer devices remain out of scope for now.
 See [NetplayProbe.md](NetplayProbe.md) and the [User Guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -11,7 +12,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using FiveDo.Core;
 using FiveDo.Host.Netplay;
+using FiveDo.Host.Netplay.Lobby;
 using FiveDo.Input;
+using FiveDo.Lobby.Protocol;
 using FiveDo.Machine;
 using FiveDo.Storage;
 
@@ -72,7 +75,10 @@ internal static class NetplayCommand
             result.BytesSent,
             result.BytesReceived,
             clock.Elapsed.TotalSeconds,
-            result.Failure);
+            result.Failure,
+            result.Lobby,
+            result.RoomCode,
+            result.Transport);
 
         if (options.Json)
         {
@@ -81,7 +87,13 @@ internal static class NetplayCommand
         else
         {
             Console.WriteLine($"role:       {options.Mode}");
-            if (string.Equals(options.Mode, "join", StringComparison.Ordinal))
+            if (!string.IsNullOrEmpty(result.Lobby))
+            {
+                Console.WriteLine($"lobby:      {result.Lobby}");
+                Console.WriteLine($"room:       {result.RoomCode}");
+                Console.WriteLine($"path:       {result.Transport}");
+            }
+            else if (string.Equals(options.Mode, "join", StringComparison.Ordinal))
             {
                 Console.WriteLine($"host:       {options.Host}:{result.Port}");
             }
@@ -117,9 +129,76 @@ internal static class NetplayCommand
         ulong contentHash,
         Func<long, ControllerState> localInput)
     {
-        using var listener = new NetplayControlListener(options.Port);
-        int port = listener.LocalEndPoint.Port;
         using var stop = new CancellationTokenSource();
+        using LobbyApiClient? lobbyClient = CreateLobbyClient(options);
+        CreateRoomResponse? lobbyRoom = null;
+        string? setupFailure = null;
+        if (lobbyClient is not null)
+        {
+            try
+            {
+                lobbyRoom = await lobbyClient
+                    .CreateRoomAsync(
+                        new CreateRoomRequest
+                        {
+                            Emulator = LobbyProtocol.Emulator5Do,
+                            ProtocolVersion = NetplayCodec.Version,
+                            ContentId = discId,
+                            ContentHash = FormatContentHash(contentHash),
+                            DisplayName = options.LobbyName,
+                            MaxPlayers = 2,
+                        },
+                        stop.Token)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is LobbyApiException
+                or HttpRequestException
+                or TaskCanceledException)
+            {
+                setupFailure = $"Lobby room creation failed: {exception.Message}";
+            }
+        }
+
+        if (setupFailure is not null)
+        {
+            return new NetplayRunResult(
+                false,
+                options.Port,
+                0,
+                -1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                setupFailure,
+                options.LobbyUrl ?? string.Empty,
+                string.Empty,
+                "none");
+        }
+
+        using var listener = new NetplayControlListener(lobbyRoom is null ? options.Port : 0);
+        int port = lobbyRoom?.Room.ControlRelay.Port ?? listener.LocalEndPoint.Port;
+        if (lobbyRoom is not null && lobbyRoom.Room.ControlRelay.Port == 0)
+        {
+            return new NetplayRunResult(
+                false,
+                port,
+                0,
+                -1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "The lobby did not allocate a TCP control relay.",
+                options.LobbyUrl ?? string.Empty,
+                lobbyRoom.Room.JoinCode,
+                "none");
+        }
+
         using IDiscSource disc = DiscImageFactory.Open(options.DiscPath);
         FiveDoMachine machine = CreateMachine(bios1, bios2, disc, tuning);
         ulong sessionId = CreateSessionId();
@@ -131,8 +210,17 @@ internal static class NetplayCommand
         var initialStartFrame = -1L;
         var lastHash = 0u;
         var lastAudioHash = 0u;
+        var transport = "direct";
         string? failure = null;
-        Console.Error.WriteLine($"5DO netplay host listening on TCP/UDP port {port}.");
+        if (lobbyRoom is null)
+        {
+            Console.Error.WriteLine($"5DO netplay host listening on TCP/UDP port {port}.");
+        }
+        else
+        {
+            Console.Error.WriteLine(
+                $"5DO netplay lobby: room {lobbyRoom.Room.JoinCode}; share the join code with player 2.");
+        }
 
         while (totalFrames < options.Frames)
         {
@@ -141,11 +229,28 @@ internal static class NetplayCommand
             {
                 using var accept = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
                 accept.CancelAfter(TimeSpan.FromSeconds(options.ReconnectTimeoutSeconds));
-                control = await listener.AcceptAsync(accept.Token).ConfigureAwait(false);
+                control = lobbyRoom is null
+                    ? await listener.AcceptAsync(accept.Token).ConfigureAwait(false)
+                    : await LobbyControlRelay
+                        .ConnectAsync(
+                            lobbyRoom.Room.ControlRelay.Host,
+                            lobbyRoom.Room.ControlRelay.Port,
+                            ParseRoomId(lobbyRoom.Room.UdpRoomId),
+                            ParseToken(lobbyRoom.HostToken),
+                            0,
+                            accept.Token)
+                        .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 failure = "Timed out waiting for a joining peer.";
+                break;
+            }
+            catch (Exception exception) when (exception is SocketException
+                or IOException
+                or InvalidDataException)
+            {
+                failure = $"Could not connect to the lobby control relay: {exception.Message}";
                 break;
             }
 
@@ -223,7 +328,9 @@ internal static class NetplayCommand
                     + $"running {options.Frames - totalFrames} frame(s).");
             }
 
-            using var udp = new UdpNetplayTransport(port, remote: null, bindAddress: IPAddress.Any);
+            using INetplayTransport udp = lobbyRoom is null
+                ? new UdpNetplayTransport(port, remote: null, bindAddress: IPAddress.Any)
+                : CreateLobbyTransport(lobbyRoom.Room, lobbyRoom.HostToken, 0, options);
             using var session = new LockstepSession(
                 udp,
                 new NetplayOptions
@@ -252,6 +359,11 @@ internal static class NetplayCommand
             lastAudioHash = run.LastAudioHash;
             bytesSent += session.Metrics.BytesSent;
             bytesReceived += session.Metrics.BytesReceived;
+            if (udp is LobbyNetplayTransport lobbyTransport)
+            {
+                transport = FormatTransport(lobbyTransport.TransportMode);
+            }
+
             if (run.Completed)
             {
                 break;
@@ -269,6 +381,11 @@ internal static class NetplayCommand
                 $"5DO netplay host: connection lost at frame {lastFrame}; waiting for reconnect.");
         }
 
+        if (lobbyClient is not null && lobbyRoom is not null)
+        {
+            await CloseLobbyRoomAsync(lobbyClient, lobbyRoom).ConfigureAwait(false);
+        }
+
         return new NetplayRunResult(
             failure is null && totalFrames == options.Frames,
             port,
@@ -280,7 +397,10 @@ internal static class NetplayCommand
             reconnects,
             bytesSent,
             bytesReceived,
-            failure);
+            failure,
+            options.LobbyUrl ?? string.Empty,
+            lobbyRoom?.Room.JoinCode ?? string.Empty,
+            transport);
     }
 
     private static async Task<NetplayRunResult> RunJoinAsync(
@@ -293,7 +413,74 @@ internal static class NetplayCommand
         Func<long, ControllerState> localInput)
     {
         string host = options.Host!;
-        IPAddress address = ResolveAddress(host);
+        using LobbyApiClient? lobbyClient = CreateLobbyClient(options);
+        JoinRoomResponse? lobbyRoom = null;
+        string? setupFailure = null;
+        if (lobbyClient is not null)
+        {
+            try
+            {
+                lobbyRoom = await lobbyClient
+                    .JoinRoomAsync(
+                        host,
+                        new JoinRoomRequest
+                        {
+                            Emulator = LobbyProtocol.Emulator5Do,
+                            ProtocolVersion = NetplayCodec.Version,
+                            ContentId = discId,
+                            ContentHash = FormatContentHash(contentHash),
+                            DisplayName = options.LobbyName,
+                        },
+                        CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is LobbyApiException
+                or HttpRequestException
+                or TaskCanceledException)
+            {
+                setupFailure = $"Lobby join failed: {exception.Message}";
+            }
+        }
+
+        if (setupFailure is not null)
+        {
+            return new NetplayRunResult(
+                false,
+                options.Port,
+                0,
+                -1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                setupFailure,
+                options.LobbyUrl ?? string.Empty,
+                string.Empty,
+                "none");
+        }
+
+        if (lobbyRoom is not null && lobbyRoom.Room.ControlRelay.Port == 0)
+        {
+            return new NetplayRunResult(
+                false,
+                options.Port,
+                0,
+                -1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "The lobby did not allocate a TCP control relay.",
+                options.LobbyUrl ?? string.Empty,
+                lobbyRoom.Room.JoinCode,
+                "none");
+        }
+
+        IPAddress address = lobbyRoom is null ? ResolveAddress(host) : IPAddress.Loopback;
         using IDiscSource disc = DiscImageFactory.Open(options.DiscPath);
         FiveDoMachine machine = CreateMachine(bios1, bios2, disc, tuning);
         var totalFrames = 0L;
@@ -304,9 +491,13 @@ internal static class NetplayCommand
         var initialStartFrame = -1L;
         var lastHash = 0u;
         var lastAudioHash = 0u;
+        var transport = "direct";
         ulong sessionId = 0;
         string? failure = null;
-        Console.Error.WriteLine($"5DO netplay join connecting to {host}:{options.Port}.");
+        Console.Error.WriteLine(
+            lobbyRoom is null
+                ? $"5DO netplay join connecting to {host}:{options.Port}."
+                : $"5DO netplay lobby: joining room {lobbyRoom.Room.JoinCode} as player {lobbyRoom.Slot + 1}.");
 
         while (totalFrames < options.Frames)
         {
@@ -315,16 +506,28 @@ internal static class NetplayCommand
             {
                 using var connect = new CancellationTokenSource(
                     TimeSpan.FromSeconds(options.ReconnectTimeoutSeconds));
-                control = await NetplayControlChannel
-                    .ConnectAsync(address.ToString(), options.Port, connect.Token)
-                    .ConfigureAwait(false);
+                control = lobbyRoom is null
+                    ? await NetplayControlChannel
+                        .ConnectAsync(address.ToString(), options.Port, connect.Token)
+                        .ConfigureAwait(false)
+                    : await LobbyControlRelay
+                        .ConnectAsync(
+                            lobbyRoom.Room.ControlRelay.Host,
+                            lobbyRoom.Room.ControlRelay.Port,
+                            ParseRoomId(lobbyRoom.Room.UdpRoomId),
+                            ParseToken(lobbyRoom.SlotToken),
+                            (byte)lobbyRoom.Slot,
+                            connect.Token)
+                        .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 failure = "Timed out connecting to the hosting peer.";
                 break;
             }
-            catch (SocketException exception)
+            catch (Exception exception) when (exception is SocketException
+                or IOException
+                or InvalidDataException)
             {
                 failure = $"Could not connect to the hosting peer: {exception.Message}";
                 break;
@@ -402,10 +605,16 @@ internal static class NetplayCommand
                     + $"running {options.Frames - totalFrames} frame(s).");
             }
 
-            using var udp = new UdpNetplayTransport(
-                0,
-                new IPEndPoint(address, options.Port),
-                IPAddress.Any);
+            using INetplayTransport udp = lobbyRoom is null
+                ? new UdpNetplayTransport(
+                    0,
+                    new IPEndPoint(address, options.Port),
+                    IPAddress.Any)
+                : CreateLobbyTransport(
+                    lobbyRoom.Room,
+                    lobbyRoom.SlotToken,
+                    (byte)lobbyRoom.Slot,
+                    options);
             using var session = new LockstepSession(
                 udp,
                 new NetplayOptions
@@ -442,6 +651,11 @@ internal static class NetplayCommand
             lastAudioHash = run.LastAudioHash;
             bytesSent += session.Metrics.BytesSent;
             bytesReceived += session.Metrics.BytesReceived;
+            if (udp is LobbyNetplayTransport lobbyTransport)
+            {
+                transport = FormatTransport(lobbyTransport.TransportMode);
+            }
+
             if (simulatedExit)
             {
                 failure = "Simulated join exit for reconnect testing.";
@@ -465,7 +679,7 @@ internal static class NetplayCommand
 
         return new NetplayRunResult(
             failure is null && totalFrames == options.Frames,
-            options.Port,
+            lobbyRoom?.Room.ControlRelay.Port ?? options.Port,
             totalFrames,
             initialStartFrame >= 0 ? initialStartFrame : lastFrame,
             sessionId,
@@ -474,7 +688,79 @@ internal static class NetplayCommand
             reconnects,
             bytesSent,
             bytesReceived,
-            failure);
+            failure,
+            options.LobbyUrl ?? string.Empty,
+            lobbyRoom?.Room.JoinCode ?? string.Empty,
+            transport);
+    }
+
+    private static LobbyApiClient? CreateLobbyClient(NetplayCliOptions options)
+    {
+        return options.LobbyUrl is null ? null : new LobbyApiClient(new Uri(options.LobbyUrl));
+    }
+
+    private static LobbyNetplayTransport CreateLobbyTransport(
+        RoomConnectionInfo room,
+        string token,
+        byte slot,
+        NetplayCliOptions options)
+    {
+        return new LobbyNetplayTransport(
+            new LobbyTransportOptions
+            {
+                Host = room.UdpRendezvous.Host,
+                RendezvousPort = room.UdpRendezvous.Port,
+                RelayPort = room.UdpRelay.Port,
+                RoomId = ParseRoomId(room.UdpRoomId),
+                Token = ParseToken(token),
+                Slot = slot,
+                LocalPort = 0,
+                Mode = options.LobbyMode,
+                DirectTimeout = TimeSpan.FromSeconds(options.LobbyDirectTimeoutSeconds),
+            });
+    }
+
+    private static async Task CloseLobbyRoomAsync(LobbyApiClient client, CreateRoomResponse room)
+    {
+        try
+        {
+            await client
+                .CloseRoomAsync(room.Room.JoinCode, room.HostToken, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is LobbyApiException
+            or HttpRequestException
+            or TaskCanceledException
+            or SocketException
+            or IOException)
+        {
+            // Best effort: the room also expires on its own.
+        }
+    }
+
+    private static string FormatContentHash(ulong hash)
+    {
+        return hash.ToString("x16", CultureInfo.InvariantCulture);
+    }
+
+    private static ulong ParseRoomId(string value)
+    {
+        return ulong.Parse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+    }
+
+    private static Guid ParseToken(string value)
+    {
+        return Guid.ParseExact(value, "N");
+    }
+
+    private static string FormatTransport(LobbyTransportMode mode)
+    {
+        return mode switch
+        {
+            LobbyTransportMode.Direct => "direct",
+            LobbyTransportMode.Relay => "relay",
+            _ => "auto",
+        };
     }
 
     private static async Task SendResponseAsync(
@@ -602,7 +888,10 @@ internal static class NetplayCommand
         int Reconnects,
         long BytesSent,
         long BytesReceived,
-        string? Failure);
+        string? Failure,
+        string Lobby = "",
+        string RoomCode = "",
+        string Transport = "");
 
     private sealed class NetplayCliOptions
     {
@@ -638,6 +927,14 @@ internal static class NetplayCommand
 
         public bool NoAudioHash { get; init; }
 
+        public string? LobbyUrl { get; init; }
+
+        public string? LobbyName { get; init; }
+
+        public LobbyTransportMode LobbyMode { get; init; } = LobbyTransportMode.Auto;
+
+        public int LobbyDirectTimeoutSeconds { get; init; } = 3;
+
         public static NetplayCliOptions Parse(string[] args)
         {
             if (args.Length < 2
@@ -664,6 +961,10 @@ internal static class NetplayCommand
             var highResolution = false;
             var trueHighResolution = false;
             var noAudioHash = false;
+            string? lobbyUrl = null;
+            string? lobbyName = null;
+            var lobbyMode = LobbyTransportMode.Auto;
+            var lobbyTimeout = 3;
 
             for (var i = 2; i < args.Length; i++)
             {
@@ -708,6 +1009,21 @@ internal static class NetplayCommand
                         break;
                     case "--no-audio-hash":
                         noAudioHash = true;
+                        break;
+                    case "--lobby":
+                        lobbyUrl = Next(args, ref i);
+                        break;
+                    case "--lobby-name":
+                        lobbyName = Next(args, ref i);
+                        break;
+                    case "--lobby-relay":
+                        lobbyMode = LobbyTransportMode.Relay;
+                        break;
+                    case "--lobby-direct":
+                        lobbyMode = LobbyTransportMode.Direct;
+                        break;
+                    case "--lobby-timeout":
+                        lobbyTimeout = ParseInt(Next(args, ref i), "--lobby-timeout");
                         break;
                     default:
                         if (args[i].StartsWith("--", StringComparison.Ordinal))
@@ -783,6 +1099,32 @@ internal static class NetplayCommand
                 throw new ArgumentException("--profile must be compatible, accuracy, or performance.", nameof(args));
             }
 
+            if (lobbyUrl is not null)
+            {
+                if (!Uri.TryCreate(lobbyUrl, UriKind.Absolute, out Uri? lobbyUri)
+                    || (!string.Equals(lobbyUri.Scheme, Uri.UriSchemeHttp, StringComparison.Ordinal)
+                        && !string.Equals(lobbyUri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal)))
+                {
+                    throw new ArgumentException("--lobby must be an absolute http or https URL.", nameof(args));
+                }
+
+                if (!string.IsNullOrWhiteSpace(lobbyName) && lobbyName.Length > 64)
+                {
+                    throw new ArgumentException("--lobby-name must be at most 64 characters.", nameof(args));
+                }
+
+                if (lobbyTimeout is < 1 or > 60)
+                {
+                    throw new ArgumentException("--lobby-timeout must be between 1 and 60 seconds.", nameof(args));
+                }
+            }
+            else if (lobbyMode != LobbyTransportMode.Auto || lobbyTimeout != 3)
+            {
+                throw new ArgumentException(
+                    "--lobby-relay, --lobby-direct, and --lobby-timeout require --lobby.",
+                    nameof(args));
+            }
+
             return new NetplayCliOptions
             {
                 Mode = mode,
@@ -801,6 +1143,10 @@ internal static class NetplayCommand
                 HighResolution = highResolution,
                 TrueHighResolution = trueHighResolution,
                 NoAudioHash = noAudioHash,
+                LobbyUrl = lobbyUrl,
+                LobbyName = lobbyName,
+                LobbyMode = lobbyMode,
+                LobbyDirectTimeoutSeconds = lobbyTimeout,
             };
         }
 

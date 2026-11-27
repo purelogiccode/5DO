@@ -3,8 +3,9 @@
 **Status:** probe and first implementation complete (2026-11-26). The desktop
 **Netplay > Host/Join Session** dialog and `5do netplay host|join` use a TCP control
 channel for state transfer and a UDP lockstep channel for input/hashes. Live two-window
-desktop acceptance and an optional session token remain; lobby/NAT/>2 players are out of
-scope.
+desktop acceptance and an optional session token remain. The direct-IP probe is still
+LAN/direct only; the separate lobby/NAT prototype is tracked as `NET-02` and documented in
+[Lobby.md](Lobby.md).
 
 ## Scope
 
@@ -166,8 +167,9 @@ lockstep from the confirmed frame.
 - A final user-documentation pass for firewall rules and the direct-IP-only scope (the
   [User Guide](UserGuide.md#netplay-direct-ip) now covers host/join, ports, delay,
   reconnect, and controls).
-- Pointer devices, more than two players, a lobby, matchmaking, and NAT traversal remain
-  out of scope for this increment.
+- Pointer devices and more than two players remain out of scope for this increment. The
+  direct-IP probe has no lobby; the `NET-02` lobby prototype is tested separately with
+  `FiveDo.LobbyProbe`.
 - Desync recovery policy beyond reporting and stopping.
 
 ## How to run

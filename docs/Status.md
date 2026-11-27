@@ -40,8 +40,9 @@ reference (`0x342EA767`, audio `0xB6AB50D0`) in about 154 s; reconnect resumed a
 latency and every-third-input-packet loss passed. The suite is **2,677/2,677**. Desktop
 host and join were each validated against a CLI peer with matching frame/audio hashes; an
 optional session token and a two-window physical-controller smoke remain post-release
-hardening. The active plan tracks **12 open items**. Lobby, NAT traversal, authentication,
-encryption, more than two players, and pointer devices are out of scope.
+hardening. The active plan tracks **13 open items**. A lobby/NAT prototype (`NET-02`)
+is available from the CLI; matchmaking, the desktop lobby UI, authentication/encryption,
+more than two players, and pointer devices remain out of scope for now.
 See [NetplayProbe.md](NetplayProbe.md), the [User Guide](UserGuide.md#netplay-direct-ip),
 and [TestCorpus.md](TestCorpus.md) 1.1da.
 

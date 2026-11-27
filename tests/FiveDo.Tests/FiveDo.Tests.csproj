@@ -26,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
@@ -56,6 +60,8 @@
     <ProjectReference Include="..\..\src\FiveDo.Achievements\FiveDo.Achievements.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Machine\FiveDo.Machine.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Host\FiveDo.Host.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Lobby.Protocol\FiveDo.Lobby.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\FiveDo.Lobby\FiveDo.Lobby.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.OpenGL\FiveDo.Video.OpenGL.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.Vulkan\FiveDo.Video.Vulkan.csproj" />
     <ProjectReference Include="..\..\src\FiveDo.Video.Direct3D\FiveDo.Video.Direct3D.csproj" />

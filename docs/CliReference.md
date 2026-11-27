@@ -1184,6 +1184,12 @@ Options:
 - `--profile compatible|accuracy|performance`: timing bundle (default compatible).
 - `--high-res` / `--true-2x`: match a desktop high-resolution/true-2x tuning.
 - `--no-audio-hash`: compare frame hashes only (diagnostic).
+- `--lobby <url>`: use a VPS lobby for room codes and NAT traversal instead of a direct
+  IP. In this mode `netplay join` takes the join code as `<host>`.
+- `--lobby-name <name>`: display name shown in lobby room status.
+- `--lobby-relay`: force the lobby TCP/UDP relay path.
+- `--lobby-direct`: require direct UDP punching; disable relay fallback.
+- `--lobby-timeout <seconds>`: direct-punch deadline before relay fallback (default 3).
 - `--json`: emit `CliNetplayResult`.
 
 If the UDP link drops, the host keeps the TCP listener open and the join reconnects.
@@ -1194,10 +1200,16 @@ the eight-entry redundant input window; longer gaps use an explicit input reques
 
 JSON fields: `ok`, `role`, `host`, `port`, `frames`, `startFrame`, `sessionId`,
 `contentHash`, `finalFrameHash`, `finalAudioHash`, `reconnects`, `bytesSent`,
-`bytesReceived`, `seconds`, `failure`.
+`bytesReceived`, `seconds`, `failure`, and the lobby fields `lobby`, `roomCode`, and
+`transport` when `--lobby` is used.
 
-The protocol has no authentication or encryption and is intended for a trusted LAN or a
-direct connection. There is no lobby, NAT traversal, or more than two players. Pause,
+Lobby mode keeps the same TCP state transfer and UDP lockstep core. The lobby allocates
+a TCP control relay and a UDP rendezvous/relay; 5DO punches a direct UDP path first and
+falls back to the relay after `--lobby-timeout`. The service is described in
+[Lobby service](Lobby.md). The direct-IP protocol has no authentication or encryption
+and is intended for a trusted LAN or a direct connection; lobby tokens are bearer
+secrets and should be carried over HTTPS. Neither mode supports more than two players.
+Pause,
 rewind, fast-forward, state load, and frame skip are disabled while a desktop session is
 active.
 

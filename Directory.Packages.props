@@ -13,6 +13,7 @@
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.342" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="11.0.0" />
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
@@ -29,16 +30,16 @@
     <PackageVersion Include="Vortice.D3DCompiler" Version="3.8.3" />
     <PackageVersion Include="Vortice.DXGI" Version="3.8.3" />
     <PackageVersion Include="XenoAtom.ShaderCompiler.Build" Version="1.2.2" />
-    <PackageVersion Include="CHDSharp" Version="1.7.2" />
+    <PackageVersion Include="CHDSharp" Version="1.7.3" />
     <PackageVersion Include="CCDSharp" Version="1.0.3" />
     <PackageVersion Include="MDSSharp" Version="1.3.0" />
     <PackageVersion Include="SharpCompress" Version="1.0.0" />
     <PackageVersion Include="MoonSharp" Version="2.0.0" />
     <!-- Cover packager (build-time tool) -->
-    <PackageVersion Include="SkiaSharp" Version="4.157.0" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="4.157.0" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.157.0" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="4.157.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.158.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="4.158.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.158.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="4.158.0" />
     <!-- Tests and benchmarks -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

@@ -791,8 +791,10 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
 - PAL1/PAL2 video and per-game PAL BIOS selection are implemented; the Europe-only
   matrix titles have dated PAL captures in [PalValidation.md](PalValidation.md).
   Guest ODE prompts, audio-only BIOS playback, and additional peripherals remain out of
-  scope for v1; netplay is in progress (`NET-01`), with the loopback probe complete but
-  no host/join surface yet. Multi-track TOC, raw CD-DA
+  scope for v1. Direct-IP netplay (`NET-01`) is complete. The `NET-02` lobby prototype
+  supports two IPv4 players over an in-memory ASP.NET Core service; desktop lobby UI,
+  persistence, TLS termination, rate limiting, and the XGrid client are not implemented
+  yet. Multi-track TOC, raw CD-DA
   sectors with volume/mute,
   READ_DATA subcode/Q packing, and M3U multi-disc playlists are implemented;
   known-title disc audio evidence remains pending.

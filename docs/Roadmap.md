@@ -74,9 +74,11 @@ short version:
 
 ## Out of scope for 1.x
 
-Direct-IP two-player netplay is complete (`NET-01`). Lobby, matchmaking, NAT traversal,
-authentication, encryption, more than two players, and pointer devices remain out of
-scope. The following are explicitly out of scope unless the product scope changes:
+Direct-IP two-player netplay is complete (`NET-01`). A lobby/NAT-traversal prototype
+(`NET-02`) adds room codes, UDP punching, and relay fallback from the CLI. Matchmaking,
+the desktop lobby UI, authentication/encryption, more than two players, and pointer
+devices remain out of scope. The following are explicitly out of scope unless the product
+scope changes:
 
 - a full debugger UI;
 - official Debian/Ubuntu/Fedora/openSUSE archives and Flathub under the retained
