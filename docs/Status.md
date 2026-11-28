@@ -1,5 +1,19 @@
 # Project Status and Next Steps
 
+**2026-11-28, v1.20.0 feature release (prepared; tag pending):** the emulator-agnostic
+VPS lobby prototype ships in the CLI. `5do netplay host|join --lobby
+https://lobby.purelogiccode.com` creates or joins a room, exchanges WebSocket signaling,
+and uses TCP/UDP relays when direct punching fails; `FiveDo.LobbyProbe` exercises the same
+contract without a disc. The public service was validated end to end on 2026-11-27:
+room create/join/delete returned `201/200/204`, WebSocket signaling returned `101` with a
+`welcome` message, the TCP control relay paired on `lobby-direct.purelogiccode.com:40000`,
+and the UDP
+relay exchanged 7/8 probe pings. Cloudflare runs the host proxied with Full (strict), a
+cache-bypass rule, and an origin-secret header; `lobby-direct` is DNS-only for relay
+traffic. The suite is **2,688/2,688**. The desktop lobby UI, XGrid client integration,
+room persistence, and automated origin-certificate renewal remain post-release. See
+[Lobby.md](Lobby.md) and [ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).
+
 **2026-11-27, v1.19.0 feature release:** direct-IP two-player netplay ships in the
 desktop and CLI. **Netplay > Host Session** and **Join Session** transfer a compressed
 machine state over TCP, then exchange per-frame PBUS input, frame hashes, and cumulative

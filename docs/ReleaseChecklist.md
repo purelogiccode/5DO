@@ -1,11 +1,13 @@
 # Release Checklist
 
 **Adopted:** 2026-10-26
-**Release timing:** **v1.19.0 is the current release**; five bundles (Windows/Linux
+**Release timing:** **v1.20.0 is the current release**; five bundles (Windows/Linux
 x64+arm64 and macOS arm64) are built from the same gates used for v1.0.0, v1.1.0, and
-v1.2.x. macOS is published as a DMG. v1.19.0 adds direct-IP two-player netplay with TCP
-state transfer, UDP lockstep, reconnect, the desktop dialog, and the 5do netplay CLI.
-v1.18.1 added one-click FFmpeg installation for MP4 recording. v1.18.0 added Alcohol MDS/MDX and CloneCD
+v1.2.x. macOS is published as a DMG. v1.20.0 adds the emulator-agnostic VPS lobby
+prototype with room/join codes, WebSocket signaling, TCP control relay, UDP punch/relay,
+the `5do netplay --lobby` CLI, and `FiveDo.LobbyProbe`. v1.19.0 added direct-IP two-player
+netplay with TCP state transfer, UDP lockstep, reconnect, the desktop dialog, and the
+5do netplay CLI. v1.18.1 added one-click FFmpeg installation for MP4 recording. v1.18.0 added Alcohol MDS/MDX and CloneCD
 CCD/IMG/SUB images, optional FFmpeg H.264/AAC MP4 recording with quality presets,
 high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
 v1.17.1 fixed the malformed-ZIP library refresh, unobserved OpenGL framebuffer fallback,
@@ -104,6 +106,30 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       [Status.md](Status.md).
 - [x] Keep local bundle copies under `src/FiveDo.Frontend.Avalonia/bin/Release`
       (`5do-1.18.0-win-x64.zip`).
+
+## 1.20.0 feature gate
+
+- [x] Bump `FiveDoVersion.Version`, `Directory.Build.props`, README, docs status,
+      MkDocs navigation, AppStream `<release>`, AUR `PKGBUILD`, changelog, what's new,
+      and `ReleaseNotes-1.20.0.md` to 1.20.0.
+- [x] Add the emulator-agnostic lobby service, protocol client, CLI `--lobby` options,
+      probe, IIS/Cloudflare deployment scripts, and `Lobby.md`.
+- [x] Full Release suite **2,688/2,688**; `dotnet build` 0 warnings.
+- [x] `dotnet format 5DO.sln --verify-no-changes`, `jb inspectcode --severity=WARNING`
+      (0 results), and `mkdocs build --strict` clean.
+- [x] Production lobby validation: room create/join/delete, WebSocket `101`, TCP relay
+      pairing, UDP relay 7/8, cache bypass, and origin lock; evidence in
+      [Lobby.md](Lobby.md) §7.4.
+- [ ] Windows x64 bundle: `--version` reports 1.20.0, `selftest` 15/15, the 600-frame
+      reference hash, lobby probe, and `FRONTEND SMOKE OK 1.20.0`.
+- [ ] Push `master` and tag `v1.20.0`; **deliberately deferred** until the owner
+      approves the release.
+- [ ] Download the published assets, verify both manifests, and record the release run
+      in [Compatibility.md](Compatibility.md) and [Status.md](Status.md).
+- [ ] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
+      (`5do-1.20.0-win-x64.zip`).
+- [ ] Fill the AUR `PKGBUILD` `sha256sums_x86_64`/`sha256sums_aarch64` from the
+      published 1.20.0 Linux tarballs.
 
 ## 1.19.0 feature gate
 

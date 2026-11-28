@@ -1,14 +1,18 @@
 # Release Legal and Attribution Review
 
-**Date:** 2026-11-26
-**Release:** 1.19.0 (five self-contained bundles)
+**Date:** 2026-11-28
+**Release:** 1.20.0 (five self-contained bundles)
 **Status:** the 2026-11-25 `REL-13` license-compliance and relicense review is complete.
 The project **retains the FreeDO modified GNU LGPL** (non-commercial donationware) and
 resolves the 4DO game database as a separate **GPL-2.0** data component. Official Debian,
 Ubuntu, Fedora, openSUSE, and Flathub channels remain **not eligible** under the retained
 terms.
-**Distribution model:** **donationware** — non-commercial, source-available, voluntary
+**Distribution model:** **donationware** - non-commercial, source-available, voluntary
 donations only (no sales). See [Licensing.md](Licensing.md).
+
+**1.20.0 scope:** the lobby service uses the ASP.NET Core 11 shared framework and adds
+no new third-party runtime packages. The FreeDO modified LGPL and the 4DO GPL-2.0 data
+component decisions are unchanged.
 
 This is an engineering audit, not legal advice. It records what the current release
 contains, what was verified, and which decisions remain.
@@ -184,7 +188,7 @@ attribution portion.
 |---|---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 | Initial v1.0 donationware release |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 | Initial v1.0 release |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, MDSSharp, CCDSharp, SharpCompress, HQx, the 4DO database GPL-2.0 text, and NuGet notices shipped; .NET 11 embedded | 2026-11-27 | 1.19.0 bundle layout |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, MDSSharp, CCDSharp, SharpCompress, HQx, the 4DO database GPL-2.0 text, and NuGet notices shipped; .NET 11 embedded | 2026-11-27 | 1.19.0 bundle layout; 1.20.0 check pending the bundle build |
 | Bundle layout | Self-contained single-file CLI + desktop app; no separate runtime folder; Windows MSVC runtime app-local | 2026-11-20 | 1.17.x bundles |
 | License/relicense review | Retain FreeDO modified GNU LGPL; non-commercial donationware | 2026-11-25 | `REL-13`; no new license committed |
 | 4DO database provenance | GPL-2.0 data component; text in `docs/GPL-2.0.txt`; XML header added | 2026-11-25 | `REL-13`; database distribution resolved |

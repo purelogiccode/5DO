@@ -1,9 +1,12 @@
 # Known Issues
 
-**Snapshot:** 2026-11-27, v1.19.0. The 1.19.0 feature release adds direct-IP
-two-player netplay with TCP state transfer, UDP lockstep, reconnect, a desktop host/join
-dialog, and the `5do netplay host|join` CLI. The 1.18.x releases added read-only Alcohol
-MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording through an
+**Snapshot:** 2026-11-28, v1.20.0. The 1.20.0 feature release adds the emulator-agnostic
+VPS lobby prototype: room/join codes, WebSocket signaling, TCP control relay, UDP
+punch/relay, the `5do netplay --lobby` CLI, and `FiveDo.LobbyProbe`. The 1.19.0 direct-IP
+netplay and the 1.18.x releases remain: direct-IP netplay with TCP state transfer, UDP
+lockstep, reconnect, a desktop host/join dialog, and the `5do netplay host|join` CLI; the
+1.18.x releases added read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional
+H.264/AAC MP4 recording through an
 external FFmpeg, one-click FFmpeg installation, high-refresh frame interpolation,
 patterned GPU void bars, and live CPU-clock changes. It retains the 1.17.x rolling autosave
 with validated startup resume and ZIP/7z ISO/BIN/CUE+BIN containers, the `disc audio`/`disc
@@ -41,6 +44,20 @@ after 1.0 (2026-11-10). See
 [`ReleaseChecklist.md`](ReleaseChecklist.md). **As of 2026-11-02 v1.0.0 is published on
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
+
+## Lobby prototype (v1.20.0)
+
+- The lobby is a prototype. Rooms and tokens are in memory only; restarting the service
+  drops every room.
+- The desktop lobby UI and XGrid client integration are not included. Use the CLI
+  `--lobby` option or `FiveDo.LobbyProbe`.
+- Rooms are limited to two players. Relay data is not encrypted; use HTTPS and treat room
+  and host tokens as bearer secrets.
+- The Cloudflare Free plan cannot enforce the requested 30-requests/1-minute edge rule.
+  The app enforces 5 room creates, 20 joins, 10 signaling upgrades, and 120 total requests
+  per IP per minute; `/healthz` is exempt.
+- There is no room persistence, account system, moderation, or automated origin-certificate
+  renewal.
 
 ## OpenAL Windows bundles (fixed in 1.10.2)
 

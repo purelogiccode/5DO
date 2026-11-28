@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.18.1, the patch release adding
-one-click FFmpeg installation on top of the 1.18.0 MDS/CCD, MP4, interpolation, void-bar,
-and live-clock features.
+All notable changes are recorded here. The project is at v1.20.0, the feature release
+adding the emulator-agnostic VPS lobby prototype on top of the 1.19.0 direct-IP netplay
+and the 1.18.x MDS/CCD, MP4, interpolation, void-bar, and live-clock features.
 
-## [Unreleased]
+## [1.20.0] - 2026-11-28
 
 ### Added
 
@@ -17,8 +17,11 @@ and live-clock features.
   install/uninstall scripts and the protocol/deployment guide are in `packaging/windows`
   and `docs/Lobby.md`. The public service adds per-IP HTTP rate limits, live-room quotas,
   UDP/TCP relay resource caps, Cloudflare client-IP support and origin-secret locking,
-  security headers, request size limits, and a health probe. XGrid integration is documented but intentionally not
-  edited in this repository.
+  security headers, request size limits, and a health probe. The public service at
+  `https://lobby.purelogiccode.com` was validated end to end on 2026-11-27 (room
+  create/join/delete, WebSocket signaling, TCP control relay, and UDP relay); the full
+  suite is 2,688/2,688. XGrid integration is documented but intentionally not edited in
+  this repository.
 
 ## [1.19.0] - 2026-11-27
 

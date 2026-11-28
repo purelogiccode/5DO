@@ -5058,3 +5058,29 @@ physical-controller smoke remains post-release hardening.
 players and joypads only. Pause, rewind, fast-forward, state load, frame skip, and run-ahead
 are disabled during a session. See [UserGuide.md](UserGuide.md#netplay-direct-ip) and
 [CliReference.md](CliReference.md#12c-netplay).
+
+### 1.1db Lobby prototype (2026-11-28)
+
+**Core and tests.** `FiveDo.Lobby` adds an ASP.NET Core 11 room service with room/join
+codes, WebSocket signaling, per-room TCP control relays, UDP rendezvous/punch coordination,
+and opaque UDP relay fallback. `FiveDo.Lobby.Protocol` carries the shared models, API
+client, datagram codec, and relay framing; `FiveDo.LobbyProbe` exercises the room,
+signaling, control relay, and UDP relay without an emulator. Eleven lobby tests cover the
+datagram and relay codecs, room creation/join/authentication, content mismatch, the per-IP
+room quota, expiry cleanup, TCP relay pairing, UDP rendezvous/relay forwarding, and direct
+and relayed transport. Full suite **2,688/2,688**.
+
+**Production evidence.** The public service at `https://lobby.purelogiccode.com` was
+validated end to end on 2026-11-27: room create/join/delete returned `201/200/204`,
+WebSocket signaling returned `101` with a `welcome` message, the TCP control relay paired
+on `lobby-direct.purelogiccode.com:40000`, and `FiveDo.LobbyProbe --relay` exchanged 7 of
+8 UDP ping/pong replies over the relay path; both peers exited `0`. Cloudflare runs the
+host proxied with Full (strict), a cache-bypass rule, and an origin-secret transform;
+direct-origin requests without the secret return `403`.
+
+**Limits.** Two players, in-memory rooms, and no relay encryption. The desktop lobby UI,
+XGrid client integration, room persistence, and automated origin-certificate renewal
+remain. The app enforces 5 room creates, 20 joins, 10 signaling upgrades, and 120 total
+requests per IP per minute; `/healthz` is exempt. The Cloudflare Free plan cannot enforce
+the requested 30-requests/1-minute edge rule. See [Lobby.md](Lobby.md) §7.1 and §7.4 and
+[ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).

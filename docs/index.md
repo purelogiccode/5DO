@@ -16,13 +16,14 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.19.0 feature release"
-    5DO is at v1.19.0. It adds **direct-IP two-player netplay**: **Netplay > Host
-    Session** and **Join Session** transfer a compressed machine state over TCP, then
-    exchange per-frame input and frame/audio hashes over UDP; `5do netplay host|join`
-    exposes the same core, and reconnect resumes from the host's current state. The
-    1.18.x feature set remains: read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB disc
-    images, optional FFmpeg-based H.264/AAC MP4 recording with Low/Medium/High quality,
+!!! important "v1.20.0 feature release"
+    5DO is at v1.20.0. It adds the **emulator-agnostic VPS lobby prototype**:
+    `5do netplay host|join --lobby https://lobby.purelogiccode.com` creates or joins a
+    room, exchanges WebSocket signaling, and falls back to TCP/UDP relays for NAT
+    traversal; `FiveDo.LobbyProbe` exercises the same contract without a disc. The
+    1.19.0 direct-IP netplay and the 1.18.x feature set remain: read-only Alcohol
+    MDS/MDX and CloneCD CCD/IMG/SUB disc images, optional FFmpeg-based H.264/AAC MP4
+    recording with Low/Medium/High quality,
     one-click FFmpeg installation, high-refresh frame interpolation, patterned GPU void
     bars, and live CPU-clock changes without restarting the machine. The desktop keeps a
     rolling autosave under `states/autosave/`, written on pause, clean exit, and a
@@ -90,16 +91,19 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.19.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.20.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-27, lobby prototype (unreleased).** An emulator-agnostic ASP.NET Core 11
-service now provides room codes, WebSocket signaling, TCP control relay, UDP NAT
-punching, and UDP relay fallback for 5DO and XGrid. The 5DO CLI uses it with `--lobby`;
-`FiveDo.LobbyProbe` exercises the same control plane without a disc. See
-[Lobby service](Lobby.md).
+**2026-11-28, v1.20.0 feature release (prepared; tag pending).** An emulator-agnostic
+ASP.NET Core 11 lobby service now provides room codes, WebSocket signaling, TCP control
+relay, UDP NAT punching, and UDP relay fallback for 5DO and XGrid. The 5DO CLI uses it
+with `--lobby`; `FiveDo.LobbyProbe` exercises the same control plane without a disc. The
+public service at `https://lobby.purelogiccode.com` was validated end to end: room
+create/join/delete, WebSocket signaling, TCP relay pairing, and UDP relay traffic. The
+suite is **2,688/2,688**. See [Lobby service](Lobby.md) and
+[ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).
 
 **2026-11-27, v1.19.0 feature release (GitHub Releases).** Direct-IP two-player netplay
 is available in the desktop and CLI: host/join, TCP state transfer, UDP delay-based
@@ -117,19 +121,6 @@ macOS), verify its SHA-256, test H.264/AAC support, and install it beside 5DO wh
 writable (otherwise in the user data `tools/` folder). FFmpeg is still not bundled. The
 installer was validated on Windows x64, Linux x64, and macOS arm64. The 1.18.1 test
 assembly had **2,651 tests**.
-
-**2026-11-26, NET-01 direct-IP netplay (unreleased).** **Netplay > Host Session** and
-**Join Session** transfer a compressed machine state over TCP, then exchange per-frame
-input and frame/audio hashes over UDP. The CLI exposes `5do netplay host|join`; reconnect
-resumes from the host's current state. A 36,000-frame two-process run with different P1/P2
-scripts matched the single-machine reference at `0x342EA767`; reconnect resumed at frame
-304 with matching final hashes and audio. The test assembly now has **2,677 tests**. Desktop
-host and join were each validated against a CLI peer; an optional session token and a
-two-window physical-controller smoke remain post-release hardening. The active plan tracks
-**13 open items**. A lobby/NAT prototype (`NET-02`) is available from the CLI;
-matchmaking, the desktop lobby UI, authentication/encryption, more than two players, and
-pointer devices remain out of scope for now.
-See [NetplayProbe.md](NetplayProbe.md) and the [User Guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-26, v1.18.0 feature release (GitHub Releases).** Read-only Alcohol MDS/MDX and
 CloneCD CCD/IMG/SUB images are now supported, and optional H.264/AAC MP4 recording uses

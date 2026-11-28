@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at **v1.19.0** (published on GitHub). Windows x64 and Linux x64 are the
+The project is at **v1.20.0** (published on GitHub). Windows x64 and Linux x64 are the
 validated desktop targets; macOS arm64 renders through Vulkan/MoltenVK; Linux arm64 and
 Windows arm64 pass native CLI/frontend runtime smoke. The compatibility program is
 complete on the current corpus:
@@ -19,7 +19,11 @@ complete on the current corpus:
 - Five self-contained bundles are published (Windows/Linux x64+arm64 and macOS arm64);
   Linux also has `.deb`, `.rpm`, AppImage, and Flatpak assets. The .NET 11 runtime is
   embedded, so no separate runtime is required. Intel macOS is unsupported.
-- v1.19.0 adds direct-IP two-player netplay: desktop **Netplay > Host/Join Session**,
+- v1.20.0 adds the emulator-agnostic VPS lobby prototype: `5do netplay host|join --lobby`,
+  room/join codes, WebSocket signaling, TCP control relay, UDP punch/relay, and the
+  public `https://lobby.purelogiccode.com` service. The desktop lobby UI and XGrid
+  integration remain.
+- v1.19.0 added direct-IP two-player netplay: desktop **Netplay > Host/Join Session**,
   `5do netplay host|join`, TCP compressed-state transfer, UDP delay-based lockstep, and
   reconnect from the host's current state. It retains the 1.18.x one-click FFmpeg
   installation, read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional
@@ -29,7 +33,7 @@ complete on the current corpus:
   containers, physical CD-DA and read-error recovery, the Steam Deck first-run layout,
   Arcade CRT, RetroAchievements, TAS movies, rewind/run-ahead, cheats, and the library.
 
-## Next (post-1.19.0)
+## Next (post-1.20.0)
 
 The full ordered backlog is in [ImplementationPlan.md](ImplementationPlan.md). The
 short version:

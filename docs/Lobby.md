@@ -623,6 +623,37 @@ curl.exe -k --resolve lobby.purelogiccode.com:443:107.174.146.107 `
     https://lobby.purelogiccode.com/healthz
 ```
 
+### 7.4 Edge cache and rate limits
+
+5DO clients select the production lobby with
+`--lobby https://lobby.purelogiccode.com`; the room response advertises
+`lobby-direct.purelogiccode.com` for the TCP/UDP relay endpoints.
+
+The `purelogiccode.com` zone (currently the **Free** plan) carries these Cloudflare rules
+for the lobby:
+
+- **Cache bypass** (`http_request_cache_settings`, rule `FiveDo Lobby no-cache`):
+  `http.host eq "lobby.purelogiccode.com" and (starts_with(http.request.uri.path, "/v1/") or http.request.uri.path eq "/healthz")`
+  with `cache: false`. This covers the room API, WebSocket signaling, and health endpoint.
+  Cloudflare may report `cf-cache-status: DYNAMIC` for a bypassed dynamic response; it must
+  never report `HIT`.
+- **Rate limiting**: the requested 30-requests/1-minute rule requires the Host field and a
+  60-second window, which the Free plan does not offer (Free allows the Path field only, a
+  10-second window, and one rule). The app-level limits in §7.1 remain the enforcement
+  point: room-create 5/min, join 20/min, signal 10/min, global 120/min, with `/healthz`
+  exempt. The exact edge rule requires Pro or higher.
+
+Do not enable Bot Fight Mode or Under Attack Mode for this hostname; both can challenge
+the 5DO/XGrid API clients. The zone is on `security_level: medium` with Bot Fight Mode off.
+
+**Validated 2026-11-27** through `https://lobby.purelogiccode.com`: room create/join/delete
+returned `201/200/204`, WebSocket signaling returned `101` and a `welcome` message, the TCP
+control relay paired on `lobby-direct.purelogiccode.com:40000`, and
+`FiveDo.LobbyProbe --relay` completed with 7 of 8 UDP ping/pong replies over the relay path
+(UDP loss is expected); both peers exited `0`. A direct-origin request without
+`X-FiveDo-Origin-Secret` returned `403`, and `CF-Connecting-IP` partitioning is enabled by
+`Lobby:TrustCloudflareHeaders=true` in `appsettings.Production.json`.
+
 ## 8. Troubleshooting
 
 | Symptom | Check |
