@@ -4,7 +4,7 @@
 > which now carries only the remaining work for each open ID.
 > **Part I** below is the 2026-11-08 plan snapshot. **Part II** holds the completed
 > baseline, results, completed backlog rows, partial deliveries, stable IDs, platform
-> workstreams, and release history through v1.19.0.
+> workstreams, and release history through v1.20.0.
 
 <a id="master-dashboard"></a>
 # 5DO — Implementation Plan
@@ -891,8 +891,14 @@ remain in the active plan. Credentials and start/stop commands are in the gitign
 (`UX-16`) are intentionally out of scope for this release by owner decision; the DMG
 remains unsigned.
 
-## 14. Release history (v1.9.1 - v1.19.0)
+## 14. Release history (v1.9.1 - v1.20.0)
 
+- **v1.20.0 (2026-11-28):** feature release - emulator-agnostic VPS lobby prototype
+  (ASP.NET Core 11 room service, WebSocket signaling, TCP control relay, UDP punch/relay,
+  CLI `--lobby`, and `FiveDo.LobbyProbe`), 11 lobby tests, suite 2,688/2,688. Published 17
+  assets in run <https://github.com/purelogiccode/5DO/actions/runs/46108633103>; both
+  checksum manifests verify with 0 mismatches, and the published win-x64 bundle reports
+  1.20.0, passes `selftest`/frontend smoke, and reproduces the 600-frame hash.
 - **v1.19.0 (2026-11-27):** feature release - direct-IP two-player netplay with TCP
   compressed-state transfer, UDP delay-based lockstep, reconnect from the host's current
   state, desktop **Netplay > Host/Join Session**, the `5do netplay host|join` CLI, and the

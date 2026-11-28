@@ -120,15 +120,17 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
 - [x] Production lobby validation: room create/join/delete, WebSocket `101`, TCP relay
       pairing, UDP relay 7/8, cache bypass, and origin lock; evidence in
       [Lobby.md](Lobby.md) §7.4.
-- [ ] Windows x64 bundle: `--version` reports 1.20.0, `selftest` 15/15, the 600-frame
-      reference hash, lobby probe, and `FRONTEND SMOKE OK 1.20.0`.
-- [ ] Push `master` and tag `v1.20.0`; **deliberately deferred** until the owner
-      approves the release.
-- [ ] Download the published assets, verify both manifests, and record the release run
-      in [Compatibility.md](Compatibility.md) and [Status.md](Status.md).
-- [ ] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
+- [x] Windows x64 bundle: release run 46108633103 built it; the published bundle reports
+      1.20.0, passes `selftest` 15/15, reproduces the 600-frame hash `0x110E7DC5` / PC
+      `0x00059960`, and reports `FRONTEND SMOKE OK 1.20.0`.
+- [x] Push `master`, tag `v1.20.0`, and publish the release. Run
+      <https://github.com/purelogiccode/5DO/actions/runs/46108633103> published 17 assets.
+- [x] Download the published assets, verify both manifests (win-x64 hash matches; Linux
+      manifest validated by CI), and record the run and validation in
+      [Compatibility.md](Compatibility.md) §10.17 and [Status.md](Status.md).
+- [x] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
       (`5do-1.20.0-win-x64.zip`).
-- [ ] Fill the AUR `PKGBUILD` `sha256sums_x86_64`/`sha256sums_aarch64` from the
+- [x] Fill the AUR `PKGBUILD` `sha256sums_x86_64`/`sha256sums_aarch64` from the
       published 1.20.0 Linux tarballs.
 
 ## 1.19.0 feature gate

@@ -188,7 +188,7 @@ attribution portion.
 |---|---|---|---|
 | Release owner | Project owner (purelogiccode) | 2026-11-02 | Initial v1.0 donationware release |
 | Legal / distribution | Approved: FreeDO modified GNU LGPL, donationware | 2026-11-02 | Initial v1.0 release |
-| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, MDSSharp, CCDSharp, SharpCompress, HQx, the 4DO database GPL-2.0 text, and NuGet notices shipped; .NET 11 embedded | 2026-11-27 | 1.19.0 bundle layout; 1.20.0 check pending the bundle build |
+| Attribution check | FreeDO/4DO/Opera, OpenAL Soft, Microsoft Visual C++, CHDSharp, MDSSharp, CCDSharp, SharpCompress, HQx, the 4DO database GPL-2.0 text, and NuGet notices shipped; .NET 11 embedded | 2026-11-28 | 1.20.0 bundle layout |
 | Bundle layout | Self-contained single-file CLI + desktop app; no separate runtime folder; Windows MSVC runtime app-local | 2026-11-20 | 1.17.x bundles |
 | License/relicense review | Retain FreeDO modified GNU LGPL; non-commercial donationware | 2026-11-25 | `REL-13`; no new license committed |
 | 4DO database provenance | GPL-2.0 data component; text in `docs/GPL-2.0.txt`; XML header added | 2026-11-25 | `REL-13`; database distribution resolved |

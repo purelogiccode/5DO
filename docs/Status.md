@@ -10,7 +10,11 @@ room create/join/delete returned `201/200/204`, WebSocket signaling returned `10
 and the UDP
 relay exchanged 7/8 probe pings. Cloudflare runs the host proxied with Full (strict), a
 cache-bypass rule, and an origin-secret header; `lobby-direct` is DNS-only for relay
-traffic. The suite is **2,688/2,688**. The desktop lobby UI, XGrid client integration,
+traffic. The suite is **2,688/2,688**. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/46108633103> published 17 assets; both
+checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.20.0,
+passes `selftest` 15/15 and `FRONTEND SMOKE OK 1.20.0`, and reproduces the 600-frame hash
+`0x110E7DC5` / PC `0x00059960`. The desktop lobby UI, XGrid client integration,
 room persistence, and automated origin-certificate renewal remain post-release. See
 [Lobby.md](Lobby.md) and [ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).
 

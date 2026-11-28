@@ -1226,6 +1226,19 @@ H.264/AAC with DAR 4:3. The local copy is
 `src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.19.0-win-x64.zip`. Raw reports:
 [host](data/netplay-release-host-600.json), [join](data/netplay-release-join-600.json).
 
+### 10.17 v1.20.0 lobby prototype and release bundles (2026-11-28)
+
+The v1.20.0 tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/46108633103> built the five bundles and
+Linux packages and published 17 assets. Both `SHA256SUMS.txt` and `SHA256SUMS-linux.txt`
+verified with **0 mismatches** (the win-x64 hash was rechecked locally). The published
+win-x64 bundle reports 1.20.0, passes `selftest` 15/15, reproduces the 600-frame hash
+`0x110E7DC5` / PC `0x00059960`, and reports `FRONTEND SMOKE OK 1.20.0`. The local copy is
+`src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.20.0-win-x64.zip`. The lobby service at
+`https://lobby.purelogiccode.com` completed room create/join/delete, WebSocket signaling,
+TCP relay pairing, and a UDP relay probe (7/8 replies) on 2026-11-27; see
+[Lobby.md](Lobby.md) §7.4.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with
