@@ -1,6 +1,6 @@
 # Lobby service (VPS prototype)
 
-**Status:** prototype, 2026-11-27. The lobby is an ASP.NET Core 11 service that runs on
+**Status:** prototype, 2026-11-28. The lobby is an ASP.NET Core 11 service that runs on
 a Windows VPS. It is emulator-agnostic and is shared by 5DO and XGrid; each emulator
 keeps its own state, handshake, and frame-sync protocol.
 
@@ -20,7 +20,7 @@ It never interprets save states, frame hashes, input packets, or guest network f
 | --- | --- | --- |
 | `FiveDo.Lobby` | Windows VPS | Room registry, join codes, WebSocket signaling, TCP control relay, UDP rendezvous, UDP relay |
 | `FiveDo.Lobby.Protocol` | Both sides | Shared HTTP/WebSocket models, UDP datagram codec, TCP relay handshake |
-| 5DO | Player PC | TCP state transfer, UDP lockstep input and hashes, `--lobby` client path |
+| 5DO | Player PC | TCP state transfer, UDP lockstep input and hashes, desktop lobby dialog and `--lobby` client path |
 | XGrid | Player PC | Its own handshake and guest-network framing over the same control/data relays |
 | `FiveDo.LobbyProbe` | Any test machine | Headless room/control/UDP probe without a disc or BIOS |
 

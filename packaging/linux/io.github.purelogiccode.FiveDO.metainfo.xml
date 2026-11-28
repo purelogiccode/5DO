@@ -77,6 +77,15 @@
   </languages>
 
   <releases>
+    <release version="1.21.0" date="2026-11-28">
+      <description>
+        <p>
+          Adds desktop lobby netplay to Netplay &gt; Host/Join Session: room codes,
+          online host/join, automatic punching with relay fallback, forced relay or
+          direct-only transport, room close on stop, and reconnect.
+        </p>
+      </description>
+    </release>
     <release version="1.20.0" date="2026-11-28">
       <description>
         <p>

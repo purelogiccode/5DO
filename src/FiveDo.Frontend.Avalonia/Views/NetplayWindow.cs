@@ -438,7 +438,8 @@ internal sealed class NetplayWindow : Window
             or ArgumentException
             or LobbyApiException
             or HttpRequestException
-            or JsonException)
+            or JsonException
+            or FormatException)
         {
             _status.Text = exception.Message;
             Serilog.Log.Error(exception, "Netplay setup failed.");
@@ -903,14 +904,16 @@ internal sealed class NetplayWindow : Window
         try
         {
             using var client = new LobbyApiClient(lobby.LobbyUri);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             await client
-                .CloseRoomAsync(lobby.JoinCode, lobby.HostToken, CancellationToken.None)
+                .CloseRoomAsync(lobby.JoinCode, lobby.HostToken, timeout.Token)
                 .ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is LobbyApiException
             or HttpRequestException
             or SocketException
             or IOException
+            or JsonException
             or TaskCanceledException)
         {
             Serilog.Log.Debug(exception, "Could not close the lobby room {Room}.", lobby.JoinCode);

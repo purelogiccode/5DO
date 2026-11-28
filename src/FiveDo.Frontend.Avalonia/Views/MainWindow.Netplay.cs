@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
@@ -489,7 +490,7 @@ public partial class MainWindow
     private async Task StopNetplayAsync(bool keepListener = false)
     {
         NetplayRuntime? netplay = _netplay;
-        LobbyNetplaySession? lobby = netplay?.Lobby;
+        LobbyNetplaySession? lobby = netplay?.Lobby ?? _netplayLobby;
         _netplay = null;
         if (netplay is not null)
         {
@@ -590,14 +591,16 @@ public partial class MainWindow
         try
         {
             using var client = new LobbyApiClient(lobby.LobbyUri);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             await client
-                .CloseRoomAsync(lobby.JoinCode, lobby.HostToken, CancellationToken.None)
+                .CloseRoomAsync(lobby.JoinCode, lobby.HostToken, timeout.Token)
                 .ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is LobbyApiException
             or HttpRequestException
             or SocketException
             or IOException
+            or JsonException
             or TaskCanceledException)
         {
             Serilog.Log.Debug(exception, "Could not close the lobby room {Room}.", lobby.JoinCode);

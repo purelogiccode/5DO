@@ -1,24 +1,26 @@
-# What's new in 5DO 1.20.0
+# What's new in 5DO 1.21.0
 
 **Released:** 2026-11-28
 
-5DO 1.20.0 adds the **emulator-agnostic VPS lobby prototype**. A host creates a room and
-shares the six-character join code; the joining player connects through WebSocket
-signaling, then the two peers punch UDP directly or fall back to the TCP/UDP relays. The
-service is emulator-agnostic, so XGrid can use the same room contract.
+5DO 1.21.0 brings the online lobby to the desktop app. **Netplay > Host Session...** and
+**Join Session...** now offer **Use the online lobby**, so two players can create or join
+a room by six-character code without configuring ports or IP addresses. The host chooses
+automatic direct punching with relay fallback, forced relay, or direct only. **Stop
+Session** closes the host room, and a dropped session reconnects through the stored room
+token. The direct-IP host/join path from 1.19.0 is unchanged.
 
 ## Pick the right file
 
 | Your system | Download |
 |---|---|
-| Windows 10/11 (x64) | `5do-1.20.0-win-x64.zip` |
-| Windows on ARM | `5do-1.20.0-win-arm64.zip` |
-| macOS on Apple Silicon | `5do-1.20.0-osx-arm64.dmg` |
-| Debian, Ubuntu, Mint | `5do_1.20.0_amd64.deb` (arm64: `_arm64`) |
-| Fedora, RHEL, openSUSE | `5do-1.20.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
-| Any Linux, no install | `5do-1.20.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
-| Any Linux, sandboxed | `5do-1.20.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
-| Any Linux, portable folder | `5do-1.20.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
+| Windows 10/11 (x64) | `5do-1.21.0-win-x64.zip` |
+| Windows on ARM | `5do-1.21.0-win-arm64.zip` |
+| macOS on Apple Silicon | `5do-1.21.0-osx-arm64.dmg` |
+| Debian, Ubuntu, Mint | `5do_1.21.0_amd64.deb` (arm64: `_arm64`) |
+| Fedora, RHEL, openSUSE | `5do-1.21.0-1.linux.x86_64.rpm` (arm64: `aarch64`) |
+| Any Linux, no install | `5do-1.21.0-linux-x86_64.AppImage` (arm64: `aarch64`) |
+| Any Linux, sandboxed | `5do-1.21.0-linux-x86_64.flatpak` (arm64: `aarch64`) |
+| Any Linux, portable folder | `5do-1.21.0-linux-x64.tar.gz` (arm64: `linux-arm64`) |
 
 Each bundle contains both the desktop app and the CLI, and the .NET 11 runtime is embedded
 in the self-contained single-file apphosts. Extract the archive before running it.
@@ -26,61 +28,58 @@ in the self-contained single-file apphosts. Extract the archive before running i
 `SHA256SUMS-linux.txt` covers the Linux installers. No `.asc` signatures or keyring are
 published.
 
-## Lobby
+## Desktop lobby
 
-- Create a room:
+1. Open your disc, select the BIOS, and start the game.
+2. **Netplay > Host Session...**, check **Use the online lobby**, leave the lobby URL at
+   `https://lobby.purelogiccode.com`, and select **Create lobby room**.
+3. Share the six-character room code.
+4. On the other PC, **Netplay > Join Session...**, check **Use the online lobby**, enter
+   the code, and select **Join lobby room**.
+5. **Transport** selects Automatic (direct, then relay), Force relay, or Direct only.
 
-  ```text
-  5do netplay host game.chd --bios bios/panafz1.bin --lobby https://lobby.purelogiccode.com
-  ```
+Both peers must use the same BIOS, disc, and behavior-affecting settings. The desktop uses
+its saved settings; a CLI peer must match them, for example with `--high-res` when **High
+resolution** is enabled. The CLI keeps the same `--lobby` flow:
 
-- Join with the code printed by the host:
+```text
+5do netplay host game.chd --bios bios/panafz1.bin --lobby https://lobby.purelogiccode.com
+5do netplay join X7JTX4 game.chd --bios bios/panafz1.bin --lobby https://lobby.purelogiccode.com
+```
 
-  ```text
-  5do netplay join X7JTX4 game.chd --bios bios/panafz1.bin --lobby https://lobby.purelogiccode.com
-  ```
+## Fixes and hardening
 
-- The room response supplies the signaling host, TCP control relay, UDP rendezvous, and
-  UDP relay endpoints. The client does not need any relay configuration.
-- `--lobby-relay` forces the relay path, `--lobby-direct` requires direct punching, and
-  `--lobby-timeout` sets the direct-punch deadline (default 3 seconds).
-- `FiveDo.LobbyProbe` exercises the same room, WebSocket, TCP relay, and UDP relay
-  contract without a disc or BIOS.
-- The public health endpoint is `https://lobby.purelogiccode.com/healthz`.
+- Malformed lobby data now surfaces as a dialog error instead of an unhandled
+  exception, with regression coverage; closing a host room times out after five seconds
+  when the lobby is unreachable.
+- The library scan tolerates an out-of-range Win32 timestamp per file instead of failing
+  the scan; the existing missing-native startup check and OpenGL framebuffer fallback
+  remain covered.
+- The macOS bundle-hashing step retries while the disk image closes, avoiding a rare
+  release-pipeline failure.
 
-The prototype supports two players and in-memory rooms. Tokens are bearer secrets, relay
-data is not encrypted, and there is no desktop lobby UI, XGrid client integration, room
-persistence, or account system yet. The service enforces 5 room creates, 20 joins,
-10 signaling upgrades, and 120 total requests per IP per minute; `/healthz` is exempt.
+## Other changes
 
-## Netplay and other changes
-
-- The 1.19.0 direct-IP netplay remains: desktop **Netplay > Host/Join Session**, the
-  `5do netplay host|join` CLI, TCP compressed-state transfer, UDP delay-based lockstep,
+- The 1.20.0 lobby service, protocol client, `--lobby` CLI options, and
+  `FiveDo.LobbyProbe` remain available.
+- The 1.19.0 direct-IP netplay remains: TCP compressed-state transfer, UDP lockstep,
   reconnect, and frame/audio hash checks.
-- The 1.18.x feature set remains: read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB
-  images, optional FFmpeg-based H.264/AAC MP4 recording, one-click FFmpeg installation,
-  high-refresh frame interpolation, patterned GPU void bars, and live CPU-clock changes.
-- Rolling autosave, ZIP/7z disc containers, physical CD-DA, the Steam Deck layout, Arcade
-  CRT, RetroAchievements, TAS movies, rewind/run-ahead, cheats, and the library are
-  unchanged.
+- The 1.18.x feature set remains: MDS/MDX and CCD/IMG/SUB disc images, optional
+  FFmpeg-based H.264/AAC MP4 recording, one-click FFmpeg installation, high-refresh frame
+  interpolation, patterned GPU void bars, and live CPU-clock changes.
 
 ## Verification
 
-- Full Release suite **2,688/2,688**; build 0 warnings, `dotnet format`,
+- Full Release suite **2,694/2,694**; build 0 warnings, `dotnet format`,
   `jb inspectcode --severity=WARNING`, and `mkdocs build --strict` clean.
-- The public service was validated end to end on 2026-11-27: room create/join/delete
-  returned `201/200/204`, WebSocket signaling returned `101` with a `welcome` message,
-  the TCP control relay paired, and the UDP relay exchanged 7/8 probe pings.
-- Cloudflare runs the lobby host proxied with Full (strict), a cache-bypass rule, and an
-  origin-secret header; `lobby-direct` is DNS-only for relay traffic.
+- Desktop host + CLI join and CLI host + desktop join each completed 600 frames through
+  `https://lobby.purelogiccode.com` with `ok=true`, direct transport, and matching
+  frame/audio hashes.
+- A packaged Windows x64 bundle hosted a room and joined it with the bundled CLI,
+  completing 600 frames with `ok=true`.
 
 ## Known issues
 
-- The lobby is a prototype; restarting the service drops every room.
-- The desktop lobby UI and XGrid client integration are not included.
-- Relay data is not encrypted, and rooms are limited to two players.
-- The Cloudflare Free plan cannot enforce the requested 30-requests/1-minute edge rule;
-  the app-level limits above are the enforcement point.
-- No room persistence, moderation, account system, or automated origin-certificate
-  renewal.
+- The lobby is a prototype; restarting the service drops every room. Rooms are limited to
+  two players, and relay data is not encrypted. XGrid client integration, room
+  persistence, and matchmaking remain.

@@ -2,10 +2,12 @@
 
 This document tracks what the emulator intends to support, what it deliberately does not support yet, and the game/BIOS quirks inherited from FreeDOCore/4DO. New compatibility work uses `References/opera-libretro-master/libopera` as the primary behavioral reference; see [`ReferenceStrategy.md`](ReferenceStrategy.md).
 
-**Current release (2026-11-28):** v1.20.0 adds the emulator-agnostic VPS lobby prototype:
-room/join codes, WebSocket signaling, TCP control relay, UDP punch/relay, the
-`5do netplay --lobby` CLI, and `FiveDo.LobbyProbe`. The public service at
-`https://lobby.purelogiccode.com` was validated end to end on 2026-11-27; see
+**Current release (2026-11-28):** v1.21.0 adds desktop lobby netplay to **Netplay >
+Host Session...** and **Join Session...**: room codes, automatic punching with relay
+fallback, forced relay or direct-only transport, room close on stop, and reconnect. The
+1.20.0 lobby service, protocol client, `--lobby` CLI, and `FiveDo.LobbyProbe` remain; the
+public service at `https://lobby.purelogiccode.com` was validated end to end on
+2026-11-27; see
 [Lobby.md](Lobby.md) §7.4. The 1.19.0 direct-IP netplay and the 1.18.x feature set remain:
 read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional H.264/AAC MP4 recording
 with Low/Medium/High quality, one-click FFmpeg installation, high-refresh frame
@@ -1238,6 +1240,25 @@ win-x64 bundle reports 1.20.0, passes `selftest` 15/15, reproduces the 600-frame
 `https://lobby.purelogiccode.com` completed room create/join/delete, WebSocket signaling,
 TCP relay pairing, and a UDP relay probe (7/8 replies) on 2026-11-27; see
 [Lobby.md](Lobby.md) §7.4.
+
+### 10.18 v1.21.0 desktop lobby and release bundles (2026-11-28)
+
+The desktop **Netplay > Host Session...** and **Join Session...** dialogs add **Use the
+online lobby** with room codes, automatic punching with relay fallback, forced relay or
+direct-only transport, room close on **Stop Session**, and reconnect through the stored
+room token. `LobbyNetplaySession` parses the room id and bearer token for both roles, and
+malformed tokens surface as a dialog error. The desktop host and join were validated
+against a CLI peer through `https://lobby.purelogiccode.com`:
+
+| Direction | Room | Frames | Result | Transport | Frame hash | Audio hash |
+|---|---|---|---|---|---|---|
+| Desktop host + CLI join | `F9EH4J` | 600 | `ok=true` | direct | `820256197` | `56582933` |
+| CLI host + desktop join | `B5K46B` | 600 | `ok=true` | direct | `820256197` | `56582933` |
+
+The desktop host used `HighResolution=True`; the CLI peer matched it with `--high-res`.
+A self-contained win-x64 bundle built from master hosted room `YAZ5DP` and joined it with
+the bundled CLI: 600 frames, `ok=true`, direct transport, frame hash `820256197`, audio
+`56582933`. Full suite **2,694/2,694**.
 
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 

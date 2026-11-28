@@ -6,7 +6,7 @@ This is the short public roadmap. The authoritative active plan is
 
 ## Current phase
 
-The project is at **v1.20.0** (published on GitHub). Windows x64 and Linux x64 are the
+The project is at **v1.21.0** (published on GitHub). Windows x64 and Linux x64 are the
 validated desktop targets; macOS arm64 renders through Vulkan/MoltenVK; Linux arm64 and
 Windows arm64 pass native CLI/frontend runtime smoke. The compatibility program is
 complete on the current corpus:
@@ -19,10 +19,13 @@ complete on the current corpus:
 - Five self-contained bundles are published (Windows/Linux x64+arm64 and macOS arm64);
   Linux also has `.deb`, `.rpm`, AppImage, and Flatpak assets. The .NET 11 runtime is
   embedded, so no separate runtime is required. Intel macOS is unsupported.
-- v1.20.0 adds the emulator-agnostic VPS lobby prototype: `5do netplay host|join --lobby`,
+- v1.21.0 adds desktop lobby netplay: **Netplay > Host/Join Session** offers the online
+  lobby, room codes, automatic punching/relay fallback, forced relay or direct-only
+  transport, room close on stop, and reconnect.
+- v1.20.0 added the emulator-agnostic VPS lobby prototype: `5do netplay host|join --lobby`,
   room/join codes, WebSocket signaling, TCP control relay, UDP punch/relay, and the
-  public `https://lobby.purelogiccode.com` service. The desktop lobby UI is available on
-  master; XGrid integration and room persistence remain.
+  public `https://lobby.purelogiccode.com` service. The desktop lobby UI followed in
+  1.21.0; XGrid integration and room persistence remain.
 - v1.19.0 added direct-IP two-player netplay: desktop **Netplay > Host/Join Session**,
   `5do netplay host|join`, TCP compressed-state transfer, UDP delay-based lockstep, and
   reconnect from the host's current state. It retains the 1.18.x one-click FFmpeg
@@ -33,7 +36,7 @@ complete on the current corpus:
   containers, physical CD-DA and read-error recovery, the Steam Deck first-run layout,
   Arcade CRT, RetroAchievements, TAS movies, rewind/run-ahead, cheats, and the library.
 
-## Next (post-1.20.0)
+## Next (post-1.21.0)
 
 The full ordered backlog is in [ImplementationPlan.md](ImplementationPlan.md). The
 short version:

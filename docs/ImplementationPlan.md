@@ -1,7 +1,7 @@
 # 5DO — Missing Features
 
 **Snapshot:** 2026-11-28
-**Release:** v1.20.0
+**Release:** v1.21.0
 **Status:** the compatibility program is complete. This file tracks **remaining work
 only**; completed items, their evidence, the full stable-ID history, and the completed
 portions of partially open IDs are in
@@ -99,7 +99,7 @@ prototype; more than two players and pointer devices remain out of scope.
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **NET-02** | Partial | M | **VPS lobby and NAT traversal prototype**: emulator-agnostic ASP.NET Core 11 coordinator, room/join codes, WebSocket signaling, TCP control relay, UDP punch coordination, UDP relay fallback, 5DO CLI `--lobby`, `FiveDo.LobbyProbe`, HTTP/UDP rate limits, per-IP room quotas, relay caps, and health monitoring. Remaining: XGrid client integration, persistence, and fully automated origin-certificate renewal. | The control plane, relays, 5DO transport, and headless probe are implemented; IIS/Cloudflare deployment is validated on the Windows VPS; direct NAT between the Azure host and a home network passed; a 600-frame 5DO relay session matched the reference hash; the public service was validated end to end on 2026-11-27 (room lifecycle, WebSocket signaling, TCP relay, UDP relay, cache bypass, origin lock); the suite is 2,688/2,688; the protocol and hardening are documented in [Lobby.md](Lobby.md). | Two 5DO peers complete a lobby-hosted session from different NATs with direct and relay evidence; the probe and lobby tests pass; an XGrid headless client joins the same room contract. |
+| **NET-02** | Partial | M | **VPS lobby and NAT traversal prototype**: emulator-agnostic ASP.NET Core 11 coordinator, room/join codes, WebSocket signaling, TCP control relay, UDP punch coordination, UDP relay fallback, desktop **Netplay > Host/Join Session** lobby flow, 5DO CLI `--lobby`, `FiveDo.LobbyProbe`, HTTP/UDP rate limits, per-IP room quotas, relay caps, and health monitoring. Remaining: XGrid client integration, persistence, and fully automated origin-certificate renewal. | The control plane, relays, 5DO transport, desktop lobby, and headless probe are implemented; IIS/Cloudflare deployment is validated on the Windows VPS; direct NAT between the Azure host and a home network passed; a 600-frame 5DO relay session matched the reference hash; the public service was validated end to end on 2026-11-27 (room lifecycle, WebSocket signaling, TCP relay, UDP relay, cache bypass, origin lock); desktop host/join completed 600 frames with a CLI peer through the public service in both directions; the suite is 2,694/2,694; the protocol and hardening are documented in [Lobby.md](Lobby.md). | Two 5DO peers complete a lobby-hosted session from different NATs with direct and relay evidence; the probe and lobby tests pass; an XGrid headless client joins the same room contract. |
 
 ### 3.5 P2/P3 - Rendering completeness
 

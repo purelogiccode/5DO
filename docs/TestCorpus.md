@@ -4907,7 +4907,7 @@ run was 2,964,718 bytes at 50.050 s with peak 15,551 / RMS 1,788.2.
 
 **Desktop evidence.** Invoking **File > Record MP4...** through UI Automation, choosing
 `desktop-test.mp4`, recording for ~17.6 s, and invoking **Stop MP4 Recording** produced a
-2,492,692-byte MP4: H.264 640x480 at 60000/1001, AAC 44.1 kHz stereo, 17.601 s, 1,056
+2,492,694-byte MP4: H.264 640x480 at 60000/1001, AAC 44.1 kHz stereo, 17.601 s, 1,056
 frames; the decoded audio had peak 29,702, RMS 4,267.8, 28,745 silent samples, 0 clipped.
 The start, save, and stop paths logged normally. A UI-automation pass opened Settings > Video,
 selected MP4 quality **High**, pressed OK, and wrote `"Mp4Quality": "High"` to the isolated
@@ -5092,15 +5092,19 @@ and display name, a join-code field, a room-code display, and automatic/relay/di
 transport selection while keeping the direct-IP host/join path. `LobbyNetplaySession`
 parses the room id and bearer token for the host and join slots; `MainWindow` attaches a
 `LobbyNetplayTransport`, closes the host room on stop, and reconnects through the stored
-room token. Two new `LobbyNetplaySessionTests` cover host/join parsing, and
+room token. New `LobbyNetplaySessionTests` cover host/join parsing and malformed room-id,
+token, and slot rejection, and
 `LibraryCacheTests.FromAndMatches_TolerateAnInvalidFileTimestamp` covers the out-of-range
-Win32 timestamp path. Full suite **2,691/2,691**.
+Win32 timestamp path. Full suite **2,694/2,694**.
 
 **Desktop acceptance.** Desktop host + CLI join (room `F9EH4J`, desktop result
 `host F9EH4J`) and CLI host + desktop join (room `B5K46B`, desktop result `join B5K46B`)
 each completed 600 frames through `https://lobby.purelogiccode.com` with `ok=true`,
 `transport=direct`, final frame hash `820256197`, and audio hash `56582933`. The desktop
-host used `HighResolution=True`; the CLI peer matched it with `--high-res`.
+host used `HighResolution=True`; the CLI peer matched it with `--high-res`. A
+self-contained win-x64 bundle built from master hosted room `YAZ5DP` and joined it with
+the bundled CLI: 600 frames, `ok=true`, direct transport, frame hash `820256197`, audio
+`56582933`.
 
 **Limits.** The lobby remains a two-player prototype with in-memory rooms. Relay data is
 not encrypted. XGrid client integration, room persistence, and matchmaking remain. See

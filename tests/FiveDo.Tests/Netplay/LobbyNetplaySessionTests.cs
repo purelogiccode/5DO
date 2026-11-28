@@ -61,6 +61,64 @@ public sealed class LobbyNetplaySessionTests
         Assert.Equal(TimeSpan.FromSeconds(5), session.DirectTimeout);
     }
 
+    [Fact]
+    public void ForHost_RejectsMalformedTokens()
+    {
+        var response = new CreateRoomResponse
+        {
+            Room = CreateRoom("ABC123", "0123456789abcdef"),
+            HostToken = "not-a-hex-token",
+        };
+
+        Assert.Throws<FormatException>(
+            () => LobbyNetplaySession.ForHost(
+                new Uri("https://lobby.example.com"),
+                response,
+                LobbyTransportMode.Auto,
+                TimeSpan.FromSeconds(3)));
+    }
+
+    [Fact]
+    public void ForHost_RejectsMalformedRoomIds()
+    {
+        var response = new CreateRoomResponse
+        {
+            Room = CreateRoom("ABC123", "10000000000000000"),
+            HostToken = Guid.NewGuid().ToString("N"),
+        };
+
+        Assert.Throws<FormatException>(
+            () => LobbyNetplaySession.ForHost(
+                new Uri("https://lobby.example.com"),
+                response,
+                LobbyTransportMode.Auto,
+                TimeSpan.FromSeconds(3)));
+    }
+
+    [Fact]
+    public void ForJoin_RejectsAnOutOfRangeSlot()
+    {
+        JoinRoomResponse CreateResponse(int slot) => new()
+        {
+            Room = CreateRoom("XYZ789", "fedcba9876543210"),
+            SlotToken = Guid.NewGuid().ToString("N"),
+            Slot = slot,
+        };
+
+        Assert.Throws<FormatException>(
+            () => LobbyNetplaySession.ForJoin(
+                new Uri("https://lobby.example.com"),
+                CreateResponse(0),
+                LobbyTransportMode.Auto,
+                TimeSpan.FromSeconds(3)));
+        Assert.Throws<FormatException>(
+            () => LobbyNetplaySession.ForJoin(
+                new Uri("https://lobby.example.com"),
+                CreateResponse(300),
+                LobbyTransportMode.Auto,
+                TimeSpan.FromSeconds(3)));
+    }
+
     private static RoomConnectionInfo CreateRoom(string code, string roomId)
     {
         return new RoomConnectionInfo

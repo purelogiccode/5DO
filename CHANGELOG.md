@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes are recorded here. The project is at v1.20.0, the feature release
-adding the emulator-agnostic VPS lobby prototype on top of the 1.19.0 direct-IP netplay
-and the 1.18.x MDS/CCD, MP4, interpolation, void-bar, and live-clock features.
+All notable changes are recorded here. The project is at v1.21.0, the desktop lobby
+feature release on top of the 1.20.0 VPS/CLI lobby, the 1.19.0 direct-IP netplay, and the
+1.18.x MDS/CCD, MP4, interpolation, void-bar, and live-clock features.
 
-## [Unreleased]
+## [1.21.0] - 2026-11-28
 
 ### Added
 
@@ -16,8 +16,16 @@ and the 1.18.x MDS/CCD, MP4, interpolation, void-bar, and live-clock features.
   reconnects through the stored room token after a drop. Desktop automation adds
   `--netplay-lobby <url>`, `--netplay-code-out <path>`, and `--netplay-result <path>`.
 - **Lobby session tests.** `LobbyNetplaySession` covers room-id/token parsing for host
-  and join; the desktop host and join flows were validated against a CLI peer through the
-  public service.
+  and join and rejects malformed room ids, tokens, and slots; the desktop host and join
+  flows were validated against a CLI peer through the public service.
+
+### Fixed
+
+- Malformed lobby room ids, tokens, and slots now surface as a dialog error instead of an
+  unhandled exception; closing a host room times out after five seconds when the lobby is
+  unreachable.
+- macOS bundle hashing retries while the disk image closes, avoiding a rare release
+  pipeline failure.
 
 ### Tests
 

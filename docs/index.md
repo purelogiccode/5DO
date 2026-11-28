@@ -16,12 +16,12 @@
   <a href="https://github.com/purelogiccode/5DO/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-FreeDO%20modified%20LGPL-blue" alt="License"></a>
 </p>
 
-!!! important "v1.20.0 feature release"
-    5DO is at v1.20.0. It adds the **emulator-agnostic VPS lobby prototype**:
-    `5do netplay host|join --lobby https://lobby.purelogiccode.com` creates or joins a
-    room, exchanges WebSocket signaling, and falls back to TCP/UDP relays for NAT
-    traversal; `FiveDo.LobbyProbe` exercises the same contract without a disc. The
-    1.19.0 direct-IP netplay and the 1.18.x feature set remain: read-only Alcohol
+!!! important "v1.21.0 feature release"
+    5DO is at v1.21.0. It adds **desktop lobby netplay**: **Netplay > Host Session** and
+    **Join Session** offer **Use the online lobby**, with room codes, automatic
+    punching/relay fallback, forced relay or direct-only transport, room close on stop,
+    and reconnect. The 1.20.0 lobby service/CLI and the 1.19.0 direct-IP netplay remain,
+    along with the 1.18.x feature set: read-only Alcohol
     MDS/MDX and CloneCD CCD/IMG/SUB disc images, optional FFmpeg-based H.264/AAC MP4
     recording with Low/Medium/High quality,
     one-click FFmpeg installation, high-refresh frame interpolation, patterned GPU void
@@ -91,18 +91,18 @@
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md), [Known issues](KnownIssues.md) |
 | Build, test, or publish 5DO | [Build and test](BuildAndTest.md), [Test strategy](TestStrategy.md) |
 | Contribute code or documentation | [Contributing](https://github.com/purelogiccode/5DO/blob/master/CONTRIBUTING.md), [Developer guide](DeveloperGuide.md), [Documentation guide](Documentation.md) |
-| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.20.0.md) |
+| Check the current project position | [Status](Status.md), [Roadmap](Roadmap.md), [Release notes](ReleaseNotes-1.21.0.md) |
 | Read the license and attribution rules | [Licensing](Licensing.md), [project license](https://github.com/purelogiccode/5DO/blob/master/LICENSE), [third-party notices](https://github.com/purelogiccode/5DO/blob/master/THIRD-PARTY-NOTICES.md) |
 
 ## Current snapshot
 
-**2026-11-28, desktop lobby netplay (unreleased on master).** **Netplay > Host Session**
+**2026-11-28, v1.21.0 feature release.** **Netplay > Host Session**
 and **Join Session** now offer **Use the online lobby**: create a room at
 `https://lobby.purelogiccode.com`, share the six-character code, or join by code, with
 automatic punching/relay fallback, forced relay, or direct only. The host closes the room
 on **Stop Session**, and the dialog reconnects through the stored room token. Desktop
 host + CLI join and CLI host + desktop join each completed 600 frames through the public
-service. The suite is **2,691/2,691**. See [Lobby service](Lobby.md) and
+service. The suite is **2,694/2,694**. See [Lobby service](Lobby.md) and
 [User guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-28, v1.20.0 feature release.** An emulator-agnostic

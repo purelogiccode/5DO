@@ -1,8 +1,11 @@
 # Known Issues
 
-**Snapshot:** 2026-11-28, v1.20.0. The 1.20.0 feature release adds the emulator-agnostic
-VPS lobby prototype: room/join codes, WebSocket signaling, TCP control relay, UDP
-punch/relay, the `5do netplay --lobby` CLI, and `FiveDo.LobbyProbe`. The 1.19.0 direct-IP
+**Snapshot:** 2026-11-28, v1.21.0. The 1.21.0 feature release adds desktop lobby netplay
+to **Netplay > Host Session...** and **Join Session...**: room codes, automatic punching
+with relay fallback, forced relay or direct-only transport, room close on stop, and
+reconnect. The 1.20.0 emulator-agnostic VPS lobby service remains: room/join codes,
+WebSocket signaling, TCP control relay, UDP punch/relay, the `5do netplay --lobby` CLI,
+and `FiveDo.LobbyProbe`. The 1.19.0 direct-IP
 netplay and the 1.18.x releases remain: direct-IP netplay with TCP state transfer, UDP
 lockstep, reconnect, a desktop host/join dialog, and the `5do netplay host|join` CLI; the
 1.18.x releases added read-only Alcohol MDS/MDX and CloneCD CCD/IMG/SUB images, optional
@@ -45,11 +48,11 @@ after 1.0 (2026-11-10). See
 GitHub**: the source is tagged `v1.0.0`, the unified Windows/Linux/macOS x64 bundles and
 checksums are attached, and legal/attribution sign-off is recorded.
 
-## Lobby prototype (v1.20.0)
+## Lobby prototype (v1.21.0)
 
 - The lobby is a prototype. Rooms and tokens are in memory only; restarting the service
   drops every room.
-- The desktop lobby UI is available from **Netplay > Host/Join Session**. XGrid client
+- The desktop lobby is available from **Netplay > Host/Join Session**. XGrid client
   integration is not included.
 - Rooms are limited to two players. Relay data is not encrypted; use HTTPS and treat room
   and host tokens as bearer secrets.
@@ -809,9 +812,9 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   matrix titles have dated PAL captures in [PalValidation.md](PalValidation.md).
   Guest ODE prompts, audio-only BIOS playback, and additional peripherals remain out of
   scope for v1. Direct-IP netplay (`NET-01`) is complete. The `NET-02` lobby prototype
-  supports two IPv4 players over an in-memory ASP.NET Core service; the desktop lobby UI
-  is available on master, while room persistence and the XGrid client are not implemented
-  yet. Multi-track TOC, raw CD-DA
+  supports two IPv4 players over an in-memory ASP.NET Core service; the desktop lobby is
+  available in **Netplay > Host/Join Session**, while room persistence and the XGrid
+  client are not implemented yet. Multi-track TOC, raw CD-DA
   sectors with volume/mute,
   READ_DATA subcode/Q packing, and M3U multi-disc playlists are implemented;
   known-title disc audio evidence remains pending.

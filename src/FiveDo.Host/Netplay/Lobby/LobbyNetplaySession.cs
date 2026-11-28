@@ -97,7 +97,7 @@ public sealed record LobbyNetplaySession
             Room = response.Room,
             RoomId = ParseRoomId(response.Room.UdpRoomId),
             Token = ParseToken(response.SlotToken),
-            Slot = checked((byte)response.Slot),
+            Slot = ParseSlot(response.Slot),
             IsHost = false,
             Mode = mode,
             DirectTimeout = directTimeout,
@@ -106,7 +106,22 @@ public sealed record LobbyNetplaySession
 
     private static ulong ParseRoomId(string value)
     {
-        return ulong.Parse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        if (!ulong.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong roomId))
+        {
+            throw new FormatException("The lobby room id is not a valid hexadecimal value.");
+        }
+
+        return roomId;
+    }
+
+    private static byte ParseSlot(int slot)
+    {
+        if (slot < 1 || slot >= LobbyProtocol.PlayerSlots)
+        {
+            throw new FormatException("The lobby slot is outside the supported range.");
+        }
+
+        return (byte)slot;
     }
 
     private static Guid ParseToken(string value)
