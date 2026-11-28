@@ -80,6 +80,28 @@ function Set-ContentWithRetry {
     }
 }
 
+function Get-FileHashWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $LiteralPath
+    )
+
+    for ($attempt = 0; ; $attempt++) {
+        try {
+            return (Get-FileHash -LiteralPath $LiteralPath -Algorithm SHA256).Hash
+        }
+        catch [System.IO.IOException] {
+            if ($attempt -ge 29) {
+                throw
+            }
+
+            # macOS keeps the freshly built disk image open through
+            # diskimages-help for a few seconds after hdiutil returns.
+            Start-Sleep -Milliseconds 500
+        }
+    }
+}
+
 function Copy-PublishTree {
     param(
         [Parameter(Mandatory = $true)]
@@ -96,8 +118,8 @@ function Copy-PublishTree {
         New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
 
         if (Test-Path -LiteralPath $target) {
-            $existingHash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
-            $sourceHash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+            $existingHash = Get-FileHashWithRetry -LiteralPath $target
+            $sourceHash = Get-FileHashWithRetry -LiteralPath $file.FullName
             if ($existingHash -ne $sourceHash) {
                 throw ("The CLI and frontend publish outputs conflict on '$relative'. " +
                     'Publish both apps with PublishSingleFile=true and PublishTrimmed=false so shared files are identical.')
@@ -525,7 +547,7 @@ try {
 
     foreach ($artifact in $artifacts) {
         $artifactName = [System.IO.Path]::GetFileName($artifact)
-        $hash = (Get-FileHash -LiteralPath $artifact -Algorithm SHA256).Hash.ToLowerInvariant()
+        $hash = (Get-FileHashWithRetry -LiteralPath $artifact).ToLowerInvariant()
         $lines += "$hash  $artifactName"
     }
 
