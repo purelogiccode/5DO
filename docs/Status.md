@@ -1,5 +1,16 @@
 # Project Status and Next Steps
 
+**2026-11-28, desktop lobby netplay (unreleased on master):** the desktop
+**Netplay > Host Session...** and **Join Session...** dialogs now offer **Use the online
+lobby**. The host creates a room at `https://lobby.purelogiccode.com`, shares the
+six-character code, and chooses automatic punching with relay fallback, forced relay, or
+direct only; the join enters the code. The host closes the room on **Stop Session**, and
+the dialog reconnects through the stored room token after a drop. Both directions were
+validated against a CLI peer through the public service: desktop host + CLI join and CLI
+host + desktop join each completed 600 frames with `ok=true`, direct transport, and final
+frame hash `820256197` / audio `56582933`. The suite is **2,691/2,691**. XGrid client
+integration, room persistence, and matchmaking remain.
+
 **2026-11-28, v1.20.0 feature release (prepared; tag pending):** the emulator-agnostic
 VPS lobby prototype ships in the CLI. `5do netplay host|join --lobby
 https://lobby.purelogiccode.com` creates or joins a room, exchanges WebSocket signaling,
@@ -14,8 +25,9 @@ traffic. The suite is **2,688/2,688**. The tag workflow
 <https://github.com/purelogiccode/5DO/actions/runs/46108633103> published 17 assets; both
 checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.20.0,
 passes `selftest` 15/15 and `FRONTEND SMOKE OK 1.20.0`, and reproduces the 600-frame hash
-`0x110E7DC5` / PC `0x00059960`. The desktop lobby UI, XGrid client integration,
-room persistence, and automated origin-certificate renewal remain post-release. See
+`0x110E7DC5` / PC `0x00059960`. The desktop lobby UI shipped on master after the 1.20.0
+tag; XGrid client integration, room persistence, and automated origin-certificate renewal
+remain post-release. See
 [Lobby.md](Lobby.md) and [ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).
 
 **2026-11-27, v1.19.0 feature release:** direct-IP two-player netplay ships in the

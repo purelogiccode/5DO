@@ -41,8 +41,20 @@ internal static class Program
     /// <summary>Gets whether this launch should automatically host a netplay session.</summary>
     internal static bool NetplayHostMode { get; private set; }
 
-    /// <summary>Gets the host address for an automatic netplay join, if any.</summary>
+    /// <summary>Gets the host address or lobby join code for an automatic netplay join, if any.</summary>
     internal static string? NetplayJoinAddress { get; private set; }
+
+    /// <summary>Gets whether the automated netplay run should use the online lobby.</summary>
+    internal static bool NetplayUseLobby { get; private set; }
+
+    /// <summary>Gets the lobby URL for an automated netplay run.</summary>
+    internal static string? NetplayLobbyUrl { get; private set; }
+
+    /// <summary>Gets the path that receives the host's join code during automation.</summary>
+    internal static string? NetplayCodeOutputPath { get; private set; }
+
+    /// <summary>Gets the path that receives the attached-session result during automation.</summary>
+    internal static string? NetplayResultPath { get; private set; }
 
     /// <summary>Gets the automatic netplay TCP/UDP port.</summary>
     internal static int NetplayPort { get; private set; } = 5600;
@@ -67,6 +79,37 @@ internal static class Program
     /// Gets the optional path that receives the smoke-test result marker.
     /// </summary>
     internal static string? SmokeOutputPath { get; private set; }
+
+    /// <summary>Writes the host's join code for the desktop lobby automation.</summary>
+    /// <param name="code">Join code to write.</param>
+    internal static void ReportNetplayJoinCode(string code)
+    {
+        WriteNetplayAutomationFile(NetplayCodeOutputPath, code);
+    }
+
+    /// <summary>Writes the attached netplay session result for automation.</summary>
+    /// <param name="result">Result text to write.</param>
+    internal static void ReportNetplayResult(string result)
+    {
+        WriteNetplayAutomationFile(NetplayResultPath, result);
+    }
+
+    private static void WriteNetplayAutomationFile(string? path, string value)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            File.WriteAllText(path, value);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Serilog.Log.Warning(exception, "Could not write netplay automation file {Path}.", path);
+        }
+    }
 
     /// <summary>
     /// Gets the GPU presentation probe request, or <see langword="null"/> during normal
@@ -333,6 +376,10 @@ internal static class Program
             StartupBiosPath = FindBiosPath(args);
             NetplayHostMode = HasFlag(args, "--netplay-host");
             NetplayJoinAddress = FindOptionValue(args, "--netplay-join");
+            NetplayLobbyUrl = FindOptionValue(args, "--netplay-lobby");
+            NetplayUseLobby = NetplayLobbyUrl is not null;
+            NetplayCodeOutputPath = FindOptionValue(args, "--netplay-code-out");
+            NetplayResultPath = FindOptionValue(args, "--netplay-result");
             var netplayPort = FindOptionValue(args, "--netplay-port");
             if (netplayPort is not null
                 && int.TryParse(netplayPort, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPort)
@@ -561,7 +608,8 @@ internal static class Program
         Console.WriteLine("  --gamepad-probe         List the active gamepad source and sample raw input for two seconds.");
         Console.WriteLine("  --audio-soak <seconds> [--audio-soak-output <json>] [--audio-device <name>]");
         Console.WriteLine("                         [--audio-buffer 20..500] [--audio-sync -250..250] [--region auto|ntsc|pal1|pal2]");
-        Console.WriteLine("  --netplay-host | --netplay-join <host> [--netplay-port N] [--netplay-delay N]");
+        Console.WriteLine("  --netplay-host | --netplay-join <host-or-code> [--netplay-port N] [--netplay-delay N]");
+        Console.WriteLine("      [--netplay-lobby <url> [--netplay-code-out <path>] [--netplay-result <path>]]");
         Console.WriteLine("                         Start the desktop host/join flow automatically for acceptance runs.");
     }
 

@@ -99,7 +99,7 @@ prototype; more than two players and pointer devices remain out of scope.
 
 | ID | Status | Effort | Missing work | Why it is achievable | Done when |
 |---|---|---|---|---|---|
-| **NET-02** | Partial | M | **VPS lobby and NAT traversal prototype**: emulator-agnostic ASP.NET Core 11 coordinator, room/join codes, WebSocket signaling, TCP control relay, UDP punch coordination, UDP relay fallback, 5DO CLI `--lobby`, `FiveDo.LobbyProbe`, HTTP/UDP rate limits, per-IP room quotas, relay caps, and health monitoring. Remaining: XGrid client integration, desktop lobby UI, persistence, and fully automated origin-certificate renewal. | The control plane, relays, 5DO transport, and headless probe are implemented; IIS/Cloudflare deployment is validated on the Windows VPS; direct NAT between the Azure host and a home network passed; a 600-frame 5DO relay session matched the reference hash; the public service was validated end to end on 2026-11-27 (room lifecycle, WebSocket signaling, TCP relay, UDP relay, cache bypass, origin lock); the suite is 2,688/2,688; the protocol and hardening are documented in [Lobby.md](Lobby.md). | Two 5DO peers complete a lobby-hosted session from different NATs with direct and relay evidence; the probe and lobby tests pass; an XGrid headless client joins the same room contract. |
+| **NET-02** | Partial | M | **VPS lobby and NAT traversal prototype**: emulator-agnostic ASP.NET Core 11 coordinator, room/join codes, WebSocket signaling, TCP control relay, UDP punch coordination, UDP relay fallback, 5DO CLI `--lobby`, `FiveDo.LobbyProbe`, HTTP/UDP rate limits, per-IP room quotas, relay caps, and health monitoring. Remaining: XGrid client integration, persistence, and fully automated origin-certificate renewal. | The control plane, relays, 5DO transport, and headless probe are implemented; IIS/Cloudflare deployment is validated on the Windows VPS; direct NAT between the Azure host and a home network passed; a 600-frame 5DO relay session matched the reference hash; the public service was validated end to end on 2026-11-27 (room lifecycle, WebSocket signaling, TCP relay, UDP relay, cache bypass, origin lock); the suite is 2,688/2,688; the protocol and hardening are documented in [Lobby.md](Lobby.md). | Two 5DO peers complete a lobby-hosted session from different NATs with direct and relay evidence; the probe and lobby tests pass; an XGrid headless client joins the same room contract. |
 
 ### 3.5 P2/P3 - Rendering completeness
 
@@ -173,8 +173,8 @@ was measured and closed with a documented limitation, not that it is unachievabl
    sync, UDP lockstep, reconnect, CLI, and desktop dialog, with the 36,000-frame run and
    probe matching the reference. Optional session-token and two-window physical-controller
    hardening are post-release. `NET-02` carries the lobby/NAT prototype through Windows VPS
-   validation, XGrid client integration, and the desktop lobby UI; >2 players remain out
-   of scope.
+   validation and XGrid client integration; the desktop lobby UI is implemented; >2
+   players remain out of scope.
 5. **Rendering:** `VID-20` true-2x completeness first, then `VID-21` GPU CEL rasterization
    as a bounded probe. `VID-22` high-refresh interpolation is complete (archive §12); it
    keeps the emulated machine at its native 59.94/50 Hz and only raises the presentation

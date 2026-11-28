@@ -126,6 +126,27 @@ public sealed class LibraryCacheTests
         Assert.False(entry.Matches(new FileInfo(path)));
     }
 
+    [Fact]
+    public void FromAndMatches_TolerateAnInvalidFileTimestamp()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var directory = new TempDirectory();
+        var path = Path.Combine(directory.Path, "disc.iso");
+        File.WriteAllBytes(path, [1, 2, 3]);
+        Assert.True(TestFileTimes.TrySetInvalidLastWriteTime(path));
+        var info = new FileInfo(path);
+        CachedLibraryEntry entry = CachedLibraryEntry.From(
+            new GameLibraryEntry(path, "ISO", 1, "ABCD1234", "Test Disc", true, string.Empty),
+            info);
+
+        Assert.Equal(FileStamp.UnknownTicks, entry.LastWriteTimeUtcTicks);
+        Assert.True(entry.Matches(new FileInfo(path)));
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         internal TempDirectory()

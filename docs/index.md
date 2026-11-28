@@ -96,7 +96,16 @@
 
 ## Current snapshot
 
-**2026-11-28, v1.20.0 feature release (prepared; tag pending).** An emulator-agnostic
+**2026-11-28, desktop lobby netplay (unreleased on master).** **Netplay > Host Session**
+and **Join Session** now offer **Use the online lobby**: create a room at
+`https://lobby.purelogiccode.com`, share the six-character code, or join by code, with
+automatic punching/relay fallback, forced relay, or direct only. The host closes the room
+on **Stop Session**, and the dialog reconnects through the stored room token. Desktop
+host + CLI join and CLI host + desktop join each completed 600 frames through the public
+service. The suite is **2,691/2,691**. See [Lobby service](Lobby.md) and
+[User guide](UserGuide.md#netplay-direct-ip).
+
+**2026-11-28, v1.20.0 feature release.** An emulator-agnostic
 ASP.NET Core 11 lobby service now provides room codes, WebSocket signaling, TCP control
 relay, UDP NAT punching, and UDP relay fallback for 5DO and XGrid. The 5DO CLI uses it
 with `--lobby`; `FiveDo.LobbyProbe` exercises the same control plane without a disc. The

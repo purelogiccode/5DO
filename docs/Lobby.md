@@ -244,8 +244,22 @@ front of the HTTP endpoint before exposing join codes to the internet:
 
 ## 3. 5DO usage
 
-The 5DO CLI can create or join a lobby room. The desktop **Netplay** dialog still uses
-direct IP in this prototype; the lobby path is currently CLI and probe only.
+The desktop **Netplay** dialog supports both direct IP and the online lobby. Open the
+disc and BIOS, start the game, then:
+
+- **Host (desktop):** **Netplay > Host Session...**, select **Use the online lobby**,
+  leave the lobby URL at `https://lobby.purelogiccode.com`, and select **Create lobby
+  room**. Share the six-character room code. **Transport** selects automatic punching
+  with relay fallback, forced relay, or direct only. The host closes the room when
+  **Stop Session** is selected.
+- **Join (desktop):** **Netplay > Join Session...**, select **Use the online lobby**,
+  enter the room code, and select **Join lobby room**.
+
+Both peers must use the same disc, BIOS, and behavior-affecting settings. The desktop uses
+its saved settings; a CLI peer must match them (for example, add `--high-res` when the
+desktop has **High resolution** enabled, or use the same `--profile`).
+
+The 5DO CLI can also create or join a lobby room directly.
 
 Host:
 

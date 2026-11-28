@@ -398,14 +398,14 @@ or a flat CHD and verifies the game ID; see
 `run --playlist game.m3u`, and test a swap with
 `run game.chd --swap-at 1200 --swap-disc disc2.chd`.
 
-## Netplay (direct IP)
+## Netplay (direct IP and online lobby) {#netplay-direct-ip}
 
-> **Status:** the desktop direct-IP menu and the CLI core are implemented and validated.
-> A lobby/NAT-traversal prototype is available from the CLI with `--lobby`; the desktop
-> lobby UI and matchmaking are not implemented yet.
+> **Status:** the desktop direct-IP and online-lobby host/join flows, the CLI, and the
+> public lobby service are implemented and validated. XGrid client integration and
+> matchmaking remain.
 
-Netplay connects two 5DO instances directly. The host is player 1 and owns the listening
-port; the join is player 2. Both players must use the same 5DO build, BIOS, disc, and
+Netplay connects two 5DO instances directly or through the public lobby. The host is
+player 1; the join is player 2. Both players must use the same 5DO build, BIOS, disc, and
 behavior-affecting emulation settings. The host transfers a compressed machine state to
 the join, so both start from the exact same frame and deterministic state.
 
@@ -413,16 +413,27 @@ the join, so both start from the exact same frame and deterministic state.
 
 1. Open the disc and BIOS, then start the game.
 2. Choose **Netplay > Host Session...**.
-3. Set the TCP/UDP port (default `5600`), input delay (default 4 frames), and wait timeout.
-4. Select **Start hosting** and share the host address and port with player 2.
-5. The session starts when player 2 connects and validates the transferred state.
+3. For a direct connection, set the TCP/UDP port (default `5600`), select **Start
+   hosting**, and share the host address and port. For the online lobby, select **Use the
+   online lobby**, leave the lobby URL at `https://lobby.purelogiccode.com`, and select
+   **Create lobby room**; share the six-character room code.
+4. Set the input delay (default 4 frames) and wait timeout. **Transport** selects
+   automatic punching with relay fallback, forced relay, or direct only.
+5. The session starts when player 2 connects and validates the transferred state. The
+   host closes the lobby room on **Stop Session**.
 
 **Join**
 
 1. Open the same disc and BIOS. Do not start a different game.
 2. Choose **Netplay > Join Session...**.
-3. Enter the host address and port, then select **Join session**.
+3. For a direct connection, enter the host address and port and select **Join session**.
+   For the online lobby, select **Use the online lobby**, enter the room code, and select
+   **Join lobby room**.
 4. The host state is loaded and validated before the first input is applied.
+
+A desktop peer uses its saved emulation settings. A CLI peer must match them; for example,
+add `--high-res` when the desktop has **High resolution** enabled, or pass the same
+`--profile`.
 
 The host sets the input delay; the join uses the host's value. Use 2-4 frames on a LAN
 and 6-10 frames when one-way latency is around 50-100 ms. **Netplay > Stop Session** ends
@@ -436,12 +447,12 @@ frame is included in the request).
   are forced off so every peer executes every frame.
 - P1 and P2 use the existing player 1/player 2 keyboard and gamepad bindings.
 - The menu shows **Stop Session**; the status bar shows the role.
-- The direct-IP protocol has no authentication or encryption. Use it on a trusted LAN or a
-  direct connection, and do not expose the port to the public Internet without a VPN or
-  firewall rules you understand.
+- Direct-IP traffic has no authentication or encryption. The lobby API uses HTTPS and
+  bearer tokens, but relayed game data is not encrypted. Use trusted peers and do not
+  expose the direct port to the public Internet without a VPN or firewall rules you
+  understand.
 - Two players and joypads are supported. Pointer devices, more than two players,
-  matchmaking, and a desktop lobby UI are out of scope for this increment. The CLI
-  `--lobby` path provides room codes and NAT traversal for testing.
+  matchmaking, XGrid client integration, and room persistence remain out of scope.
 
 The CLI exposes the same core for automation and evidence:
 
@@ -467,6 +478,9 @@ and falls back to an opaque relay when direct traffic is blocked. `--lobby-relay
 the relay, `--lobby-direct` requires punching, and `--lobby-timeout` sets the fallback
 deadline. See [Lobby.md](Lobby.md) for the service, Windows VPS install, and the shared
 XGrid contract.
+
+Desktop acceptance automation adds `--netplay-lobby <url>`, `--netplay-code-out <path>`,
+and `--netplay-result <path>` to `--netplay-host`/`--netplay-join`.
 
 ## Display
 

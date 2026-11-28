@@ -49,8 +49,8 @@ checksums are attached, and legal/attribution sign-off is recorded.
 
 - The lobby is a prototype. Rooms and tokens are in memory only; restarting the service
   drops every room.
-- The desktop lobby UI and XGrid client integration are not included. Use the CLI
-  `--lobby` option or `FiveDo.LobbyProbe`.
+- The desktop lobby UI is available from **Netplay > Host/Join Session**. XGrid client
+  integration is not included.
 - Rooms are limited to two players. Relay data is not encrypted; use HTTPS and treat room
   and host tokens as bearer secrets.
 - The Cloudflare Free plan cannot enforce the requested 30-requests/1-minute edge rule.
@@ -809,8 +809,8 @@ The full pass is recorded in [Compatibility.md](Compatibility.md) §10.6.
   matrix titles have dated PAL captures in [PalValidation.md](PalValidation.md).
   Guest ODE prompts, audio-only BIOS playback, and additional peripherals remain out of
   scope for v1. Direct-IP netplay (`NET-01`) is complete. The `NET-02` lobby prototype
-  supports two IPv4 players over an in-memory ASP.NET Core service; desktop lobby UI,
-  persistence, TLS termination, rate limiting, and the XGrid client are not implemented
+  supports two IPv4 players over an in-memory ASP.NET Core service; the desktop lobby UI
+  is available on master, while room persistence and the XGrid client are not implemented
   yet. Multi-track TOC, raw CD-DA
   sectors with volume/mute,
   READ_DATA subcode/Q packing, and M3U multi-disc playlists are implemented;

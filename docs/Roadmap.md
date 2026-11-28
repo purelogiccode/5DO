@@ -21,8 +21,8 @@ complete on the current corpus:
   embedded, so no separate runtime is required. Intel macOS is unsupported.
 - v1.20.0 adds the emulator-agnostic VPS lobby prototype: `5do netplay host|join --lobby`,
   room/join codes, WebSocket signaling, TCP control relay, UDP punch/relay, and the
-  public `https://lobby.purelogiccode.com` service. The desktop lobby UI and XGrid
-  integration remain.
+  public `https://lobby.purelogiccode.com` service. The desktop lobby UI is available on
+  master; XGrid integration and room persistence remain.
 - v1.19.0 added direct-IP two-player netplay: desktop **Netplay > Host/Join Session**,
   `5do netplay host|join`, TCP compressed-state transfer, UDP delay-based lockstep, and
   reconnect from the host's current state. It retains the 1.18.x one-click FFmpeg
@@ -79,9 +79,9 @@ short version:
 ## Out of scope for 1.x
 
 Direct-IP two-player netplay is complete (`NET-01`). A lobby/NAT-traversal prototype
-(`NET-02`) adds room codes, UDP punching, and relay fallback from the CLI. Matchmaking,
-the desktop lobby UI, authentication/encryption, more than two players, and pointer
-devices remain out of scope. The following are explicitly out of scope unless the product
+(`NET-02`) adds room codes, UDP punching, relay fallback, and the desktop lobby UI.
+Matchmaking, authentication/encryption, more than two players, and pointer devices
+remain out of scope. The following are explicitly out of scope unless the product
 scope changes:
 
 - a full debugger UI;

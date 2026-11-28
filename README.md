@@ -74,8 +74,9 @@ test harness designed for reproducible compatibility evidence.
   and frame/audio hashes over UDP. The CLI exposes the same core with `5do netplay
   host|join`; reconnect resumes from the host's current state. The `--lobby` option adds
   room/join codes, WebSocket signaling, and TCP/UDP relay fallback through the public
-  `https://lobby.purelogiccode.com` service; the desktop lobby UI and XGrid integration
-  remain. Relay data is not encrypted and more than two players are out of scope.
+  `https://lobby.purelogiccode.com` service. The desktop **Netplay** dialog offers the
+  same lobby host/join flow on master; XGrid integration remains. Relay data is not
+  encrypted and more than two players are out of scope.
 - **Modern presentation.** Two-stage OpenGL/GLES presenter with accurate, nearest,
   sharp-bilinear, bicubic, CRT, arcade CRT, xBR-lv2, FSR 1.0, GPU rule-table HQx 2x/3x/4x, and
   MMPX 2x filters, plus

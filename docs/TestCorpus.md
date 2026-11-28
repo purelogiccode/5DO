@@ -5084,3 +5084,24 @@ remain. The app enforces 5 room creates, 20 joins, 10 signaling upgrades, and 12
 requests per IP per minute; `/healthz` is exempt. The Cloudflare Free plan cannot enforce
 the requested 30-requests/1-minute edge rule. See [Lobby.md](Lobby.md) §7.1 and §7.4 and
 [ReleaseNotes-1.20.0.md](ReleaseNotes-1.20.0.md).
+
+### 1.1dc Desktop lobby netplay (2026-11-28)
+
+**Core and tests.** The desktop `NetplayWindow` adds **Use the online lobby**, a lobby URL
+and display name, a join-code field, a room-code display, and automatic/relay/direct
+transport selection while keeping the direct-IP host/join path. `LobbyNetplaySession`
+parses the room id and bearer token for the host and join slots; `MainWindow` attaches a
+`LobbyNetplayTransport`, closes the host room on stop, and reconnects through the stored
+room token. Two new `LobbyNetplaySessionTests` cover host/join parsing, and
+`LibraryCacheTests.FromAndMatches_TolerateAnInvalidFileTimestamp` covers the out-of-range
+Win32 timestamp path. Full suite **2,691/2,691**.
+
+**Desktop acceptance.** Desktop host + CLI join (room `F9EH4J`, desktop result
+`host F9EH4J`) and CLI host + desktop join (room `B5K46B`, desktop result `join B5K46B`)
+each completed 600 frames through `https://lobby.purelogiccode.com` with `ok=true`,
+`transport=direct`, final frame hash `820256197`, and audio hash `56582933`. The desktop
+host used `HighResolution=True`; the CLI peer matched it with `--high-res`.
+
+**Limits.** The lobby remains a two-player prototype with in-memory rooms. Relay data is
+not encrypted. XGrid client integration, room persistence, and matchmaking remain. See
+[Lobby.md](Lobby.md) §3 and [UserGuide.md](UserGuide.md#netplay-direct-ip).

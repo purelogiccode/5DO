@@ -4,6 +4,27 @@ All notable changes are recorded here. The project is at v1.20.0, the feature re
 adding the emulator-agnostic VPS lobby prototype on top of the 1.19.0 direct-IP netplay
 and the 1.18.x MDS/CCD, MP4, interpolation, void-bar, and live-clock features.
 
+## [Unreleased]
+
+### Added
+
+- **Desktop lobby netplay.** **Netplay > Host Session...** and **Join Session...** now
+  offer **Use the online lobby**. The host creates a room at
+  `https://lobby.purelogiccode.com` (or another service), shares the six-character code,
+  and chooses automatic punching with relay fallback, forced relay, or direct only. The
+  join enters the code. The host closes the room on **Stop Session**, and the dialog
+  reconnects through the stored room token after a drop. Desktop automation adds
+  `--netplay-lobby <url>`, `--netplay-code-out <path>`, and `--netplay-result <path>`.
+- **Lobby session tests.** `LobbyNetplaySession` covers room-id/token parsing for host
+  and join; the desktop host and join flows were validated against a CLI peer through the
+  public service.
+
+### Tests
+
+- Added regression coverage for the library scan's out-of-range Win32 timestamp path
+  (#70641-#70644). The missing-native startup check (#70645, #70646) and the OpenGL FBO
+  compositor fallback (#70639) were already present and remain covered.
+
 ## [1.20.0] - 2026-11-28
 
 ### Added

@@ -2,6 +2,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -9,8 +12,10 @@ using FiveDo.Core;
 using FiveDo.Diagnostics.Logging;
 using FiveDo.Host;
 using FiveDo.Host.Netplay;
+using FiveDo.Host.Netplay.Lobby;
 using FiveDo.Host.Osd;
 using FiveDo.Input;
+using FiveDo.Lobby.Protocol;
 using FiveDo.Storage;
 using FiveDo.Video;
 
@@ -31,6 +36,10 @@ public partial class MainWindow
     private int _netplayReconnectTimeout = 30;
     private long _netplayLastFrame;
     private uint _netplayLastHash;
+    private bool _netplayUseLobby;
+    private string _netplayLobbyUrl = "https://lobby.purelogiccode.com";
+    private string _netplayLobbyName = Environment.UserName;
+    private LobbyNetplaySession? _netplayLobby;
     private FrameBuffer? _netplayHashBuffer;
     private ControllerState _lastNetplayLocalInput;
 
@@ -43,6 +52,8 @@ public partial class MainWindow
         public required NetplayAudioSink Audio { get; init; }
 
         public Action? PreviousBeforeFrame { get; init; }
+
+        public LobbyNetplaySession? Lobby { get; init; }
     }
 
 
@@ -64,6 +75,12 @@ public partial class MainWindow
         if (!Program.NetplayHostMode)
         {
             _netplayHost = Program.NetplayJoinAddress!;
+        }
+
+        _netplayUseLobby = Program.NetplayUseLobby;
+        if (Program.NetplayLobbyUrl is not null)
+        {
+            _netplayLobbyUrl = Program.NetplayLobbyUrl;
         }
 
         _netplayPort = Program.NetplayPort;
@@ -125,7 +142,9 @@ public partial class MainWindow
 
         CancelFastForward();
 
-        if (reconnect && (host ? _netplayListener is null : string.IsNullOrEmpty(_netplayHost)))
+        if (reconnect
+            && _netplayLobby is null
+            && (host ? _netplayListener is null : string.IsNullOrEmpty(_netplayHost)))
         {
             ShowError("Netplay", "There is no session to reconnect.");
             return;
@@ -155,6 +174,12 @@ public partial class MainWindow
             ContentHash = _netplayContentHash,
             SessionId = _netplaySessionId,
             Listener = host ? _netplayListener : null,
+            UseLobby = _netplayUseLobby,
+            LobbyUrl = _netplayLobbyUrl,
+            DisplayName = _netplayLobbyName,
+            JoinCode = _netplayLobby?.JoinCode
+                ?? (_netplayUseLobby && !host ? _netplayHost : string.Empty),
+            LobbySession = reconnect ? _netplayLobby : null,
             CaptureState = CaptureNetplayState,
             ApplyState = ApplyNetplayState,
         };
@@ -194,6 +219,18 @@ public partial class MainWindow
         _netplayInputDelay = setup.InputDelay;
         _netplaySessionId = setup.SessionId;
         _netplayHostMode = host;
+        _netplayLobby = setup.Lobby;
+        _netplayUseLobby = setup.Lobby is not null;
+        if (setup.Lobby is not null)
+        {
+            _netplayLobbyUrl = setup.Lobby.LobbyUri.ToString();
+        }
+
+        if (!string.IsNullOrWhiteSpace(setup.DisplayName))
+        {
+            _netplayLobbyName = setup.DisplayName;
+        }
+
         if (!host)
         {
             _netplayHost = setup.HostAddress;
@@ -215,11 +252,27 @@ public partial class MainWindow
             return;
         }
 
+        if (setup.Lobby is { } resultLobby)
+        {
+            Program.ReportNetplayResult(
+                $"{(host ? "host" : "join")} {resultLobby.JoinCode}");
+        }
+
         NetplayStopMenuItem.IsEnabled = true;
-        ShowOsd(
-            host
-                ? $"Netplay: hosting as player 1 on port {setup.Port}."
-                : $"Netplay: joined {setup.HostAddress}:{setup.Port} as player 2.");
+        if (setup.Lobby is { } lobby)
+        {
+            ShowOsd(
+                host
+                    ? $"Netplay: hosting room {lobby.JoinCode}."
+                    : $"Netplay: joined room {lobby.JoinCode} as player 2.");
+        }
+        else
+        {
+            ShowOsd(
+                host
+                    ? $"Netplay: hosting as player 1 on port {setup.Port}."
+                    : $"Netplay: joined {setup.HostAddress}:{setup.Port} as player 2.");
+        }
     }
 
     private NetplayStateMessage CaptureNetplayState()
@@ -258,8 +311,23 @@ public partial class MainWindow
 
         bool host = setup.Mode is NetplayDialogMode.Host or NetplayDialogMode.ReconnectHost;
         byte localPlayer = host ? (byte)0 : (byte)1;
-        UdpNetplayTransport udp;
-        if (host)
+        INetplayTransport udp;
+        if (setup.Lobby is { } lobby)
+        {
+            udp = new LobbyNetplayTransport(
+                new LobbyTransportOptions
+                {
+                    Host = lobby.Room.UdpRendezvous.Host,
+                    RendezvousPort = lobby.Room.UdpRendezvous.Port,
+                    RelayPort = lobby.Room.UdpRelay.Port,
+                    RoomId = lobby.RoomId,
+                    Token = lobby.Token,
+                    Slot = lobby.Slot,
+                    Mode = lobby.Mode,
+                    DirectTimeout = lobby.DirectTimeout,
+                });
+        }
+        else if (host)
         {
             udp = new UdpNetplayTransport(setup.Port, remote: null, bindAddress: IPAddress.Any);
         }
@@ -321,6 +389,7 @@ public partial class MainWindow
             Source = source,
             Audio = audio,
             PreviousBeforeFrame = previousBeforeFrame,
+            Lobby = setup.Lobby,
         };
         _netplayLastFrame = setup.StartFrame;
         _netplayLastHash = setup.StartFrame == 0 ? 0 : _netplayLastHash;
@@ -337,9 +406,19 @@ public partial class MainWindow
         SetPlayState(running: true);
 
         ShowEmulationView();
-        StatusText.Text = host
-            ? "Netplay: hosting as player 1."
-            : "Netplay: connected as player 2.";
+        if (setup.Lobby is { } lobbyStatus)
+        {
+            StatusText.Text = host
+                ? $"Netplay: hosting room {lobbyStatus.JoinCode}."
+                : $"Netplay: joined room {lobbyStatus.JoinCode} as player 2.";
+        }
+        else
+        {
+            StatusText.Text = host
+                ? "Netplay: hosting as player 1."
+                : "Netplay: connected as player 2.";
+        }
+
         return true;
     }
 
@@ -393,7 +472,8 @@ public partial class MainWindow
             StatusText.Text = "Netplay: " + text;
             ShowOsd("Netplay: " + text, OsdSeverity.Warning);
             await StopNetplayAsync(keepListener: true).ConfigureAwait(true);
-            if (_netplayHostMode ? _netplayListener is not null : !string.IsNullOrEmpty(_netplayHost))
+            if (_netplayLobby is not null
+                || (_netplayHostMode ? _netplayListener is not null : !string.IsNullOrEmpty(_netplayHost)))
             {
                 bool autoStart = Program.NetplayHostMode
                     || !string.IsNullOrWhiteSpace(Program.NetplayJoinAddress);
@@ -409,6 +489,7 @@ public partial class MainWindow
     private async Task StopNetplayAsync(bool keepListener = false)
     {
         NetplayRuntime? netplay = _netplay;
+        LobbyNetplaySession? lobby = netplay?.Lobby;
         _netplay = null;
         if (netplay is not null)
         {
@@ -430,6 +511,7 @@ public partial class MainWindow
         {
             _netplayListener?.Dispose();
             _netplayListener = null;
+            _netplayLobby = null;
         }
 
         NetplayStopMenuItem.IsEnabled = false;
@@ -451,7 +533,11 @@ public partial class MainWindow
             _netplayLastHash = 0;
         }
 
-        await Task.CompletedTask.ConfigureAwait(true);
+        if (!keepListener && lobby is { IsHost: true, HostToken: not null })
+        {
+            await CloseLobbyRoomAsync(lobby).ConfigureAwait(true);
+        }
+
         ShowOsd("Netplay session stopped.");
     }
 
@@ -494,4 +580,27 @@ public partial class MainWindow
         }
     }
 
+    private static async Task CloseLobbyRoomAsync(LobbyNetplaySession lobby)
+    {
+        if (!lobby.IsHost || string.IsNullOrWhiteSpace(lobby.HostToken))
+        {
+            return;
+        }
+
+        try
+        {
+            using var client = new LobbyApiClient(lobby.LobbyUri);
+            await client
+                .CloseRoomAsync(lobby.JoinCode, lobby.HostToken, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is LobbyApiException
+            or HttpRequestException
+            or SocketException
+            or IOException
+            or TaskCanceledException)
+        {
+            Serilog.Log.Debug(exception, "Could not close the lobby room {Room}.", lobby.JoinCode);
+        }
+    }
 }
