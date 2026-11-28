@@ -5104,7 +5104,8 @@ each completed 600 frames through `https://lobby.purelogiccode.com` with `ok=tru
 host used `HighResolution=True`; the CLI peer matched it with `--high-res`. A
 self-contained win-x64 bundle built from master hosted room `YAZ5DP` and joined it with
 the bundled CLI: 600 frames, `ok=true`, direct transport, frame hash `820256197`, audio
-`56582933`.
+`56582933`. The published v1.21.0 win-x64 bundle repeated the run: room `3UTU8Z`, 600
+frames, `ok=true`, direct, frame hash `820256197`, audio `56582933`.
 
 **Limits.** The lobby remains a two-player prototype with in-memory rooms. Relay data is
 not encrypted. XGrid client integration, room persistence, and matchmaking remain. See

@@ -8,8 +8,12 @@ direct only; the join enters the code. The host closes the room on **Stop Sessio
 the dialog reconnects through the stored room token after a drop. Both directions were
 validated against a CLI peer through the public service: desktop host + CLI join and CLI
 host + desktop join each completed 600 frames with `ok=true`, direct transport, and final
-frame hash `820256197` / audio `56582933`. The suite is **2,694/2,694**. XGrid client
-integration, room persistence, and matchmaking remain.
+frame hash `820256197` / audio `56582933`. The suite is **2,694/2,694**. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/46115932046> published 17 assets; both
+checksum manifests verify with 0 mismatches. The published win-x64 bundle reports 1.21.0,
+passes `selftest` 15/15 and `FRONTEND SMOKE OK 1.21.0`, and hosted room `3UTU8Z` for a
+600-frame lobby join with the bundled CLI (`ok=true`, direct; frame hash `820256197` /
+audio `56582933`). XGrid client integration, room persistence, and matchmaking remain.
 
 **2026-11-28, v1.20.0 feature release:** the emulator-agnostic
 VPS lobby prototype ships in the CLI. `5do netplay host|join --lobby

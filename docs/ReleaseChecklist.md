@@ -124,12 +124,16 @@ run, screenshot, or recorded hash), not just an intention. Update `docs/Status.m
       through the public service with `ok=true`, direct transport, and matching hashes.
 - [x] Packaged Windows x64 bundle hosted room `YAZ5DP` and joined it with the bundled
       CLI: 600 frames, `ok=true`, direct transport.
-- [ ] Push `master`, tag `v1.21.0`, and publish the release; record the run.
-- [ ] Download the published assets, verify both manifests, and record the run and
-      validation in [Compatibility.md](Compatibility.md) 10.18 and [Status.md](Status.md).
-- [ ] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
+- [x] Push `master`, tag `v1.21.0`, and publish the release. Run
+      <https://github.com/purelogiccode/5DO/actions/runs/46115932046> published 17 assets.
+- [x] Download the published assets, verify both manifests with 0 mismatches, and record
+      the run and validation in [Compatibility.md](Compatibility.md) 10.18 and
+      [Status.md](Status.md). The published win-x64 bundle reports 1.21.0, passes
+      `selftest` 15/15 and `FRONTEND SMOKE OK 1.21.0`, and hosted room `3UTU8Z` for a
+      600-frame join with the bundled CLI.
+- [x] Keep the local bundle copy under `src/FiveDo.Frontend.Avalonia/bin/Release`
       (`5do-1.21.0-win-x64.zip`).
-- [ ] Fill the AUR `PKGBUILD` `sha256sums_x86_64`/`sha256sums_aarch64` from the
+- [x] Fill the AUR `PKGBUILD` `sha256sums_x86_64`/`sha256sums_aarch64` from the
       published 1.21.0 Linux tarballs.
 
 ## 1.20.0 feature gate

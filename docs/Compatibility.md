@@ -1260,6 +1260,15 @@ A self-contained win-x64 bundle built from master hosted room `YAZ5DP` and joine
 the bundled CLI: 600 frames, `ok=true`, direct transport, frame hash `820256197`, audio
 `56582933`. Full suite **2,694/2,694**.
 
+The v1.21.0 tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/46115932046> built the five bundles and
+Linux packages and published 17 assets. Both `SHA256SUMS.txt` and `SHA256SUMS-linux.txt`
+verified with **0 mismatches**. The published win-x64 bundle reports 1.21.0, passes
+`selftest` 15/15, reports `FRONTEND SMOKE OK 1.21.0`, and hosted room `3UTU8Z` for a
+600-frame join with the bundled CLI (`ok=true`, direct transport, frame hash `820256197`,
+audio `56582933`). The local copy is
+`src/FiveDo.Frontend.Avalonia/bin/Release/5do-1.21.0-win-x64.zip`.
+
 ## 11. Reference comparison (2026-10-23, updated 2026-10-24)
 
 The data track of each CHD was extracted to ISO with `5do disc dump`, then run with

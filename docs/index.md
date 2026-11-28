@@ -102,7 +102,10 @@ and **Join Session** now offer **Use the online lobby**: create a room at
 automatic punching/relay fallback, forced relay, or direct only. The host closes the room
 on **Stop Session**, and the dialog reconnects through the stored room token. Desktop
 host + CLI join and CLI host + desktop join each completed 600 frames through the public
-service. The suite is **2,694/2,694**. See [Lobby service](Lobby.md) and
+service. The suite is **2,694/2,694**. The tag workflow
+<https://github.com/purelogiccode/5DO/actions/runs/46115932046> published 17 assets; both
+checksum manifests verify with 0 mismatches, and the published win-x64 bundle completes a
+600-frame lobby join. See [Lobby service](Lobby.md) and
 [User guide](UserGuide.md#netplay-direct-ip).
 
 **2026-11-28, v1.20.0 feature release.** An emulator-agnostic

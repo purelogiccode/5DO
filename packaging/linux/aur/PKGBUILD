@@ -24,8 +24,8 @@ _asset="5do-$pkgver-$_rid.tar.gz"
 
 source=("$url/releases/download/v$pkgver/$_asset")
 noextract=("$_asset")
-sha256sums_x86_64=('REPLACE_WITH_X64_SHA256')
-sha256sums_aarch64=('REPLACE_WITH_ARM64_SHA256')
+sha256sums_x86_64=('4e53b9db9f5229d313059bc4a8637362618314ba8d2924a4cec521340252d542')
+sha256sums_aarch64=('a7818f946fe15437cd2f3c78ec62bac50b66b48af3f20a8b19f671f93b8c6ba7')
 
 package() {
   install -d "$pkgdir/opt/5do"
